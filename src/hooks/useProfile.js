@@ -1,0 +1,46 @@
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+
+const fromRow = (row) => ({
+  name: row.name || "",
+  focusAreas: row.focus_areas || [],
+  workStyle: row.work_style || "Mix of both",
+  onboarded: !!row.onboarded,
+});
+
+export function useProfile(userId) {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    let { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    if (!data && !error) {
+      const insertRes = await supabase.from("profiles").insert({ id: userId }).select().single();
+      data = insertRes.data;
+    }
+    if (data) setProfile(fromRow(data));
+    setLoading(false);
+  }, [userId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const updateProfile = useCallback(
+    async (patch) => {
+      if (!userId) return;
+      setProfile((p) => ({ ...p, ...patch }));
+      const dbPatch = {};
+      if ("name" in patch) dbPatch.name = patch.name;
+      if ("focusAreas" in patch) dbPatch.focus_areas = patch.focusAreas;
+      if ("workStyle" in patch) dbPatch.work_style = patch.workStyle;
+      if ("onboarded" in patch) dbPatch.onboarded = patch.onboarded;
+      await supabase.from("profiles").update(dbPatch).eq("id", userId);
+    },
+    [userId]
+  );
+
+  return { profile, loading, updateProfile };
+}
