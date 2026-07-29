@@ -1,5 +1,6 @@
 import { ListChecks } from "lucide-react";
-import { CATEGORY_COLORS, EDU_TYPE_COLORS, HABIT_COLOR, PRIMARY, TASK_COLOR, serifFont } from "../../lib/constants";
+import { EDU_TYPE_COLORS, HABIT_COLOR, PRIMARY, TASK_COLOR, serifFont } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
@@ -21,6 +22,7 @@ function ReviewSection({ title, items, color }) {
 }
 
 export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, journalEntries, onClose }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const weekStart = toISO(startOfWeek(new Date()));
   const weekEnd = toISO(addDays(startOfWeek(new Date()), 6));
   const inWeek = (iso) => iso && iso >= weekStart && iso <= weekEnd;

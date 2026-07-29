@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { CATEGORY_COLORS, HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, PRIMARY_TINT, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, PRIMARY_TINT, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 
 export default function OnboardingQuiz({ onComplete }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [focusAreas, setFocusAreas] = useState([]);

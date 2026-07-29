@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { DEFAULT_THEME } from "../lib/constants";
+import { DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME } from "../lib/constants";
 
 const fromRow = (row) => ({
   name: row.name || "",
@@ -9,6 +9,7 @@ const fromRow = (row) => ({
   onboarded: !!row.onboarded,
   enabledPages: row.enabled_pages || [],
   themeColor: row.theme_color || DEFAULT_THEME,
+  categoryColors: { ...DEFAULT_CATEGORY_COLOR_KEYS, ...(row.category_colors || {}) },
 });
 
 export function useProfile(userId) {
@@ -42,7 +43,9 @@ export function useProfile(userId) {
       if ("onboarded" in patch) dbPatch.onboarded = patch.onboarded;
       if ("enabledPages" in patch) dbPatch.enabled_pages = patch.enabledPages;
       if ("themeColor" in patch) dbPatch.theme_color = patch.themeColor;
-      await supabase.from("profiles").update(dbPatch).eq("id", userId);
+      if ("categoryColors" in patch) dbPatch.category_colors = patch.categoryColors;
+      const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
+      if (error) console.error("updateProfile failed:", error.message);
     },
     [userId]
   );

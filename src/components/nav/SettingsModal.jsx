@@ -1,11 +1,11 @@
 import { Settings as SettingsIcon } from "lucide-react";
-import { PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
+import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 
-export default function SettingsModal({ themeColor, onSetTheme, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onClose }) {
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, width: 400 }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ ...modalStyle, width: 440, maxHeight: "85vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
           <SettingsIcon size={19} color={PRIMARY} strokeWidth={2} /> Settings
         </div>
@@ -31,7 +31,37 @@ export default function SettingsModal({ themeColor, onSetTheme, onClose }) {
           })}
         </div>
 
-        <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 20 }}>Done</button>
+        <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Category colors — used across the calendar, goals, and onboarding.</div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {CATEGORY_KEYS.map((cat) => {
+            const activeKey = categoryColors?.[cat];
+            return (
+              <div key={cat}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>{cat}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
+                    const active = activeKey === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => onSetCategoryColor(cat, key)}
+                        title={key}
+                        style={{
+                          width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
+                          background: swatch.bg, border: `2px solid ${active ? swatch.border : "transparent"}`,
+                          boxShadow: active ? `0 0 0 2px ${swatch.bg}` : "none",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 22 }}>Done</button>
       </div>
     </div>
   );

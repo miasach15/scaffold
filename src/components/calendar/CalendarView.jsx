@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
-import { CATEGORY_COLORS, EDU_TYPE_COLORS, PRIMARY, ROW_H, TASK_COLOR, cardStyle, serifFont } from "../../lib/constants";
+import { EDU_TYPE_COLORS, PRIMARY, ROW_H, TASK_COLOR, cardStyle, serifFont } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dayLabel, dateLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
 export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const scrollRef = useRef(null);
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 6 * ROW_H;

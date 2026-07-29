@@ -1,8 +1,29 @@
+// Shared swatch palette a user can assign to any of the 4 goal/event categories
+// (see CategoryColorsContext + SettingsModal). Keys are stable identifiers stored
+// per-user; the actual {bg,border,text} triples live here in one place.
+export const CATEGORY_COLOR_SWATCHES = {
+  blue: { bg: "#DCEAFB", border: "#7FB2E8", text: "#2A5C8A" },
+  pink: { bg: "#FBE3EC", border: "#E7A9C4", text: "#95375E" },
+  green: { bg: "#DFEEE5", border: "#87BFA1", text: "#2C6B4C" },
+  purple: { bg: "#E0DBFA", border: "#A99BEA", text: "#4A3B94" },
+  orange: { bg: "#FCE9E4", border: "#EFAE93", text: "#9B4A2A" },
+  teal: { bg: "#DFF3EF", border: "#8ED9C4", text: "#1F7A5C" },
+  red: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
+  yellow: { bg: "#FFF7D6", border: "#F0DA85", text: "#8A6F1F" },
+  indigo: { bg: "#E4E7FB", border: "#A6ACE8", text: "#3B4394" },
+  gray: { bg: "#F1F3F5", border: "#C9D0D8", text: "#4A5568" },
+};
+
+export const CATEGORY_KEYS = ["Education", "Personal", "Health", "People"];
+export const DEFAULT_CATEGORY_COLOR_KEYS = { Education: "blue", Personal: "pink", Health: "green", People: "purple" };
+
+// Default-theme category colors, used as the CategoryColorsContext fallback and
+// anywhere rendered before a user's customization has loaded.
 export const CATEGORY_COLORS = {
-  Education: { bg: "#DCEAFB", border: "#7FB2E8", text: "#2A5C8A" },
-  Personal: { bg: "#FBE3EC", border: "#E7A9C4", text: "#95375E" },
-  Health: { bg: "#DFEEE5", border: "#87BFA1", text: "#2C6B4C" },
-  People: { bg: "#E0DBFA", border: "#A99BEA", text: "#4A3B94" },
+  Education: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Education],
+  Personal: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Personal],
+  Health: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Health],
+  People: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.People],
 };
 export const EDU_TYPE_COLORS = {
   Test: { bg: "#FBEDED", border: "#EFC0C0", text: "#9B4646" },

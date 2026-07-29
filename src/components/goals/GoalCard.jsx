@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { CATEGORY_COLORS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
 export default function GoalCard({ goal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onSetActionDone, onRemoveAction }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const col = CATEGORY_COLORS[goal.category];
   const allActions = goal.milestones.flatMap((m) => m.actions);

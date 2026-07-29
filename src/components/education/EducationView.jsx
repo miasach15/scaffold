@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { GraduationCap } from "lucide-react";
-import { CATEGORY_COLORS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, decimalToTimeLabel, toISO } from "../../lib/dateHelpers";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -18,6 +18,7 @@ export default function EducationView({
   onSetSessionDone,
   onOpenFocus,
 }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");

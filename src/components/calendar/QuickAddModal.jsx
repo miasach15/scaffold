@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { CATEGORY_COLORS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 
 export default function QuickAddModal({ initial, onClose, onSave }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(`${pad(initial.hour)}:00`);

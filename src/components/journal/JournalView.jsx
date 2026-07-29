@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { BookOpen } from "lucide-react";
-import { CATEGORY_COLORS, JOURNAL_PROMPTS, cardStyle, serifFont } from "../../lib/constants";
+import { JOURNAL_PROMPTS, cardStyle, serifFont } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 
 export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [category, setCategory] = useState("Gratitude");
   const [prompt, setPrompt] = useState(() => JOURNAL_PROMPTS.Gratitude[0]);
   const [mode, setMode] = useState("prompt"); // 'prompt' | 'freewrite'

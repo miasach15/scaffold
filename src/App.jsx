@@ -22,6 +22,7 @@ import FocusTimerModal from "./components/focus/FocusTimerModal";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
+import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
 import MoviesView from "./components/lifestyle/MoviesView";
 import BooksView from "./components/lifestyle/BooksView";
 import RestaurantsView from "./components/lifestyle/RestaurantsView";
@@ -31,7 +32,7 @@ import GiftsView from "./components/lifestyle/GiftsView";
 import NotesView from "./components/lifestyle/NotesView";
 
 import { addDays, repeatDates, startOfWeek, timeToDecimal } from "./lib/dateHelpers";
-import { DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
+import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -127,7 +128,18 @@ function ScaffoldApp({ userId, onSignOut }) {
 
   const theme = THEME_PRESETS[profile.themeColor] || THEME_PRESETS[DEFAULT_THEME];
 
+  const resolvedCategoryColors = {};
+  for (const cat of CATEGORY_KEYS) {
+    const key = profile.categoryColors[cat] || DEFAULT_CATEGORY_COLOR_KEYS[cat];
+    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS[cat]];
+  }
+
+  const setCategoryColor = (category, swatchKey) => {
+    updateProfile({ categoryColors: { ...profile.categoryColors, [category]: swatchKey } });
+  };
+
   return (
+    <CategoryColorsProvider value={resolvedCategoryColors}>
     <div
       style={{
         "--primary": theme.primary,
@@ -235,6 +247,8 @@ function ScaffoldApp({ userId, onSignOut }) {
         <SettingsModal
           themeColor={profile.themeColor}
           onSetTheme={(key) => updateProfile({ themeColor: key })}
+          categoryColors={profile.categoryColors}
+          onSetCategoryColor={setCategoryColor}
           onClose={() => setShowSettings(false)}
         />
       )}
@@ -271,5 +285,6 @@ function ScaffoldApp({ userId, onSignOut }) {
         />
       )}
     </div>
+    </CategoryColorsProvider>
   );
 }

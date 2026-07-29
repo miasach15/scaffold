@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Target } from "lucide-react";
-import { CATEGORY_COLORS, SUGGESTED_GOALS } from "../../lib/constants";
+import { SUGGESTED_GOALS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onSetActionDone, onRemoveAction }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [filter, setFilter] = useState("All");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(defaultCategory || "Personal");
