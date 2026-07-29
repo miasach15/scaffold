@@ -46,14 +46,9 @@ export function useEduItems(userId) {
     [userId]
   );
 
-  const toggleDone = useCallback(async (id) => {
-    let nextDone;
-    setEduItems((e) => e.map((x) => {
-      if (x.id !== id) return x;
-      nextDone = !x.done;
-      return { ...x, done: nextDone };
-    }));
-    await supabase.from("edu_items").update({ done: nextDone }).eq("id", id);
+  const setDone = useCallback(async (id, done) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, done } : x)));
+    await supabase.from("edu_items").update({ done }).eq("id", id);
   }, []);
 
   const removeItem = useCallback(async (id) => {
@@ -61,5 +56,5 @@ export function useEduItems(userId) {
     await supabase.from("edu_items").delete().eq("id", id); // cascades to linked tasks server-side
   }, []);
 
-  return { eduItems, loading, addEduItems, toggleDone, removeItem };
+  return { eduItems, loading, addEduItems, setDone, removeItem };
 }

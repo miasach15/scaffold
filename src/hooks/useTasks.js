@@ -50,14 +50,9 @@ export function useTasks(userId) {
     [userId]
   );
 
-  const toggleTaskDone = useCallback(async (id) => {
-    let nextDone;
-    setTasks((ts) => ts.map((t) => {
-      if (t.id !== id) return t;
-      nextDone = !t.done;
-      return { ...t, done: nextDone };
-    }));
-    await supabase.from("tasks").update({ done: nextDone }).eq("id", id);
+  const setTaskDone = useCallback(async (id, done) => {
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done } : t)));
+    await supabase.from("tasks").update({ done }).eq("id", id);
   }, []);
 
   const removeTask = useCallback(async (id) => {
@@ -76,5 +71,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, toggleTaskDone, removeTask, removeTasksByEduId, rescheduleTask };
+  return { tasks, loading, addTask, setTaskDone, removeTask, removeTasksByEduId, rescheduleTask };
 }

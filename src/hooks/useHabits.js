@@ -56,24 +56,25 @@ export function useHabits(userId) {
     await supabase.from("habits").delete().eq("id", id);
   }, []);
 
-  const toggleToday = useCallback(
-    async (id) => {
+  const setDoneToday = useCallback(
+    async (id, done) => {
       if (!userId) return;
       const todayISO = toISO(new Date());
-      const habit = habits.find((h) => h.id === id);
-      const has = habit?.doneDates.includes(todayISO);
       setHabits((hs) => hs.map((h) => {
         if (h.id !== id) return h;
-        return { ...h, doneDates: has ? h.doneDates.filter((d) => d !== todayISO) : [...h.doneDates, todayISO] };
+        const doneDates = done
+          ? (h.doneDates.includes(todayISO) ? h.doneDates : [...h.doneDates, todayISO])
+          : h.doneDates.filter((d) => d !== todayISO);
+        return { ...h, doneDates };
       }));
-      if (has) {
-        await supabase.from("habit_done_dates").delete().eq("habit_id", id).eq("date", todayISO);
+      if (done) {
+        await supabase.from("habit_done_dates").upsert({ id: uid(), user_id: userId, habit_id: id, date: todayISO }, { onConflict: "habit_id,date" });
       } else {
-        await supabase.from("habit_done_dates").insert({ id: uid(), user_id: userId, habit_id: id, date: todayISO });
+        await supabase.from("habit_done_dates").delete().eq("habit_id", id).eq("date", todayISO);
       }
     },
-    [userId, habits]
+    [userId]
   );
 
-  return { habits, loading, addHabit, addHabitsBulk, removeHabit, toggleToday };
+  return { habits, loading, addHabit, addHabitsBulk, removeHabit, setDoneToday };
 }

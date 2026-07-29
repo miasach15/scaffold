@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CATEGORY_COLORS, HABIT_COLOR, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { CATEGORY_COLORS, HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 
 export default function OnboardingQuiz({ onComplete }) {
@@ -7,14 +7,17 @@ export default function OnboardingQuiz({ onComplete }) {
   const [name, setName] = useState("");
   const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
+  const [lifestylePages, setLifestylePages] = useState([]);
   const [workStyle, setWorkStyle] = useState("Mix of both");
 
   const toggleFocus = (c) => setFocusAreas((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
   const toggleHabit = (h) => setHabitPicks((hs) => (hs.includes(h) ? hs.filter((x) => x !== h) : [...hs, h]));
+  const toggleLifestylePage = (key) => setLifestylePages((ps) => (ps.includes(key) ? ps.filter((x) => x !== key) : [...ps, key]));
 
-  const steps = ["Name", "Focus", "Habits", "Style", "Done"];
-  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, workStyle });
-  const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
+  const steps = ["Name", "Focus", "Habits", "Extras", "Style", "Done"];
+  const lastStep = steps.length - 1;
+  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, lifestylePages, workStyle });
+  const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], lifestylePages: [], workStyle: "Mix of both" });
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -26,7 +29,7 @@ export default function OnboardingQuiz({ onComplete }) {
         input { font-family: inherit; }
         input:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
       `}</style>
-      <div style={{ ...cardStyle, width: 440, maxWidth: "100%", padding: 28 }}>
+      <div style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>
           {steps.map((s, i) => (
@@ -90,6 +93,35 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 3 && (
           <div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Want any extra pages?</div>
+            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Totally optional, just for fun. You can add or remove these anytime from the top bar.</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {LIFESTYLE_PAGE_META.map((p) => {
+                const active = lifestylePages.includes(p.key);
+                const col = LIFESTYLE_COLORS[p.key];
+                return (
+                  <button
+                    key={p.key}
+                    onClick={() => toggleLifestylePage(p.key)}
+                    style={{
+                      padding: "10px 14px", borderRadius: 10, fontSize: 14, fontWeight: 700, textAlign: "left",
+                      border: `1.5px solid ${active ? col.border : "#E5E9ED"}`,
+                      background: active ? col.bg : "#fff",
+                      color: active ? col.text : "#000000",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}
+                  >
+                    <span>{p.label}</span>
+                    <span style={{ fontWeight: 400, fontSize: 12, color: active ? col.text : "#93A0AD", opacity: 0.85 }}>{p.tagline}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>How do you like to work?</div>
             <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Sets your default Focus Timer length.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -111,12 +143,13 @@ export default function OnboardingQuiz({ onComplete }) {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
             <div style={{ fontSize: 13.5, color: "#5A6472", lineHeight: 1.6, marginBottom: 6 }}>
               {focusAreas.length > 0 && <>Focusing on {focusAreas.join(", ")}. </>}
               {habitPicks.length > 0 && <>Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}. </>}
+              {lifestylePages.length > 0 && <>Added {lifestylePages.length} extra page{lifestylePages.length === 1 ? "" : "s"}. </>}
               Focus sessions default to {workStyle === "Short focused bursts" ? "15" : workStyle === "Long deep sessions" ? "50" : "25"} minutes.
             </div>
           </div>
@@ -125,13 +158,13 @@ export default function OnboardingQuiz({ onComplete }) {
         <div style={{ display: "flex", gap: 8, marginTop: 24 }}>
           {step > 0 && <button onClick={() => setStep((s) => s - 1)} style={ghostBtn}>Back</button>}
           <div style={{ flex: 1 }} />
-          {step < 4 ? (
+          {step < lastStep ? (
             <button onClick={() => setStep((s) => s + 1)} style={primaryBtn}>Next</button>
           ) : (
             <button onClick={finish} style={primaryBtn}>Get started</button>
           )}
         </div>
-        {step < 4 && (
+        {step < lastStep && (
           <button onClick={skip} style={{ ...ghostBtn, border: "none", background: "none", marginTop: 10, fontSize: 12, color: "#B4AA98", padding: 0 }}>Skip for now</button>
         )}
       </div>

@@ -11,11 +11,11 @@ export default function EducationView({
   eduItems,
   tasks,
   onAddEduItem,
-  onToggleEduDone,
+  onSetEduDone,
   onRemoveEduItem,
   onAddSession,
   onRemoveSession,
-  onToggleSessionDone,
+  onSetSessionDone,
   onOpenFocus,
 }) {
   const [title, setTitle] = useState("");
@@ -71,7 +71,7 @@ export default function EducationView({
       key: `s-${t.id}`, title: t.title, subtitle: parent ? parent.title : null,
       done: t.done, date: t.date, dateLabel: t.start != null ? `${t.date} · ${decimalToTimeLabel(t.start)}` : `${t.date} · all-day`,
       priority: t.priority || "Low", colorKind: "task",
-      onToggleDone: () => onToggleSessionDone(t.id), onFocus: () => onOpenFocus(t.id, t.title),
+      onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
   }).filter(Boolean);
@@ -79,7 +79,7 @@ export default function EducationView({
     key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, dateLabel: e.dueDate,
     priority: null, colorKind: "edu", eduType: "Homework",
-    onToggleDone: () => onToggleEduDone(e.id), onFocus: null, onRemove: () => onRemoveEduItem(e.id),
+    onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null, onRemove: () => onRemoveEduItem(e.id),
   }));
   const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
   const leftDone = [...sessionRows, ...homeworkRows].filter((i) => i.done);
@@ -114,7 +114,7 @@ export default function EducationView({
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} onToggleDone={onToggleEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} />
+            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} />
           ))}
         </div>
       )}
@@ -152,14 +152,14 @@ export default function EducationView({
           {upcomingTests.length === 0 ? (
             <EmptyState text="No upcoming tests." />
           ) : (
-            <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onToggleEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
+            <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
           )}
           <div style={{ marginTop: 18 }}>
             <SubHeader>Upcoming Assignments</SubHeader>
             {upcomingAssignments.length === 0 ? (
               <EmptyState text="No upcoming assignments." />
             ) : (
-              <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onToggleEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
+              <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
             )}
           </div>
         </div>

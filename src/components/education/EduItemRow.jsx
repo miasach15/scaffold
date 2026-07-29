@@ -17,7 +17,7 @@ export default function EduItemRow({ item, onToggleDone, onRemove, onAddSession,
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: item.done ? "#fff" : col.bg, transition: "box-shadow .15s ease, transform .15s ease" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-        <Checkbox checked={item.done} onClick={() => onToggleDone(item.id)} color={col} />
+        <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
         <Swatch color={col} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>

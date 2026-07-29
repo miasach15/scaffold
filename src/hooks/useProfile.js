@@ -6,6 +6,7 @@ const fromRow = (row) => ({
   focusAreas: row.focus_areas || [],
   workStyle: row.work_style || "Mix of both",
   onboarded: !!row.onboarded,
+  enabledPages: row.enabled_pages || [],
 });
 
 export function useProfile(userId) {
@@ -37,6 +38,7 @@ export function useProfile(userId) {
       if ("focusAreas" in patch) dbPatch.focus_areas = patch.focusAreas;
       if ("workStyle" in patch) dbPatch.work_style = patch.workStyle;
       if ("onboarded" in patch) dbPatch.onboarded = patch.onboarded;
+      if ("enabledPages" in patch) dbPatch.enabled_pages = patch.enabledPages;
       await supabase.from("profiles").update(dbPatch).eq("id", userId);
     },
     [userId]

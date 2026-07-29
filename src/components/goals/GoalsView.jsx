@@ -5,7 +5,7 @@ import { inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
 
-export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onToggleAction, onRemoveAction }) {
+export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onSetActionDone, onRemoveAction }) {
   const [filter, setFilter] = useState("All");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(defaultCategory || "Personal");
@@ -60,7 +60,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
               onAddMilestone={onAddMilestone}
               onRemoveMilestone={onRemoveMilestone}
               onAddAction={onAddAction}
-              onToggleAction={onToggleAction}
+              onSetActionDone={onSetActionDone}
               onRemoveAction={onRemoveAction}
             />
           ))}

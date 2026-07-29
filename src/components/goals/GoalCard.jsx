@@ -5,7 +5,7 @@ import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-export default function GoalCard({ goal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onToggleAction, onRemoveAction }) {
+export default function GoalCard({ goal, onRemoveGoal, onAddMilestone, onRemoveMilestone, onAddAction, onSetActionDone, onRemoveAction }) {
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const col = CATEGORY_COLORS[goal.category];
   const allActions = goal.milestones.flatMap((m) => m.actions);
@@ -50,7 +50,7 @@ export default function GoalCard({ goal, onRemoveGoal, onAddMilestone, onRemoveM
                 milestone={m}
                 col={col}
                 onAddAction={(t, d) => onAddAction(goal.id, m.id, t, d)}
-                onToggleAction={(aid) => onToggleAction(goal.id, m.id, aid)}
+                onSetActionDone={(aid, done) => onSetActionDone(goal.id, m.id, aid, done)}
                 onRemoveAction={(aid) => onRemoveAction(goal.id, m.id, aid)}
                 onRemoveMilestone={() => onRemoveMilestone(goal.id, m.id)}
               />

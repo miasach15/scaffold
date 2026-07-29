@@ -85,20 +85,15 @@ export function useGoals(userId) {
     [userId]
   );
 
-  const toggleAction = useCallback(async (goalId, milestoneId, actionId) => {
-    let nextDone;
+  const setActionDone = useCallback(async (goalId, milestoneId, actionId, done) => {
     setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
       ...g,
       milestones: g.milestones.map((m) => m.id !== milestoneId ? m : {
         ...m,
-        actions: m.actions.map((a) => {
-          if (a.id !== actionId) return a;
-          nextDone = !a.done;
-          return { ...a, done: nextDone };
-        }),
+        actions: m.actions.map((a) => (a.id === actionId ? { ...a, done } : a)),
       }),
     }));
-    await supabase.from("goal_actions").update({ done: nextDone }).eq("id", actionId);
+    await supabase.from("goal_actions").update({ done }).eq("id", actionId);
   }, []);
 
   const removeAction = useCallback(async (goalId, milestoneId, actionId) => {
@@ -109,5 +104,5 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").delete().eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, addMilestone, removeMilestone, addAction, toggleAction, removeAction };
+  return { goals, loading, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction };
 }

@@ -4,7 +4,7 @@ import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function MilestoneBlock({ milestone, col, onAddAction, onToggleAction, onRemoveAction, onRemoveMilestone }) {
+export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone }) {
   const [actionTitle, setActionTitle] = useState("");
   const [actionDate, setActionDate] = useState("");
   const done = milestone.actions.filter((a) => a.done).length;
@@ -29,7 +29,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onToggleAc
         <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8, paddingLeft: 15 }}>
           {milestone.actions.map((a) => (
             <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Checkbox checked={a.done} onClick={() => onToggleAction(a.id)} color={col} />
+              <Checkbox checked={a.done} onClick={() => onSetActionDone(a.id, !a.done)} color={col} />
               <div style={{ flex: 1, fontSize: 13, textDecoration: a.done ? "line-through" : "none", opacity: a.done ? 0.5 : 1 }}>{a.title}</div>
               {a.dueDate && <UrgencyBadge iso={a.dueDate} done={a.done} />}
               {a.dueDate && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{a.dueDate}</div>}

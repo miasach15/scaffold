@@ -6,7 +6,7 @@ import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import Swatch from "../shared/Swatch";
 import { toISO } from "../../lib/dateHelpers";
 
-export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onToggleToday }) {
+export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDoneToday }) {
   const [title, setTitle] = useState("");
   const todayISO = toISO(new Date());
 
@@ -50,7 +50,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onToggle
                   <div style={{ fontSize: 11.5, color: "#A69C8D", marginTop: 1 }}>{h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total</div>
                 </div>
                 <button
-                  onClick={() => onToggleToday(h.id)}
+                  onClick={() => onSetDoneToday(h.id, !doneToday)}
                   style={{
                     padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700,
                     border: `1.5px solid ${doneToday ? HABIT_COLOR.border : "#E2E8F0"}`,

@@ -3,10 +3,9 @@ import { CATEGORY_COLORS, EDU_TYPE_COLORS, PRIMARY, ROW_H, TASK_COLOR, cardStyle
 import { addDays, dayLabel, dateLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
-import TodaysPriorities from "./TodaysPriorities";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, todayPriorities, todayEvents, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask, profileName }) {
+export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask }) {
   const scrollRef = useRef(null);
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 6 * ROW_H;
@@ -37,8 +36,6 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
 
   return (
     <div>
-      <TodaysPriorities priorities={todayPriorities} todayEvents={todayEvents} profileName={profileName} />
-
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700 }}>{monthLabel(days[0])}</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -105,7 +102,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
                     <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} />
                   ))}
                   {tasks.filter((t) => t.date === iso && t.start != null).map((t) => (
-                    <CalBlock key={t.id} item={t} color={TASK_COLOR} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id)} />
+                    <CalBlock key={t.id} item={t} color={TASK_COLOR} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
                   ))}
                   {iso === todayISO && (
                     <div style={{ position: "absolute", top: nowDecimal * ROW_H, left: 0, right: 0, height: 0, zIndex: 5, pointerEvents: "none" }}>

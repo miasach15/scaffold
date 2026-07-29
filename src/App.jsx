@@ -20,8 +20,16 @@ import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
+import ManagePagesModal from "./components/nav/ManagePagesModal";
+import MoviesView from "./components/lifestyle/MoviesView";
+import BooksView from "./components/lifestyle/BooksView";
+import RestaurantsView from "./components/lifestyle/RestaurantsView";
+import BucketListView from "./components/lifestyle/BucketListView";
+import PackingListsView from "./components/lifestyle/PackingListsView";
+import GiftsView from "./components/lifestyle/GiftsView";
+import NotesView from "./components/lifestyle/NotesView";
 
-import { addDays, decimalToTimeLabel, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, repeatDates, startOfWeek, timeToDecimal } from "./lib/dateHelpers";
 import { PAPER_BG, PRIMARY } from "./lib/constants";
 
 export default function App() {
@@ -43,17 +51,18 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents } = useEvents(userId);
-  const { tasks, addTask, toggleTaskDone, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, addMilestone, removeMilestone, addAction, toggleAction, removeAction } = useGoals(userId);
-  const { habits, addHabit, addHabitsBulk, removeHabit, toggleToday } = useHabits(userId);
+  const { tasks, addTask, setTaskDone, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { goals, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction } = useGoals(userId);
+  const { habits, addHabit, addHabitsBulk, removeHabit, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
-  const { eduItems, addEduItems, toggleDone: toggleEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
+  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
 
   const [view, setView] = useState("calendar");
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [modal, setModal] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
+  const [showManagePages, setShowManagePages] = useState(false);
 
   const openFocus = (id, title) => setFocusTask({ id, title });
 
@@ -81,37 +90,21 @@ function ScaffoldApp({ userId, onSignOut }) {
   }, [goals, eduItems, tasks]);
 
   const onChipClick = (chip) => {
-    if (chip.kind === "goal") toggleAction(chip.goalId, chip.milestoneId, chip.id);
-    else if (chip.kind === "edu") toggleEduDone(chip.id);
-    else if (chip.kind === "task") toggleTaskDone(chip.id);
+    if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
+    else if (chip.kind === "edu") setEduDone(chip.id, !chip.done);
+    else if (chip.kind === "task") setTaskDone(chip.id, !chip.done);
   };
 
-  const todayISO = toISO(new Date());
-
-  const todayPriorities = useMemo(() => {
-    const items = [];
-    dueChips.forEach((c) => {
-      if (c.done || c.date > todayISO) return;
-      let label = c.title;
-      if (c.kind === "goal-deadline") label = `Goal due: ${c.title}`;
-      else if (c.kind === "edu") label = `${c.type}${c.subject ? ` (${c.subject})` : ""}: ${c.title}`;
-      const colorKind = c.kind === "goal-deadline" ? "goal" : c.kind;
-      items.push({ key: `chip-${c.kind}-${c.id}`, title: label, tag: null, overdue: c.date < todayISO, colorKind, category: c.category, type: c.type, onClick: () => onChipClick(c) });
-    });
-    tasks.forEach((t) => {
-      if (t.done || t.start == null || !t.date || t.date > todayISO) return;
-      items.push({ key: `task-${t.id}`, title: t.title, tag: decimalToTimeLabel(t.start), overdue: t.date < todayISO, colorKind: "task", priority: t.priority || "Low", onClick: () => toggleTaskDone(t.id), onFocus: () => openFocus(t.id, t.title) });
-    });
-    items.sort((a, b) => (a.overdue === b.overdue ? 0 : a.overdue ? -1 : 1));
-    return items;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dueChips, tasks, todayISO]);
-
-  const todayEvents = useMemo(() => events.filter((e) => e.date === todayISO).sort((a, b) => a.start - b.start), [events, todayISO]);
-
   const completeOnboarding = async (answers) => {
-    await updateProfile({ name: answers.name, focusAreas: answers.focusAreas, workStyle: answers.workStyle, onboarded: true });
+    await updateProfile({ name: answers.name, focusAreas: answers.focusAreas, workStyle: answers.workStyle, enabledPages: answers.lifestylePages, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
+  };
+
+  const toggleLifestylePage = (key) => {
+    const current = profile.enabledPages || [];
+    const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key];
+    updateProfile({ enabledPages: next });
+    if (current.includes(key) && view === key) setView("calendar");
   };
 
   const removeEduItem = async (id) => {
@@ -149,7 +142,14 @@ function ScaffoldApp({ userId, onSignOut }) {
         .hoverable:hover { box-shadow: 0 4px 16px rgba(90,70,50,0.09) !important; transform: translateY(-1px); }
       `}</style>
 
-      <TopNav view={view} setView={setView} onOpenWeeklyReview={() => setShowWeeklyReview(true)} onSignOut={onSignOut} />
+      <TopNav
+        view={view}
+        setView={setView}
+        onOpenWeeklyReview={() => setShowWeeklyReview(true)}
+        onOpenManagePages={() => setShowManagePages(true)}
+        onSignOut={onSignOut}
+        enabledPages={profile.enabledPages}
+      />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 16px 60px" }}>
         {view === "calendar" && (
@@ -160,18 +160,15 @@ function ScaffoldApp({ userId, onSignOut }) {
             events={events}
             tasks={tasks}
             dueChips={dueChips}
-            todayPriorities={todayPriorities}
-            todayEvents={todayEvents}
             onCellClick={(date, hour) => setModal({ date, hour })}
-            onToggleTask={toggleTaskDone}
+            onToggleTask={setTaskDone}
             onChipClick={onChipClick}
             onOpenFocus={openFocus}
             onRescheduleTask={rescheduleTask}
-            profileName={profile.name}
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={toggleTaskDone} onRemove={removeTask} onOpenFocus={openFocus} />
+          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onRemove={removeTask} onOpenFocus={openFocus} />
         )}
         {view === "goals" && (
           <GoalsView
@@ -182,12 +179,12 @@ function ScaffoldApp({ userId, onSignOut }) {
             onAddMilestone={addMilestone}
             onRemoveMilestone={removeMilestone}
             onAddAction={addAction}
-            onToggleAction={toggleAction}
+            onSetActionDone={setActionDone}
             onRemoveAction={removeAction}
           />
         )}
         {view === "habits" && (
-          <HabitsView habits={habits} onAddHabit={addHabit} onRemoveHabit={removeHabit} onToggleToday={toggleToday} />
+          <HabitsView habits={habits} onAddHabit={addHabit} onRemoveHabit={removeHabit} onSetDoneToday={setDoneToday} />
         )}
         {view === "journal" && (
           <JournalView entries={journalEntries} onAddEntry={addJournalEntry} onRemoveEntry={removeJournalEntry} />
@@ -197,15 +194,30 @@ function ScaffoldApp({ userId, onSignOut }) {
             eduItems={eduItems}
             tasks={tasks}
             onAddEduItem={addEduItem}
-            onToggleEduDone={toggleEduDone}
+            onSetEduDone={setEduDone}
             onRemoveEduItem={removeEduItem}
             onAddSession={addEduSession}
             onRemoveSession={removeTask}
-            onToggleSessionDone={toggleTaskDone}
+            onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
           />
         )}
+        {view === "movies" && <MoviesView userId={userId} />}
+        {view === "books" && <BooksView userId={userId} />}
+        {view === "restaurants" && <RestaurantsView userId={userId} />}
+        {view === "bucket" && <BucketListView userId={userId} />}
+        {view === "packing" && <PackingListsView userId={userId} />}
+        {view === "gifts" && <GiftsView userId={userId} />}
+        {view === "notes" && <NotesView userId={userId} />}
       </div>
+
+      {showManagePages && (
+        <ManagePagesModal
+          enabledPages={profile.enabledPages}
+          onTogglePage={toggleLifestylePage}
+          onClose={() => setShowManagePages(false)}
+        />
+      )}
 
       {modal && (
         <QuickAddModal
@@ -223,7 +235,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         <FocusTimerModal
           task={focusTask}
           onClose={() => setFocusTask(null)}
-          onComplete={() => { toggleTaskDone(focusTask.id); setFocusTask(null); }}
+          onComplete={() => { setTaskDone(focusTask.id, true); setFocusTask(null); }}
           defaultMinutes={profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25}
         />
       )}
