@@ -13,6 +13,7 @@ create table if not exists profiles (
   enabled_pages text[] not null default '{}',
   theme_color text not null default 'violet',
   category_colors jsonb not null default '{}'::jsonb,
+  tour_seen boolean not null default false,
   created_at timestamptz not null default now()
 );
 

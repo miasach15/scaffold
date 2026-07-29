@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "./hooks/AuthProvider";
 import { useProfile } from "./hooks/useProfile";
 import { useEvents } from "./hooks/useEvents";
@@ -22,6 +22,7 @@ import FocusTimerModal from "./components/focus/FocusTimerModal";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
+import TourOverlay from "./components/nav/TourOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
 import MoviesView from "./components/lifestyle/MoviesView";
 import BooksView from "./components/lifestyle/BooksView";
@@ -66,6 +67,20 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showManagePages, setShowManagePages] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourStarted, setTourStarted] = useState(false);
+
+  useEffect(() => {
+    if (profile && profile.onboarded && !profile.tourSeen && !tourStarted) {
+      setTourOpen(true);
+      setTourStarted(true);
+    }
+  }, [profile, tourStarted]);
+
+  const finishTour = () => {
+    setTourOpen(false);
+    updateProfile({ tourSeen: true });
+  };
 
   const openFocus = (id, title) => setFocusTask({ id, title });
 
@@ -249,8 +264,13 @@ function ScaffoldApp({ userId, onSignOut }) {
           onSetTheme={(key) => updateProfile({ themeColor: key })}
           categoryColors={profile.categoryColors}
           onSetCategoryColor={setCategoryColor}
+          onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
           onClose={() => setShowSettings(false)}
         />
+      )}
+
+      {tourOpen && (
+        <TourOverlay setView={setView} enabledPages={profile.enabledPages} onFinish={finishTour} />
       )}
 
       {modal && (

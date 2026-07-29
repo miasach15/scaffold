@@ -110,13 +110,14 @@ export default function EducationView({
       </div>
 
       <SubHeader>Today</SubHeader>
-      {today_.length === 0 ? (
-        <EmptyState text="Nothing due today, no homework due tomorrow, and nothing with a session scheduled today." />
+      {today_.length === 0 && leftTodayItems.length === 0 ? (
+        <EmptyState text="Nothing due today, no homework due tomorrow, and nothing scheduled for today." />
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
             <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} />
           ))}
+          {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
       )}
 
@@ -131,14 +132,6 @@ export default function EducationView({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, marginTop: 16 }}>
         <div>
-          <SubHeader>Today</SubHeader>
-          {leftTodayItems.length === 0 ? (
-            <EmptyState text="Nothing scheduled for today." />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", marginBottom: 4 }}>
-              {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
-            </div>
-          )}
           <SubHeader>Upcoming Tasks</SubHeader>
           {leftUpcomingItems.length === 0 ? (
             <EmptyState text="Nothing to work on yet. Break down a test or assignment on the right, or add homework above." />

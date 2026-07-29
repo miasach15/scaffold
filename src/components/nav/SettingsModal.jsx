@@ -2,7 +2,7 @@ import { Settings as SettingsIcon } from "lucide-react";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onReplayTour, onClose }) {
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 440, maxHeight: "85vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
@@ -61,7 +61,8 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
           })}
         </div>
 
-        <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 22 }}>Done</button>
+        <button onClick={onReplayTour} style={{ ...ghostBtn, width: "100%", marginTop: 22 }}>Replay page tour</button>
+        <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 8 }}>Done</button>
       </div>
     </div>
   );

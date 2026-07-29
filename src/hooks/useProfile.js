@@ -10,6 +10,7 @@ const fromRow = (row) => ({
   enabledPages: row.enabled_pages || [],
   themeColor: row.theme_color || DEFAULT_THEME,
   categoryColors: { ...DEFAULT_CATEGORY_COLOR_KEYS, ...(row.category_colors || {}) },
+  tourSeen: !!row.tour_seen,
 });
 
 export function useProfile(userId) {
@@ -44,6 +45,7 @@ export function useProfile(userId) {
       if ("enabledPages" in patch) dbPatch.enabled_pages = patch.enabledPages;
       if ("themeColor" in patch) dbPatch.theme_color = patch.themeColor;
       if ("categoryColors" in patch) dbPatch.category_colors = patch.categoryColors;
+      if ("tourSeen" in patch) dbPatch.tour_seen = patch.tourSeen;
       const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
       if (error) console.error("updateProfile failed:", error.message);
     },
