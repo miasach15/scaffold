@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Rocket } from "lucide-react";
-import { LIFESTYLE_COLORS } from "../../lib/constants";
-import { deleteBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { LIFESTYLE_COLORS, SUGGESTED_BUCKET_LIST } from "../../lib/constants";
+import { deleteBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { EmptyState, ProgressBar, SectionHeader } from "../shared/Misc";
 import Checkbox from "../shared/Checkbox";
 import { useBucketList } from "../../hooks/useBucketList";
@@ -12,11 +12,15 @@ export default function BucketListView({ userId }) {
   const [category, setCategory] = useState("");
   const col = LIFESTYLE_COLORS.bucket;
 
-  const add = () => {
-    if (!title.trim()) return;
-    addItem(title, category);
-    setTitle(""); setCategory("");
+  const add = (t) => {
+    const tt = (t !== undefined ? t : title).trim();
+    if (!tt) return;
+    addItem(tt, t !== undefined ? "" : category);
+    if (t === undefined) { setTitle(""); setCategory(""); }
   };
+
+  const addedTitles = new Set(items.map((i) => i.title.toLowerCase()));
+  const available = SUGGESTED_BUCKET_LIST.filter((s) => !addedTitles.has(s.toLowerCase()));
 
   const done = items.filter((i) => i.done).length;
   const total = items.length;
@@ -28,8 +32,17 @@ export default function BucketListView({ userId }) {
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <input placeholder="Something you want to do someday..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && add()} />
         <input placeholder="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 160 }} onKeyDown={(e) => e.key === "Enter" && add()} />
-        <button onClick={add} className="btn-primary" style={primaryBtn}>Add</button>
+        <button onClick={() => add()} className="btn-primary" style={primaryBtn}>Add</button>
       </div>
+
+      {available.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+          <span style={{ fontSize: 11.5, color: "#9CA3AF", alignSelf: "center", marginRight: 2 }}>Suggested:</span>
+          {available.map((s) => (
+            <button key={s} onClick={() => add(s)} style={suggestionChip}>+ {s}</button>
+          ))}
+        </div>
+      )}
 
       {total > 0 && (
         <div style={{ marginBottom: 18, maxWidth: 320 }}>
@@ -42,7 +55,7 @@ export default function BucketListView({ userId }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {items.map((it) => (
-            <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: it.done ? "#fff" : col.bg, border: `1px solid ${it.done ? "#F1EEE9" : col.border}` }}>
+            <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: it.done ? "#fff" : col.bg, border: `1px solid ${it.done ? "#EDEDED" : col.border}` }}>
               <Checkbox checked={it.done} onClick={() => setDone(it.id, !it.done)} color={col} />
               <div style={{ flex: 1, fontSize: 14, textDecoration: it.done ? "line-through" : "none", opacity: it.done ? 0.55 : 1 }}>
                 {it.done ? "🎉 " : ""}{it.title}

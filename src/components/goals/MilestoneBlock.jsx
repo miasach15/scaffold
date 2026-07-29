@@ -18,7 +18,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
   };
 
   return (
-    <div style={{ border: "1px solid #F0ECE5", borderRadius: 10, padding: "8px 10px", background: "#FDFCFA" }}>
+    <div style={{ border: "1px solid #ECECEC", borderRadius: 10, padding: "8px 10px", background: "#FDFCFA" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         <div style={{ width: 7, height: 7, borderRadius: 4, background: milestoneDone ? col.border : "#DADAD8", flexShrink: 0 }} />
         <div style={{ flex: 1, fontSize: 13, fontWeight: 700, textDecoration: milestoneDone ? "line-through" : "none", opacity: milestoneDone ? 0.6 : 1 }}>{milestone.title}</div>

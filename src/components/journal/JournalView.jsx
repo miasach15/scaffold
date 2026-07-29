@@ -67,7 +67,7 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
           {sorted.map((e) => (
             <div key={e.id} className="hoverable" style={{ ...cardStyle, padding: "12px 14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                <div style={{ fontSize: 11.5, color: "#A69C8D", fontWeight: 600 }}>{e.date}</div>
+                <div style={{ fontSize: 11.5, color: "#8B95A1", fontWeight: 600 }}>{e.date}</div>
                 <button onClick={() => onRemoveEntry(e.id)} className="btn-delete" style={deleteBtn}>×</button>
               </div>
               {e.prompt && <div style={{ fontFamily: serifFont, fontSize: 14.5, fontStyle: "italic", color: "#6E93B7", marginBottom: 4 }}>{e.prompt}</div>}

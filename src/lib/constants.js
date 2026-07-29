@@ -12,8 +12,25 @@ export const EDU_TYPE_COLORS = {
 export const EVENT_COLOR = { bg: "#FCFEFF", border: "#E6F2F8", text: "#3A7796" };
 export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };
-export const PRIMARY = "#7B6EF0";
-export const PAPER_BG = "#FAF8F4";
+// PRIMARY/PRIMARY_DARK/PRIMARY_TINT resolve to whatever accent theme is currently
+// applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
+// properties on the root element). The fallback values are the default "Violet" theme.
+export const PRIMARY = "var(--primary, #7B6EF0)";
+export const PRIMARY_DARK = "var(--primary-dark, #5849C4)";
+export const PRIMARY_TINT = "var(--primary-tint, #E7E3FC)";
+
+export const THEME_PRESETS = {
+  violet: { label: "Violet", primary: "#7B6EF0", primaryDark: "#5849C4", primaryTint: "#E7E3FC" },
+  blue: { label: "Blue", primary: "#3E7BFA", primaryDark: "#2A5FD1", primaryTint: "#DCE7FD" },
+  green: { label: "Green", primary: "#34A870", primaryDark: "#247A50", primaryTint: "#DBF3E6" },
+  rose: { label: "Rose", primary: "#E8608F", primaryDark: "#C23F6C", primaryTint: "#FBE0EA" },
+  orange: { label: "Orange", primary: "#F0923B", primaryDark: "#C96F1F", primaryTint: "#FCE7D2" },
+  teal: { label: "Teal", primary: "#2CAFA0", primaryDark: "#1D8478", primaryTint: "#D8F2EE" },
+  slate: { label: "Slate", primary: "#5B6472", primaryDark: "#3F4653", primaryTint: "#E4E7EB" },
+};
+export const DEFAULT_THEME = "violet";
+
+export const PAPER_BG = "#FAFAFA";
 export const PRIORITY_COLORS = {
   Low: { bg: "#F1F3F5", border: "#DCE1E6", text: "#5A6472" },
   Medium: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
@@ -28,9 +45,9 @@ export const TONE = {
 export const serifFont = "'Playfair Display', 'Georgia', serif";
 export const cardStyle = {
   background: "#fff",
-  border: "1px solid #F0ECE5",
+  border: "1px solid #ECECEC",
   borderRadius: 18,
-  boxShadow: "0 6px 24px rgba(90,70,50,0.055)",
+  boxShadow: "0 6px 24px rgba(15,23,42,0.05)",
   transition: "box-shadow .15s ease, transform .15s ease",
 };
 
@@ -39,6 +56,52 @@ export const SUGGESTED_GOALS = {
   Health: ["Sleep 8 hours a night", "Move your body 3x this week", "Drink more water"],
   People: ["Call a friend", "Plan a hangout", "Check in with family"],
 };
+
+// pre-filled starter checklist for a new packing list, organized loosely by category
+export const PACKING_LIST_TEMPLATE = [
+  "Passport / ID",
+  "Wallet, cards, cash",
+  "Phone + charger",
+  "Laptop + charger",
+  "Headphones",
+  "Travel adapter",
+  "Portable battery pack",
+  "Toothbrush + toothpaste",
+  "Deodorant",
+  "Shampoo / body wash",
+  "Skincare / sunscreen",
+  "Medications",
+  "Underwear",
+  "Socks",
+  "Pajamas",
+  "Comfortable shoes",
+  "Jacket / layer for weather",
+  "Swimsuit",
+  "Sunglasses",
+  "Reusable water bottle",
+  "Snacks for the trip",
+  "Book or entertainment",
+  "Travel pillow",
+  "Umbrella",
+];
+
+export const SUGGESTED_BUCKET_LIST = [
+  "See the northern lights",
+  "Learn a new language",
+  "Go skydiving",
+  "Visit every continent",
+  "Run a marathon",
+  "Learn to play an instrument",
+  "Watch a meteor shower",
+  "Go on a solo trip",
+  "Write a book",
+  "Learn to cook a signature dish",
+  "Go camping under the stars",
+  "Take a road trip with no plan",
+  "Learn to surf",
+  "See the pyramids",
+  "Swim in the ocean at night",
+];
 export const SUGGESTED_HABITS = ["Drink water", "Stretch", "Journal", "No phone before bed", "Read 10 pages", "Make your bed", "Tidy desk", "Walk outside"];
 export const JOURNAL_PROMPTS = {
   Confidence: [

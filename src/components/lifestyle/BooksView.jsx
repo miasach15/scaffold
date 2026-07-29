@@ -63,7 +63,7 @@ function BookRow({ book, col, onSetStatus, onRate, onRemove }) {
   const nextStatus = { "Want to read": "Reading", "Reading": "Read", "Read": "Want to read" }[book.status];
   const nextLabel = { "Want to read": "Start reading", "Reading": "Finished", "Read": "Read again" }[book.status];
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: book.status === "Read" ? "#fff" : col.bg, border: `1px solid ${book.status === "Read" ? "#F1EEE9" : col.border}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: book.status === "Read" ? "#fff" : col.bg, border: `1px solid ${book.status === "Read" ? "#EDEDED" : col.border}` }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 600 }}>{book.title}</div>
         {book.author && <div style={{ fontSize: 11.5, color: "#93A0AD" }}>{book.author}</div>}

@@ -66,12 +66,12 @@ function RestaurantRow({ r, col, onToggle, onRate, onNotes, onRemove }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const tried = r.status === "Tried";
   return (
-    <div className="hoverable" style={{ padding: "10px 12px", borderRadius: 12, background: tried ? "#fff" : col.bg, border: `1px solid ${tried ? "#F1EEE9" : col.border}` }}>
+    <div className="hoverable" style={{ padding: "10px 12px", borderRadius: 12, background: tried ? "#fff" : col.bg, border: `1px solid ${tried ? "#EDEDED" : col.border}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
           onClick={onToggle}
           title={tried ? "Move back to want-to-try" : "Mark tried"}
-          style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${tried ? col.border : "#DCD5C8"}`, background: tried ? col.bg : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: col.text }}
+          style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${tried ? col.border : "#D1D5DB"}`, background: tried ? col.bg : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: col.text }}
         >
           {tried ? "✓" : ""}
         </button>

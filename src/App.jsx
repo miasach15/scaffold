@@ -21,6 +21,7 @@ import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
+import SettingsModal from "./components/nav/SettingsModal";
 import MoviesView from "./components/lifestyle/MoviesView";
 import BooksView from "./components/lifestyle/BooksView";
 import RestaurantsView from "./components/lifestyle/RestaurantsView";
@@ -30,7 +31,7 @@ import GiftsView from "./components/lifestyle/GiftsView";
 import NotesView from "./components/lifestyle/NotesView";
 
 import { addDays, repeatDates, startOfWeek, timeToDecimal } from "./lib/dateHelpers";
-import { PAPER_BG, PRIMARY } from "./lib/constants";
+import { DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -63,6 +64,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [focusTask, setFocusTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showManagePages, setShowManagePages] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const openFocus = (id, title) => setFocusTask({ id, title });
 
@@ -123,8 +125,17 @@ function ScaffoldApp({ userId, onSignOut }) {
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
   if (!profile.onboarded) return <OnboardingQuiz onComplete={completeOnboarding} />;
 
+  const theme = THEME_PRESETS[profile.themeColor] || THEME_PRESETS[DEFAULT_THEME];
+
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FDFBF8 0%, ${PAPER_BG} 45%)`, minHeight: "100vh", color: "#000000" }}>
+    <div
+      style={{
+        "--primary": theme.primary,
+        "--primary-dark": theme.primaryDark,
+        "--primary-tint": theme.primaryTint,
+        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, minHeight: "100vh", color: "#000000",
+      }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; }
@@ -134,12 +145,12 @@ function ScaffoldApp({ userId, onSignOut }) {
         input, select, textarea { font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #E7E1D8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #D9D9D9; border-radius: 4px; }
         .btn-primary:hover:not(:disabled) { box-shadow: 0 3px 10px rgba(110,147,183,0.35); transform: translateY(-1px); }
-        .btn-ghost:hover:not(:disabled) { background: #FAF7F2 !important; border-color: #D9D2C6 !important; }
+        .btn-ghost:hover:not(:disabled) { background: #F5F5F5 !important; border-color: #D1D5DB !important; }
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
-        .hoverable:hover { box-shadow: 0 4px 16px rgba(90,70,50,0.09) !important; transform: translateY(-1px); }
+        .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; transform: translateY(-1px); }
       `}</style>
 
       <TopNav
@@ -147,6 +158,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         setView={setView}
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
         onOpenManagePages={() => setShowManagePages(true)}
+        onOpenSettings={() => setShowSettings(true)}
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
       />
@@ -216,6 +228,14 @@ function ScaffoldApp({ userId, onSignOut }) {
           enabledPages={profile.enabledPages}
           onTogglePage={toggleLifestylePage}
           onClose={() => setShowManagePages(false)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          themeColor={profile.themeColor}
+          onSetTheme={(key) => updateProfile({ themeColor: key })}
+          onClose={() => setShowSettings(false)}
         />
       )}
 

@@ -53,7 +53,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
             const isToday = iso === todayISO;
             return (
               <div key={iso} style={{ padding: "12px 6px", textAlign: "center", borderLeft: "1px solid #F4F6F8" }}>
-                <div style={{ fontSize: 11, color: "#B4AA98", fontWeight: 700, letterSpacing: 0.6 }}>{dayLabel(d).toUpperCase()}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 700, letterSpacing: 0.6 }}>{dayLabel(d).toUpperCase()}</div>
                 <div style={{
                   fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 700, marginTop: 3, width: 32, height: 32, lineHeight: "32px",
                   borderRadius: "50%", margin: "3px auto 0",

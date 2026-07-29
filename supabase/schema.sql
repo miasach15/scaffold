@@ -11,6 +11,7 @@ create table if not exists profiles (
   work_style text not null default 'Mix of both',
   onboarded boolean not null default false,
   enabled_pages text[] not null default '{}',
+  theme_color text not null default 'violet',
   created_at timestamptz not null default now()
 );
 

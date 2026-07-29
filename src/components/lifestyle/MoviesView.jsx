@@ -82,11 +82,11 @@ export default function MoviesView({ userId }) {
 function WatchRow({ item, col, onToggle, onRate, onRemove }) {
   const watched = item.status === "Watched";
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: watched ? "#fff" : col.bg, border: `1px solid ${watched ? "#F1EEE9" : col.border}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: watched ? "#fff" : col.bg, border: `1px solid ${watched ? "#EDEDED" : col.border}` }}>
       <button
         onClick={onToggle}
         title={watched ? "Move back to watchlist" : "Mark watched"}
-        style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${watched ? col.border : "#DCD5C8"}`, background: watched ? col.bg : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: col.text }}
+        style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${watched ? col.border : "#D1D5DB"}`, background: watched ? col.bg : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: col.text }}
       >
         {watched ? "✓" : ""}
       </button>

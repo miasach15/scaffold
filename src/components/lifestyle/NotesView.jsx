@@ -73,7 +73,7 @@ function NoteCard({ note, onTogglePin, onRemove }) {
       style={{
         breakInside: "avoid", marginBottom: 12, borderRadius: 14, padding: 14,
         background: col.bg, border: `1px solid ${col.border}`,
-        boxShadow: "0 4px 14px rgba(90,70,50,0.06)", transition: "box-shadow .15s ease, transform .15s ease",
+        boxShadow: "0 4px 14px rgba(15,23,42,0.05)", transition: "box-shadow .15s ease, transform .15s ease",
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6 }}>

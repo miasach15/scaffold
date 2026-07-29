@@ -11,7 +11,7 @@ export default function StarRating({ value, onChange, color, size = 16 }) {
             title={`${n} star${n > 1 ? "s" : ""}`}
             style={{
               background: "none", border: "none", padding: 0, lineHeight: 1,
-              fontSize: size, color: filled ? color.text : "#DCD5C8",
+              fontSize: size, color: filled ? color.text : "#D1D5DB",
               transition: "transform .1s ease, color .1s ease",
             }}
           >

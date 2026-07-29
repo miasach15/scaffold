@@ -25,6 +25,7 @@ export default function PackingListsView({ userId }) {
         <input placeholder={'New list, e.g. "Tokyo trip"...'} value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && add()} />
         <button onClick={add} className="btn-primary" style={primaryBtn}>New list</button>
       </div>
+      <div style={{ fontSize: 11.5, color: "#9CA3AF", marginTop: -10, marginBottom: 18 }}>New lists start pre-filled with a full travel checklist — just delete what you don't need.</div>
 
       {lists.length === 0 ? (
         <EmptyState text="No packing lists yet. Start one above for your next trip." />

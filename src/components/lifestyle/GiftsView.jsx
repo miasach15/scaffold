@@ -47,7 +47,7 @@ export default function GiftsView({ userId }) {
             <SubHeader>{r}</SubHeader>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {byRecipient[r].map((g) => (
-                <div key={g.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: g.status === "Given" ? "#fff" : col.bg, border: `1px solid ${g.status === "Given" ? "#F1EEE9" : col.border}` }}>
+                <div key={g.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: g.status === "Given" ? "#fff" : col.bg, border: `1px solid ${g.status === "Given" ? "#EDEDED" : col.border}` }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, textDecoration: g.status === "Given" ? "line-through" : "none", opacity: g.status === "Given" ? 0.6 : 1 }}>{g.idea}</div>
                     {(g.occasion || g.price != null) && (

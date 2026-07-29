@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { DEFAULT_THEME } from "../lib/constants";
 
 const fromRow = (row) => ({
   name: row.name || "",
@@ -7,6 +8,7 @@ const fromRow = (row) => ({
   workStyle: row.work_style || "Mix of both",
   onboarded: !!row.onboarded,
   enabledPages: row.enabled_pages || [],
+  themeColor: row.theme_color || DEFAULT_THEME,
 });
 
 export function useProfile(userId) {
@@ -39,6 +41,7 @@ export function useProfile(userId) {
       if ("workStyle" in patch) dbPatch.work_style = patch.workStyle;
       if ("onboarded" in patch) dbPatch.onboarded = patch.onboarded;
       if ("enabledPages" in patch) dbPatch.enabled_pages = patch.enabledPages;
+      if ("themeColor" in patch) dbPatch.theme_color = patch.themeColor;
       await supabase.from("profiles").update(dbPatch).eq("id", userId);
     },
     [userId]

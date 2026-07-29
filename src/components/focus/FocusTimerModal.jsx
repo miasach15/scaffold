@@ -50,7 +50,7 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
                 <stop offset="100%" stopColor="#B5AEEA" />
               </linearGradient>
             </defs>
-            <circle cx="80" cy="80" r="70" fill="none" stroke="#F1EEE9" strokeWidth="10" />
+            <circle cx="80" cy="80" r="70" fill="none" stroke="#EDEDED" strokeWidth="10" />
             <circle
               cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : "url(#focusRingGradient)"} strokeWidth="10"
               strokeDasharray={2 * Math.PI * 70}

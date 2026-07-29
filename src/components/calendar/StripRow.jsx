@@ -3,8 +3,8 @@ import { daysUntil, toISO } from "../../lib/dateHelpers";
 
 export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #F1EEE9", minHeight: 28 }}>
-      <div style={{ fontSize: 10, color: "#B4AA98", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
+    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
+      <div style={{ fontSize: 10, color: "#9CA3AF", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
         const dayChips = chips.filter((c) => c.date === iso);
@@ -19,7 +19,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 if (data.taskId) onDropTask(data.taskId, iso);
               } catch {}
             } : undefined}
-            style={{ borderLeft: "1px solid #F4F1EA", padding: "3px", display: "flex", flexDirection: "column", gap: 3 }}
+            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3 }}
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);

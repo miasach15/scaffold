@@ -1,7 +1,7 @@
 import { serifFont } from "../../lib/constants";
 
 export function SectionHeader({ title, subtitle, Icon, tint }) {
-  const t = tint || { bg: "#F1EFEA", border: "#E5E1D8", text: "#3A3A3A" };
+  const t = tint || { bg: "#F1F3F5", border: "#E2E8F0", text: "#3A3A3A" };
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
       {Icon && (
@@ -11,13 +11,13 @@ export function SectionHeader({ title, subtitle, Icon, tint }) {
       )}
       <div>
         <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 500, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
-        <div style={{ fontSize: 13.5, color: "#A69C8D", marginTop: 4 }}>{subtitle}</div>
+        <div style={{ fontSize: 13.5, color: "#8B95A1", marginTop: 4 }}>{subtitle}</div>
       </div>
     </div>
   );
 }
 export function SubHeader({ children }) {
-  return <div style={{ fontSize: 11.5, fontWeight: 600, color: "#8A8272", letterSpacing: 0.5, textTransform: "uppercase", margin: "18px 0 8px", background: "#F3EFE7", display: "inline-block", padding: "5px 12px", borderRadius: 999 }}>{children}</div>;
+  return <div style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", letterSpacing: 0.5, textTransform: "uppercase", margin: "18px 0 8px", background: "#EFEFEF", display: "inline-block", padding: "5px 12px", borderRadius: 999 }}>{children}</div>;
 }
 export function AddRow({ children }) {
   return <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>{children}</div>;

@@ -8,7 +8,7 @@ export default function WorkItemRow({ item }) {
   const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : TASK_COLOR;
   const tinted = !item.done;
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1px solid ${tinted ? col.border : "#F1EEE9"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
       <Swatch color={col} size={22} />
       <div style={{ flex: 1, minWidth: 0 }}>

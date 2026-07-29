@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CATEGORY_COLORS, HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { CATEGORY_COLORS, HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, PRIMARY_TINT, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 
 export default function OnboardingQuiz({ onComplete }) {
@@ -33,7 +33,7 @@ export default function OnboardingQuiz({ onComplete }) {
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>
           {steps.map((s, i) => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY : "#EDE7DC" }} />
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY : "#E5E7EB" }} />
           ))}
         </div>
 
@@ -132,7 +132,7 @@ export default function OnboardingQuiz({ onComplete }) {
                   style={{
                     padding: "12px 14px", borderRadius: 10, fontSize: 14, fontWeight: 600, textAlign: "left",
                     border: `1.5px solid ${workStyle === w ? PRIMARY : "#E5E9ED"}`,
-                    background: workStyle === w ? "#E7E3FC" : "#fff",
+                    background: workStyle === w ? PRIMARY_TINT : "#fff",
                     color: "#000000",
                   }}
                 >
@@ -165,7 +165,7 @@ export default function OnboardingQuiz({ onComplete }) {
           )}
         </div>
         {step < lastStep && (
-          <button onClick={skip} style={{ ...ghostBtn, border: "none", background: "none", marginTop: 10, fontSize: 12, color: "#B4AA98", padding: 0 }}>Skip for now</button>
+          <button onClick={skip} style={{ ...ghostBtn, border: "none", background: "none", marginTop: 10, fontSize: 12, color: "#9CA3AF", padding: 0 }}>Skip for now</button>
         )}
       </div>
     </div>

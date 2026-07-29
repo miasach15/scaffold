@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { PACKING_LIST_TEMPLATE } from "../lib/constants";
 
 const itemFromRow = (row) => ({ id: row.id, title: row.title, packed: row.packed });
 const listFromRow = (row) => ({
@@ -33,12 +34,16 @@ export function usePackingLists(userId) {
   }, [load]);
 
   const addList = useCallback(
-    async (title) => {
+    async (title, useTemplate = true) => {
       const tt = title.trim();
       if (!userId || !tt) return;
       const row = { id: uid(), user_id: userId, title: tt };
-      setLists((ls) => [{ ...row, items: [] }, ...ls]);
+      const itemRows = useTemplate
+        ? PACKING_LIST_TEMPLATE.map((t) => ({ id: uid(), user_id: userId, list_id: row.id, title: t, packed: false }))
+        : [];
+      setLists((ls) => [{ ...row, items: itemRows.map(itemFromRow) }, ...ls]);
       await supabase.from("packing_lists").insert(row);
+      if (itemRows.length > 0) await supabase.from("packing_list_items").insert(itemRows);
     },
     [userId]
   );

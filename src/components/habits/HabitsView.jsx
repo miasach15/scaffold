@@ -47,7 +47,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 <Swatch color={doneToday ? HABIT_COLOR : { bg: "#F1F3F5", border: "#DCE1E6" }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14.5 }}>{h.title}</div>
-                  <div style={{ fontSize: 11.5, color: "#A69C8D", marginTop: 1 }}>{h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total</div>
+                  <div style={{ fontSize: 11.5, color: "#8B95A1", marginTop: 1 }}>{h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total</div>
                 </div>
                 <button
                   onClick={() => onSetDoneToday(h.id, !doneToday)}
