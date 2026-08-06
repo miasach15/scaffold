@@ -42,10 +42,18 @@ export function useNotes(userId) {
     await supabase.from("notes").update({ pinned }).eq("id", id);
   }, []);
 
+  const updateNote = useCallback(async (id, title, body, color) => {
+    const bb = body.trim();
+    if (!bb) return;
+    const patch = { title: title.trim() || null, body: bb, color };
+    setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, ...patch } : n)));
+    await supabase.from("notes").update(patch).eq("id", id);
+  }, []);
+
   const removeNote = useCallback(async (id) => {
     setNotes((ns) => ns.filter((n) => n.id !== id));
     await supabase.from("notes").delete().eq("id", id);
   }, []);
 
-  return { notes, loading, addNote, setPinned, removeNote };
+  return { notes, loading, addNote, setPinned, updateNote, removeNote };
 }

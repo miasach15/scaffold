@@ -71,7 +71,7 @@ export default function EducationView({
     return {
       key: `s-${t.id}`, title: t.title, subtitle: parent ? parent.title : null,
       done: t.done, date: t.date, dateLabel: t.start != null ? `${t.date} · ${decimalToTimeLabel(t.start)}` : `${t.date} · all-day`,
-      priority: t.priority || "Low", colorKind: "task",
+      colorKind: "task",
       onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
@@ -79,7 +79,7 @@ export default function EducationView({
   const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e)).map((e) => ({
     key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, dateLabel: e.dueDate,
-    priority: null, colorKind: "edu", eduType: "Homework",
+    colorKind: "edu", eduType: "Homework",
     onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null, onRemove: () => onRemoveEduItem(e.id),
   }));
   const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
@@ -90,7 +90,7 @@ export default function EducationView({
   return (
     <div>
       <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." Icon={GraduationCap} tint={CATEGORY_COLORS.Education} />
-      <div style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+      <div data-tour="education-add" style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
         <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
         <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
           <option>Assignment</option><option>Test</option><option>Homework</option>

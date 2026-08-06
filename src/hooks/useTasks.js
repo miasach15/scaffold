@@ -10,7 +10,7 @@ const fromRow = (row) => ({
   duration: row.duration === null ? null : Number(row.duration),
   done: row.done,
   eduId: row.edu_id,
-  priority: row.priority || "Low",
+  category: row.category || "Personal",
 });
 
 export function useTasks(userId) {
@@ -30,7 +30,7 @@ export function useTasks(userId) {
   }, [load]);
 
   const addTask = useCallback(
-    async ({ title, date = null, start = null, duration = null, priority = "Low", eduId = null }) => {
+    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null }) => {
       if (!userId) return;
       const row = {
         id: uid(),
@@ -41,7 +41,7 @@ export function useTasks(userId) {
         duration,
         done: false,
         edu_id: eduId,
-        priority,
+        category,
       };
       setTasks((ts) => [...ts, fromRow(row)]);
       await supabase.from("tasks").insert(row);
@@ -53,6 +53,11 @@ export function useTasks(userId) {
   const setTaskDone = useCallback(async (id, done) => {
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done } : t)));
     await supabase.from("tasks").update({ done }).eq("id", id);
+  }, []);
+
+  const setTaskCategory = useCallback(async (id, category) => {
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, category } : t)));
+    await supabase.from("tasks").update({ category }).eq("id", id);
   }, []);
 
   const removeTask = useCallback(async (id) => {
@@ -71,5 +76,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, setTaskDone, removeTask, removeTasksByEduId, rescheduleTask };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask };
 }

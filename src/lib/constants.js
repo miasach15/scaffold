@@ -52,11 +52,6 @@ export const THEME_PRESETS = {
 export const DEFAULT_THEME = "violet";
 
 export const PAPER_BG = "#FAFAFA";
-export const PRIORITY_COLORS = {
-  Low: { bg: "#F1F3F5", border: "#DCE1E6", text: "#5A6472" },
-  Medium: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
-  Urgent: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
-};
 export const TONE = {
   danger: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
   warn: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },

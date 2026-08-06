@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Repeat } from "lucide-react";
+import { Repeat, History } from "lucide-react";
 import { HABIT_COLOR, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { deleteBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import Swatch from "../shared/Swatch";
 import { toISO } from "../../lib/dateHelpers";
+import HabitHistoryModal from "./HabitHistoryModal";
 
-export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDoneToday }) {
+export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDoneToday, onSetDone }) {
   const [title, setTitle] = useState("");
+  const [historyHabitId, setHistoryHabitId] = useState(null);
   const todayISO = toISO(new Date());
 
   const addHabit = (t) => {
@@ -17,15 +19,18 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
   const addedTitles = new Set(habits.map((h) => h.title.toLowerCase()));
   const available = SUGGESTED_HABITS.filter((s) => !addedTitles.has(s.toLowerCase()));
+  const historyHabit = habits.find((h) => h.id === historyHabitId) || null;
 
   return (
     <div>
       <SectionHeader title="Habits" subtitle="Progress over perfection. Missing a day doesn't reset anything." Icon={Repeat} tint={HABIT_COLOR} />
 
-      <AddRow>
-        <input placeholder="Add a custom habit..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addHabit()} />
-        <button onClick={() => addHabit()} className="btn-primary" style={primaryBtn}>Add</button>
-      </AddRow>
+      <div data-tour="habits-add">
+        <AddRow>
+          <input placeholder="Add a custom habit..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addHabit()} />
+          <button onClick={() => addHabit()} className="btn-primary" style={primaryBtn}>Add</button>
+        </AddRow>
+      </div>
 
       {available.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
@@ -45,11 +50,18 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
             return (
               <div key={h.id} className="hoverable" style={{ ...cardStyle, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12 }}>
                 <Swatch color={doneToday ? HABIT_COLOR : { bg: "#F1F3F5", border: "#DCE1E6" }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{h.title}</div>
-                  <div style={{ fontSize: 11.5, color: "#8B95A1", marginTop: 1 }}>{h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total</div>
-                </div>
                 <button
+                  onClick={() => setHistoryHabitId(h.id)}
+                  title="View history"
+                  style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0 }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{h.title}</div>
+                  <div style={{ fontSize: 11.5, color: "#8B95A1", marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
+                    <History size={11} strokeWidth={2.3} /> {h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total — view history
+                  </div>
+                </button>
+                <button
+                  data-tour="habits-markdone"
                   onClick={() => onSetDoneToday(h.id, !doneToday)}
                   style={{
                     padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700,
@@ -65,6 +77,10 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
             );
           })}
         </div>
+      )}
+
+      {historyHabit && (
+        <HabitHistoryModal habit={historyHabit} onSetDone={onSetDone} onClose={() => setHistoryHabitId(null)} />
       )}
     </div>
   );

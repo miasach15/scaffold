@@ -28,20 +28,22 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
     <div>
       <SectionHeader title="Goals" subtitle="Goal, then milestones, then the next small action." Icon={Target} tint={CATEGORY_COLORS.People} />
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+      <div data-tour="goals-filter" style={{ display: "flex", gap: 6, marginBottom: 14 }}>
         {["All", "Personal", "Health", "People"].map((c) => (
           <FilterPill key={c} label={c} active={filter === c} color={CATEGORY_COLORS[c]} onClick={() => setFilter(c)} />
         ))}
       </div>
 
-      <AddRow>
-        <input placeholder="Add a goal..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-          <option>Personal</option><option>Health</option><option>People</option>
-        </select>
-        <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
-        <button onClick={() => addGoal()} className="btn-primary" style={primaryBtn}>Add</button>
-      </AddRow>
+      <div data-tour="goals-add">
+        <AddRow>
+          <input placeholder="Add a goal..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
+          <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
+            <option>Personal</option><option>Health</option><option>People</option>
+          </select>
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
+          <button onClick={() => addGoal()} className="btn-primary" style={primaryBtn}>Add</button>
+        </AddRow>
+      </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
         <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested for {category}:</span>

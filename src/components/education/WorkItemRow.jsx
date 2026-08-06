@@ -1,4 +1,4 @@
-import { EDU_TYPE_COLORS, PRIORITY_COLORS, TASK_COLOR } from "../../lib/constants";
+import { EDU_TYPE_COLORS, TASK_COLOR } from "../../lib/constants";
 import { deleteBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
@@ -19,9 +19,6 @@ export default function WorkItemRow({ item }) {
         )}
         {item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>}
       </div>
-      {item.priority && item.priority !== "Low" && !item.done && (
-        <div style={{ fontSize: 10, fontWeight: 700, color: PRIORITY_COLORS[item.priority].text, background: "rgba(255,255,255,0.6)", border: `1px solid ${PRIORITY_COLORS[item.priority].border}`, padding: "2px 7px", borderRadius: 999 }}>{item.priority}</div>
-      )}
       <UrgencyBadge iso={item.date} done={item.done} />
       <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.dateLabel}</div>
       <button onClick={item.onRemove} className="btn-delete" style={deleteBtn}>×</button>

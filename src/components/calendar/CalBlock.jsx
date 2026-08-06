@@ -1,11 +1,13 @@
-import { PRIORITY_COLORS, ROW_H } from "../../lib/constants";
+import { ROW_H } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeLabel } from "../../lib/dateHelpers";
 
 export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const top = item.start * ROW_H;
   const height = Math.max((item.duration / 60) * ROW_H, 18);
-  const priority = item.priority || "Low";
-  const showPriority = isTask && priority !== "Low" && !done;
+  const categoryCol = isTask ? CATEGORY_COLORS[item.category || "Personal"] : null;
+  const showCategory = isTask && categoryCol && !done;
   return (
     <div
       onClick={isTask ? onOpenFocus : undefined}
@@ -13,9 +15,9 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
       onDragStart={isTask ? (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: item.id })) : undefined}
       style={{
         position: "absolute", top, left: 3, right: 3, height,
-        background: color.bg, border: `1.5px solid ${showPriority ? PRIORITY_COLORS[priority].border : color.border}`, borderRadius: 12,
+        background: color.bg, border: `1.5px solid ${showCategory ? categoryCol.border : color.border}`, borderRadius: 12,
         padding: "3px 8px", overflow: "hidden", cursor: isTask ? "grab" : "default", opacity: done ? 0.5 : 1,
-        boxShadow: showPriority ? `inset 3px 0 0 ${PRIORITY_COLORS[priority].text}` : "none",
+        boxShadow: showCategory ? `inset 3px 0 0 ${categoryCol.border}` : "none",
       }}
     >
       {isTask && (

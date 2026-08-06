@@ -54,9 +54,9 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction } = useGoals(userId);
-  const { habits, addHabit, addHabitsBulk, removeHabit, setDoneToday } = useHabits(userId);
+  const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
 
@@ -135,7 +135,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   };
 
   const addEduSession = (eduId, sessionTitle, date, time, duration, isAllDay) => {
-    addTask({ title: sessionTitle, date, start: isAllDay ? null : timeToDecimal(time), duration: isAllDay ? null : duration, eduId, priority: "Low" });
+    addTask({ title: sessionTitle, date, start: isAllDay ? null : timeToDecimal(time), duration: isAllDay ? null : duration, eduId, category: "Education" });
   };
 
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
@@ -207,7 +207,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onRemove={removeTask} onOpenFocus={openFocus} />
+          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} />
         )}
         {view === "goals" && (
           <GoalsView
@@ -223,7 +223,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           />
         )}
         {view === "habits" && (
-          <HabitsView habits={habits} onAddHabit={addHabit} onRemoveHabit={removeHabit} onSetDoneToday={setDoneToday} />
+          <HabitsView habits={habits} onAddHabit={addHabit} onRemoveHabit={removeHabit} onSetDoneToday={setDoneToday} onSetDone={setHabitDone} />
         )}
         {view === "journal" && (
           <JournalView entries={journalEntries} onAddEntry={addJournalEntry} onRemoveEntry={removeJournalEntry} />

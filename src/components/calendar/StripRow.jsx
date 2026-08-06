@@ -1,7 +1,7 @@
 import { TONE } from "../../lib/constants";
 import { daysUntil, toISO } from "../../lib/dateHelpers";
 
-export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask }) {
+export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
       <div style={{ fontSize: 10, color: "#9CA3AF", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
@@ -11,6 +11,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
         return (
           <div
             key={iso}
+            onClick={onAddClick ? () => onAddClick(iso) : undefined}
             onDragOver={onDropTask ? (e) => e.preventDefault() : undefined}
             onDrop={onDropTask ? (e) => {
               e.preventDefault();
@@ -19,7 +20,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 if (data.taskId) onDropTask(data.taskId, iso);
               } catch {}
             } : undefined}
-            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3 }}
+            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3, cursor: onAddClick ? "pointer" : undefined }}
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);
@@ -34,9 +35,9 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
               };
               const dragProps = c.kind === "task" ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: c.id })) } : {};
               return onChipClick ? (
-                <button key={c.kind + c.id} onClick={() => onChipClick(c)} style={style} {...dragProps}>{content}</button>
+                <button key={c.kind + c.id} onClick={(e) => { e.stopPropagation(); onChipClick(c); }} style={style} {...dragProps}>{content}</button>
               ) : (
-                <div key={c.kind + c.id} style={style} {...dragProps}>{content}</div>
+                <div key={c.kind + c.id} onClick={(e) => e.stopPropagation()} style={style} {...dragProps}>{content}</div>
               );
             })}
           </div>

@@ -7,10 +7,10 @@ export default function QuickAddModal({ initial, onClose, onSave }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(initial.date);
-  const [time, setTime] = useState(`${pad(initial.hour)}:00`);
+  const [time, setTime] = useState(`${pad(initial.hour ?? 9)}:00`);
   const [durationHours, setDurationHours] = useState(1);
   const [durationMinutes, setDurationMinutes] = useState(0);
-  const [allDay, setAllDay] = useState(false);
+  const [allDay, setAllDay] = useState(initial.hour == null);
   const [category, setCategory] = useState("Personal");
   const [repeat, setRepeat] = useState("None");
 

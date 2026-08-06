@@ -40,7 +40,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700 }}>{monthLabel(days[0])}</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button onClick={() => setWeekStart(startOfWeek(new Date()))} className="btn-ghost" style={ghostBtn}>Today</button>
           <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="btn-ghost" style={ghostBtn}>‹</button>
           <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="btn-ghost" style={ghostBtn}>›</button>
@@ -66,11 +66,13 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
           })}
         </div>
 
-        <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={null} />
+        <div data-tour="calendar-allday">
+          <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={null} onAddClick={(iso) => onCellClick(iso, null)} />
+        </div>
         <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
         <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
 
-        <div ref={scrollRef} style={{ display: "grid", gridTemplateColumns: `56px 1fr`, maxHeight: 560, overflowY: "auto" }}>
+        <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, maxHeight: 560, overflowY: "auto" }}>
           <div style={{ position: "relative", height: 24 * ROW_H }}>
             {Array.from({ length: 24 }, (_, h) => (
               <div key={h} style={{ position: "absolute", top: h * ROW_H - 6, right: 8, fontSize: 10.5, color: "#B4BCC5" }}>

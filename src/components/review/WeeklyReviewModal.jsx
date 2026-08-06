@@ -5,6 +5,39 @@ import { addDays, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 
+const CONFETTI_COLORS = ["#7B6EF0", "#F0923B", "#34A870", "#E8608F", "#2CAFA0", "#3E7BFA"];
+
+function Confetti() {
+  const pieces = Array.from({ length: 46 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.35,
+    duration: 1.6 + Math.random() * 1.1,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    size: 6 + Math.random() * 5,
+  }));
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 200 }}>
+      <style>{`
+        @keyframes confetti-fall {
+          0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+      {pieces.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute", top: 0, left: `${p.left}%`, width: p.size, height: p.size * 0.6,
+            background: p.color, borderRadius: 2,
+            animation: `confetti-fall ${p.duration}s ease-in ${p.delay}s forwards`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function ReviewSection({ title, items, color }) {
   return (
     <div style={{ marginBottom: 16 }}>
@@ -37,9 +70,12 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
   const entriesThisWeek = journalEntries.filter((e) => inWeek(e.date));
 
   const totalWins = tasksDone.length + eduDone.length + actionsDone.length;
+  const dow = new Date().getDay();
+  const isEndOfWeek = dow === 0 || dow === 6; // Saturday or Sunday
 
   return (
     <div style={overlayStyle} onClick={onClose}>
+      {isEndOfWeek && <Confetti />}
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
         <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 16 }}>{weekStart} to {weekEnd}</div>

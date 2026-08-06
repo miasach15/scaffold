@@ -52,6 +52,7 @@ create table if not exists tasks (
   done boolean not null default false,
   edu_id uuid references edu_items(id) on delete cascade,
   priority text not null default 'Low',
+  category text not null default 'Personal',
   created_at timestamptz not null default now()
 );
 

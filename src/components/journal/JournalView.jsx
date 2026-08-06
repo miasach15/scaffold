@@ -33,7 +33,7 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
       <SectionHeader title="Journal" Icon={BookOpen} tint={CATEGORY_COLORS.Personal} />
 
       <div style={{ ...cardStyle, padding: 16, marginBottom: 20 }}>
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        <div data-tour="journal-prompt" style={{ display: "flex", gap: 6, marginBottom: 12 }}>
           {Object.keys(JOURNAL_PROMPTS).map((c) => (
             <FilterPill key={c} label={c} active={category === c} onClick={() => { setCategory(c); shuffle(c); }} />
           ))}
