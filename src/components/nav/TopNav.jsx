@@ -115,10 +115,10 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
         </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 8 }}>
-          <button onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={15} />
           </button>
-          <button onClick={onOpenWeeklyReview} className="btn-ghost" style={ghostBtn}>Weekly Review</button>
+          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} className="btn-ghost" style={ghostBtn}>Weekly Review</button>
           <button onClick={onSignOut} className="btn-ghost" style={ghostBtn}>Sign out</button>
         </div>
       </div>

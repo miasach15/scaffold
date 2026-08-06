@@ -6,15 +6,19 @@ import { ghostBtn, primaryBtn } from "../../lib/styles";
 const CORE_STEPS = [
   { view: "calendar", selector: '[data-tour="calendar-allday"]', title: "All-day row", desc: "Click anywhere in this row to add an event that isn't tied to a specific time." },
   { view: "calendar", selector: '[data-tour="calendar-grid"]', title: "Time grid", desc: "Click any slot to add a timed event. Drag a task onto a new day or time to reschedule it." },
+  { view: "calendar", selector: '[data-tour="calendar-due"]', title: "Everything that's due", desc: "Goal deadlines (from Goals) and assignment/test due dates (from Education) land here automatically — click one to mark it done without leaving the calendar." },
+  { view: "calendar", selector: '[data-tour="calendar-tasksrow"]', title: "Your tasks, synced", desc: "Any task with a date shows up here too — give it a time and it becomes a block in the grid below instead. Everything stays in sync with the Tasks page." },
   { view: "calendar", selector: '[data-tour="calendar-nav"]', title: "Move around", desc: "Jump back to this week, or step to the previous/next week." },
-  { view: "tasks", selector: '[data-tour="tasks-add"]', title: "Add a task", desc: "Type a task, optionally give it a date, and hit Add." },
+  { view: "tasks", selector: '[data-tour="tasks-add"]', title: "Add a task", desc: "Type a task, optionally give it a date, and hit Add — give it a date and it'll appear on the Calendar automatically." },
   { view: "tasks", selector: '[data-tour="tasks-category"]', title: "Categorize it", desc: "Tag each task Education, Personal, Health, or People — click a task's colored dot any time to change it." },
-  { view: "goals", selector: '[data-tour="goals-add"]', title: "Set a goal", desc: "Give it a category and, if you want, a deadline. Then break it into milestones and small next actions." },
+  { view: "goals", selector: '[data-tour="goals-add"]', title: "Set a goal", desc: "Give it a category and, if you want, a deadline — that deadline (and each action's due date) shows up on the Calendar's Due row automatically. Then break it into milestones and small next actions." },
   { view: "goals", selector: '[data-tour="goals-filter"]', title: "Filter by category", desc: "Focus on one category of goals at a time." },
   { view: "habits", selector: '[data-tour="habits-add"]', title: "Track a habit", desc: "Add your own, or tap a suggestion below to get started fast." },
   { view: "habits", selector: '[data-tour="habits-markdone"]', title: "Mark it done", desc: "Tap to check off today. Click a habit's name to see a full calendar of which days you've kept it up, and toggle any past day." },
   { view: "journal", selector: '[data-tour="journal-prompt"]', title: "Prompts", desc: "Pick a category for a writing prompt, shuffle for a new one, or skip to free write." },
-  { view: "education", selector: '[data-tour="education-add"]', title: "Add work", desc: "Log an assignment, test, or homework with its due date — study sessions can be broken out from there." },
+  { view: "education", selector: '[data-tour="education-add"]', title: "Add work", desc: "Log an assignment, test, or homework with its due date — it shows up on the Calendar automatically. Break it into study sessions from the list below, and those become tasks that sync across Tasks and the Calendar too." },
+  { view: "calendar", selector: '[data-tour="nav-weekly-review"]', title: "Weekly Review", desc: "A wrap-up of everything you completed this week across tasks, goals, education, and habits — open it any time from here." },
+  { view: "calendar", selector: '[data-tour="nav-settings"]', title: "Settings", desc: "Change your accent color, or recolor each of the four categories — Education, Personal, Health, People — to whatever you like." },
 ];
 
 export default function TourOverlay({ setView, enabledPages, onFinish }) {

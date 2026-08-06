@@ -69,8 +69,12 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
         <div data-tour="calendar-allday">
           <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={null} onAddClick={(iso) => onCellClick(iso, null)} />
         </div>
-        <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
-        <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
+        <div data-tour="calendar-due">
+          <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
+        </div>
+        <div data-tour="calendar-tasksrow">
+          <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
+        </div>
 
         <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, maxHeight: 560, overflowY: "auto" }}>
           <div style={{ position: "relative", height: 24 * ROW_H }}>
