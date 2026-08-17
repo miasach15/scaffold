@@ -269,10 +269,6 @@ function ScaffoldApp({ userId, onSignOut }) {
         />
       )}
 
-      {tourOpen && (
-        <TourOverlay setView={setView} enabledPages={profile.enabledPages} onFinish={finishTour} />
-      )}
-
       {modal && (
         <QuickAddModal
           initial={modal}
@@ -302,6 +298,17 @@ function ScaffoldApp({ userId, onSignOut }) {
           eduItems={eduItems}
           journalEntries={journalEntries}
           onClose={() => setShowWeeklyReview(false)}
+        />
+      )}
+
+      {tourOpen && (
+        <TourOverlay
+          setView={setView}
+          enabledPages={profile.enabledPages}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenWeeklyReview={() => setShowWeeklyReview(true)}
+          onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); }}
+          onFinish={finishTour}
         />
       )}
     </div>
