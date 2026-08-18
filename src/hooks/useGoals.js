@@ -3,14 +3,20 @@ import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { distributeDates, toISO } from "../lib/dateHelpers";
 
-const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done });
+const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index });
 const milestoneFromRow = (row) => ({
   id: row.id,
   title: row.title,
   dueDate: row.due_date,
   actions: (row.goal_actions || [])
     .slice()
-    .sort((a, b) => a.created_at?.localeCompare(b.created_at))
+    .sort((a, b) => {
+      // existing rows may not have an order_index yet — fall back to creation order for those
+      if (a.order_index != null && b.order_index != null) return a.order_index - b.order_index;
+      if (a.order_index != null) return -1;
+      if (b.order_index != null) return 1;
+      return a.created_at?.localeCompare(b.created_at);
+    })
     .map(actionFromRow),
 });
 const goalFromRow = (row) => ({
@@ -125,15 +131,40 @@ export function useGoals(userId) {
   const addAction = useCallback(
     async (goalId, milestoneId, title, dueDate) => {
       if (!userId || !title.trim()) return;
-      const row = { id: uid(), user_id: userId, milestone_id: milestoneId, title: title.trim(), due_date: dueDate || null, done: false };
+      const goal = goals.find((g) => g.id === goalId);
+      const milestone = goal?.milestones.find((m) => m.id === milestoneId);
+      const orderIndex = milestone ? milestone.actions.length : 0;
+      const row = { id: uid(), user_id: userId, milestone_id: milestoneId, title: title.trim(), due_date: dueDate || null, done: false, order_index: orderIndex };
       setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
         ...g,
         milestones: g.milestones.map((m) => m.id !== milestoneId ? m : { ...m, actions: [...m.actions, actionFromRow(row)] }),
       }));
       await supabase.from("goal_actions").insert(row);
     },
-    [userId]
+    [userId, goals]
   );
+
+  // Swaps an action with its neighbor above/below and re-persists sequential
+  // order_index values for the whole milestone so future loads keep the order.
+  const moveAction = useCallback(async (goalId, milestoneId, actionId, direction) => {
+    const goal = goals.find((g) => g.id === goalId);
+    const milestone = goal?.milestones.find((m) => m.id === milestoneId);
+    if (!milestone) return;
+    const idx = milestone.actions.findIndex((a) => a.id === actionId);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= milestone.actions.length) return;
+
+    const reordered = milestone.actions.slice();
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+    const reindexed = reordered.map((a, i) => ({ ...a, orderIndex: i }));
+
+    setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
+      ...g,
+      milestones: g.milestones.map((m) => m.id !== milestoneId ? m : { ...m, actions: reindexed }),
+    }));
+
+    await Promise.all(reindexed.map((a) => supabase.from("goal_actions").update({ order_index: a.orderIndex }).eq("id", a.id)));
+  }, [goals]);
 
   const setActionDone = useCallback(async (goalId, milestoneId, actionId, done) => {
     setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
@@ -177,5 +208,5 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, setActionDone, removeAction, renameAction, setActionDueDate };
+  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate };
 }

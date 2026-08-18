@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { inputStyle } from "../../lib/styles";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onRenameAction, onSetActionDueDate }) {
+export default function MilestoneBlock({ milestone, col, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onRenameAction, onSetActionDueDate }) {
   const [actionTitle, setActionTitle] = useState("");
   const [actionDate, setActionDate] = useState("");
   const [editingMilestone, setEditingMilestone] = useState(false);
@@ -88,8 +89,26 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
       </div>
       {milestone.actions.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8, paddingLeft: 15 }}>
-          {milestone.actions.map((a) => (
+          {milestone.actions.map((a, i) => (
             <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+                <button
+                  onClick={() => onMoveAction(a.id, "up")}
+                  disabled={i === 0}
+                  title="Move up"
+                  style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: 0, color: i === 0 ? "#DADAD8" : "#93A0AD", display: "flex", lineHeight: 0 }}
+                >
+                  <ChevronUp size={11} strokeWidth={2.5} />
+                </button>
+                <button
+                  onClick={() => onMoveAction(a.id, "down")}
+                  disabled={i === milestone.actions.length - 1}
+                  title="Move down"
+                  style={{ background: "none", border: "none", cursor: i === milestone.actions.length - 1 ? "default" : "pointer", padding: 0, color: i === milestone.actions.length - 1 ? "#DADAD8" : "#93A0AD", display: "flex", lineHeight: 0 }}
+                >
+                  <ChevronDown size={11} strokeWidth={2.5} />
+                </button>
+              </div>
               <Checkbox checked={a.done} onClick={() => onSetActionDone(a.id, !a.done)} color={col} />
               {editingActionId === a.id ? (
                 <input

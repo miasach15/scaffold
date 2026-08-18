@@ -82,6 +82,7 @@ create table if not exists goal_actions (
   title text not null,
   due_date date,
   done boolean not null default false,
+  order_index integer,
   created_at timestamptz not null default now()
 );
 
