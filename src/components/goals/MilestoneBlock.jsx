@@ -4,13 +4,14 @@ import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onRenameAction }) {
+export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onRenameAction, onSetActionDueDate }) {
   const [actionTitle, setActionTitle] = useState("");
   const [actionDate, setActionDate] = useState("");
   const [editingMilestone, setEditingMilestone] = useState(false);
   const [milestoneDraft, setMilestoneDraft] = useState(milestone.title);
   const [editingActionId, setEditingActionId] = useState(null);
   const [actionDraft, setActionDraft] = useState("");
+  const [editingDateId, setEditingDateId] = useState(null);
   const done = milestone.actions.filter((a) => a.done).length;
   const total = milestone.actions.length;
   const milestoneDone = total > 0 && done === total;
@@ -93,8 +94,23 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
                   {a.title}
                 </div>
               )}
-              {a.dueDate && <UrgencyBadge iso={a.dueDate} done={a.done} />}
-              {a.dueDate && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{a.dueDate}</div>}
+              {editingDateId === a.id ? (
+                <input
+                  type="date"
+                  autoFocus
+                  value={a.dueDate || ""}
+                  onChange={(e) => { onSetActionDueDate(a.id, e.target.value); setEditingDateId(null); }}
+                  onBlur={() => setEditingDateId(null)}
+                  style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
+                />
+              ) : a.dueDate ? (
+                <>
+                  <UrgencyBadge iso={a.dueDate} done={a.done} />
+                  <div onClick={() => setEditingDateId(a.id)} title="Click to change date" style={{ fontSize: 10.5, color: "#93A0AD", cursor: "pointer" }}>{a.dueDate}</div>
+                </>
+              ) : (
+                <button onClick={() => setEditingDateId(a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ date</button>
+              )}
               <button onClick={() => onRemoveAction(a.id)} className="btn-delete" style={deleteBtn}>×</button>
             </div>
           ))}

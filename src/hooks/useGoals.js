@@ -121,6 +121,17 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").delete().eq("id", actionId);
   }, []);
 
+  const setActionDueDate = useCallback(async (goalId, milestoneId, actionId, dueDate) => {
+    setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
+      ...g,
+      milestones: g.milestones.map((m) => m.id !== milestoneId ? m : {
+        ...m,
+        actions: m.actions.map((a) => (a.id === actionId ? { ...a, dueDate: dueDate || null } : a)),
+      }),
+    }));
+    await supabase.from("goal_actions").update({ due_date: dueDate || null }).eq("id", actionId);
+  }, []);
+
   const renameAction = useCallback(async (goalId, milestoneId, actionId, title) => {
     if (!title.trim()) return;
     setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
@@ -133,5 +144,5 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction };
+  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction, setActionDueDate };
 }

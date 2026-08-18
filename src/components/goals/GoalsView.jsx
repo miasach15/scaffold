@@ -7,7 +7,7 @@ import { inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
 
-export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onAddAction, onSetActionDone, onRemoveAction, onRenameAction }) {
+export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onAddAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [filter, setFilter] = useState("All");
   const [title, setTitle] = useState("");
@@ -131,6 +131,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
               onSetActionDone={onSetActionDone}
               onRemoveAction={onRemoveAction}
               onRenameAction={onRenameAction}
+              onSetActionDueDate={onSetActionDueDate}
             />
           ))}
         </div>

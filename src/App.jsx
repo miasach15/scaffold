@@ -55,7 +55,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction } = useGoals(userId);
+  const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
@@ -232,6 +232,7 @@ function ScaffoldApp({ userId, onSignOut }) {
             onSetActionDone={setActionDone}
             onRemoveAction={removeAction}
             onRenameAction={renameAction}
+            onSetActionDueDate={setActionDueDate}
           />
         )}
         {view === "habits" && (
