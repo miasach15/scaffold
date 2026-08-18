@@ -57,27 +57,42 @@ serve(async (req) => {
 
 Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 small, specific, actionable next actions — things that could go on a to-do list, not vague advice. Titles should be short and concrete, no filler words like "consider" or "try to".`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-opus-5",
-        max_tokens: 2000,
-        output_config: {
-          effort: "medium",
-          format: { type: "json_schema", schema: PLAN_SCHEMA },
+    // Anthropic's API occasionally returns a transient overloaded_error / 429 —
+    // retry a couple times with backoff before giving up.
+    let res: Response | null = null;
+    let lastErrText = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
         },
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+        body: JSON.stringify({
+          model: "claude-opus-5",
+          max_tokens: 2000,
+          output_config: {
+            effort: "medium",
+            format: { type: "json_schema", schema: PLAN_SCHEMA },
+          },
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      return new Response(JSON.stringify({ error: errText }), { status: 502, headers: corsHeaders });
+      if (res.ok) break;
+
+      lastErrText = await res.text();
+      const retryable = res.status === 429 || res.status === 529 || lastErrText.includes("overloaded_error");
+      if (!retryable || attempt === 2) break;
+      await new Promise((r) => setTimeout(r, 600 * (attempt + 1) * (attempt + 1))); // 600ms, 2400ms
+    }
+
+    if (!res || !res.ok) {
+      const friendly = lastErrText.includes("overloaded_error")
+        ? "Claude is a bit overloaded right now — try again in a few seconds."
+        : lastErrText;
+      return new Response(JSON.stringify({ error: friendly }), { status: 502, headers: corsHeaders });
     }
 
     const data = await res.json();
