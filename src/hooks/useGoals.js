@@ -58,6 +58,12 @@ export function useGoals(userId) {
     await supabase.from("goals").delete().eq("id", goalId);
   }, []);
 
+  const renameGoal = useCallback(async (goalId, title) => {
+    if (!title.trim()) return;
+    setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, title: title.trim() })));
+    await supabase.from("goals").update({ title: title.trim() }).eq("id", goalId);
+  }, []);
+
   const addMilestone = useCallback(
     async (goalId, title) => {
       if (!userId || !title.trim()) return null;
@@ -72,6 +78,15 @@ export function useGoals(userId) {
   const removeMilestone = useCallback(async (goalId, milestoneId) => {
     setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, milestones: g.milestones.filter((m) => m.id !== milestoneId) })));
     await supabase.from("milestones").delete().eq("id", milestoneId);
+  }, []);
+
+  const renameMilestone = useCallback(async (goalId, milestoneId, title) => {
+    if (!title.trim()) return;
+    setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : {
+      ...g,
+      milestones: g.milestones.map((m) => (m.id !== milestoneId ? m : { ...m, title: title.trim() })),
+    })));
+    await supabase.from("milestones").update({ title: title.trim() }).eq("id", milestoneId);
   }, []);
 
   const addAction = useCallback(
@@ -106,5 +121,17 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").delete().eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction };
+  const renameAction = useCallback(async (goalId, milestoneId, actionId, title) => {
+    if (!title.trim()) return;
+    setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
+      ...g,
+      milestones: g.milestones.map((m) => m.id !== milestoneId ? m : {
+        ...m,
+        actions: m.actions.map((a) => (a.id === actionId ? { ...a, title: title.trim() } : a)),
+      }),
+    }));
+    await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
+  }, []);
+
+  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction };
 }

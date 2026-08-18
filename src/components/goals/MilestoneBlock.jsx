@@ -4,9 +4,13 @@ import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone }) {
+export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onRenameAction }) {
   const [actionTitle, setActionTitle] = useState("");
   const [actionDate, setActionDate] = useState("");
+  const [editingMilestone, setEditingMilestone] = useState(false);
+  const [milestoneDraft, setMilestoneDraft] = useState(milestone.title);
+  const [editingActionId, setEditingActionId] = useState(null);
+  const [actionDraft, setActionDraft] = useState("");
   const done = milestone.actions.filter((a) => a.done).length;
   const total = milestone.actions.length;
   const milestoneDone = total > 0 && done === total;
@@ -17,11 +21,49 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
     setActionTitle(""); setActionDate("");
   };
 
+  const startEditMilestone = () => {
+    setMilestoneDraft(milestone.title);
+    setEditingMilestone(true);
+  };
+  const saveMilestone = () => {
+    if (milestoneDraft.trim() && milestoneDraft.trim() !== milestone.title) onRenameMilestone(milestoneDraft);
+    setEditingMilestone(false);
+  };
+
+  const startEditAction = (a) => {
+    setActionDraft(a.title);
+    setEditingActionId(a.id);
+  };
+  const saveAction = (a) => {
+    if (actionDraft.trim() && actionDraft.trim() !== a.title) onRenameAction(a.id, actionDraft);
+    setEditingActionId(null);
+  };
+
   return (
     <div style={{ border: "1px solid #ECECEC", borderRadius: 10, padding: "8px 10px", background: "#FDFCFA" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         <div style={{ width: 7, height: 7, borderRadius: 4, background: milestoneDone ? col.border : "#DADAD8", flexShrink: 0 }} />
-        <div style={{ flex: 1, fontSize: 13, fontWeight: 700, textDecoration: milestoneDone ? "line-through" : "none", opacity: milestoneDone ? 0.6 : 1 }}>{milestone.title}</div>
+        {editingMilestone ? (
+          <input
+            autoFocus
+            value={milestoneDraft}
+            onChange={(e) => setMilestoneDraft(e.target.value)}
+            onBlur={saveMilestone}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveMilestone();
+              if (e.key === "Escape") setEditingMilestone(false);
+            }}
+            style={{ ...inputStyle, flex: 1, fontSize: 13, fontWeight: 700, padding: "3px 6px" }}
+          />
+        ) : (
+          <div
+            onClick={startEditMilestone}
+            title="Click to edit"
+            style={{ flex: 1, fontSize: 13, fontWeight: 700, textDecoration: milestoneDone ? "line-through" : "none", opacity: milestoneDone ? 0.6 : 1, cursor: "text" }}
+          >
+            {milestone.title}
+          </div>
+        )}
         {total > 0 && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{done}/{total}</div>}
         <button onClick={onRemoveMilestone} className="btn-delete" style={deleteBtn}>×</button>
       </div>
@@ -30,7 +72,27 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
           {milestone.actions.map((a) => (
             <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Checkbox checked={a.done} onClick={() => onSetActionDone(a.id, !a.done)} color={col} />
-              <div style={{ flex: 1, fontSize: 13, textDecoration: a.done ? "line-through" : "none", opacity: a.done ? 0.5 : 1 }}>{a.title}</div>
+              {editingActionId === a.id ? (
+                <input
+                  autoFocus
+                  value={actionDraft}
+                  onChange={(e) => setActionDraft(e.target.value)}
+                  onBlur={() => saveAction(a)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveAction(a);
+                    if (e.key === "Escape") setEditingActionId(null);
+                  }}
+                  style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "3px 6px" }}
+                />
+              ) : (
+                <div
+                  onClick={() => startEditAction(a)}
+                  title="Click to edit"
+                  style={{ flex: 1, fontSize: 13, textDecoration: a.done ? "line-through" : "none", opacity: a.done ? 0.5 : 1, cursor: "text" }}
+                >
+                  {a.title}
+                </div>
+              )}
               {a.dueDate && <UrgencyBadge iso={a.dueDate} done={a.done} />}
               {a.dueDate && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{a.dueDate}</div>}
               <button onClick={() => onRemoveAction(a.id)} className="btn-delete" style={deleteBtn}>×</button>

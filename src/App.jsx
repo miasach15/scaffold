@@ -55,7 +55,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction } = useGoals(userId);
+  const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction } = useGoals(userId);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
@@ -224,11 +224,14 @@ function ScaffoldApp({ userId, onSignOut }) {
             defaultCategory={["Personal", "Health", "People"].find((c) => profile.focusAreas.includes(c)) || "Personal"}
             onAddGoal={addGoal}
             onRemoveGoal={removeGoal}
+            onRenameGoal={renameGoal}
             onAddMilestone={addMilestone}
             onRemoveMilestone={removeMilestone}
+            onRenameMilestone={renameMilestone}
             onAddAction={addAction}
             onSetActionDone={setActionDone}
             onRemoveAction={removeAction}
+            onRenameAction={renameAction}
           />
         )}
         {view === "habits" && (
