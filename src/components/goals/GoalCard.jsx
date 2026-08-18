@@ -6,7 +6,7 @@ import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onAddAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
+export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
@@ -88,6 +88,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
                 onRemoveAction={(aid) => onRemoveAction(goal.id, m.id, aid)}
                 onRemoveMilestone={() => onRemoveMilestone(goal.id, m.id)}
                 onRenameMilestone={(title) => onRenameMilestone(goal.id, m.id, title)}
+                onSetMilestoneDueDate={(date) => onSetMilestoneDueDate(goal.id, m.id, date)}
                 onRenameAction={(aid, title) => onRenameAction(goal.id, m.id, aid, title)}
                 onSetActionDueDate={(aid, date) => onSetActionDueDate(goal.id, m.id, aid, date)}
               />

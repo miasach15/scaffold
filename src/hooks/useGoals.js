@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { distributeDates, toISO } from "../lib/dateHelpers";
 
 const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done });
 const milestoneFromRow = (row) => ({
   id: row.id,
   title: row.title,
+  dueDate: row.due_date,
   actions: (row.goal_actions || [])
     .slice()
     .sort((a, b) => a.created_at?.localeCompare(b.created_at))
@@ -89,6 +91,37 @@ export function useGoals(userId) {
     await supabase.from("milestones").update({ title: title.trim() }).eq("id", milestoneId);
   }, []);
 
+  // Setting/changing a milestone's target date auto-fills due dates on any of its
+  // actions that don't have one yet, spreading them evenly up to that date.
+  const setMilestoneDueDate = useCallback(async (goalId, milestoneId, dueDate) => {
+    const goal = goals.find((g) => g.id === goalId);
+    const milestone = goal?.milestones.find((m) => m.id === milestoneId);
+    if (!milestone) return;
+
+    const undated = milestone.actions.filter((a) => !a.dueDate);
+    const dateForAction = new Map();
+    if (dueDate && undated.length > 0) {
+      const todayISO = toISO(new Date());
+      const startISO = dueDate > todayISO ? todayISO : dueDate;
+      const autoDates = distributeDates(startISO, dueDate, undated.length);
+      undated.forEach((a, i) => dateForAction.set(a.id, autoDates[i]));
+    }
+
+    setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : {
+      ...g,
+      milestones: g.milestones.map((m) => (m.id !== milestoneId ? m : {
+        ...m,
+        dueDate: dueDate || null,
+        actions: m.actions.map((a) => (dateForAction.has(a.id) ? { ...a, dueDate: dateForAction.get(a.id) } : a)),
+      })),
+    })));
+
+    await supabase.from("milestones").update({ due_date: dueDate || null }).eq("id", milestoneId);
+    for (const [actionId, d] of dateForAction) {
+      await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId);
+    }
+  }, [goals]);
+
   const addAction = useCallback(
     async (goalId, milestoneId, title, dueDate) => {
       if (!userId || !title.trim()) return;
@@ -144,5 +177,5 @@ export function useGoals(userId) {
     await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, addAction, setActionDone, removeAction, renameAction, setActionDueDate };
+  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, setActionDone, removeAction, renameAction, setActionDueDate };
 }

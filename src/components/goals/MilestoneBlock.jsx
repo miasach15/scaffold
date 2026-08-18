@@ -4,7 +4,7 @@ import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onRenameAction, onSetActionDueDate }) {
+export default function MilestoneBlock({ milestone, col, onAddAction, onSetActionDone, onRemoveAction, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onRenameAction, onSetActionDueDate }) {
   const [actionTitle, setActionTitle] = useState("");
   const [actionDate, setActionDate] = useState("");
   const [editingMilestone, setEditingMilestone] = useState(false);
@@ -12,6 +12,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
   const [editingActionId, setEditingActionId] = useState(null);
   const [actionDraft, setActionDraft] = useState("");
   const [editingDateId, setEditingDateId] = useState(null);
+  const [editingMilestoneDate, setEditingMilestoneDate] = useState(false);
   const done = milestone.actions.filter((a) => a.done).length;
   const total = milestone.actions.length;
   const milestoneDone = total > 0 && done === total;
@@ -66,6 +67,23 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onSetActio
           </div>
         )}
         {total > 0 && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{done}/{total}</div>}
+        {editingMilestoneDate ? (
+          <input
+            type="date"
+            autoFocus
+            value={milestone.dueDate || ""}
+            onChange={(e) => { onSetMilestoneDueDate(e.target.value); setEditingMilestoneDate(false); }}
+            onBlur={() => setEditingMilestoneDate(false)}
+            style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
+          />
+        ) : milestone.dueDate ? (
+          <>
+            <UrgencyBadge iso={milestone.dueDate} done={milestoneDone} />
+            <div onClick={() => setEditingMilestoneDate(true)} title="Click to change target date" style={{ fontSize: 10.5, color: "#93A0AD", cursor: "pointer", whiteSpace: "nowrap" }}>{milestone.dueDate}</div>
+          </>
+        ) : (
+          <button onClick={() => setEditingMilestoneDate(true)} title="Set a target date — this will auto-fill dates for actions below" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ target date</button>
+        )}
         <button onClick={onRemoveMilestone} className="btn-delete" style={deleteBtn}>×</button>
       </div>
       {milestone.actions.length > 0 && (

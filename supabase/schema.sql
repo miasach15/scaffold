@@ -71,6 +71,7 @@ create table if not exists milestones (
   user_id uuid not null references auth.users(id) on delete cascade,
   goal_id uuid not null references goals(id) on delete cascade,
   title text not null,
+  due_date date,
   created_at timestamptz not null default now()
 );
 

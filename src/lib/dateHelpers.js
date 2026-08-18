@@ -86,6 +86,21 @@ export const repeatDates = (startISO, repeat, customDays) => {
   }
   return dates.length ? dates : [startISO];
 };
+// Spreads `count` items evenly across the range (startISO, endISO], with the
+// last item always landing exactly on endISO. Used to auto-assign due dates
+// to a milestone's small actions once the milestone itself gets a target date.
+export const distributeDates = (startISO, endISO, count) => {
+  if (count <= 0) return [];
+  const start = new Date(startISO + "T00:00:00");
+  const end = new Date(endISO + "T00:00:00");
+  const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+  const dates = [];
+  for (let i = 1; i <= count; i++) {
+    const offset = Math.round((totalDays * i) / count);
+    dates.push(toISO(addDays(start, offset)));
+  }
+  return dates;
+};
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
   const startOffset = (first.getDay() + 6) % 7; // Monday = 0
