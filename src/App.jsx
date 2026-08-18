@@ -311,6 +311,10 @@ function ScaffoldApp({ userId, onSignOut }) {
       {editingEvent && (
         <QuickAddModal
           event={editingEvent}
+          hasFollowing={events.some((e) =>
+            e.id !== editingEvent.id && e.title === editingEvent.title && e.category === editingEvent.category &&
+            e.start === editingEvent.start && e.duration === editingEvent.duration && e.date >= editingEvent.date
+          )}
           onClose={() => setEditingEvent(null)}
           onUpdate={({ id, repeat, customDays, ...patch }) => {
             updateEvent(id, patch);
@@ -322,7 +326,18 @@ function ScaffoldApp({ userId, onSignOut }) {
             }
             setEditingEvent(null);
           }}
-          onDelete={(id) => { removeEvent(id); setEditingEvent(null); }}
+          onDelete={async (id, mode) => {
+            if (mode === "following") {
+              const ids = events
+                .filter((e) => e.title === editingEvent.title && e.category === editingEvent.category &&
+                  e.start === editingEvent.start && e.duration === editingEvent.duration && e.date >= editingEvent.date)
+                .map((e) => e.id);
+              for (const eid of ids) await removeEvent(eid);
+            } else {
+              await removeEvent(id);
+            }
+            setEditingEvent(null);
+          }}
         />
       )}
 

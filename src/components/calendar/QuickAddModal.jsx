@@ -4,9 +4,10 @@ import { TONE } from "../../lib/constants";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 
-export default function QuickAddModal({ initial, event, onClose, onSave, onUpdate, onDelete }) {
+export default function QuickAddModal({ initial, event, hasFollowing, onClose, onSave, onUpdate, onDelete }) {
   const CATEGORY_COLORS = useCategoryColors();
   const isEdit = !!event;
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [title, setTitle] = useState(event?.title || "");
   const [date, setDate] = useState(event ? event.date : initial.date);
@@ -119,20 +120,34 @@ export default function QuickAddModal({ initial, event, onClose, onSave, onUpdat
             This turns this event into a repeating series — future occurrences will be added when you save.
           </div>
         )}
-        <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
-          {isEdit && (
-            <button onClick={() => onDelete(event.id)} className="btn-ghost" style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}>Delete</button>
-          )}
-          <button onClick={onClose} className="btn-ghost" style={ghostBtn}>Cancel</button>
-          <button
-            disabled={!title.trim()}
-            onClick={save}
-            className="btn-primary"
-            style={{ ...primaryBtn, flex: 1, opacity: title.trim() ? 1 : 0.5 }}
-          >
-            {isEdit ? "Save changes" : "Add event"}
-          </button>
-        </div>
+        {isEdit && confirmDelete ? (
+          <div style={{ display: "flex", gap: 8, marginTop: 18, alignItems: "center" }}>
+            <button onClick={() => onDelete(event.id, "one")} className="btn-ghost" style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}>This one</button>
+            <button onClick={() => onDelete(event.id, "following")} className="btn-ghost" style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}>This + following</button>
+            <button onClick={() => setConfirmDelete(false)} className="btn-ghost" style={ghostBtn}>Cancel</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+            {isEdit && (
+              <button
+                onClick={() => (hasFollowing ? setConfirmDelete(true) : onDelete(event.id, "one"))}
+                className="btn-ghost"
+                style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}
+              >
+                Delete
+              </button>
+            )}
+            <button onClick={onClose} className="btn-ghost" style={ghostBtn}>Cancel</button>
+            <button
+              disabled={!title.trim()}
+              onClick={save}
+              className="btn-primary"
+              style={{ ...primaryBtn, flex: 1, opacity: title.trim() ? 1 : 0.5 }}
+            >
+              {isEdit ? "Save changes" : "Add event"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
