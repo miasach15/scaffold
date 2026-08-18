@@ -55,7 +55,11 @@ serve(async (req) => {
 
     const prompt = `The user wants to achieve this outcome: "${outcome.trim()}"${category ? ` (category: ${category})` : ""}.
 
-Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 small, specific, actionable next actions — things that could go on a to-do list, not vague advice. Titles should be short and concrete, no filler words like "consider" or "try to".`;
+Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 small, specific, actionable next actions — things that could go on a to-do list, not vague advice.
+
+Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
+- Milestone titles: max ~6 words.
+- Action titles: max ~4-5 words (aim under 30 characters). Lead with a verb (e.g. "Book flights", "Email advisor", "Draft outline") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about". If the full idea needs more words, cut it down to the core verb + object and drop the rest.`;
 
     // Anthropic's API occasionally returns a transient overloaded_error / 429 —
     // retry a couple times with backoff before giving up.

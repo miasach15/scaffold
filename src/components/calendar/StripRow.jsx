@@ -32,12 +32,14 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 boxShadow: overdue ? `inset 2px 0 0 ${TONE.danger.text}` : "none",
                 textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 600,
                 cursor: c.kind === "task" ? "grab" : onChipClick ? "pointer" : "default",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%",
               };
               const dragProps = c.kind === "task" ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: c.id })) } : {};
+              const fullLabel = chipLabel(c);
               return onChipClick ? (
-                <button key={c.kind + c.id} onClick={(e) => { e.stopPropagation(); onChipClick(c); }} style={style} {...dragProps}>{content}</button>
+                <button key={c.kind + c.id} title={fullLabel} onClick={(e) => { e.stopPropagation(); onChipClick(c); }} style={style} {...dragProps}>{content}</button>
               ) : (
-                <div key={c.kind + c.id} onClick={(e) => e.stopPropagation()} style={style} {...dragProps}>{content}</div>
+                <div key={c.kind + c.id} title={fullLabel} onClick={(e) => e.stopPropagation()} style={style} {...dragProps}>{content}</div>
               );
             })}
           </div>
