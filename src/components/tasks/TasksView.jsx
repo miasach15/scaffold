@@ -6,7 +6,6 @@ import { timeToDecimal } from "../../lib/dateHelpers";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import TaskRow from "./TaskRow";
-import PriorityBand from "./PriorityBand";
 
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenFocus }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -28,7 +27,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     setTitle(""); setDate(""); setTime("");
   };
 
-  const scheduled = tasks.filter((t) => t.date).sort((a, b) => a.date.localeCompare(b.date));
+  const scheduled = tasks.filter((t) => t.date).sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
   const unscheduled = tasks.filter((t) => !t.date);
 
   return (
@@ -79,16 +78,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       {scheduled.length === 0 ? (
         <EmptyState text="No scheduled tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
-        CATEGORY_KEYS.map((cat) => {
-          const group = scheduled.filter((t) => (t.category || "Personal") === cat);
-          if (group.length === 0) return null;
-          return (
-            <div key={cat} style={{ marginBottom: 16 }}>
-              <PriorityBand label={cat} count={group.length} color={CATEGORY_COLORS[cat]} />
-              <List>{group.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />)}</List>
-            </div>
-          );
-        })
+        <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />)}</List>
       )}
     </div>
   );
