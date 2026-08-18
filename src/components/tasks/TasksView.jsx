@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckSquare } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { timeToDecimal } from "../../lib/dateHelpers";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import TaskRow from "./TaskRow";
@@ -11,19 +12,20 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [allDay, setAllDay] = useState(false);
+  const [time, setTime] = useState("");
   const [category, setCategory] = useState("Personal");
 
   const add = () => {
     if (!title.trim()) return;
+    const hasTime = date && time;
     onAddTask({
       title: title.trim(),
       date: date || null,
-      start: date && !allDay ? 9 : null,
-      duration: date && !allDay ? 60 : null,
+      start: hasTime ? timeToDecimal(time) : null,
+      duration: hasTime ? 60 : null,
       category,
     });
-    setTitle(""); setDate("");
+    setTitle(""); setDate(""); setTime("");
   };
 
   const scheduled = tasks.filter((t) => t.date).sort((a, b) => a.date.localeCompare(b.date));
@@ -41,10 +43,11 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
         {date && (
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
-            <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
-            All-day (shows in "Tasks" on the Calendar instead of a time slot)
-          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
+            <span>Time (optional):</span>
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
+            <span style={{ fontSize: 11, color: "#B4BCC5" }}>Leave blank for an all-day task</span>
+          </div>
         )}
         <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 12, color: "#93A0AD" }}>Category:</span>
