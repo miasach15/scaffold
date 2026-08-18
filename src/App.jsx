@@ -207,7 +207,7 @@ function ScaffoldApp({ userId, onSignOut }) {
 
       <div
         style={{
-          maxWidth: 1100, margin: "0 auto", width: "100%", padding: view === "calendar" ? "16px 16px 12px" : "20px 16px 60px",
+          maxWidth: view === "calendar" ? "none" : 1100, margin: "0 auto", width: "100%", padding: view === "calendar" ? "16px 24px 12px" : "20px 16px 60px",
           flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
           overflowY: view === "calendar" ? "hidden" : "auto",
         }}
