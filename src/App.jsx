@@ -188,6 +188,8 @@ function ScaffoldApp({ userId, onSignOut }) {
         input:focus, select:focus, textarea:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: #D9D9D9; border-radius: 4px; }
+        .topnav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .topnav-scroll::-webkit-scrollbar { display: none; }
         .btn-primary:hover:not(:disabled) { box-shadow: 0 3px 10px rgba(110,147,183,0.35); transform: translateY(-1px); }
         .btn-ghost:hover:not(:disabled) { background: #F5F5F5 !important; border-color: #D1D5DB !important; }
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
