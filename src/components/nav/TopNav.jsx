@@ -54,19 +54,19 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
 
   return (
     <div style={{ borderBottom: "1px solid rgba(226,226,226,0.7)", position: "sticky", top: 0, background: "rgba(250,250,250,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 20 }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, marginRight: 8 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 20, flexWrap: "nowrap", overflowX: "auto" }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, marginRight: 8, flexShrink: 0 }}>
           Scaffold
         </div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "nowrap", flexShrink: 0 }}>
           {primary.map((p) => (
             <NavTab key={p.key} active={view === p.key} onClick={() => setView(p.key)} label={p.label} Icon={p.icon} />
           ))}
         </div>
-        <div style={{ width: 1, height: 20, background: "#E2E8F0", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 20, background: "#E2E8F0", margin: "0 4px", flexShrink: 0 }} />
         <NavTab active={view === "education"} onClick={() => setView("education")} label="Education" Icon={GraduationCap} />
 
-        <div style={{ position: "relative" }} ref={menuRef}>
+        <div style={{ position: "relative", flexShrink: 0 }} ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             style={{
@@ -114,7 +114,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
           )}
         </div>
 
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 6 }}>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 6, flexShrink: 0 }}>
           <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={15} />
           </button>
