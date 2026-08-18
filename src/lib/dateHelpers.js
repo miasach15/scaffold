@@ -68,18 +68,23 @@ export const dateRangeISO = (startISO, endISO) => {
 };
 export const formatShortDate = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-export const repeatDates = (startISO, repeat) => {
+// customDays: array of day-of-week ints (0=Sun..6=Sat), only used when repeat === "Custom"
+export const repeatDates = (startISO, repeat, customDays) => {
   if (!repeat || repeat === "None") return [startISO];
   const dates = [];
   let cur = new Date(startISO + "T00:00:00");
-  const count = repeat === "Daily" ? 60 : repeat === "Weekdays" ? 60 : 12; // ~2 months of daily/weekdays, ~3 months weekly
-  for (let i = 0; i < count && dates.length < 60; i++) {
+  const isWeekly = repeat === "Weekly";
+  const isWeekdays = repeat === "Weekdays";
+  const isCustom = repeat === "Custom";
+  const step = isWeekly ? 7 : 1;
+  const iterations = isWeekly ? 12 : 90; // ~3 months weekly, ~3 months day-by-day
+  for (let i = 0; i < iterations && dates.length < 60; i++) {
     const dow = cur.getDay();
-    const include = repeat === "Weekly" ? true : repeat === "Weekdays" ? dow !== 0 && dow !== 6 : true;
+    const include = isWeekly ? true : isWeekdays ? dow !== 0 && dow !== 6 : isCustom ? (customDays || []).includes(dow) : true; // Daily
     if (include) dates.push(toISO(cur));
-    cur = repeat === "Weekly" ? addDays(cur, 7) : addDays(cur, 1);
+    cur = addDays(cur, step);
   }
-  return dates;
+  return dates.length ? dates : [startISO];
 };
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);

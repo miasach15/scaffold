@@ -1,15 +1,18 @@
-import { useState } from "react";
-import { Repeat, History } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Repeat, History, Shuffle } from "lucide-react";
 import { HABIT_COLOR, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
-import { deleteBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import Swatch from "../shared/Swatch";
 import { toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
+const SUGGESTIONS_SHOWN = 6;
+
 export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDoneToday, onSetDone }) {
   const [title, setTitle] = useState("");
   const [historyHabitId, setHistoryHabitId] = useState(null);
+  const [shuffleKey, setShuffleKey] = useState(0);
   const todayISO = toISO(new Date());
 
   const addHabit = (t) => {
@@ -18,7 +21,12 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
   };
 
   const addedTitles = new Set(habits.map((h) => h.title.toLowerCase()));
-  const available = SUGGESTED_HABITS.filter((s) => !addedTitles.has(s.toLowerCase()));
+  const pool = SUGGESTED_HABITS.filter((s) => !addedTitles.has(s.toLowerCase()));
+  const available = useMemo(() => {
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, SUGGESTIONS_SHOWN);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shuffleKey, pool.length]);
   const historyHabit = habits.find((h) => h.id === historyHabitId) || null;
 
   return (
@@ -33,11 +41,20 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
       </div>
 
       {available.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
           <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested:</span>
           {available.map((s) => (
             <button key={s} onClick={() => addHabit(s)} style={suggestionChip}>+ {s}</button>
           ))}
+          {pool.length > SUGGESTIONS_SHOWN && (
+            <button
+              onClick={() => setShuffleKey((k) => k + 1)}
+              title="Show different suggestions"
+              style={{ ...ghostBtn, padding: "5px 10px", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5 }}
+            >
+              <Shuffle size={12} strokeWidth={2.3} /> Shuffle
+            </button>
+          )}
         </div>
       )}
 

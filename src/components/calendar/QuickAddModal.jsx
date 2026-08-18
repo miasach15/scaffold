@@ -19,8 +19,11 @@ export default function QuickAddModal({ initial, event, onClose, onSave, onUpdat
   const [allDay, setAllDay] = useState(event ? event.start == null : initial.hour == null);
   const [category, setCategory] = useState(event?.category || "Personal");
   const [repeat, setRepeat] = useState("None");
+  const [customDays, setCustomDays] = useState([]);
 
   const totalDuration = Math.max(5, Math.round(durationHours) * 60 + Math.round(durationMinutes));
+
+  const toggleCustomDay = (d) => setCustomDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
 
   const save = () => {
     const payload = {
@@ -28,8 +31,8 @@ export default function QuickAddModal({ initial, event, onClose, onSave, onUpdat
       start: allDay ? null : timeToDecimal(time),
       duration: allDay ? null : totalDuration,
     };
-    if (isEdit) onUpdate({ id: event.id, ...payload });
-    else onSave({ kind: "event", ...payload, repeat });
+    if (isEdit) onUpdate({ id: event.id, ...payload, repeat, customDays });
+    else onSave({ kind: "event", ...payload, repeat, customDays });
   };
 
   return (
@@ -82,16 +85,39 @@ export default function QuickAddModal({ initial, event, onClose, onSave, onUpdat
           <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
           All-day event (shows in the "All day" row instead of a time slot)
         </label>
-        {!isEdit && (
-          <>
-            <label style={{ ...labelStyle, marginTop: 10 }}>Repeat</label>
-            <select value={repeat} onChange={(e) => setRepeat(e.target.value)} style={inputStyle}>
-              <option value="None">Doesn't repeat</option>
-              <option value="Daily">Every day</option>
-              <option value="Weekdays">Every weekday (Mon–Fri)</option>
-              <option value="Weekly">Every week</option>
-            </select>
-          </>
+        <label style={{ ...labelStyle, marginTop: 10 }}>{isEdit ? "Repeat going forward" : "Repeat"}</label>
+        <select value={repeat} onChange={(e) => setRepeat(e.target.value)} style={inputStyle}>
+          <option value="None">Doesn't repeat</option>
+          <option value="Daily">Every day</option>
+          <option value="Weekdays">Every weekday (Mon–Fri)</option>
+          <option value="Weekly">Every week, same day</option>
+          <option value="Custom">Custom days</option>
+        </select>
+        {repeat === "Custom" && (
+          <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label, d) => {
+              const active = customDays.includes(d);
+              return (
+                <button
+                  key={d}
+                  onClick={() => toggleCustomDay(d)}
+                  style={{
+                    width: 40, padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
+                    border: `1.5px solid ${active ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                    background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                    color: active ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {isEdit && repeat !== "None" && (
+          <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, lineHeight: 1.4 }}>
+            This turns this event into a repeating series — future occurrences will be added when you save.
+          </div>
         )}
         <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
           {isEdit && (

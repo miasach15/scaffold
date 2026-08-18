@@ -283,7 +283,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           initial={modal}
           onClose={() => setModal(null)}
           onSave={(item) => {
-            const occurrences = repeatDates(item.date, item.repeat);
+            const occurrences = repeatDates(item.date, item.repeat, item.customDays);
             addEvents(occurrences.map((d) => ({ title: item.title, date: d, start: item.start, duration: item.duration, category: item.category || "Personal" })));
             setModal(null);
           }}
@@ -294,7 +294,16 @@ function ScaffoldApp({ userId, onSignOut }) {
         <QuickAddModal
           event={editingEvent}
           onClose={() => setEditingEvent(null)}
-          onUpdate={({ id, ...patch }) => { updateEvent(id, patch); setEditingEvent(null); }}
+          onUpdate={({ id, repeat, customDays, ...patch }) => {
+            updateEvent(id, patch);
+            if (repeat && repeat !== "None") {
+              const occurrences = repeatDates(patch.date, repeat, customDays).slice(1); // first date is this event itself
+              if (occurrences.length > 0) {
+                addEvents(occurrences.map((d) => ({ title: patch.title, date: d, start: patch.start, duration: patch.duration, category: patch.category })));
+              }
+            }
+            setEditingEvent(null);
+          }}
           onDelete={(id) => { removeEvent(id); setEditingEvent(null); }}
         />
       )}

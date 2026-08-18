@@ -44,10 +44,11 @@ export function useGoals(userId) {
 
   const addGoal = useCallback(
     async (title, category, deadline = null) => {
-      if (!userId || !title.trim()) return;
+      if (!userId || !title.trim()) return null;
       const row = { id: uid(), user_id: userId, title: title.trim(), category, deadline: deadline || null };
       setGoals((gs) => [...gs, { ...row, milestones: [] }]);
       await supabase.from("goals").insert(row);
+      return row.id;
     },
     [userId]
   );
@@ -59,10 +60,11 @@ export function useGoals(userId) {
 
   const addMilestone = useCallback(
     async (goalId, title) => {
-      if (!userId || !title.trim()) return;
+      if (!userId || !title.trim()) return null;
       const row = { id: uid(), user_id: userId, goal_id: goalId, title: title.trim() };
       setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, milestones: [...g.milestones, { ...row, actions: [] }] })));
       await supabase.from("milestones").insert(row);
+      return row.id;
     },
     [userId]
   );
