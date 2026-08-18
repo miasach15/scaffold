@@ -126,9 +126,22 @@ function ScaffoldApp({ userId, onSignOut }) {
     if (current.includes(key) && view === key) setView("calendar");
   };
 
-  const removeEduItem = async (id) => {
-    await removeTasksByEduId(id);
-    await removeEduItemRaw(id);
+  // mode: "one" (default) or "following" — for repeating edu items (no stored series id),
+  // "following" is found heuristically: same title/type/subject, due date on or after this one's.
+  const removeEduItem = async (id, mode = "one") => {
+    let ids = [id];
+    if (mode === "following") {
+      const item = eduItems.find((e) => e.id === id);
+      if (item) {
+        ids = eduItems
+          .filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate)
+          .map((e) => e.id);
+      }
+    }
+    for (const eid of ids) {
+      await removeTasksByEduId(eid);
+      await removeEduItemRaw(eid);
+    }
   };
 
   const addEduItem = (title, type, subject, dueDate, repeat) => {

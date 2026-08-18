@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { EDU_TYPE_COLORS, TASK_COLOR } from "../../lib/constants";
-import { deleteBtn } from "../../lib/styles";
+import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -7,6 +8,7 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 export default function WorkItemRow({ item }) {
   const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : TASK_COLOR;
   const tinted = !item.done;
+  const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
@@ -21,7 +23,15 @@ export default function WorkItemRow({ item }) {
       </div>
       <UrgencyBadge iso={item.date} done={item.done} />
       <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.dateLabel}</div>
-      <button onClick={item.onRemove} className="btn-delete" style={deleteBtn}>×</button>
+      {confirmDelete ? (
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <button onClick={() => item.onRemove("one")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>This one</button>
+          <button onClick={() => item.onRemove("following")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>+ following</button>
+          <button onClick={() => setConfirmDelete(false)} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
+        </div>
+      ) : (
+        <button onClick={() => (item.hasFollowing ? setConfirmDelete(true) : item.onRemove("one"))} className="btn-delete" style={deleteBtn}>×</button>
+      )}
     </div>
   );
 }

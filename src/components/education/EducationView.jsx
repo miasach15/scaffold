@@ -42,6 +42,11 @@ export default function EducationView({
     onAddSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
   };
 
+  // No stored series id for repeating edu items — treat same title/type/subject with a
+  // due date on or after this one's as "the rest of the series" for delete-all-following.
+  const eduHasFollowing = (item) =>
+    eduItems.some((e) => e.id !== item.id && e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate);
+
   const bySubject = (e) => subjectFilter === "All" || e.subject === subjectFilter;
   const todayISOlocal = toISO(new Date());
   const tomorrowISO = toISO(addDays(new Date(), 1));
@@ -80,7 +85,9 @@ export default function EducationView({
     key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, dateLabel: e.dueDate,
     colorKind: "edu", eduType: "Homework",
-    onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null, onRemove: () => onRemoveEduItem(e.id),
+    onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null,
+    hasFollowing: eduHasFollowing(e),
+    onRemove: (mode) => onRemoveEduItem(e.id, mode),
   }));
   const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
   const leftDone = [...sessionRows, ...homeworkRows].filter((i) => i.done);
@@ -115,7 +122,7 @@ export default function EducationView({
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} />
+            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} hasFollowing={eduHasFollowing(e)} />
           ))}
           {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
@@ -146,14 +153,14 @@ export default function EducationView({
           {upcomingTests.length === 0 ? (
             <EmptyState text="No upcoming tests." />
           ) : (
-            <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
+            <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
           <div style={{ marginTop: 18 }}>
             <SubHeader>Upcoming Assignments</SubHeader>
             {upcomingAssignments.length === 0 ? (
               <EmptyState text="No upcoming assignments." />
             ) : (
-              <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} />)}</div>
+              <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
             )}
           </div>
         </div>

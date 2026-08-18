@@ -7,11 +7,12 @@ import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function EduItemRow({ item, onToggleDone, onRemove, onAddSession, tag }) {
+export default function EduItemRow({ item, onToggleDone, onRemove, onAddSession, tag, hasFollowing }) {
   const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
   const todayISOlocal = toISO(new Date());
   const options = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate]);
   const [selDate, setSelDate] = useState(options[0] || todayISOlocal);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const actionLabel = item.type === "Test" ? "Study session" : "Sub-task";
 
   return (
@@ -27,7 +28,15 @@ export default function EduItemRow({ item, onToggleDone, onRemove, onAddSession,
           </div>
         </div>
         {tag ? <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 600 }}>{tag}</div> : <UrgencyBadge iso={item.dueDate} done={item.done} />}
-        <button onClick={() => onRemove(item.id)} className="btn-delete" style={deleteBtn}>×</button>
+        {confirmDelete ? (
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <button onClick={() => onRemove(item.id, "one")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>This one</button>
+            <button onClick={() => onRemove(item.id, "following")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>+ following</button>
+            <button onClick={() => setConfirmDelete(false)} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
+          </div>
+        ) : (
+          <button onClick={() => (hasFollowing ? setConfirmDelete(true) : onRemove(item.id, "one"))} className="btn-delete" style={deleteBtn}>×</button>
+        )}
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
         <select value={selDate} onChange={(e) => setSelDate(e.target.value)} style={{ ...inputStyle, fontSize: 12, flex: 1, padding: "6px 8px" }}>
