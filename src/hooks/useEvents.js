@@ -46,5 +46,21 @@ export function useEvents(userId) {
     [userId]
   );
 
-  return { events, loading, addEvents };
+  const updateEvent = useCallback(async (id, patch) => {
+    setEvents((es) => es.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+    const dbPatch = {};
+    if ("title" in patch) dbPatch.title = patch.title;
+    if ("date" in patch) dbPatch.date = patch.date;
+    if ("start" in patch) dbPatch.start = patch.start;
+    if ("duration" in patch) dbPatch.duration = patch.duration;
+    if ("category" in patch) dbPatch.category = patch.category;
+    await supabase.from("events").update(dbPatch).eq("id", id);
+  }, []);
+
+  const removeEvent = useCallback(async (id) => {
+    setEvents((es) => es.filter((e) => e.id !== id));
+    await supabase.from("events").delete().eq("id", id);
+  }, []);
+
+  return { events, loading, addEvents, updateEvent, removeEvent };
 }

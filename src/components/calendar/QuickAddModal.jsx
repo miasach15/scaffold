@@ -1,25 +1,41 @@
 import { useState } from "react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { TONE } from "../../lib/constants";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 
-export default function QuickAddModal({ initial, onClose, onSave }) {
+export default function QuickAddModal({ initial, event, onClose, onSave, onUpdate, onDelete }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState(initial.date);
-  const [time, setTime] = useState(`${pad(initial.hour ?? 9)}:00`);
-  const [durationHours, setDurationHours] = useState(1);
-  const [durationMinutes, setDurationMinutes] = useState(0);
-  const [allDay, setAllDay] = useState(initial.hour == null);
-  const [category, setCategory] = useState("Personal");
+  const isEdit = !!event;
+
+  const [title, setTitle] = useState(event?.title || "");
+  const [date, setDate] = useState(event ? event.date : initial.date);
+  const [time, setTime] = useState(() => {
+    if (event) return event.start != null ? `${pad(Math.floor(event.start))}:${pad(Math.round((event.start % 1) * 60))}` : "09:00";
+    return `${pad(initial.hour ?? 9)}:00`;
+  });
+  const [durationHours, setDurationHours] = useState(event?.duration != null ? Math.floor(event.duration / 60) : 1);
+  const [durationMinutes, setDurationMinutes] = useState(event?.duration != null ? event.duration % 60 : 0);
+  const [allDay, setAllDay] = useState(event ? event.start == null : initial.hour == null);
+  const [category, setCategory] = useState(event?.category || "Personal");
   const [repeat, setRepeat] = useState("None");
 
   const totalDuration = Math.max(5, Math.round(durationHours) * 60 + Math.round(durationMinutes));
 
+  const save = () => {
+    const payload = {
+      title: title.trim(), date, category,
+      start: allDay ? null : timeToDecimal(time),
+      duration: allDay ? null : totalDuration,
+    };
+    if (isEdit) onUpdate({ id: event.id, ...payload });
+    else onSave({ kind: "event", ...payload, repeat });
+  };
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 12 }}>Add event</div>
+        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 12 }}>{isEdit ? "Edit event" : "Add event"}</div>
         <label style={labelStyle}>Title</label>
         <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chem lecture" style={inputStyle} />
         <label style={{ ...labelStyle, marginTop: 10 }}>Category</label>
@@ -66,22 +82,29 @@ export default function QuickAddModal({ initial, onClose, onSave }) {
           <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
           All-day event (shows in the "All day" row instead of a time slot)
         </label>
-        <label style={{ ...labelStyle, marginTop: 10 }}>Repeat</label>
-        <select value={repeat} onChange={(e) => setRepeat(e.target.value)} style={inputStyle}>
-          <option value="None">Doesn't repeat</option>
-          <option value="Daily">Every day</option>
-          <option value="Weekdays">Every weekday (Mon–Fri)</option>
-          <option value="Weekly">Every week</option>
-        </select>
+        {!isEdit && (
+          <>
+            <label style={{ ...labelStyle, marginTop: 10 }}>Repeat</label>
+            <select value={repeat} onChange={(e) => setRepeat(e.target.value)} style={inputStyle}>
+              <option value="None">Doesn't repeat</option>
+              <option value="Daily">Every day</option>
+              <option value="Weekdays">Every weekday (Mon–Fri)</option>
+              <option value="Weekly">Every week</option>
+            </select>
+          </>
+        )}
         <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+          {isEdit && (
+            <button onClick={() => onDelete(event.id)} className="btn-ghost" style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}>Delete</button>
+          )}
           <button onClick={onClose} className="btn-ghost" style={ghostBtn}>Cancel</button>
           <button
             disabled={!title.trim()}
-            onClick={() => onSave({ kind: "event", title: title.trim(), date, start: allDay ? null : timeToDecimal(time), duration: allDay ? null : totalDuration, category, repeat })}
+            onClick={save}
             className="btn-primary"
             style={{ ...primaryBtn, flex: 1, opacity: title.trim() ? 1 : 0.5 }}
           >
-            Add event
+            {isEdit ? "Save changes" : "Add event"}
           </button>
         </div>
       </div>

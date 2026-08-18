@@ -53,7 +53,7 @@ function FullScreenMessage({ text }) {
 
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
-  const { events, addEvents } = useEvents(userId);
+  const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, addMilestone, removeMilestone, addAction, setActionDone, removeAction } = useGoals(userId);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
@@ -63,6 +63,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [view, setView] = useState("calendar");
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [modal, setModal] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showManagePages, setShowManagePages] = useState(false);
@@ -211,6 +212,7 @@ function ScaffoldApp({ userId, onSignOut }) {
             onChipClick={onChipClick}
             onOpenFocus={openFocus}
             onRescheduleTask={rescheduleTask}
+            onEditEvent={setEditingEvent}
           />
         )}
         {view === "tasks" && (
@@ -285,6 +287,15 @@ function ScaffoldApp({ userId, onSignOut }) {
             addEvents(occurrences.map((d) => ({ title: item.title, date: d, start: item.start, duration: item.duration, category: item.category || "Personal" })));
             setModal(null);
           }}
+        />
+      )}
+
+      {editingEvent && (
+        <QuickAddModal
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onUpdate={({ id, ...patch }) => { updateEvent(id, patch); setEditingEvent(null); }}
+          onDelete={(id) => { removeEvent(id); setEditingEvent(null); }}
         />
       )}
 

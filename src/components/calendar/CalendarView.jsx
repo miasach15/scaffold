@@ -6,7 +6,7 @@ import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask }) {
+export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask, onEditEvent }) {
   const CATEGORY_COLORS = useCategoryColors();
   const scrollRef = useRef(null);
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
         </div>
 
         <div data-tour="calendar-allday" style={{ flexShrink: 0 }}>
-          <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={null} onAddClick={(iso) => onCellClick(iso, null)} />
+          <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={(chip) => onEditEvent({ id: chip.id, title: chip.title, date: chip.date, start: null, duration: null, category: chip.category })} onAddClick={(iso) => onCellClick(iso, null)} />
         </div>
         <div data-tour="calendar-due" style={{ flexShrink: 0 }}>
           <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
@@ -107,7 +107,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
                     />
                   ))}
                   {events.filter((e) => e.date === iso && e.start != null).map((e) => (
-                    <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} />
+                    <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} />
                   ))}
                   {tasks.filter((t) => t.date === iso && t.start != null).map((t) => (
                     <CalBlock key={t.id} item={t} color={TASK_COLOR} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
