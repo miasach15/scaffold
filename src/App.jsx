@@ -160,7 +160,8 @@ function ScaffoldApp({ userId, onSignOut }) {
         "--primary": theme.primary,
         "--primary-dark": theme.primaryDark,
         "--primary-tint": theme.primaryTint,
-        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, minHeight: "100vh", color: "#000000",
+        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, height: "100vh", color: "#000000",
+        display: "flex", flexDirection: "column", overflow: "hidden",
       }}
     >
       <style>{`
@@ -190,7 +191,13 @@ function ScaffoldApp({ userId, onSignOut }) {
         enabledPages={profile.enabledPages}
       />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 16px 60px" }}>
+      <div
+        style={{
+          maxWidth: 1100, margin: "0 auto", width: "100%", padding: view === "calendar" ? "16px 16px 12px" : "20px 16px 60px",
+          flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
+          overflowY: view === "calendar" ? "hidden" : "auto",
+        }}
+      >
         {view === "calendar" && (
           <CalendarView
             days={days}

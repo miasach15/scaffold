@@ -37,9 +37,9 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
   const allDayEventChips = events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category }));
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700 }}>{monthLabel(days[0])}</div>
+    <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0 }}>
+        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700 }}>{monthLabel(days[0])}</div>
         <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button onClick={() => setWeekStart(startOfWeek(new Date()))} className="btn-ghost" style={ghostBtn}>Today</button>
           <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="btn-ghost" style={ghostBtn}>‹</button>
@@ -47,8 +47,8 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
         </div>
       </div>
 
-      <div style={{ ...cardStyle, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDF0F3" }}>
+      <div style={{ ...cardStyle, overflow: "hidden", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
           <div />
           {days.map((d) => {
             const iso = toISO(d);
@@ -66,17 +66,17 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
           })}
         </div>
 
-        <div data-tour="calendar-allday">
+        <div data-tour="calendar-allday" style={{ flexShrink: 0 }}>
           <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={null} onAddClick={(iso) => onCellClick(iso, null)} />
         </div>
-        <div data-tour="calendar-due">
+        <div data-tour="calendar-due" style={{ flexShrink: 0 }}>
           <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
         </div>
-        <div data-tour="calendar-tasksrow">
+        <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
           <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
         </div>
 
-        <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, maxHeight: 560, overflowY: "auto" }}>
+        <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div style={{ position: "relative", height: 24 * ROW_H }}>
             {Array.from({ length: 24 }, (_, h) => (
               <div key={h} style={{ position: "absolute", top: h * ROW_H - 6, right: 8, fontSize: 10.5, color: "#B4BCC5" }}>
@@ -124,7 +124,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
           </div>
         </div>
       </div>
-      <div style={{ fontSize: 12.5, color: "#93A0AD", marginTop: 10 }}>Click any cell to add an event or task. Drag a task to a new day or time to reschedule it. Goal and education due dates show up automatically above.</div>
+      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>Click any cell to add an event or task. Drag a task to reschedule it.</div>
     </div>
   );
 }

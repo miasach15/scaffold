@@ -18,7 +18,7 @@ function NavTab({ active, onClick, label, Icon }) {
     <button
       onClick={onClick}
       style={{
-        padding: "8px 16px", fontSize: 14, fontWeight: 500, borderRadius: 999, marginBottom: 8,
+        padding: "7px 14px", fontSize: 14, fontWeight: 500, borderRadius: 999, marginBottom: 6,
         color: active ? "#000000" : "#93897A", background: active ? PRIMARY_TINT : "transparent", border: "none",
         display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
       }}
@@ -54,7 +54,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
 
   return (
     <div style={{ borderBottom: "1px solid rgba(226,226,226,0.7)", position: "sticky", top: 0, background: "rgba(250,250,250,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 20 }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 16px 0", display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, marginRight: 8 }}>
           Scaffold
         </div>
@@ -70,7 +70,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
           <button
             onClick={() => setMenuOpen((o) => !o)}
             style={{
-              padding: "8px 14px", fontSize: 14, fontWeight: 500, borderRadius: 999, marginBottom: 8,
+              padding: "7px 14px", fontSize: 14, fontWeight: 500, borderRadius: 999, marginBottom: 6,
               color: lifestyleActive ? "#000000" : "#93897A", background: lifestyleActive ? PRIMARY_TINT : "transparent", border: "none",
               display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
             }}
@@ -114,7 +114,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
           )}
         </div>
 
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 8 }}>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 6 }}>
           <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={15} />
           </button>
