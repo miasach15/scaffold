@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { GraduationCap, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -62,10 +62,10 @@ export default function EducationView({
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks);
-      return schedule.steps.map((t, i) => ({ title: t, date: dates[i] }));
+      return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
     }
     const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks);
-    return dates.map((d) => ({ title: `Work on: ${title.trim()}`, date: d }));
+    return groupItemsByDate(dates.map((d) => ({ title: `Work on: ${title.trim()}`, date: d })));
   };
 
   const breakDownAssignment = async () => {
@@ -102,8 +102,11 @@ export default function EducationView({
   };
 
   const confirmPlan = () => {
-    if (!pendingPlan) return;
-    onAddEduItem(title.trim(), type, subject, dueDate, pendingPlan.repeatValue, pendingPlan.schedule);
+    if (!pendingPlan || pendingPlan.items.length === 0) return;
+    // previewItems carries whatever the user edited/removed in the modal — used exactly
+    // as-is for the first occurrence; if this assignment repeats, later occurrences fall
+    // back to auto-computing their own schedule from `schedule` since we only preview one.
+    onAddEduItem(title.trim(), type, subject, dueDate, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
     setPendingPlan(null);
     resetAddForm();
   };
@@ -299,7 +302,13 @@ export default function EducationView({
       </div>
 
       {pendingPlan && (
-        <BreakdownPreviewModal heading={title || "Your assignment"} items={pendingPlan.items} onConfirm={confirmPlan} onCancel={() => setPendingPlan(null)} />
+        <BreakdownPreviewModal
+          heading={title || "Your assignment"}
+          items={pendingPlan.items}
+          onChangeItems={(items) => setPendingPlan((p) => ({ ...p, items }))}
+          onConfirm={confirmPlan}
+          onCancel={() => setPendingPlan(null)}
+        />
       )}
     </div>
   );

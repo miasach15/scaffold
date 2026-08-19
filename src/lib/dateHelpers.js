@@ -184,6 +184,21 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) =>
 
   return offsets.slice().sort((a, b) => a - b).map((o) => toISO(addDays(start, o)));
 };
+// Collapses a {title, date}[] list down to at most one entry per date — used after
+// distributing a breakdown's steps, so if two ever land on the same day (e.g. more
+// steps than available days) they show up as one task covering both instead of two
+// separate rows on the same date. Identical titles on the same day collapse to one.
+export const groupItemsByDate = (items) => {
+  const map = new Map();
+  for (const it of items) {
+    if (!map.has(it.date)) map.set(it.date, []);
+    const titles = map.get(it.date);
+    if (!titles.includes(it.title)) titles.push(it.title);
+  }
+  return Array.from(map.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, titles]) => ({ date, title: titles.join(" + ") }));
+};
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
   const startOffset = (first.getDay() + 6) % 7; // Monday = 0

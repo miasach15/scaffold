@@ -167,25 +167,37 @@ function ScaffoldApp({ userId, onSignOut }) {
       }
     } else if (type === "Assignment" && workDays) {
       const todayISO = toISO(new Date());
-      const isAiSteps = typeof workDays === "object" && Array.isArray(workDays.steps) && workDays.steps.length > 0;
-      for (const row of rows) {
+      // The Education page previews an Assignment's schedule in a modal before adding
+      // anything — previewItems carries whatever the user edited/removed there, used
+      // exactly as-is for the first occurrence.
+      const hasPreview = typeof workDays === "object" && "previewItems" in workDays;
+      const previewItems = hasPreview ? workDays.previewItems : null;
+      const effectiveSchedule = hasPreview ? workDays.schedule : workDays;
+      const isAiSteps = typeof effectiveSchedule === "object" && Array.isArray(effectiveSchedule.steps) && effectiveSchedule.steps.length > 0;
+      rows.forEach((row, rowIdx) => {
+        if (rowIdx === 0 && previewItems) {
+          previewItems.forEach((it) => {
+            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: "Education" });
+          });
+          return;
+        }
         const startISO = row.dueDate > todayISO ? todayISO : row.dueDate;
         // Work leads up to the due date but never lands on it — you shouldn't still be
         // working the day it's due.
         const lastWorkDay = dayBefore(row.dueDate);
         const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
         if (isAiSteps) {
-          const dates = distributeDatesByLoad(startISO, endISO, workDays.steps.length, tasks);
-          workDays.steps.forEach((stepTitle, i) => {
+          const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks);
+          effectiveSchedule.steps.forEach((stepTitle, i) => {
             addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: "Education" });
           });
         } else {
-          const dates = workDays === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, workDays, tasks);
+          const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks);
           for (const d of dates) {
             addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
           }
         }
-      }
+      });
     }
   };
 

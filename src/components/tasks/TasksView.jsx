@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckSquare, Sparkles } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { dayBefore, distributeDatesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
@@ -43,7 +43,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks);
-      setPendingPlan({ items: steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })) });
+      setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] }))) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
@@ -170,7 +170,13 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       )}
 
       {pendingPlan && (
-        <BreakdownPreviewModal heading={title || "Your task"} items={pendingPlan.items} onConfirm={confirmPlan} onCancel={() => setPendingPlan(null)} />
+        <BreakdownPreviewModal
+          heading={title || "Your task"}
+          items={pendingPlan.items}
+          onChangeItems={(items) => setPendingPlan((p) => ({ ...p, items }))}
+          onConfirm={confirmPlan}
+          onCancel={() => setPendingPlan(null)}
+        />
       )}
     </div>
   );
