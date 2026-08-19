@@ -88,10 +88,10 @@ export const repeatDates = (startISO, repeat, customDays) => {
   return dates.length ? dates : [startISO];
 };
 // Spreads `count` items evenly across the range [startISO, endISO] with never more than
-// one item per day. If it fits, the last item lands exactly on endISO. If there are more
-// items than days available (e.g. 8 steps but only 3 days before something's due), it
-// falls back to one item per day starting at startISO, spilling past endISO only as a
-// last resort — that's still better than stacking two items on the same day.
+// one item per day, and NEVER past endISO — if it fits, the last item lands exactly on
+// endISO. If there are more items than days available (e.g. 8 steps but only 3 days
+// before something's due), extra items get packed onto existing days within the window
+// instead — still evenly as possible, but endISO is a hard ceiling, never crossed.
 export const distributeDates = (startISO, endISO, count) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
@@ -113,7 +113,9 @@ export const distributeDates = (startISO, endISO, count) => {
       if (offsets[i] >= offsets[i + 1]) offsets[i] = offsets[i + 1] - 1;
     }
   } else {
-    offsets = Array.from({ length: count }, (_, i) => i);
+    // Not enough distinct days — pack multiple items onto the same days, evenly, but
+    // capped at totalDays so nothing ever lands after endISO.
+    offsets = Array.from({ length: count }, (_, i) => Math.min(totalDays, Math.floor((i * availableSlots) / count)));
   }
   return offsets.map((o) => toISO(addDays(start, o)));
 };
@@ -130,7 +132,10 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) =>
   const availableSlots = totalDays + 1;
 
   if (count > availableSlots) {
-    return Array.from({ length: count }, (_, i) => toISO(addDays(start, i)));
+    // Not enough distinct days — pack multiple items onto the same days, evenly, but
+    // capped at totalDays so nothing ever lands after endISO (load-balancing doesn't
+    // apply here since every day in the window is going to get used regardless).
+    return Array.from({ length: count }, (_, i) => toISO(addDays(start, Math.min(totalDays, Math.floor((i * availableSlots) / count)))));
   }
 
   let offsets = [];
