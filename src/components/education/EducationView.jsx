@@ -53,6 +53,9 @@ export default function EducationView({
     setTitle(""); setDueDate(""); setRepeat("None"); setAssignmentDetails("");
   };
 
+  const schedulable = type === "Assignment" || type === "Test";
+  const workVerb = type === "Test" ? "Study" : "Work on";
+
   // Computes the same schedule App.jsx's addEduItem would, just for preview — the
   // actual insert happens only once the plan is confirmed in the modal.
   const previewSchedule = (schedule) => {
@@ -65,7 +68,7 @@ export default function EducationView({
       return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
     }
     const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks);
-    return groupItemsByDate(dates.map((d) => ({ title: `Work on: ${title.trim()}`, date: d })));
+    return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
   };
 
   const breakDownAssignment = async () => {
@@ -91,8 +94,8 @@ export default function EducationView({
 
   const add = () => {
     if (!title.trim() || !dueDate) return;
-    if (type === "Assignment" && useAI) { breakDownAssignment(); return; }
-    if (type === "Assignment") {
+    if (schedulable && useAI) { breakDownAssignment(); return; }
+    if (schedulable) {
       const schedule = workMode === "everyday" ? "everyday" : workDays;
       setPendingPlan({ schedule, repeatValue: repeat, items: previewSchedule(schedule) });
       return;
@@ -190,9 +193,9 @@ export default function EducationView({
           <option value="Weekdays">Every weekday</option>
           <option value="Weekly">Every week</option>
         </select>
-        {type === "Assignment" && (
+        {schedulable && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
-            <span>Work on it:</span>
+            <span>{workVerb} it:</span>
             {["days", "everyday"].map((m) => (
               <button
                 key={m}
@@ -211,14 +214,14 @@ export default function EducationView({
               <input
                 type="number" min={1} max={30} value={workDays}
                 onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
-                title="We'll spread that many 'Work on' tasks evenly between today and the due date"
+                title={`We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
                 style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
               />
             )}
           </div>
         )}
         <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
-          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : type === "Assignment" ? "Review plan" : "Add"}
+          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
         </button>
       </div>
 
@@ -303,7 +306,7 @@ export default function EducationView({
 
       {pendingPlan && (
         <BreakdownPreviewModal
-          heading={title || "Your assignment"}
+          heading={title || (type === "Test" ? "Your exam" : "Your assignment")}
           items={pendingPlan.items}
           onChangeItems={(items) => setPendingPlan((p) => ({ ...p, items }))}
           onConfirm={confirmPlan}

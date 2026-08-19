@@ -171,11 +171,12 @@ function ScaffoldApp({ userId, onSignOut }) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
         addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: "Education" });
       }
-    } else if (type === "Assignment" && workDays) {
+    } else if ((type === "Assignment" || type === "Test") && workDays) {
+      const workVerb = type === "Test" ? "Study" : "Work on";
       const todayISO = toISO(new Date());
-      // The Education page previews an Assignment's schedule in a modal before adding
-      // anything — previewItems carries whatever the user edited/removed there, used
-      // exactly as-is for the first occurrence.
+      // The Education page previews an Assignment/Test's schedule in a modal before
+      // adding anything — previewItems carries whatever the user edited/removed there,
+      // used exactly as-is for the first occurrence.
       const hasPreview = typeof workDays === "object" && "previewItems" in workDays;
       const previewItems = hasPreview ? workDays.previewItems : null;
       const effectiveSchedule = hasPreview ? workDays.schedule : workDays;
@@ -200,7 +201,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         } else {
           const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks);
           for (const d of dates) {
-            addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
+            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
           }
         }
       });

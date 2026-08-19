@@ -95,8 +95,8 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 3 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Want any extra pages?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Totally optional, just for fun. You can add or remove these anytime from the top bar.</div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Add any bonus "Lifestyle" pages?</div>
+            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are extra pages beyond Calendar/Tasks/Goals/Habits/Journal — things like a movie watchlist or packing lists. Totally optional. You can add or remove these anytime from the "Lifestyle" menu in the top bar.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {LIFESTYLE_PAGE_META.map((p) => {
                 const active = lifestylePages.includes(p.key);

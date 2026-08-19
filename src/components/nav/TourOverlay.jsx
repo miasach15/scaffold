@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { GripHorizontal, Sparkles } from "lucide-react";
 import { LIFESTYLE_PAGE_META, PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
@@ -36,6 +36,30 @@ export default function TourOverlay({ setView, enabledPages, onOpenSettings, onO
   const step = steps[i];
   const isLast = i === steps.length - 1;
 
+  // Drag support — the box defaults to bottom-center, which can sit over whatever modal
+  // a step opens (e.g. Settings). Dragging it by the grip moves it out of the way; once
+  // moved, it stays put for the rest of the tour instead of snapping back each step.
+  const [dragPos, setDragPos] = useState(null); // null = default bottom-center position
+  const boxRef = useRef(null);
+  const startDrag = (e) => {
+    const rect = boxRef.current.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const origLeft = rect.left;
+    const origTop = rect.top;
+    const onMove = (ev) => {
+      const left = Math.min(Math.max(8, origLeft + (ev.clientX - startX)), window.innerWidth - rect.width - 8);
+      const top = Math.min(Math.max(8, origTop + (ev.clientY - startY)), window.innerHeight - rect.height - 8);
+      setDragPos({ left, top });
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
   useEffect(() => {
     onCloseModals();
     if (step.type === "modal") {
@@ -53,14 +77,20 @@ export default function TourOverlay({ setView, enabledPages, onOpenSettings, onO
 
   return (
     <div
-      style={{
-        position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 100,
-        background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)",
-        padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0",
-      }}
+      ref={boxRef}
+      style={
+        dragPos
+          ? { position: "fixed", top: dragPos.top, left: dragPos.left, zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
+          : { position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
+      }
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+      <div
+        onMouseDown={startDrag}
+        title="Drag to move this out of the way"
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, cursor: "grab" }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.4 }}>
+          <GripHorizontal size={13} strokeWidth={2.3} color="#B4BCC5" />
           <Sparkles size={13} strokeWidth={2.3} /> {i + 1} of {steps.length}
         </div>
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip tour</button>
