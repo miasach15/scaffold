@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, decimalToTimeLabel, toISO } from "../../lib/dateHelpers";
+import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import EduItemRow from "./EduItemRow";
@@ -24,17 +25,46 @@ export default function EducationView({
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [repeat, setRepeat] = useState("None");
-  const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
+  const [workMode, setWorkMode] = useState("days"); // "days" (pick a count), "everyday", or "ai" (break it down)
   const [workDays, setWorkDays] = useState(3);
+  const [assignmentDetails, setAssignmentDetails] = useState("");
+  const [breakingDown, setBreakingDown] = useState(false);
+  const [breakdownError, setBreakdownError] = useState(null);
   const [subjectFilter, setSubjectFilter] = useState("All");
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
 
+  const resetAddForm = () => {
+    setTitle(""); setDueDate(""); setRepeat("None"); setAssignmentDetails("");
+  };
+
+  const breakDownAssignment = async () => {
+    if (!title.trim() || !dueDate || !assignmentDetails.trim() || breakingDown) return;
+    setBreakingDown(true);
+    setBreakdownError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
+        body: { title: title.trim(), details: assignmentDetails.trim(), dueDate },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
+      if (steps.length === 0) throw new Error("No steps came back — try adding more detail.");
+      onAddEduItem(title.trim(), type, subject, dueDate, "None", { steps });
+      resetAddForm();
+    } catch (e) {
+      setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
+    } finally {
+      setBreakingDown(false);
+    }
+  };
+
   const add = () => {
     if (!title.trim() || !dueDate) return;
+    if (type === "Assignment" && workMode === "ai") { breakDownAssignment(); return; }
     const schedule = type === "Assignment" ? (workMode === "everyday" ? "everyday" : workDays) : null;
     onAddEduItem(title.trim(), type, subject, dueDate, repeat, schedule);
-    setTitle(""); setDueDate(""); setRepeat("None");
+    resetAddForm();
   };
 
   // one-click quick add from the day picker: Tests get a timed study session, Assignments get an all-day sub-task
@@ -119,7 +149,7 @@ export default function EducationView({
         {type === "Assignment" && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
             <span>Work on it:</span>
-            {["days", "everyday"].map((m) => (
+            {["days", "everyday", "ai"].map((m) => (
               <button
                 key={m}
                 onClick={() => setWorkMode(m)}
@@ -128,9 +158,11 @@ export default function EducationView({
                   border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
                   background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
                   color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                  display: "inline-flex", alignItems: "center", gap: 4,
                 }}
               >
-                {m === "everyday" ? "Every day" : "Pick days"}
+                {m === "ai" && <Sparkles size={11} strokeWidth={2.3} />}
+                {m === "everyday" ? "Every day" : m === "ai" ? "Break it down" : "Pick days"}
               </button>
             ))}
             {workMode === "days" && (
@@ -143,8 +175,23 @@ export default function EducationView({
             )}
           </div>
         )}
-        <button onClick={add} className="btn-primary" style={primaryBtn}>Add</button>
+        <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
+          {type === "Assignment" && workMode === "ai" ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
+        </button>
       </div>
+
+      {type === "Assignment" && workMode === "ai" && (
+        <div style={{ marginBottom: 12 }}>
+          <textarea
+            value={assignmentDetails}
+            onChange={(e) => setAssignmentDetails(e.target.value)}
+            placeholder="Paste or describe the assignment instructions — we'll turn them into ordered work steps leading up to the due date."
+            rows={3}
+            style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+          />
+          {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+        </div>
+      )}
 
       <SubHeader>Today</SubHeader>
       {today_.length === 0 && leftTodayItems.length === 0 ? (

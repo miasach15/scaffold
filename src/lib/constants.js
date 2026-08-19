@@ -67,10 +67,27 @@ export const cardStyle = {
   transition: "box-shadow .15s ease, transform .15s ease",
 };
 
+// Outcome-shaped goals (a finish line, not an ongoing daily habit — recurring things
+// like "drink more water" or "read every day" belong on the Habits page instead).
 export const SUGGESTED_GOALS = {
-  Personal: ["Read for 20 minutes daily", "Declutter your desk", "Learn a new skill"],
-  Health: ["Sleep 8 hours a night", "Move your body 3x this week", "Drink more water"],
-  People: ["Call a friend", "Plan a hangout", "Check in with family"],
+  Personal: [
+    "Read 12 books this year", "Declutter your whole apartment", "Learn to cook 5 new recipes",
+    "Finish an online course", "Get your finances organized", "Learn conversational Spanish",
+    "Build a personal website", "Write a short story", "Deep clean and organize your closet",
+    "Finish a DIY project you've been putting off", "Learn to play a song on an instrument", "Redecorate a room",
+  ],
+  Health: [
+    "Run a 5k", "Complete a 30-day fitness challenge", "Get a full check-up done",
+    "Fix your sleep schedule", "Train for a hike", "Build a workout routine that sticks",
+    "Cut back on sugar for a month", "Try a new sport", "Finish a couch-to-5k program",
+    "Set up a home workout space", "Hit a specific fitness milestone", "Improve your posture",
+  ],
+  People: [
+    "Plan a trip with friends", "Reconnect with an old friend", "Host a dinner party",
+    "Write letters to family", "Plan a surprise for someone", "Volunteer for a cause",
+    "Organize a group hangout", "Plan a milestone celebration", "Mend a strained relationship",
+    "Meet your partner's/friend's family", "Plan a reunion", "Start a small tradition with someone",
+  ],
 };
 
 // pre-filled starter checklist for a new packing list, organized loosely by category

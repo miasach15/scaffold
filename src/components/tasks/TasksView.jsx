@@ -27,8 +27,9 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     setTitle(""); setDate(""); setTime("");
   };
 
-  const scheduled = tasks.filter((t) => t.date).sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
-  const unscheduled = tasks.filter((t) => !t.date);
+  // Done tasks drop off the list entirely rather than sticking around struck through.
+  const scheduled = tasks.filter((t) => t.date && !t.done).sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
+  const unscheduled = tasks.filter((t) => !t.date && !t.done);
 
   return (
     <div>

@@ -149,8 +149,10 @@ function ScaffoldApp({ userId, onSignOut }) {
     }
   };
 
-  // workDays: for Assignments, how many days the user wants to work on it — that many
-  // "Work on: <title>" all-day tasks get spread evenly between today and the due date.
+  // workDays: for Assignments, either a number of days (spreads that many "Work on: <title>"
+  // tasks evenly up to the due date), "everyday" (one every day until due), or
+  // {steps: [...]} — AI-generated step titles (from "Break it down for me"), spread the
+  // same way but each task keeps its own step title instead of the generic "Work on:" one.
   const addEduItem = async (title, type, subject, dueDate, repeat, workDays) => {
     const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat) });
     if (!rows || rows.length === 0) return;
@@ -163,11 +165,19 @@ function ScaffoldApp({ userId, onSignOut }) {
       }
     } else if (type === "Assignment" && workDays) {
       const todayISO = toISO(new Date());
+      const isAiSteps = typeof workDays === "object" && Array.isArray(workDays.steps) && workDays.steps.length > 0;
       for (const row of rows) {
         const startISO = row.dueDate > todayISO ? todayISO : row.dueDate;
-        const dates = workDays === "everyday" ? dateRangeISO(startISO, row.dueDate) : distributeDates(startISO, row.dueDate, workDays);
-        for (const d of dates) {
-          addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
+        if (isAiSteps) {
+          const dates = distributeDates(startISO, row.dueDate, workDays.steps.length);
+          workDays.steps.forEach((stepTitle, i) => {
+            addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: "Education" });
+          });
+        } else {
+          const dates = workDays === "everyday" ? dateRangeISO(startISO, row.dueDate) : distributeDates(startISO, row.dueDate, workDays);
+          for (const d of dates) {
+            addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
+          }
         }
       }
     }

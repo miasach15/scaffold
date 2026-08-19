@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Target, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Target, Sparkles, Shuffle } from "lucide-react";
 import { SUGGESTED_GOALS, cardStyle } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
-import { inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
+import { ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
+
+const SUGGESTIONS_SHOWN = 6;
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -16,6 +18,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   const [outcome, setOutcome] = useState("");
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState(null);
+  const [shuffleKey, setShuffleKey] = useState(0);
 
   const addGoal = (t, cat, useDeadline = true) => {
     const tt = (t !== undefined ? t : title).trim();
@@ -56,7 +59,13 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   };
 
   const filtered = filter === "All" ? goals : goals.filter((g) => g.category === filter);
-  const suggestions = SUGGESTED_GOALS[category] || [];
+  const addedTitles = new Set(goals.filter((g) => g.category === category).map((g) => g.title.toLowerCase()));
+  const suggestionPool = (SUGGESTED_GOALS[category] || []).filter((s) => !addedTitles.has(s.toLowerCase()));
+  const suggestions = useMemo(() => {
+    const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, SUGGESTIONS_SHOWN);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shuffleKey, category, suggestionPool.length]);
 
   return (
     <div>
@@ -107,12 +116,23 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         </AddRow>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
-        <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested for {category}:</span>
-        {suggestions.map((s) => (
-          <button key={s} onClick={() => addGoal(s, category, false)} style={suggestionChip}>+ {s}</button>
-        ))}
-      </div>
+      {suggestions.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
+          <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested for {category}:</span>
+          {suggestions.map((s) => (
+            <button key={s} onClick={() => addGoal(s, category, false)} style={suggestionChip}>+ {s}</button>
+          ))}
+          {suggestionPool.length > SUGGESTIONS_SHOWN && (
+            <button
+              onClick={() => setShuffleKey((k) => k + 1)}
+              title="Show different suggestions"
+              style={{ ...ghostBtn, padding: "5px 10px", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5 }}
+            >
+              <Shuffle size={12} strokeWidth={2.3} /> Shuffle
+            </button>
+          )}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <EmptyState text="No goals here yet." />
