@@ -56,9 +56,17 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (!title.trim()) return;
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
+    let scheduledDate = date || null;
+    if (date && !hasTime) {
+      // No specific time given — the date is "needs to be done by", not "I'm doing it
+      // then". Pick whichever day between now and then has the fewest tasks already.
+      const todayISO = toISO(new Date());
+      const startISO = date > todayISO ? todayISO : date;
+      scheduledDate = distributeDatesByLoad(startISO, date, 1, tasks)[0];
+    }
     onAddTask({
       title: title.trim(),
-      date: date || null,
+      date: scheduledDate,
       start: hasTime ? timeToDecimal(time) : null,
       duration: hasTime ? 60 : null,
       category,
@@ -76,7 +84,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       <div data-tour="tasks-add">
         <AddRow>
           <input placeholder="Add a task..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Date"} style={{ ...inputStyle, width: 150 }} />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
           </button>
@@ -87,7 +95,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
             <span>Time (optional):</span>
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
-            <span style={{ fontSize: 11, color: "#B4BCC5" }}>Leave blank for an all-day task</span>
+            <span style={{ fontSize: 11, color: "#B4BCC5" }}>{time ? "Locked to this exact date & time" : "Leave blank and we'll pick the least busy day up to your date"}</span>
           </div>
         )}
         <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
