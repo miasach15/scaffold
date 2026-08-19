@@ -9,6 +9,7 @@ import { overlayStyle, modalStyle, primaryBtn, ghostBtn, inputStyle } from "../.
 // captures land in the Inbox on the Tasks page to turn into a real task later; picking
 // Education sends you straight to the Education page instead, since assignments/tests
 // need real fields (type, subject, due date) that don't belong in a quick jot-down.
+// Lives in the top nav so it's reachable from any page.
 export default function QuickCapture({ onCapture }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [open, setOpen] = useState(false);
@@ -26,15 +27,13 @@ export default function QuickCapture({ onCapture }) {
   return (
     <>
       <button
+        data-tour="nav-quick-capture"
         onClick={() => setOpen(true)}
         title="Quick capture — jot something down now, sort it out later"
-        style={{
-          position: "fixed", bottom: 22, right: 22, zIndex: 90, width: 50, height: 50, borderRadius: "50%",
-          background: "var(--primary, #7B6EF0)", color: "#fff", border: "none", boxShadow: "0 8px 24px rgba(15,23,42,0.25)",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-        }}
+        className="btn-ghost"
+        style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
       >
-        <NotebookPen size={20} strokeWidth={2.2} />
+        <NotebookPen size={14} strokeWidth={2.3} /> Quick capture
       </button>
 
       {open && (
