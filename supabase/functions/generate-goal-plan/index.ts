@@ -57,7 +57,7 @@ serve(async (req) => {
 
 Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 next actions — things that could go on a to-do list, not vague advice.
 
-Each action should be sized as ONE sitting of about 30 minutes to an hour of focused work — not a 5-minute micro-task (like "open a spreadsheet") and not a multi-hour or multi-day chunk that's really several actions glued together. If a step you're considering would take under 30 minutes, merge it with a neighboring step; if it would take much more than an hour, split it into two.
+Each action should be sized as ONE sitting of about 45 minutes to 1.5 hours of real, substantial focused work — err toward the longer end. This is NOT a quick checklist item: things like "check email", "inspect checklist", "review notes", "make a list", or "read the instructions" are all too small on their own — fold trivial steps like that into the larger piece of work they support (e.g. don't make "inspect checklist" its own action — it's part of "Draft the checklist" or whatever real task comes next). If a step you're considering would take less than 45 minutes by itself, merge it into a neighboring step rather than listing it separately. If it would take much more than 1.5 hours, split it into two.
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Milestone titles: max ~6 words.
