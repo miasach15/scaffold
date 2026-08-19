@@ -32,7 +32,7 @@ import PackingListsView from "./components/lifestyle/PackingListsView";
 import GiftsView from "./components/lifestyle/GiftsView";
 import NotesView from "./components/lifestyle/NotesView";
 
-import { addDays, distributeDates, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, dateRangeISO, distributeDates, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
@@ -161,11 +161,11 @@ function ScaffoldApp({ userId, onSignOut }) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
         addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: "Education" });
       }
-    } else if (type === "Assignment" && workDays > 0) {
+    } else if (type === "Assignment" && workDays) {
       const todayISO = toISO(new Date());
       for (const row of rows) {
         const startISO = row.dueDate > todayISO ? todayISO : row.dueDate;
-        const dates = distributeDates(startISO, row.dueDate, workDays);
+        const dates = workDays === "everyday" ? dateRangeISO(startISO, row.dueDate) : distributeDates(startISO, row.dueDate, workDays);
         for (const d of dates) {
           addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
         }

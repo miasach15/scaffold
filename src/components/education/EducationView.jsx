@@ -24,6 +24,7 @@ export default function EducationView({
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [repeat, setRepeat] = useState("None");
+  const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
   const [subjectFilter, setSubjectFilter] = useState("All");
 
@@ -31,7 +32,8 @@ export default function EducationView({
 
   const add = () => {
     if (!title.trim() || !dueDate) return;
-    onAddEduItem(title.trim(), type, subject, dueDate, repeat, type === "Assignment" ? workDays : null);
+    const schedule = type === "Assignment" ? (workMode === "everyday" ? "everyday" : workDays) : null;
+    onAddEduItem(title.trim(), type, subject, dueDate, repeat, schedule);
     setTitle(""); setDueDate(""); setRepeat("None");
   };
 
@@ -115,9 +117,30 @@ export default function EducationView({
           <option value="Weekly">Every week</option>
         </select>
         {type === "Assignment" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }} title="We'll spread that many 'Work on' tasks evenly between today and the due date">
-            <span>Work days needed:</span>
-            <input type="number" min={1} max={30} value={workDays} onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))} style={{ ...inputStyle, width: 60, padding: "6px 8px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
+            <span>Work on it:</span>
+            {["days", "everyday"].map((m) => (
+              <button
+                key={m}
+                onClick={() => setWorkMode(m)}
+                style={{
+                  padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                  border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                  background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                  color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                }}
+              >
+                {m === "everyday" ? "Every day" : "Pick days"}
+              </button>
+            ))}
+            {workMode === "days" && (
+              <input
+                type="number" min={1} max={30} value={workDays}
+                onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
+                title="We'll spread that many 'Work on' tasks evenly between today and the due date"
+                style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
+              />
+            )}
           </div>
         )}
         <button onClick={add} className="btn-primary" style={primaryBtn}>Add</button>
