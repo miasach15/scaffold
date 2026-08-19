@@ -34,7 +34,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
   const chipLabel = (chip) => {
     if (chip.kind === "goal-deadline") return `Goal due: ${chip.title}`;
     if (chip.kind === "goal-milestone") return chip.title;
-    if (chip.kind === "edu") return `${chip.type}${chip.subject ? ` (${chip.subject})` : ""}: ${chip.title}`;
+    if (chip.kind === "edu") return `${chip.title}${chip.subject ? ` (${chip.subject})` : ""}`;
     return chip.title;
   };
   const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "edu");
