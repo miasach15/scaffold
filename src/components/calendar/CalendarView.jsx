@@ -25,7 +25,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
     if (chip.kind === "goal") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     if (chip.kind === "edu") return EDU_TYPE_COLORS[chip.type] || EDU_TYPE_COLORS.Homework;
     if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
-    return TASK_COLOR;
+    return { ...TASK_COLOR, bg: "#fff" }; // task chips: colored outline only, no fill
   };
   const chipLabel = (chip) => {
     if (chip.kind === "goal-deadline") return `Goal due: ${chip.title}`;

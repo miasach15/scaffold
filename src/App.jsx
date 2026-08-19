@@ -231,7 +231,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} />
+          <TasksView tasks={tasks} goals={goals} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} onSetActionDone={setActionDone} />
         )}
         {view === "goals" && (
           <GoalsView

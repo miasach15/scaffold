@@ -6,8 +6,9 @@ import { timeToDecimal } from "../../lib/dateHelpers";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import TaskRow from "./TaskRow";
+import GoalTaskRow from "./GoalTaskRow";
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenFocus }) {
+export default function TasksView({ tasks, goals, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenFocus, onSetActionDone }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -27,7 +28,32 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     setTitle(""); setDate(""); setTime("");
   };
 
-  const scheduled = tasks.filter((t) => t.date).sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
+  // Goal small actions with a due date, and milestones with a target date, show up here
+  // too — not just on the Goals page and the Calendar's "Due" row.
+  const goalActionRows = (goals || []).flatMap((g) =>
+    g.milestones.flatMap((m) =>
+      m.actions.filter((a) => a.dueDate).map((a) => ({
+        key: `ga-${a.id}`, kind: "goal-action", title: a.title, date: a.dueDate, done: a.done, category: g.category,
+        onToggle: () => onSetActionDone(g.id, m.id, a.id, !a.done),
+      }))
+    )
+  );
+  const milestoneRows = (goals || []).flatMap((g) =>
+    g.milestones.filter((m) => m.dueDate).map((m) => {
+      const total = m.actions.length;
+      const doneCount = m.actions.filter((a) => a.done).length;
+      return {
+        key: `ms-${m.id}`, kind: "goal-milestone", title: `Milestone: ${m.title}`, date: m.dueDate,
+        done: total > 0 && doneCount === total, category: g.category, onToggle: null,
+      };
+    })
+  );
+
+  const scheduled = [
+    ...tasks.filter((t) => t.date).map((t) => ({ key: t.id, kind: "task", date: t.date, start: t.start, task: t })),
+    ...goalActionRows.map((r) => ({ ...r, start: null })),
+    ...milestoneRows.map((r) => ({ ...r, start: null })),
+  ].sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
   const unscheduled = tasks.filter((t) => !t.date);
 
   return (
@@ -78,7 +104,15 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       {scheduled.length === 0 ? (
         <EmptyState text="No scheduled tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
-        <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />)}</List>
+        <List>
+          {scheduled.map((it) =>
+            it.kind === "task" ? (
+              <TaskRow key={it.key} t={it.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />
+            ) : (
+              <GoalTaskRow key={it.key} title={it.title} date={it.date} done={it.done} category={it.category} onToggle={it.onToggle} />
+            )
+          )}
+        </List>
       )}
     </div>
   );
