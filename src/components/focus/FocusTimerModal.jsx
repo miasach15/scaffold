@@ -69,7 +69,7 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
         ) : (
           <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
             {[15, 25, 50].map((m) => (
-              <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: totalSeconds === m * 60 ? TASK_COLOR.bg : "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : "#4A5568" }}>{m}m</button>
+              <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : "#4A5568" }}>{m}m</button>
             ))}
           </div>
         )}
@@ -80,7 +80,7 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{ ...ghostBtn, flex: 1 }}>Close</button>
-          <button onClick={onComplete} style={{ ...ghostBtn, flex: 1, background: TASK_COLOR.bg, borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
+          <button onClick={onComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
         </div>
       </div>
     </div>

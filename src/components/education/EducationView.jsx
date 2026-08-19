@@ -24,13 +24,14 @@ export default function EducationView({
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [repeat, setRepeat] = useState("None");
+  const [workDays, setWorkDays] = useState(3);
   const [subjectFilter, setSubjectFilter] = useState("All");
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
 
   const add = () => {
     if (!title.trim() || !dueDate) return;
-    onAddEduItem(title.trim(), type, subject, dueDate, repeat);
+    onAddEduItem(title.trim(), type, subject, dueDate, repeat, type === "Assignment" ? workDays : null);
     setTitle(""); setDueDate(""); setRepeat("None");
   };
 
@@ -113,6 +114,12 @@ export default function EducationView({
           <option value="Weekdays">Every weekday</option>
           <option value="Weekly">Every week</option>
         </select>
+        {type === "Assignment" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }} title="We'll spread that many 'Work on' tasks evenly between today and the due date">
+            <span>Work days needed:</span>
+            <input type="number" min={1} max={30} value={workDays} onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))} style={{ ...inputStyle, width: 60, padding: "6px 8px" }} />
+          </div>
+        )}
         <button onClick={add} className="btn-primary" style={primaryBtn}>Add</button>
       </div>
 

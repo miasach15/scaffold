@@ -32,7 +32,7 @@ import PackingListsView from "./components/lifestyle/PackingListsView";
 import GiftsView from "./components/lifestyle/GiftsView";
 import NotesView from "./components/lifestyle/NotesView";
 
-import { addDays, repeatDates, startOfWeek, timeToDecimal } from "./lib/dateHelpers";
+import { addDays, distributeDates, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
@@ -149,8 +149,28 @@ function ScaffoldApp({ userId, onSignOut }) {
     }
   };
 
-  const addEduItem = (title, type, subject, dueDate, repeat) => {
-    addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat) });
+  // workDays: for Assignments, how many days the user wants to work on it — that many
+  // "Work on: <title>" all-day tasks get spread evenly between today and the due date.
+  const addEduItem = async (title, type, subject, dueDate, repeat, workDays) => {
+    const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat) });
+    if (!rows || rows.length === 0) return;
+
+    if (type === "Homework") {
+      // A homework item gets a single reminder task the day before it's due.
+      for (const row of rows) {
+        const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
+        addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: "Education" });
+      }
+    } else if (type === "Assignment" && workDays > 0) {
+      const todayISO = toISO(new Date());
+      for (const row of rows) {
+        const startISO = row.dueDate > todayISO ? todayISO : row.dueDate;
+        const dates = distributeDates(startISO, row.dueDate, workDays);
+        for (const d of dates) {
+          addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
+        }
+      }
+    }
   };
 
   const addEduSession = (eduId, sessionTitle, date, time, duration, isAllDay) => {

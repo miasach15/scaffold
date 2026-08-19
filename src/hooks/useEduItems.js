@@ -27,10 +27,11 @@ export function useEduItems(userId) {
     load();
   }, [load]);
 
-  // occurrences: array of due-date ISO strings
+  // occurrences: array of due-date ISO strings. Returns the inserted rows (id + due_date)
+  // so callers can schedule linked work sessions off the real generated ids.
   const addEduItems = useCallback(
     async ({ title, type, subject, occurrences }) => {
-      if (!userId || !title.trim() || occurrences.length === 0) return;
+      if (!userId || !title.trim() || occurrences.length === 0) return [];
       const rows = occurrences.map((d) => ({
         id: uid(),
         user_id: userId,
@@ -42,6 +43,7 @@ export function useEduItems(userId) {
       }));
       setEduItems((e) => [...e, ...rows.map(fromRow)]);
       await supabase.from("edu_items").insert(rows);
+      return rows.map((r) => ({ id: r.id, dueDate: r.due_date }));
     },
     [userId]
   );
