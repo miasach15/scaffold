@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
-import { distributeDates, toISO } from "../lib/dateHelpers";
+import { dayBefore, distributeDates, toISO } from "../lib/dateHelpers";
 
 const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index });
 const milestoneFromRow = (row) => ({
@@ -109,7 +109,11 @@ export function useGoals(userId) {
     if (dueDate && undated.length > 0) {
       const todayISO = toISO(new Date());
       const startISO = dueDate > todayISO ? todayISO : dueDate;
-      const autoDates = distributeDates(startISO, dueDate, undated.length);
+      // Work leads up to the milestone's due date but never lands on it — you shouldn't
+      // still be working the day it's due.
+      const lastWorkDay = dayBefore(dueDate);
+      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+      const autoDates = distributeDates(startISO, endISO, undated.length);
       undated.forEach((a, i) => dateForAction.set(a.id, autoDates[i]));
     }
 

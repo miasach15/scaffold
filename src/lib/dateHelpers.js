@@ -66,6 +66,7 @@ export const dateRangeISO = (startISO, endISO) => {
   }
   return arr.length ? arr : [startISO];
 };
+export const dayBefore = (iso) => toISO(addDays(new Date(iso + "T00:00:00"), -1));
 export const formatShortDate = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 // customDays: array of day-of-week ints (0=Sun..6=Sat), only used when repeat === "Custom"
