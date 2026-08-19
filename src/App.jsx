@@ -13,6 +13,7 @@ import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
 import OnboardingQuiz from "./components/onboarding/OnboardingQuiz";
 import TopNav from "./components/nav/TopNav";
 import CalendarView from "./components/calendar/CalendarView";
+import MonthView from "./components/calendar/MonthView";
 import QuickAddModal from "./components/calendar/QuickAddModal";
 import TasksView from "./components/tasks/TasksView";
 import GoalsView from "./components/goals/GoalsView";
@@ -65,6 +66,8 @@ function ScaffoldApp({ userId, onSignOut }) {
 
   const [view, setView] = useState("calendar");
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
+  const [dayView, setDayViewRaw] = useState(null); // ISO date string, or null for week view
+  const [monthView, setMonthView] = useState(null); // Date anchor, or null when not in month mode
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
@@ -93,7 +96,13 @@ function ScaffoldApp({ userId, onSignOut }) {
     if (t) setEditingTask(t);
   };
 
-  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const days = useMemo(
+    () => (dayView ? [new Date(dayView + "T00:00:00")] : Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))),
+    [weekStart, dayView]
+  );
+  const setDayView = (iso) => { setMonthView(null); setDayViewRaw(iso); };
+  const enterMonth = () => { setDayViewRaw(null); setMonthView(monthView || new Date()); };
+  const exitMonth = () => setMonthView(null);
 
   const dueChips = useMemo(() => {
     const chips = [];
@@ -277,11 +286,24 @@ function ScaffoldApp({ userId, onSignOut }) {
           overflowY: view === "calendar" ? "hidden" : "auto",
         }}
       >
-        {view === "calendar" && (
+        {view === "calendar" && monthView && (
+          <MonthView
+            monthDate={monthView}
+            setMonthDate={setMonthView}
+            events={events}
+            dueChips={dueChips}
+            onSelectDay={setDayView}
+            onExitMonth={exitMonth}
+          />
+        )}
+        {view === "calendar" && !monthView && (
           <CalendarView
             days={days}
             weekStart={weekStart}
             setWeekStart={setWeekStart}
+            dayView={dayView}
+            onSetDayView={setDayView}
+            onEnterMonth={enterMonth}
             events={events}
             tasks={tasks}
             dueChips={dueChips}

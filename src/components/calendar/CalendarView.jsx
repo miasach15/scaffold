@@ -6,7 +6,7 @@ import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onEditEvent }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onEditEvent }) {
   const CATEGORY_COLORS = useCategoryColors();
   const scrollRef = useRef(null);
   useEffect(() => {
@@ -41,30 +41,51 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
   const taskChipsOnly = dueChips.filter((c) => c.kind === "task" || c.kind === "goal");
   const allDayEventChips = events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category }));
 
+  const isDay = !!dayView;
+  const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));
+  const goNext = () => (isDay ? onSetDayView(toISO(addDays(days[0], 1))) : setWeekStart(addDays(weekStart, 7)));
+  const goToday = () => (isDay ? onSetDayView(todayISO) : setWeekStart(startOfWeek(new Date())));
+  const modeBtnStyle = (active) => ({
+    ...ghostBtn, padding: "5px 10px", fontSize: 12,
+    background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
+    borderColor: active ? "var(--primary, #7B6EF0)" : ghostBtn.border,
+    color: active ? "var(--primary-dark, #5849C4)" : ghostBtn.color,
+  });
+
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700 }}>{monthLabel(days[0])}</div>
-        <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button onClick={() => setWeekStart(startOfWeek(new Date()))} className="btn-ghost" style={ghostBtn}>Today</button>
-          <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="btn-ghost" style={ghostBtn}>‹</button>
-          <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="btn-ghost" style={ghostBtn}>›</button>
+        <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={() => onSetDayView(null)} className="btn-ghost" style={modeBtnStyle(!isDay)}>Week</button>
+            <button onClick={() => onSetDayView(dayView || todayISO)} className="btn-ghost" style={modeBtnStyle(isDay)}>Day</button>
+            <button onClick={onEnterMonth} className="btn-ghost" style={modeBtnStyle(false)}>Month</button>
+          </div>
+          <button onClick={goToday} className="btn-ghost" style={ghostBtn}>Today</button>
+          <button onClick={goPrev} className="btn-ghost" style={ghostBtn}>‹</button>
+          <button onClick={goNext} className="btn-ghost" style={ghostBtn}>›</button>
         </div>
       </div>
 
       <div style={{ ...cardStyle, overflow: "hidden", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        {/* On narrow screens the 7-day grid would get crushed unreadably — this wrapper
+        {/* On narrow screens the day grid would get crushed unreadably — this wrapper
             scrolls horizontally as one synced unit (header + strip rows + hourly grid
             all move together) instead of squishing each day column down. */}
         <div style={{ overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-          <div style={{ minWidth: 760, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
+          <div style={{ minWidth: isDay ? 320 : 760, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
               <div />
               {days.map((d) => {
                 const iso = toISO(d);
                 const isToday = iso === todayISO;
                 return (
-                  <div key={iso} style={{ padding: "12px 6px", textAlign: "center", borderLeft: "1px solid #F4F6F8" }}>
+                  <div
+                    key={iso}
+                    onClick={isDay ? undefined : () => onSetDayView(iso)}
+                    title={isDay ? undefined : "Click to zoom into this day"}
+                    style={{ padding: "12px 6px", textAlign: "center", borderLeft: "1px solid #F4F6F8", cursor: isDay ? "default" : "pointer" }}
+                  >
                     <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 700, letterSpacing: 0.6 }}>{dayLabel(d).toUpperCase()}</div>
                     <div style={{
                       fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 700, marginTop: 3, width: 32, height: 32, lineHeight: "32px",
@@ -94,7 +115,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
                   </div>
                 ))}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(7, minmax(0, 1fr))`, position: "relative" }}>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`, position: "relative" }}>
                 {days.map((d) => {
                   const iso = toISO(d);
                   return (

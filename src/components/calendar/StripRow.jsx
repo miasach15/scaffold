@@ -3,7 +3,7 @@ import { daysUntil, toISO } from "../../lib/dateHelpers";
 
 export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
       <div style={{ fontSize: 10, color: "#9CA3AF", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
