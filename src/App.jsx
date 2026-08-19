@@ -94,6 +94,11 @@ function ScaffoldApp({ userId, onSignOut }) {
       const allActionsDone = allActions.length > 0 && allActions.every((a) => a.done);
       if (g.deadline) chips.push({ id: g.id, kind: "goal-deadline", title: g.title, date: g.deadline, done: allActionsDone, category: g.category, goalId: g.id });
       g.milestones.forEach((m) => {
+        if (m.dueDate) {
+          const total = m.actions.length;
+          const doneCount = m.actions.filter((a) => a.done).length;
+          chips.push({ id: m.id, kind: "goal-milestone", title: m.title, date: m.dueDate, done: total > 0 && doneCount === total, category: g.category, goalId: g.id, milestoneId: m.id });
+        }
         m.actions.forEach((a) => {
           if (a.dueDate) chips.push({ id: a.id, kind: "goal", title: a.title, date: a.dueDate, done: a.done, category: g.category, goalId: g.id, milestoneId: m.id });
         });
@@ -231,7 +236,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} goals={goals} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} onSetActionDone={setActionDone} />
+          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} />
         )}
         {view === "goals" && (
           <GoalsView

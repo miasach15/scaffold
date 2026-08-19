@@ -18,7 +18,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
 
   const chipStyle = (chip) => {
-    if (chip.kind === "goal-deadline") {
+    if (chip.kind === "goal-deadline" || chip.kind === "goal-milestone") {
       const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
       return { bg: c.border, border: c.border, text: "#fff" };
     }
@@ -29,11 +29,12 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
   };
   const chipLabel = (chip) => {
     if (chip.kind === "goal-deadline") return `Goal due: ${chip.title}`;
+    if (chip.kind === "goal-milestone") return `Milestone: ${chip.title}`;
     if (chip.kind === "edu") return `${chip.type}${chip.subject ? ` (${chip.subject})` : ""}: ${chip.title}`;
     return chip.title;
   };
-  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal" || c.kind === "goal-deadline" || c.kind === "edu");
-  const taskChipsOnly = dueChips.filter((c) => c.kind === "task");
+  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "edu");
+  const taskChipsOnly = dueChips.filter((c) => c.kind === "task" || c.kind === "goal");
   const allDayEventChips = events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category }));
 
   return (
