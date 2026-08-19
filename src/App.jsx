@@ -20,6 +20,7 @@ import HabitsView from "./components/habits/HabitsView";
 import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
+import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -56,7 +57,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
@@ -67,6 +68,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showManagePages, setShowManagePages] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -86,6 +88,10 @@ function ScaffoldApp({ userId, onSignOut }) {
   };
 
   const openFocus = (id, title) => setFocusTask({ id, title });
+  const openTaskDetail = (id) => {
+    const t = tasks.find((x) => x.id === id);
+    if (t) setEditingTask(t);
+  };
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
@@ -118,7 +124,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const onChipClick = (chip) => {
     if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
     else if (chip.kind === "edu") setEduDone(chip.id, !chip.done);
-    else if (chip.kind === "task") setTaskDone(chip.id, !chip.done);
+    else if (chip.kind === "task") openTaskDetail(chip.id);
   };
 
   const completeOnboarding = async (answers) => {
@@ -281,13 +287,13 @@ function ScaffoldApp({ userId, onSignOut }) {
             onCellClick={(date, hour) => setModal({ date, hour })}
             onToggleTask={setTaskDone}
             onChipClick={onChipClick}
-            onOpenFocus={openFocus}
+            onOpenTaskDetail={openTaskDetail}
             onRescheduleTask={rescheduleTask}
             onEditEvent={setEditingEvent}
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenFocus={openFocus} />
+          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenTaskDetail={openTaskDetail} />
         )}
         {view === "goals" && (
           <GoalsView
@@ -406,6 +412,17 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setFocusTask(null)}
           onComplete={() => { setTaskDone(focusTask.id, true); setFocusTask(null); }}
           defaultMinutes={profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25}
+        />
+      )}
+
+      {editingTask && (
+        <TaskDetailModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onRename={renameTask}
+          onToggleDone={setTaskDone}
+          onRemove={removeTask}
+          onOpenFocus={openFocus}
         />
       )}
 

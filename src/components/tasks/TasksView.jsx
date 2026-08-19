@@ -9,7 +9,7 @@ import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Mi
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TaskRow from "./TaskRow";
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenFocus }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -158,7 +158,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       {unscheduled.length > 0 && (
         <>
           <SubHeader>Backlog</SubHeader>
-          <List>{unscheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} />)}</List>
+          <List>{unscheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} />)}</List>
         </>
       )}
 
@@ -166,7 +166,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       {scheduled.length === 0 ? (
         <EmptyState text="No scheduled tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
-        <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />)}</List>
+        <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />)}</List>
       )}
 
       {pendingPlan && (

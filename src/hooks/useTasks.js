@@ -60,6 +60,12 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ category }).eq("id", id);
   }, []);
 
+  const renameTask = useCallback(async (id, title) => {
+    if (!title.trim()) return;
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, title: title.trim() } : t)));
+    await supabase.from("tasks").update({ title: title.trim() }).eq("id", id);
+  }, []);
+
   const removeTask = useCallback(async (id) => {
     setTasks((ts) => ts.filter((t) => t.id !== id));
     await supabase.from("tasks").delete().eq("id", id);
@@ -76,5 +82,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, removeTask, removeTasksByEduId, rescheduleTask };
 }

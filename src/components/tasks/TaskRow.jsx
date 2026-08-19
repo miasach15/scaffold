@@ -5,7 +5,7 @@ import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenFocus }) {
+export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenDetail }) {
   const CATEGORY_COLORS = useCategoryColors();
   const category = t.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
@@ -23,7 +23,7 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
       <button onClick={cycleCategory} title={`${category} — click to change category`} style={{ background: "none", border: "none", padding: 0, cursor: onSetCategory ? "pointer" : "default" }}>
         <Swatch color={col} />
       </button>
-      <button onClick={() => onOpenFocus(t.id, t.title)} style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000" }}>{t.title}</button>
+      <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
       {showDate && <UrgencyBadge iso={t.date} done={t.done} />}
       {showDate && <div style={{ fontSize: 12, color: "#93A0AD" }}>{t.date}</div>}
