@@ -58,7 +58,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
             all move together) instead of squishing each day column down. */}
         <div style={{ overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <div style={{ minWidth: 760, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
+            <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
               <div />
               {days.map((d) => {
                 const iso = toISO(d);
@@ -94,7 +94,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
                   </div>
                 ))}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(7, 1fr)`, position: "relative" }}>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(7, minmax(0, 1fr))`, position: "relative" }}>
                 {days.map((d) => {
                   const iso = toISO(d);
                   return (

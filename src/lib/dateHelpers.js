@@ -197,7 +197,12 @@ export const groupItemsByDate = (items) => {
   }
   return Array.from(map.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([date, titles]) => ({ date, title: titles.join(" + ") }));
+    .map(([date, titles]) => ({
+      // Joining every merged title in full can produce a very long string — these show
+      // up as small calendar chips, so cap it to the first title plus a count instead.
+      date,
+      title: titles.length === 1 ? titles[0] : `${titles[0]} +${titles.length - 1} more`,
+    }));
 };
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);

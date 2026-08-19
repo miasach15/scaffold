@@ -3,7 +3,7 @@ import { daysUntil, toISO } from "../../lib/dateHelpers";
 
 export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, 1fr)`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
       <div style={{ fontSize: 10, color: "#9CA3AF", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
@@ -20,7 +20,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 if (data.taskId) onDropTask(data.taskId, iso);
               } catch {}
             } : undefined}
-            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3, cursor: onAddClick ? "pointer" : undefined }}
+            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3, cursor: onAddClick ? "pointer" : undefined, minWidth: 0 }}
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);
@@ -32,7 +32,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 boxShadow: overdue ? `inset 2px 0 0 ${TONE.danger.text}` : "none",
                 textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 600,
                 cursor: c.kind === "task" ? "grab" : onChipClick ? "pointer" : "default",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "100%",
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
               };
               const dragProps = c.kind === "task" ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: c.id })) } : {};
               const fullLabel = chipLabel(c);

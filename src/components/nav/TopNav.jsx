@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, Film, BookMarked, UtensilsCrossed, Rocket, Luggage, Gift, StickyNote, ChevronDown, Settings, Plus } from "lucide-react";
 import { LIFESTYLE_PAGE_META, PRIMARY_TINT } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
@@ -41,12 +42,28 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
   const lifestyleActive = lifestyle.some((p) => p.key === view);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const menuRef = useRef(null);
+  const menuBtnRef = useRef(null);
+
+  // The nav tabs sit in a horizontally-scrolling strip (so the whole bar stays on one
+  // row on narrow screens); that container clips anything positioned outside its own
+  // bounds, which was swallowing this dropdown. Render it into a portal instead, placed
+  // with fixed coordinates from the button's own position, so it always shows up.
+  const toggleMenu = () => {
+    if (!menuOpen && menuBtnRef.current) {
+      const r = menuBtnRef.current.getBoundingClientRect();
+      setMenuPos({ top: r.bottom + 6, left: r.left });
+    }
+    setMenuOpen((o) => !o);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
     const onDocClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target) && menuBtnRef.current && !menuBtnRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -67,9 +84,10 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
           <div style={{ width: 1, height: 20, background: "#E2E8F0", margin: "0 4px", flexShrink: 0 }} />
           <NavTab active={view === "education"} onClick={() => setView("education")} label="Education" Icon={GraduationCap} />
 
-          <div style={{ position: "relative", flexShrink: 0 }} ref={menuRef}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
             <button
-              onClick={() => setMenuOpen((o) => !o)}
+              ref={menuBtnRef}
+              onClick={toggleMenu}
               style={{
                 padding: "7px 14px", fontSize: 14, fontWeight: 500, borderRadius: 999, marginBottom: 6,
                 color: lifestyleActive ? "#000000" : "#93897A", background: lifestyleActive ? PRIMARY_TINT : "transparent", border: "none",
@@ -79,8 +97,8 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
               Lifestyle
               <ChevronDown size={14} strokeWidth={2.3} style={{ transform: menuOpen ? "rotate(180deg)" : "none", transition: "transform .15s ease" }} />
             </button>
-            {menuOpen && (
-              <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14, boxShadow: "0 12px 32px rgba(15,23,42,0.12)", padding: 6, minWidth: 210, zIndex: 30 }}>
+            {menuOpen && createPortal(
+              <div ref={menuRef} style={{ position: "fixed", top: menuPos.top, left: menuPos.left, background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14, boxShadow: "0 12px 32px rgba(15,23,42,0.12)", padding: 6, minWidth: 210, zIndex: 1000 }}>
                 {lifestyle.length === 0 ? (
                   <div style={{ fontSize: 12.5, color: "#9CA3AF", padding: "8px 10px" }}>No lifestyle pages turned on yet.</div>
                 ) : (
@@ -111,7 +129,8 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
                   <Plus size={15} strokeWidth={2.3} />
                   Add or remove pages
                 </button>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>
