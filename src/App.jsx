@@ -9,6 +9,7 @@ import { useJournal } from "./hooks/useJournal";
 import { useEduItems } from "./hooks/useEduItems";
 
 import AuthScreen from "./components/auth/AuthScreen";
+import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
 import OnboardingQuiz from "./components/onboarding/OnboardingQuiz";
 import TopNav from "./components/nav/TopNav";
 import CalendarView from "./components/calendar/CalendarView";
@@ -36,9 +37,10 @@ import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, s
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
 
   if (authLoading) return <FullScreenMessage text="Loading..." />;
+  if (passwordRecovery) return <ResetPasswordScreen />;
   if (!user) return <AuthScreen />;
   return <ScaffoldApp userId={user.id} onSignOut={signOut} />;
 }
@@ -234,6 +236,9 @@ function ScaffoldApp({ userId, onSignOut }) {
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; transform: translateY(-1px); }
+        @media (max-width: 640px) {
+          input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
+        }
       `}</style>
 
       <TopNav

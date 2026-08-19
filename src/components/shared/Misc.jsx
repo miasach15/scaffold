@@ -20,7 +20,7 @@ export function SubHeader({ children }) {
   return <div style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", letterSpacing: 0.5, textTransform: "uppercase", margin: "18px 0 8px", background: "#EFEFEF", display: "inline-block", padding: "5px 12px", borderRadius: 999 }}>{children}</div>;
 }
 export function AddRow({ children }) {
-  return <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>{children}</div>;
+  return <div style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>{children}</div>;
 }
 export function List({ children }) {
   return <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{children}</div>;
