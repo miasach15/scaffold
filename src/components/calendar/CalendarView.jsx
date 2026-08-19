@@ -22,10 +22,14 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
       const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
       return { bg: c.border, border: c.border, text: "#fff" };
     }
-    if (chip.kind === "goal") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     if (chip.kind === "edu") return EDU_TYPE_COLORS[chip.type] || EDU_TYPE_COLORS.Homework;
     if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
-    return { ...TASK_COLOR, bg: "#fff" }; // task chips: colored outline only, no fill
+    // "goal" (small actions) and "task" chips: colored outline only, by category, no fill
+    if (chip.kind === "goal" || chip.kind === "task") {
+      const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+      return { ...c, bg: "#fff" };
+    }
+    return { ...TASK_COLOR, bg: "#fff" };
   };
   const chipLabel = (chip) => {
     if (chip.kind === "goal-deadline") return `Goal due: ${chip.title}`;
@@ -111,7 +115,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, events, ta
                     <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} />
                   ))}
                   {tasks.filter((t) => t.date === iso && t.start != null).map((t) => (
-                    <CalBlock key={t.id} item={t} color={TASK_COLOR} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
+                    <CalBlock key={t.id} item={t} color={{ ...(CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal), bg: "#fff" }} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
                   ))}
                   {iso === todayISO && (
                     <div style={{ position: "absolute", top: nowDecimal * ROW_H, left: 0, right: 0, height: 0, zIndex: 5, pointerEvents: "none" }}>

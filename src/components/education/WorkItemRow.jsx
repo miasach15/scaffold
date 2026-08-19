@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { EDU_TYPE_COLORS, TASK_COLOR } from "../../lib/constants";
+import { EDU_TYPE_COLORS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
 export default function WorkItemRow({ item }) {
-  const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : TASK_COLOR;
+  const CATEGORY_COLORS = useCategoryColors();
+  // Session/task rows here are always Education-category work sessions, so they're
+  // outlined in the Education category color rather than a fixed task pink.
+  const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : CATEGORY_COLORS.Education;
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (

@@ -1,4 +1,4 @@
-import { CATEGORY_KEYS, EDU_TYPE_COLORS, TASK_COLOR } from "../../lib/constants";
+import { CATEGORY_KEYS, EDU_TYPE_COLORS } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -19,7 +19,7 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
 
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
-      <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={TASK_COLOR} />
+      <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
       <button onClick={cycleCategory} title={`${category} — click to change category`} style={{ background: "none", border: "none", padding: 0, cursor: onSetCategory ? "pointer" : "default" }}>
         <Swatch color={col} />
       </button>

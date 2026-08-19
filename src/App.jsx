@@ -108,7 +108,7 @@ function ScaffoldApp({ userId, onSignOut }) {
       if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, done: e.done, type: e.type, subject: e.subject });
     });
     tasks.forEach((t) => {
-      if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done });
+      if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category });
     });
     return chips;
   }, [goals, eduItems, tasks]);
