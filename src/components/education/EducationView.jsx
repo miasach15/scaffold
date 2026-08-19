@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { GraduationCap, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, decimalToTimeLabel, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -25,14 +25,27 @@ export default function EducationView({
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [repeat, setRepeat] = useState("None");
-  const [workMode, setWorkMode] = useState("days"); // "days" (pick a count), "everyday", or "ai" (break it down)
+  const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
+  const [useAI, setUseAI] = useState(false); // break it down with AI, applied on top of whichever schedule above is picked
   const [assignmentDetails, setAssignmentDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
   const [subjectFilter, setSubjectFilter] = useState("All");
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
+
+  // How many work days the currently-picked schedule implies — used only as a soft hint
+  // for the AI so its step count roughly lines up with "every day" vs a chosen day count.
+  const scheduleDayCount = () => {
+    if (!dueDate) return null;
+    if (workMode === "days") return workDays;
+    const todayISO = toISO(new Date());
+    const startISO = dueDate > todayISO ? todayISO : dueDate;
+    const lastWorkDay = dayBefore(dueDate);
+    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+    return dateRangeISO(startISO, endISO).length;
+  };
 
   const resetAddForm = () => {
     setTitle(""); setDueDate(""); setRepeat("None"); setAssignmentDetails("");
@@ -44,7 +57,7 @@ export default function EducationView({
     setBreakdownError(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
-        body: { title: title.trim(), details: assignmentDetails.trim(), dueDate },
+        body: { title: title.trim(), details: assignmentDetails.trim(), dueDate, stepHint: scheduleDayCount() },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -61,7 +74,7 @@ export default function EducationView({
 
   const add = () => {
     if (!title.trim() || !dueDate) return;
-    if (type === "Assignment" && workMode === "ai") { breakDownAssignment(); return; }
+    if (type === "Assignment" && useAI) { breakDownAssignment(); return; }
     const schedule = type === "Assignment" ? (workMode === "everyday" ? "everyday" : workDays) : null;
     onAddEduItem(title.trim(), type, subject, dueDate, repeat, schedule);
     resetAddForm();
@@ -149,7 +162,7 @@ export default function EducationView({
         {type === "Assignment" && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
             <span>Work on it:</span>
-            {["days", "everyday", "ai"].map((m) => (
+            {["days", "everyday"].map((m) => (
               <button
                 key={m}
                 onClick={() => setWorkMode(m)}
@@ -158,11 +171,9 @@ export default function EducationView({
                   border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
                   background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
                   color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                  display: "inline-flex", alignItems: "center", gap: 4,
                 }}
               >
-                {m === "ai" && <Sparkles size={11} strokeWidth={2.3} />}
-                {m === "everyday" ? "Every day" : m === "ai" ? "Break it down" : "Pick days"}
+                {m === "everyday" ? "Every day" : "Pick days"}
               </button>
             ))}
             {workMode === "days" && (
@@ -176,20 +187,36 @@ export default function EducationView({
           </div>
         )}
         <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
-          {type === "Assignment" && workMode === "ai" ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
+          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
         </button>
       </div>
 
-      {type === "Assignment" && workMode === "ai" && (
+      {type === "Assignment" && (
         <div style={{ marginBottom: 12 }}>
-          <textarea
-            value={assignmentDetails}
-            onChange={(e) => setAssignmentDetails(e.target.value)}
-            placeholder="Paste or describe the assignment instructions — we'll turn them into ordered work steps leading up to the due date."
-            rows={3}
-            style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-          />
-          {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+          <button
+            onClick={() => setUseAI((x) => !x)}
+            style={{
+              padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+              border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+              background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
+              color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+              display: "inline-flex", alignItems: "center", gap: 4,
+            }}
+          >
+            <Sparkles size={11} strokeWidth={2.3} /> Break it down with AI
+          </button>
+          {useAI && (
+            <div style={{ marginTop: 8 }}>
+              <textarea
+                value={assignmentDetails}
+                onChange={(e) => setAssignmentDetails(e.target.value)}
+                placeholder="Paste or describe the assignment instructions — we'll turn them into ordered work steps leading up to the due date."
+                rows={3}
+                style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+              />
+              {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+            </div>
+          )}
         </div>
       )}
 

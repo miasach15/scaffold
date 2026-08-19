@@ -35,7 +35,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { title, details, dueDate } = await req.json();
+    const { title, details, dueDate, stepHint } = await req.json();
     if (!details || !details.trim()) {
       return new Response(JSON.stringify({ error: "missing assignment details" }), { status: 400, headers: corsHeaders });
     }
@@ -52,6 +52,7 @@ ${details.trim()}
 Break this into an ordered list of concrete work steps a student would do in sequence to complete and turn in the assignment — from the first step to final submission.
 
 Each step should be sized as ONE sitting of about 45 minutes to 1.5 hours of real, substantial focused work — err toward the longer end. This is NOT a quick checklist item: things like "open the doc", "read the prompt", "check requirements", or "inspect checklist" are all too small on their own — fold trivial steps like that into the larger piece of real work they support. Size the number of steps to the actual scope of the assignment: a short assignment might only need 2-3 steps, a substantial one might need up to 8-10 — but every single step must independently be a real 45-90 minute sitting of work, never a checklist trivia item.
+${stepHint ? `\nThe student has ${stepHint} work day${stepHint === 1 ? "" : "s"} available before it's due, so aim for around ${stepHint} steps if that genuinely fits the assignment's scope — but never pad the list with filler or merge unrelated work just to hit that number. Go with fewer or more steps if the real scope calls for it.` : ""}
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Outline the essay", "Draft intro paragraph", "Cite sources", "Proofread and submit") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".`;
