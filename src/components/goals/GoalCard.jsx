@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Pencil, Check, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Pencil, Check, X, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { supabase } from "../../lib/supabase";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -11,6 +12,8 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(goal.title);
+  const [filling, setFilling] = useState(false);
+  const [fillError, setFillError] = useState(null);
   // New, empty goals start expanded so it's obvious where to add the first milestone;
   // goals that already have content start collapsed to keep the list short.
   const [expanded, setExpanded] = useState(goal.milestones.length === 0);
@@ -35,6 +38,32 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
     setEditingTitle(false);
   };
   const cancelTitle = () => setEditingTitle(false);
+
+  const fillInForMe = async () => {
+    if (filling) return;
+    setFilling(true);
+    setFillError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-goal-plan", {
+        body: { outcome: goal.title, category: goal.category },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const milestones = data?.milestones || [];
+      if (milestones.length === 0) throw new Error("No plan came back — try renaming the goal to be more specific.");
+      for (const m of milestones) {
+        if (!m.title) continue;
+        const milestoneId = await onAddMilestone(goal.id, m.title);
+        for (const a of m.actions || []) {
+          if (a.title) await onAddAction(goal.id, milestoneId, a.title, null);
+        }
+      }
+    } catch (e) {
+      setFillError(e.message || "Couldn't reach the planner. It may not be set up yet.");
+    } finally {
+      setFilling(false);
+    }
+  };
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 12, overflow: "hidden", transition: "box-shadow .15s ease, transform .15s ease" }}>
@@ -83,7 +112,17 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
       {expanded && (
         <div style={{ padding: "10px 14px" }}>
           {goal.milestones.length === 0 ? (
-            <div style={{ fontSize: 12.5, color: "#B4BCC5", marginBottom: 8 }}>No milestones yet. Add the first big step below.</div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12.5, color: "#B4BCC5", marginBottom: 8 }}>No milestones yet. Add the first big step below, or let AI fill it in for you.</div>
+              <button
+                onClick={fillInForMe}
+                disabled={filling}
+                style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5, opacity: filling ? 0.6 : 1 }}
+              >
+                <Sparkles size={12} strokeWidth={2.3} /> {filling ? "Filling it in..." : "Fill this in for me"}
+              </button>
+              {fillError && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{fillError}</div>}
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 10 }}>
               {goal.milestones.map((m) => (
