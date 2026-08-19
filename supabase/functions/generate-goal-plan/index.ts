@@ -55,7 +55,9 @@ serve(async (req) => {
 
     const prompt = `The user wants to achieve this outcome: "${outcome.trim()}"${category ? ` (category: ${category})` : ""}.
 
-Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 small, specific, actionable next actions — things that could go on a to-do list, not vague advice.
+Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 next actions — things that could go on a to-do list, not vague advice.
+
+Each action should be sized as ONE sitting of about 30 minutes to an hour of focused work — not a 5-minute micro-task (like "open a spreadsheet") and not a multi-hour or multi-day chunk that's really several actions glued together. If a step you're considering would take under 30 minutes, merge it with a neighboring step; if it would take much more than an hour, split it into two.
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Milestone titles: max ~6 words.
