@@ -87,20 +87,35 @@ export const repeatDates = (startISO, repeat, customDays) => {
   }
   return dates.length ? dates : [startISO];
 };
-// Spreads `count` items evenly across the range (startISO, endISO], with the
-// last item always landing exactly on endISO. Used to auto-assign due dates
-// to a milestone's small actions once the milestone itself gets a target date.
+// Spreads `count` items evenly across the range [startISO, endISO] with never more than
+// one item per day. If it fits, the last item lands exactly on endISO. If there are more
+// items than days available (e.g. 8 steps but only 3 days before something's due), it
+// falls back to one item per day starting at startISO, spilling past endISO only as a
+// last resort — that's still better than stacking two items on the same day.
 export const distributeDates = (startISO, endISO, count) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
-  const totalDays = Math.max(1, Math.round((end - start) / 86400000));
-  const dates = [];
-  for (let i = 1; i <= count; i++) {
-    const offset = Math.round((totalDays * i) / count);
-    dates.push(toISO(addDays(start, offset)));
+  const totalDays = Math.max(0, Math.round((end - start) / 86400000));
+  const availableSlots = totalDays + 1;
+
+  let offsets;
+  if (count <= availableSlots) {
+    offsets = [];
+    for (let i = 1; i <= count; i++) {
+      let offset = Math.round((totalDays * i) / count);
+      if (offsets.length && offset <= offsets[offsets.length - 1]) offset = offsets[offsets.length - 1] + 1;
+      offsets.push(Math.min(offset, totalDays));
+    }
+    // Clamping to totalDays can bunch the tail up against the end — walk backward and
+    // spread those out too, so every offset stays distinct.
+    for (let i = offsets.length - 2; i >= 0; i--) {
+      if (offsets[i] >= offsets[i + 1]) offsets[i] = offsets[i + 1] - 1;
+    }
+  } else {
+    offsets = Array.from({ length: count }, (_, i) => i);
   }
-  return dates;
+  return offsets.map((o) => toISO(addDays(start, o)));
 };
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
