@@ -6,6 +6,7 @@ import { dayBefore, distributeDatesByLoad, timeToDecimal, toISO } from "../../li
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
+import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TaskRow from "./TaskRow";
 
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenFocus }) {
@@ -18,6 +19,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
+  const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
 
   const resetForm = () => {
     setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false);
@@ -41,15 +43,19 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks);
-      steps.forEach((stepTitle, i) => {
-        onAddTask({ title: stepTitle, date: dates[i], start: null, duration: null, category });
-      });
-      resetForm();
+      setPendingPlan({ items: steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
       setBreakingDown(false);
     }
+  };
+
+  const confirmPlan = () => {
+    if (!pendingPlan) return;
+    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category }));
+    setPendingPlan(null);
+    resetForm();
   };
 
   const add = () => {
@@ -161,6 +167,10 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         <EmptyState text="No scheduled tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
         <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenFocus={onOpenFocus} showDate />)}</List>
+      )}
+
+      {pendingPlan && (
+        <BreakdownPreviewModal heading={title || "Your task"} items={pendingPlan.items} onConfirm={confirmPlan} onCancel={() => setPendingPlan(null)} />
       )}
     </div>
   );

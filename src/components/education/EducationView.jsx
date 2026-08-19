@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { GraduationCap, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
+import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
 import WorkItemRow from "./WorkItemRow";
 
@@ -31,6 +32,7 @@ export default function EducationView({
   const [assignmentDetails, setAssignmentDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
+  const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
   const [subjectFilter, setSubjectFilter] = useState("All");
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
@@ -51,6 +53,21 @@ export default function EducationView({
     setTitle(""); setDueDate(""); setRepeat("None"); setAssignmentDetails("");
   };
 
+  // Computes the same schedule App.jsx's addEduItem would, just for preview — the
+  // actual insert happens only once the plan is confirmed in the modal.
+  const previewSchedule = (schedule) => {
+    const todayISO = toISO(new Date());
+    const startISO = dueDate > todayISO ? todayISO : dueDate;
+    const lastWorkDay = dayBefore(dueDate);
+    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+    if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
+      const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks);
+      return schedule.steps.map((t, i) => ({ title: t, date: dates[i] }));
+    }
+    const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks);
+    return dates.map((d) => ({ title: `Work on: ${title.trim()}`, date: d }));
+  };
+
   const breakDownAssignment = async () => {
     if (!title.trim() || !dueDate || !assignmentDetails.trim() || breakingDown) return;
     setBreakingDown(true);
@@ -63,8 +80,8 @@ export default function EducationView({
       if (data?.error) throw new Error(data.error);
       const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
       if (steps.length === 0) throw new Error("No steps came back — try adding more detail.");
-      onAddEduItem(title.trim(), type, subject, dueDate, "None", { steps });
-      resetAddForm();
+      const schedule = { steps };
+      setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
@@ -75,8 +92,19 @@ export default function EducationView({
   const add = () => {
     if (!title.trim() || !dueDate) return;
     if (type === "Assignment" && useAI) { breakDownAssignment(); return; }
-    const schedule = type === "Assignment" ? (workMode === "everyday" ? "everyday" : workDays) : null;
-    onAddEduItem(title.trim(), type, subject, dueDate, repeat, schedule);
+    if (type === "Assignment") {
+      const schedule = workMode === "everyday" ? "everyday" : workDays;
+      setPendingPlan({ schedule, repeatValue: repeat, items: previewSchedule(schedule) });
+      return;
+    }
+    onAddEduItem(title.trim(), type, subject, dueDate, repeat, null);
+    resetAddForm();
+  };
+
+  const confirmPlan = () => {
+    if (!pendingPlan) return;
+    onAddEduItem(title.trim(), type, subject, dueDate, pendingPlan.repeatValue, pendingPlan.schedule);
+    setPendingPlan(null);
     resetAddForm();
   };
 
@@ -187,7 +215,7 @@ export default function EducationView({
           </div>
         )}
         <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
-          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
+          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : type === "Assignment" ? "Review plan" : "Add"}
         </button>
       </div>
 
@@ -269,6 +297,10 @@ export default function EducationView({
           </div>
         </div>
       </div>
+
+      {pendingPlan && (
+        <BreakdownPreviewModal heading={title || "Your assignment"} items={pendingPlan.items} onConfirm={confirmPlan} onCancel={() => setPendingPlan(null)} />
+      )}
     </div>
   );
 }
