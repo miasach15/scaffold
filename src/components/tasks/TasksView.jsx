@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { CheckSquare, Sparkles } from "lucide-react";
+import { CheckSquare, Sparkles, NotebookPen } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { inputStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TaskRow from "./TaskRow";
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, inboxItems, onTurnIntoTask, onDiscardInbox }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -153,6 +153,23 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
           <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller tasks spread out before {date || "the due date"}, instead of adding it as one task.</div>
           {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
         </div>
+      )}
+
+      {inboxItems && inboxItems.length > 0 && (
+        <>
+          <SubHeader>Inbox ({inboxItems.length})</SubHeader>
+          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Things you jotted down in the moment — turn each into a real task, or discard it.</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+            {inboxItems.map((it) => (
+              <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>
+                <NotebookPen size={15} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, fontSize: 14, minWidth: 0, whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>{it.text}</div>
+                <button onClick={() => onTurnIntoTask(it)} style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}>Turn into task</button>
+                <button onClick={() => onDiscardInbox(it.id)} className="btn-delete" style={{ background: "none", border: "none", fontSize: 16, color: "#C2C9D1", padding: "0 4px" }}>×</button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {unscheduled.length > 0 && (

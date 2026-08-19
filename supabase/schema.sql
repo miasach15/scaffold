@@ -56,6 +56,16 @@ create table if not exists tasks (
   created_at timestamptz not null default now()
 );
 
+-- ---------- inbox (quick capture) ----------
+-- Zero-friction jot-it-down-now list — e.g. mid-class, no time to pick a date/category.
+-- Reviewed later and turned into a real task (or discarded) from the Tasks page.
+create table if not exists inbox_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  text text not null,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- goals / milestones / actions ----------
 create table if not exists goals (
   id uuid primary key default gen_random_uuid(),
@@ -211,6 +221,7 @@ alter table packing_lists enable row level security;
 alter table packing_list_items enable row level security;
 alter table gifts enable row level security;
 alter table notes enable row level security;
+alter table inbox_items enable row level security;
 
 drop policy if exists "own profile" on profiles;
 create policy "own profile" on profiles for all
@@ -222,6 +233,10 @@ create policy "own events" on events for all
 
 drop policy if exists "own tasks" on tasks;
 create policy "own tasks" on tasks for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own inbox_items" on inbox_items;
+create policy "own inbox_items" on inbox_items for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own goals" on goals;

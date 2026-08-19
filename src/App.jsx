@@ -7,6 +7,7 @@ import { useGoals } from "./hooks/useGoals";
 import { useHabits } from "./hooks/useHabits";
 import { useJournal } from "./hooks/useJournal";
 import { useEduItems } from "./hooks/useEduItems";
+import { useInbox } from "./hooks/useInbox";
 
 import AuthScreen from "./components/auth/AuthScreen";
 import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
@@ -22,6 +23,7 @@ import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
+import QuickCapture from "./components/shared/QuickCapture";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -63,6 +65,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
+  const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem } = useInbox(userId);
 
   const [view, setView] = useState("calendar");
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
@@ -94,6 +97,10 @@ function ScaffoldApp({ userId, onSignOut }) {
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
+  };
+  const turnInboxIntoTask = (item) => {
+    addTask({ title: item.text, date: null, start: null, duration: null, category: "Personal" });
+    removeInboxItem(item.id);
   };
 
   const days = useMemo(
@@ -316,7 +323,17 @@ function ScaffoldApp({ userId, onSignOut }) {
           />
         )}
         {view === "tasks" && (
-          <TasksView tasks={tasks} onAddTask={addTask} onToggleDone={setTaskDone} onSetCategory={setTaskCategory} onRemove={removeTask} onOpenTaskDetail={openTaskDetail} />
+          <TasksView
+            tasks={tasks}
+            onAddTask={addTask}
+            onToggleDone={setTaskDone}
+            onSetCategory={setTaskCategory}
+            onRemove={removeTask}
+            onOpenTaskDetail={openTaskDetail}
+            inboxItems={inboxItems}
+            onTurnIntoTask={turnInboxIntoTask}
+            onDiscardInbox={removeInboxItem}
+          />
         )}
         {view === "goals" && (
           <GoalsView
@@ -459,6 +476,8 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setShowWeeklyReview(false)}
         />
       )}
+
+      {!tourOpen && <QuickCapture onCapture={addInboxItem} />}
 
       {tourOpen && (
         <TourOverlay
