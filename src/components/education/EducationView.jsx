@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GraduationCap, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
@@ -19,9 +19,19 @@ export default function EducationView({
   onRemoveSession,
   onSetSessionDone,
   onOpenFocus,
+  prefillTitle,
+  onConsumePrefill,
 }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(prefillTitle || "");
+
+  // Arriving here from Quick Capture (category: Education) — the title's already
+  // filled in above; this just tells App.jsx not to reapply it if we mount again later.
+  useEffect(() => {
+    if (prefillTitle) onConsumePrefill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");

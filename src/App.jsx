@@ -71,6 +71,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [dayView, setDayViewRaw] = useState(null); // ISO date string, or null for week view
   const [monthView, setMonthView] = useState(null); // Date anchor, or null when not in month mode
+  const [prefillEduTitle, setPrefillEduTitle] = useState(null); // set by Quick Capture when category is Education
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
@@ -99,8 +100,20 @@ function ScaffoldApp({ userId, onSignOut }) {
     if (t) setEditingTask(t);
   };
   const turnInboxIntoTask = (item) => {
-    addTask({ title: item.text, date: null, start: null, duration: null, category: "Personal" });
+    addTask({ title: item.text, date: null, start: null, duration: null, category: item.category || "Personal" });
     removeInboxItem(item.id);
+  };
+
+  // Quick Capture: Education captures skip the Inbox entirely and go straight to the
+  // Education page with the text prefilled, since assignments/tests need real fields
+  // (type, subject, due date) that a quick jot-down can't supply.
+  const handleQuickCapture = (text, category) => {
+    if (category === "Education") {
+      setPrefillEduTitle(text.trim());
+      setView("education");
+    } else {
+      addInboxItem(text, category);
+    }
   };
 
   const days = useMemo(
@@ -371,6 +384,8 @@ function ScaffoldApp({ userId, onSignOut }) {
             onRemoveSession={removeTask}
             onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
+            prefillTitle={prefillEduTitle}
+            onConsumePrefill={() => setPrefillEduTitle(null)}
           />
         )}
         {view === "movies" && <MoviesView userId={userId} />}
@@ -477,7 +492,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         />
       )}
 
-      {!tourOpen && <QuickCapture onCapture={addInboxItem} />}
+      {!tourOpen && view === "calendar" && <QuickCapture onCapture={handleQuickCapture} />}
 
       {tourOpen && (
         <TourOverlay

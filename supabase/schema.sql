@@ -63,6 +63,7 @@ create table if not exists inbox_items (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   text text not null,
+  category text not null default 'Personal',
   created_at timestamptz not null default now()
 );
 

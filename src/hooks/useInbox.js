@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 
-const fromRow = (row) => ({ id: row.id, text: row.text, createdAt: row.created_at });
+const fromRow = (row) => ({ id: row.id, text: row.text, category: row.category || "Personal", createdAt: row.created_at });
 
 // Quick Capture: jot something down instantly with no date/category prompt, review it
 // later and either turn it into a real task or discard it (see TasksView's Inbox section).
@@ -23,9 +23,9 @@ export function useInbox(userId) {
   }, [load]);
 
   const addItem = useCallback(
-    async (text) => {
+    async (text, category = "Personal") => {
       if (!userId || !text.trim()) return;
-      const row = { id: uid(), user_id: userId, text: text.trim() };
+      const row = { id: uid(), user_id: userId, text: text.trim(), category };
       setItems((its) => [...its, fromRow(row)]);
       await supabase.from("inbox_items").insert(row);
     },

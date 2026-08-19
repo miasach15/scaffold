@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { NotebookPen } from "lucide-react";
+import { CATEGORY_KEYS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { overlayStyle, modalStyle, primaryBtn, ghostBtn, inputStyle } from "../../lib/styles";
 
-// Zero-friction capture: no date, no category, no picking a page — just type and save,
-// for when you're mid-class or otherwise don't have time to file it properly. Review
-// and turn it into a real task later from the Inbox section on the Tasks page.
+// Zero-friction capture: no date, just type, pick a category, save — for when you're
+// mid-class or otherwise don't have time to file it properly. Personal/Health/People
+// captures land in the Inbox on the Tasks page to turn into a real task later; picking
+// Education sends you straight to the Education page instead, since assignments/tests
+// need real fields (type, subject, due date) that don't belong in a quick jot-down.
 export default function QuickCapture({ onCapture }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [category, setCategory] = useState("Personal");
 
   const save = () => {
     if (!text.trim()) return;
-    onCapture(text);
+    onCapture(text, category);
     setText("");
+    setCategory("Personal");
     setOpen(false);
   };
 
@@ -34,7 +41,7 @@ export default function QuickCapture({ onCapture }) {
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>Quick capture</div>
-            <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 10 }}>No date, no category — just get it down. Sort it out later from the Inbox on the Tasks page.</div>
+            <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 10 }}>No date needed — just get it down. Personal/Health/People land in your Tasks Inbox to sort out later; Education sends you straight there to fill it in properly.</div>
             <textarea
               autoFocus
               value={text}
@@ -47,9 +54,27 @@ export default function QuickCapture({ onCapture }) {
               rows={3}
               style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 14.5 }}
             />
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+              {CATEGORY_KEYS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  style={{
+                    padding: "5px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                    border: `1.5px solid ${category === c ? CATEGORY_COLORS[c].border : "#E5E9ED"}`,
+                    background: category === c ? CATEGORY_COLORS[c].bg : "#fff",
+                    color: category === c ? CATEGORY_COLORS[c].text : "#93A0AD",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button onClick={() => setOpen(false)} className="btn-ghost" style={ghostBtn}>Cancel</button>
-              <button disabled={!text.trim()} onClick={save} className="btn-primary" style={{ ...primaryBtn, flex: 1, opacity: text.trim() ? 1 : 0.5 }}>Save</button>
+              <button disabled={!text.trim()} onClick={save} className="btn-primary" style={{ ...primaryBtn, flex: 1, opacity: text.trim() ? 1 : 0.5 }}>
+                {category === "Education" ? "Save & go to Education" : "Save"}
+              </button>
             </div>
           </div>
         </div>
