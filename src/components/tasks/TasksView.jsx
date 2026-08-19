@@ -83,9 +83,12 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
       <div data-tour="tasks-add">
         <AddRow>
-          <input placeholder="Add a task..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
-          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
+          <input placeholder="Add a task..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, alignSelf: "flex-end" }} onKeyDown={(e) => e.key === "Enter" && add()} />
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 2 }}>
+            <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Due by</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
+          </div>
+          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1, alignSelf: "flex-end" }}>
             {useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
           </button>
         </AddRow>
