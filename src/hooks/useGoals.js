@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
-import { dayBefore, distributeDates, toISO } from "../lib/dateHelpers";
+import { dayBefore, distributeDatesByLoad, toISO } from "../lib/dateHelpers";
 
 const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index });
 const milestoneFromRow = (row) => ({
@@ -30,7 +30,7 @@ const goalFromRow = (row) => ({
     .map(milestoneFromRow),
 });
 
-export function useGoals(userId) {
+export function useGoals(userId, tasks) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +113,7 @@ export function useGoals(userId) {
       // still be working the day it's due.
       const lastWorkDay = dayBefore(dueDate);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDates(startISO, endISO, undated.length);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undated.length, tasks);
       undated.forEach((a, i) => dateForAction.set(a.id, autoDates[i]));
     }
 
@@ -130,7 +130,7 @@ export function useGoals(userId) {
     for (const [actionId, d] of dateForAction) {
       await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId);
     }
-  }, [goals]);
+  }, [goals, tasks]);
 
   const addAction = useCallback(
     async (goalId, milestoneId, title, dueDate) => {

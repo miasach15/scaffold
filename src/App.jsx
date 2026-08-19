@@ -32,7 +32,7 @@ import PackingListsView from "./components/lifestyle/PackingListsView";
 import GiftsView from "./components/lifestyle/GiftsView";
 import NotesView from "./components/lifestyle/NotesView";
 
-import { addDays, dateRangeISO, dayBefore, distributeDates, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
@@ -55,7 +55,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId);
+  const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
@@ -173,12 +173,12 @@ function ScaffoldApp({ userId, onSignOut }) {
         const lastWorkDay = dayBefore(row.dueDate);
         const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
         if (isAiSteps) {
-          const dates = distributeDates(startISO, endISO, workDays.steps.length);
+          const dates = distributeDatesByLoad(startISO, endISO, workDays.steps.length, tasks);
           workDays.steps.forEach((stepTitle, i) => {
             addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: "Education" });
           });
         } else {
-          const dates = workDays === "everyday" ? dateRangeISO(startISO, endISO) : distributeDates(startISO, endISO, workDays);
+          const dates = workDays === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, workDays, tasks);
           for (const d of dates) {
             addTask({ title: `Work on: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
           }

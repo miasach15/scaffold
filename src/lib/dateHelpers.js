@@ -117,6 +117,34 @@ export const distributeDates = (startISO, endISO, count) => {
   }
   return offsets.map((o) => toISO(addDays(start, o)));
 };
+// Like distributeDates, but instead of purely even spacing, prefers days that already
+// have fewer tasks scheduled — so auto-generated work sessions land on your quieter days
+// within the window rather than piling onto a day that's already packed. Falls back to
+// distributeDates' one-per-day overflow behavior when there isn't enough room to pick.
+export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) => {
+  if (count <= 0) return [];
+  const start = new Date(startISO + "T00:00:00");
+  const end = new Date(endISO + "T00:00:00");
+  const totalDays = Math.max(0, Math.round((end - start) / 86400000));
+  const availableSlots = totalDays + 1;
+
+  if (count > availableSlots) {
+    return Array.from({ length: count }, (_, i) => toISO(addDays(start, i)));
+  }
+
+  const loadByDate = {};
+  (existingTasks || []).forEach((t) => {
+    if (!t.date) return;
+    loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
+  });
+
+  const candidates = Array.from({ length: availableSlots }, (_, i) => toISO(addDays(start, i)));
+  const ranked = candidates
+    .map((iso, idx) => ({ iso, idx, load: loadByDate[iso] || 0 }))
+    .sort((a, b) => a.load - b.load || a.idx - b.idx);
+
+  return ranked.slice(0, count).sort((a, b) => a.idx - b.idx).map((c) => c.iso);
+};
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
   const startOffset = (first.getDay() + 6) % 7; // Monday = 0

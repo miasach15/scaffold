@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckSquare, Sparkles } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { dayBefore, distributeDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { dayBefore, distributeDatesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
@@ -40,7 +40,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       const startISO = date > todayISO ? todayISO : date;
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const dates = distributeDates(startISO, endISO, steps.length);
+      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks);
       steps.forEach((stepTitle, i) => {
         onAddTask({ title: stepTitle, date: dates[i], start: null, duration: null, category });
       });
