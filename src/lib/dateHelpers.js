@@ -117,10 +117,11 @@ export const distributeDates = (startISO, endISO, count) => {
   }
   return offsets.map((o) => toISO(addDays(start, o)));
 };
-// Like distributeDates, but instead of purely even spacing, prefers days that already
-// have fewer tasks scheduled — so auto-generated work sessions land on your quieter days
-// within the window rather than piling onto a day that's already packed. Falls back to
-// distributeDates' one-per-day overflow behavior when there isn't enough room to pick.
+// Like distributeDates — starts from the same even spread across the whole window — but
+// then nudges any picked day that already has more tasks on it than some unused day in
+// the window toward that quieter day. On an empty calendar this is identical to
+// distributeDates (evenly spread, not clumped at the start); the more the calendar
+// already has booked, the more it pulls new items away from your busier days.
 export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
@@ -132,18 +133,51 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) =>
     return Array.from({ length: count }, (_, i) => toISO(addDays(start, i)));
   }
 
+  let offsets = [];
+  for (let i = 1; i <= count; i++) {
+    let offset = Math.round((totalDays * i) / count);
+    if (offsets.length && offset <= offsets[offsets.length - 1]) offset = offsets[offsets.length - 1] + 1;
+    offsets.push(Math.min(offset, totalDays));
+  }
+  for (let i = offsets.length - 2; i >= 0; i--) {
+    if (offsets[i] >= offsets[i + 1]) offsets[i] = offsets[i + 1] - 1;
+  }
+
   const loadByDate = {};
   (existingTasks || []).forEach((t) => {
     if (!t.date) return;
     loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
   });
+  const loadOf = (offset) => loadByDate[toISO(addDays(start, offset))] || 0;
 
-  const candidates = Array.from({ length: availableSlots }, (_, i) => toISO(addDays(start, i)));
-  const ranked = candidates
-    .map((iso, idx) => ({ iso, idx, load: loadByDate[iso] || 0 }))
-    .sort((a, b) => a.load - b.load || a.idx - b.idx);
+  const chosen = new Set(offsets);
+  let guard = 0;
+  while (guard++ < count * availableSlots) {
+    let busiestIdx = -1, busiestLoad = -1;
+    offsets.forEach((o, idx) => {
+      const l = loadOf(o);
+      if (l > busiestLoad) { busiestLoad = l; busiestIdx = idx; }
+    });
+    if (busiestLoad <= 0) break; // nothing left worth moving off of
 
-  return ranked.slice(0, count).sort((a, b) => a.idx - b.idx).map((c) => c.iso);
+    // Among unused days that are a strict improvement, prefer the one nearest to the
+    // busy day it's replacing — keeps the spread intact instead of dragging everything
+    // toward whichever quiet day happens to be earliest in the window.
+    let bestOffset = -1, bestLoad = Infinity, bestDist = Infinity;
+    for (let o = 0; o <= totalDays; o++) {
+      if (chosen.has(o)) continue;
+      const l = loadOf(o);
+      if (l >= busiestLoad) continue;
+      const dist = Math.abs(o - offsets[busiestIdx]);
+      if (l < bestLoad || (l === bestLoad && dist < bestDist)) { bestLoad = l; bestDist = dist; bestOffset = o; }
+    }
+    if (bestOffset === -1) break; // no improving day left anywhere
+    chosen.delete(offsets[busiestIdx]);
+    chosen.add(bestOffset);
+    offsets[busiestIdx] = bestOffset;
+  }
+
+  return offsets.slice().sort((a, b) => a - b).map((o) => toISO(addDays(start, o)));
 };
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
