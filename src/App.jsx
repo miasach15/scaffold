@@ -27,6 +27,7 @@ import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import UndoToast from "./components/shared/UndoToast";
 import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
+import { useDarkMode } from "./hooks/useDarkMode";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -45,11 +46,13 @@ import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DE
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
+  // Applied at this level (not inside ScaffoldApp) so it covers the auth/reset screens too.
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   if (authLoading) return <FullScreenMessage text="Loading..." />;
   if (passwordRecovery) return <ResetPasswordScreen />;
   if (!user) return <AuthScreen />;
-  return <ScaffoldApp userId={user.id} onSignOut={signOut} />;
+  return <ScaffoldApp userId={user.id} onSignOut={signOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
 }
 
 function FullScreenMessage({ text }) {
@@ -60,7 +63,7 @@ function FullScreenMessage({ text }) {
   );
 }
 
-function ScaffoldApp({ userId, onSignOut }) {
+function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
@@ -462,6 +465,8 @@ function ScaffoldApp({ userId, onSignOut }) {
           categoryColors={profile.categoryColors}
           onSetCategoryColor={setCategoryColor}
           onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
+          darkMode={darkMode}
+          onToggleDarkMode={onToggleDarkMode}
           onClose={() => setShowSettings(false)}
         />
       )}
