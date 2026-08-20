@@ -30,7 +30,14 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
     .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
-  const relevant = [...taskItems, ...eduDeadlineItems];
+  // Overdue and due-soonest first; anything with no due date (a plain reminder that has
+  // no "day it's due" to sort by) sinks to the bottom instead of interrupting the order.
+  const relevant = [...taskItems, ...eduDeadlineItems].sort((a, b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return a.date.localeCompare(b.date);
+  });
 
   return (
     <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>

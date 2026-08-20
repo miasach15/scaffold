@@ -112,21 +112,22 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     .filter((g) => g.remainingItems.length > 0); // whole group drops off once every step is done
 
   // Done tasks drop off the list entirely rather than sticking around struck through.
-  // Undated tasks float to the top since they're the ones still needing a date.
   const singleTasks = plainTasks.filter((t) => !t.groupId && !t.done);
 
   // Homework/assignment/test deadlines (not the day-by-day work sessions) show up here
   // too, so "what's due" is all in one place — homework, essays, everything.
   const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
 
+  // Ordered by the day each is due, soonest first. Anything with no due date at all has
+  // no "day due" to sort by, so it sinks to the bottom instead of breaking the order.
   const combined = [
     ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
     ...groupRows.map((g) => ({ type: "group", date: g.remainingItems[0]?.date || null, group: g })),
     ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
   ].sort((a, b) => {
     if (!a.date && !b.date) return 0;
-    if (!a.date) return -1;
-    if (!b.date) return 1;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
     return a.date.localeCompare(b.date);
   });
 
