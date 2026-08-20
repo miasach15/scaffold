@@ -26,7 +26,7 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
       {showDate && <UrgencyBadge iso={t.date} done={t.done} />}
-      {showDate && <div style={{ fontSize: 12, color: "#93A0AD" }}>{t.date}</div>}
+      {showDate && <div style={{ fontSize: 12, color: t.date ? "#93A0AD" : "#C2C9D1" }}>{t.date || "No date"}</div>}
       <button onClick={() => onRemove(t.id)} className="btn-delete" style={deleteBtn}>×</button>
     </div>
   );

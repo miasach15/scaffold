@@ -81,8 +81,16 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   };
 
   // Done tasks drop off the list entirely rather than sticking around struck through.
-  const scheduled = tasks.filter((t) => t.date && !t.done).sort((a, b) => a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1));
-  const unscheduled = tasks.filter((t) => !t.date && !t.done);
+  // One flat list — undated tasks (no due-by set) float to the top since they're the
+  // ones still needing a date, rather than being split into a separate "Backlog".
+  const activeTasks = tasks
+    .filter((t) => !t.done)
+    .sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return -1;
+      if (!b.date) return 1;
+      return a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1);
+    });
 
   return (
     <div>
@@ -156,10 +164,10 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       )}
 
       {inboxItems && inboxItems.length > 0 && (
-        <>
-          <SubHeader>Inbox ({inboxItems.length})</SubHeader>
-          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Things you jotted down in the moment — turn each into a real task, or discard it.</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+        <div style={{ marginBottom: 16 }}>
+          <SubHeader>Quick capture ({inboxItems.length})</SubHeader>
+          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier — turn each into a real task, or discard it.</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {inboxItems.map((it) => (
               <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>
                 <NotebookPen size={15} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} />
@@ -169,21 +177,14 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      {unscheduled.length > 0 && (
-        <>
-          <SubHeader>Backlog</SubHeader>
-          <List>{unscheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} />)}</List>
-        </>
-      )}
-
-      <SubHeader>Scheduled</SubHeader>
-      {scheduled.length === 0 ? (
-        <EmptyState text="No scheduled tasks yet. Add one above or click a cell on the Calendar." />
+      <SubHeader>Tasks</SubHeader>
+      {activeTasks.length === 0 ? (
+        <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
-        <List>{scheduled.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />)}</List>
+        <List>{activeTasks.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />)}</List>
       )}
 
       {pendingPlan && (
