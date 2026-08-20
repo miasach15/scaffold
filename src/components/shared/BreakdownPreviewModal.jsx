@@ -25,14 +25,17 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {items.map((it, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: "#FDFCFA" }}>
-                <input
-                  value={it.title}
-                  onChange={(e) => updateTitle(i, e.target.value)}
-                  style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5 }}
-                />
-                <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(it.date)}</div>
-                <button onClick={() => removeItem(i)} className="btn-delete" style={deleteBtn}>×</button>
+              <div key={i} style={{ padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: "#FDFCFA" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input
+                    value={it.title}
+                    onChange={(e) => updateTitle(i, e.target.value)}
+                    style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5 }}
+                  />
+                  <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(it.date)}</div>
+                  <button onClick={() => removeItem(i)} className="btn-delete" style={deleteBtn}>×</button>
+                </div>
+                {it.notes && <div style={{ fontSize: 11, color: "#B4BCC5", padding: "0 2px 6px" }}>Also that day: {it.notes}</div>}
               </div>
             ))}
           </div>

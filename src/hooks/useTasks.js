@@ -14,6 +14,7 @@ const fromRow = (row) => ({
   groupId: row.group_id || null,
   groupTitle: row.group_title || null,
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
+  notes: row.notes || null,
 });
 
 export function useTasks(userId) {
@@ -33,7 +34,7 @@ export function useTasks(userId) {
   }, [load]);
 
   const addTask = useCallback(
-    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, leadDays = null }) => {
+    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, leadDays = null, notes = null }) => {
       if (!userId) return;
       const row = {
         id: uid(),
@@ -48,6 +49,7 @@ export function useTasks(userId) {
         group_id: groupId,
         group_title: groupTitle,
         lead_days: leadDays,
+        notes,
       };
       setTasks((ts) => [...ts, fromRow(row)]);
       await supabase.from("tasks").insert(row);
@@ -77,6 +79,12 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: date || null }).eq("id", id);
   }, []);
 
+  const setTaskNotes = useCallback(async (id, notes) => {
+    const trimmed = notes && notes.trim() ? notes.trim() : null;
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, notes: trimmed } : t)));
+    await supabase.from("tasks").update({ notes: trimmed }).eq("id", id);
+  }, []);
+
   const removeTask = useCallback(async (id) => {
     setTasks((ts) => ts.filter((t) => t.id !== id));
     await supabase.from("tasks").delete().eq("id", id);
@@ -93,5 +101,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, removeTask, removeTasksByEduId, rescheduleTask };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask };
 }

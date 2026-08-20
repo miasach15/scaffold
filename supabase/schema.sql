@@ -60,6 +60,9 @@ create table if not exists tasks (
   -- lead_days: "days needed" — a task with a due date and lead_days stays visible every
   -- day (not just once due) and is flagged urgent once today is within lead_days of date.
   lead_days integer,
+  -- notes: overflow for a breakdown step whose day absorbed more than one generated step —
+  -- title stays short, the rest lives here instead of getting jammed into the title.
+  notes text,
   created_at timestamptz not null default now()
 );
 

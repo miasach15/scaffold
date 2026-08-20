@@ -60,7 +60,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
@@ -207,7 +207,7 @@ function ScaffoldApp({ userId, onSignOut }) {
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
           previewItems.forEach((it) => {
-            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: "Education" });
+            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: "Education", notes: it.notes || null });
           });
           return;
         }
@@ -477,6 +477,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           onRemove={removeTask}
           onOpenFocus={openFocus}
           onSetDate={setTaskDate}
+          onSetNotes={setTaskNotes}
         />
       )}
 

@@ -203,6 +203,8 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) =>
 // distributing a breakdown's steps, so if two ever land on the same day (e.g. more
 // steps than available days) they show up as one task covering both instead of two
 // separate rows on the same date. Identical titles on the same day collapse to one.
+// The task keeps a short, clean title — just the first step — and any additional steps
+// that landed on the same day go into `notes` instead of getting crammed into the title.
 export const groupItemsByDate = (items) => {
   const map = new Map();
   for (const it of items) {
@@ -213,10 +215,9 @@ export const groupItemsByDate = (items) => {
   return Array.from(map.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([date, titles]) => ({
-      // Joining every merged title in full can produce a very long string — these show
-      // up as small calendar chips, so cap it to the first title plus a count instead.
       date,
-      title: titles.length === 1 ? titles[0] : `${titles[0]} +${titles.length - 1} more`,
+      title: titles[0],
+      notes: titles.length > 1 ? titles.slice(1).join(", ") : null,
     }));
 };
 export const monthMatrix = (monthDate) => {

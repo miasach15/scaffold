@@ -63,7 +63,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     // of showing a row per day. A single-step "breakdown" just becomes a normal task.
     const groupId = pendingPlan.items.length > 1 ? uid() : null;
     const groupTitle = groupId ? title.trim() : null;
-    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle }));
+    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle, notes: it.notes || null }));
     setPendingPlan(null);
     resetForm();
   };

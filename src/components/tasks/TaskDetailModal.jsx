@@ -6,12 +6,14 @@ import { ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../.
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
-export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate }) {
+export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate, onSetNotes }) {
   const [titleDraft, setTitleDraft] = useState(task.title);
+  const [notesDraft, setNotesDraft] = useState(task.notes || "");
   const [editingDate, setEditingDate] = useState(false);
 
   const save = () => {
     if (titleDraft.trim() && titleDraft.trim() !== task.title) onRename(task.id, titleDraft);
+    if (onSetNotes && notesDraft !== (task.notes || "")) onSetNotes(task.id, notesDraft);
     onClose();
   };
 
@@ -59,6 +61,19 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
             <div style={{ fontSize: 12.5, color: "#8B95A1" }}>No date</div>
           )}
         </div>
+
+        {onSetNotes && (
+          <div style={{ marginTop: 14 }}>
+            <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Notes</label>
+            <textarea
+              value={notesDraft}
+              onChange={(e) => setNotesDraft(e.target.value)}
+              placeholder="Anything extra — e.g. other steps that landed on this same day"
+              rows={2}
+              style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 12.5, marginTop: 3 }}
+            />
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: 8, marginTop: 18, flexWrap: "wrap" }}>
           <button onClick={() => { onRemove(task.id); onClose(); }} className="btn-ghost" style={{ ...ghostBtn, color: TONE.danger.text, borderColor: TONE.danger.border }}>Delete</button>

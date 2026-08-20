@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { CATEGORY_KEYS, EDU_TYPE_COLORS } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, inputStyle } from "../../lib/styles";
@@ -27,6 +27,7 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
         <Swatch color={col} />
       </button>
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
+      {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
       {showDate && t.date && <UrgencyBadge iso={t.date} done={t.done} leadDays={t.leadDays} />}
       {showDate && editingDate ? (
