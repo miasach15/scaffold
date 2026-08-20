@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StickyNote } from "lucide-react";
-import { ghostBtn } from "../../lib/styles";
+import { CATEGORY_KEYS } from "../../lib/constants";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 
-// A small sticky-note-style reminders button — shows everything waiting in the Quick
-// Capture inbox (both the Tasks Inbox and the Education reminder) in one place, so you
-// don't have to go check each page to notice something's pending. Always visible with a
-// badge count; click it anywhere to see and act on what's there.
-export default function ReminderNotes({ items, onTurnIntoTask, onGoToEducation, onDiscard }) {
+// A sticky-note-style reminders widget — click it, type directly into it, pick a
+// category, done. No separate capture modal. Personal/Health/People land in the Tasks
+// Inbox; Education leaves a reminder on the Education page instead. Also shows and lets
+// you act on everything already waiting, so it's both the write and the review surface.
+export default function ReminderNotes({ items, onCapture, onTurnIntoTask, onGoToEducation, onDiscard }) {
+  const CATEGORY_COLORS = useCategoryColors();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [text, setText] = useState("");
+  const [category, setCategory] = useState("Personal");
   const btnRef = useRef(null);
   const panelRef = useRef(null);
 
@@ -32,6 +37,13 @@ export default function ReminderNotes({ items, onTurnIntoTask, onGoToEducation, 
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
+  const save = () => {
+    if (!text.trim()) return;
+    onCapture(text, category);
+    setText("");
+    setCategory("Personal");
+  };
+
   const count = items.length;
 
   return (
@@ -39,7 +51,7 @@ export default function ReminderNotes({ items, onTurnIntoTask, onGoToEducation, 
       <button
         ref={btnRef}
         onClick={toggle}
-        title="Reminders — things you jotted down with Quick Capture"
+        title="Sticky note — jot something down, or see what's waiting"
         className="btn-ghost"
         style={{ ...ghostBtn, position: "relative", width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
       >
@@ -58,13 +70,51 @@ export default function ReminderNotes({ items, onTurnIntoTask, onGoToEducation, 
         <div
           ref={panelRef}
           style={{
-            position: "fixed", top: pos.top, left: pos.left, width: 320, maxWidth: "calc(100vw - 16px)", maxHeight: "70vh", overflowY: "auto",
+            position: "fixed", top: pos.top, left: pos.left, width: 320, maxWidth: "calc(100vw - 16px)", maxHeight: "80vh", overflowY: "auto",
             background: "#fff", border: "1px solid #E2E8F0", borderRadius: 14, boxShadow: "0 12px 32px rgba(15,23,42,0.14)", padding: 12, zIndex: 1000,
           }}
         >
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: "#000000", marginBottom: 8 }}>Reminders</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "#000000", marginBottom: 6 }}>Sticky note</div>
+          <textarea
+            autoFocus
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save();
+            }}
+            placeholder="Write it down..."
+            rows={2}
+            style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 13.5 }}
+          />
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 7 }}>
+            {CATEGORY_KEYS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                style={{
+                  padding: "4px 9px", borderRadius: 999, fontSize: 10.5, fontWeight: 700,
+                  border: `1.5px solid ${category === c ? CATEGORY_COLORS[c].border : "#E5E9ED"}`,
+                  background: category === c ? CATEGORY_COLORS[c].bg : "#fff",
+                  color: category === c ? CATEGORY_COLORS[c].text : "#93A0AD",
+                }}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+          <button
+            disabled={!text.trim()}
+            onClick={save}
+            className="btn-primary"
+            style={{ ...primaryBtn, width: "100%", marginTop: 8, padding: "7px", fontSize: 12.5, opacity: text.trim() ? 1 : 0.5 }}
+          >
+            Add
+          </button>
+
+          <div style={{ height: 1, background: "#F0F0F0", margin: "12px 0 10px" }} />
+
           {count === 0 ? (
-            <div style={{ fontSize: 12.5, color: "#B4BCC5", padding: "6px 0" }}>Nothing pending — you're all caught up.</div>
+            <div style={{ fontSize: 12.5, color: "#B4BCC5", padding: "2px 0" }}>Nothing pending — you're all caught up.</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {items.map((it) => (

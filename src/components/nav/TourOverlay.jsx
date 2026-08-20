@@ -5,7 +5,7 @@ import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 const CORE_STEPS = [
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
-  { type: "view", view: "calendar", title: "Quick Capture", bullets: ["The pencil button in the corner — jot something down anytime, no date needed", "Personal/Health/People land in your Tasks Inbox to sort out later", "Education leaves a reminder at the top of the Education page instead"] },
+  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["The note icon up top — type directly into it anytime, no date needed", "Personal/Health/People land in your Tasks Inbox to sort out later", "Education leaves a reminder at the top of the Education page instead"] },
   { type: "view", view: "tasks", title: "Tasks", bullets: ["Type a task, hit Add", "Tag it with a category", "Check it off when done"] },
   { type: "view", view: "goals", title: "Goals", bullets: ["Add a goal + deadline", "Break it into small steps", "Check off each step"] },
   { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },

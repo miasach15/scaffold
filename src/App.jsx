@@ -23,7 +23,6 @@ import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
-import QuickCapture from "./components/shared/QuickCapture";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -292,6 +291,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
         reminderItems={inboxItems}
+        onCapture={handleQuickCapture}
         onTurnIntoTask={turnInboxIntoTask}
         onGoToEducation={() => setView("education")}
         onDiscardReminder={removeInboxItem}
@@ -489,8 +489,6 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setShowWeeklyReview(false)}
         />
       )}
-
-      {!tourOpen && <QuickCapture onCapture={handleQuickCapture} />}
 
       {tourOpen && (
         <TourOverlay
