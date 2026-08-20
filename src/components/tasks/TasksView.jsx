@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
+import TodaySection from "./TodaySection";
 import TaskRow from "./TaskRow";
 
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, inboxItems, onTurnIntoTask, onDiscardInbox }) {
@@ -95,6 +96,8 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   return (
     <div>
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
+
+      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
       <div data-tour="tasks-add">
         <AddRow>
           <input placeholder="Add a task..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, alignSelf: "flex-end" }} onKeyDown={(e) => e.key === "Enter" && add()} />
