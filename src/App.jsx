@@ -23,6 +23,7 @@ import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
+import QuickCapture from "./components/shared/QuickCapture";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -70,7 +71,6 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [dayView, setDayViewRaw] = useState(null); // ISO date string, or null for week view
   const [monthView, setMonthView] = useState(null); // Date anchor, or null when not in month mode
-  const [prefillEduTitle, setPrefillEduTitle] = useState(null); // set by Quick Capture when category is Education
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
@@ -103,17 +103,12 @@ function ScaffoldApp({ userId, onSignOut }) {
     removeInboxItem(item.id);
   };
 
-  // Quick Capture: Education captures skip the Inbox entirely and go straight to the
-  // Education page with the text prefilled, since assignments/tests need real fields
-  // (type, subject, due date) that a quick jot-down can't supply.
-  const handleQuickCapture = (text, category) => {
-    if (category === "Education") {
-      setPrefillEduTitle(text.trim());
-      setView("education");
-    } else {
-      addInboxItem(text, category);
-    }
-  };
+  // Quick Capture never navigates you away from what you're doing — it just gets saved,
+  // and shows up as a reminder later: Education captures at the top of the Education
+  // page, everything else in the Inbox at the top of the Tasks page.
+  const handleQuickCapture = (text, category) => addInboxItem(text, category);
+  const eduInboxItems = inboxItems.filter((it) => it.category === "Education");
+  const otherInboxItems = inboxItems.filter((it) => it.category !== "Education");
 
   const days = useMemo(
     () => (dayView ? [new Date(dayView + "T00:00:00")] : Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))),
@@ -296,7 +291,6 @@ function ScaffoldApp({ userId, onSignOut }) {
         onOpenSettings={() => setShowSettings(true)}
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
-        onQuickCapture={handleQuickCapture}
       />
 
       <div
@@ -343,7 +337,7 @@ function ScaffoldApp({ userId, onSignOut }) {
             onSetCategory={setTaskCategory}
             onRemove={removeTask}
             onOpenTaskDetail={openTaskDetail}
-            inboxItems={inboxItems}
+            inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}
             onDiscardInbox={removeInboxItem}
           />
@@ -384,8 +378,8 @@ function ScaffoldApp({ userId, onSignOut }) {
             onRemoveSession={removeTask}
             onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
-            prefillTitle={prefillEduTitle}
-            onConsumePrefill={() => setPrefillEduTitle(null)}
+            inboxItems={eduInboxItems}
+            onDiscardInbox={removeInboxItem}
           />
         )}
         {view === "movies" && <MoviesView userId={userId} />}
@@ -491,6 +485,8 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setShowWeeklyReview(false)}
         />
       )}
+
+      {!tourOpen && <QuickCapture onCapture={handleQuickCapture} />}
 
       {tourOpen && (
         <TourOverlay

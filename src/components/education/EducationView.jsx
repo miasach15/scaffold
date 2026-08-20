@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { GraduationCap, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { GraduationCap, NotebookPen, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { inputStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
@@ -19,18 +19,18 @@ export default function EducationView({
   onRemoveSession,
   onSetSessionDone,
   onOpenFocus,
-  prefillTitle,
-  onConsumePrefill,
+  inboxItems,
+  onDiscardInbox,
 }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const [title, setTitle] = useState(prefillTitle || "");
+  const [title, setTitle] = useState("");
 
-  // Arriving here from Quick Capture (category: Education) — the title's already
-  // filled in above; this just tells App.jsx not to reapply it if we mount again later.
-  useEffect(() => {
-    if (prefillTitle) onConsumePrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // A Quick Capture reminder — pulls the text into the add form above and clears the
+  // reminder. The item isn't actually filed until you fill in the rest and hit Add.
+  const fileCapture = (item) => {
+    setTitle(item.text);
+    onDiscardInbox(item.id);
+  };
 
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
@@ -187,6 +187,24 @@ export default function EducationView({
   return (
     <div>
       <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." Icon={GraduationCap} tint={CATEGORY_COLORS.Education} />
+
+      {inboxItems && inboxItems.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <SubHeader>Quick capture ({inboxItems.length})</SubHeader>
+          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier — file each one in properly, or discard it.</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {inboxItems.map((it) => (
+              <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>
+                <NotebookPen size={15} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, fontSize: 14, minWidth: 0, whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>{it.text}</div>
+                <button onClick={() => fileCapture(it)} style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}>File this</button>
+                <button onClick={() => onDiscardInbox(it.id)} className="btn-delete" style={{ background: "none", border: "none", fontSize: 16, color: "#C2C9D1", padding: "0 4px" }}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div data-tour="education-add" style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
         <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
         <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>

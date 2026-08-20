@@ -5,11 +5,10 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { overlayStyle, modalStyle, primaryBtn, ghostBtn, inputStyle } from "../../lib/styles";
 
 // Zero-friction capture: no date, just type, pick a category, save — for when you're
-// mid-class or otherwise don't have time to file it properly. Personal/Health/People
-// captures land in the Inbox on the Tasks page to turn into a real task later; picking
-// Education sends you straight to the Education page instead, since assignments/tests
-// need real fields (type, subject, due date) that don't belong in a quick jot-down.
-// Lives in the top nav so it's reachable from any page.
+// mid-class or otherwise don't have time to file it properly. Never navigates you away
+// from what you're doing — it just leaves a reminder waiting for you: Education captures
+// show up at the top of the Education page, everything else in the Inbox at the top of
+// the Tasks page. A floating button so it's reachable from any page without leaving.
 export default function QuickCapture({ onCapture }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [open, setOpen] = useState(false);
@@ -27,20 +26,22 @@ export default function QuickCapture({ onCapture }) {
   return (
     <>
       <button
-        data-tour="nav-quick-capture"
         onClick={() => setOpen(true)}
         title="Quick capture — jot something down now, sort it out later"
-        className="btn-ghost"
-        style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
+        style={{
+          position: "fixed", bottom: 22, right: 22, zIndex: 90, width: 50, height: 50, borderRadius: "50%",
+          background: "var(--primary, #7B6EF0)", color: "#fff", border: "none", boxShadow: "0 8px 24px rgba(15,23,42,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        }}
       >
-        <NotebookPen size={14} strokeWidth={2.3} /> Quick capture
+        <NotebookPen size={20} strokeWidth={2.2} />
       </button>
 
       {open && (
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>Quick capture</div>
-            <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 10 }}>No date needed — just get it down. Personal/Health/People land in your Tasks Inbox to sort out later; Education sends you straight there to fill it in properly.</div>
+            <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 10 }}>No date needed — just get it down. It'll be waiting for you: Education captures at the top of the Education page, everything else in the Inbox at the top of Tasks.</div>
             <textarea
               autoFocus
               value={text}
@@ -71,9 +72,7 @@ export default function QuickCapture({ onCapture }) {
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button onClick={() => setOpen(false)} className="btn-ghost" style={ghostBtn}>Cancel</button>
-              <button disabled={!text.trim()} onClick={save} className="btn-primary" style={{ ...primaryBtn, flex: 1, opacity: text.trim() ? 1 : 0.5 }}>
-                {category === "Education" ? "Save & go to Education" : "Save"}
-              </button>
+              <button disabled={!text.trim()} onClick={save} className="btn-primary" style={{ ...primaryBtn, flex: 1, opacity: text.trim() ? 1 : 0.5 }}>Save</button>
             </div>
           </div>
         </div>
