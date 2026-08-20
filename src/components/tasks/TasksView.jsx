@@ -13,6 +13,8 @@ import GroupedTaskRow from "./GroupedTaskRow";
 import EduDeadlineRow from "./EduDeadlineRow";
 import TaskRow from "./TaskRow";
 
+const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
+
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
@@ -164,36 +166,20 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       </div>
 
       {showMore && (
-        <>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Due by</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional — shows in Today until you finish it either way; a due date just tells you (and the Calendar) when it needs to be done by" style={{ ...inputStyle, width: 150 }} />
+        <div style={{ background: "#FAFAF8", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <div style={fieldLabelStyle}>Due by</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional — a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
+              {date && !useAI && (
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Only if it's a real appointment at a specific time" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
+              )}
             </div>
-            {date && !useAI && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
-                <span>Time (optional):</span>
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
-                <span style={{ fontSize: 11, color: "#B4BCC5" }}>Only if it's a real appointment at a specific time</span>
-              </div>
-            )}
-            {date && !useAI && !time && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Days needed</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  placeholder="1"
-                  value={leadDays}
-                  onChange={(e) => setLeadDays(e.target.value)}
-                  title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
-                  style={{ ...inputStyle, width: 90 }}
-                />
-              </div>
-            )}
-            <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, color: "#93A0AD" }}>Category:</span>
+          </div>
+
+          <div data-tour="tasks-category">
+            <div style={fieldLabelStyle}>Category</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               {CATEGORY_KEYS.map((c) => (
                 <button
                   key={c}
@@ -209,37 +195,57 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
                 </button>
               ))}
             </div>
-            {date && (
-              <button
-                onClick={() => setUseAI((x) => !x)}
-                style={{
-                  padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                  border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                  background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                  color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                }}
-                title="For a bigger task that'll take more than one sitting — spreads it into several smaller steps leading up to this date, collapsed into one row on the list"
-              >
-                <Sparkles size={11} strokeWidth={2.3} /> Break it down
-              </button>
-            )}
           </div>
 
-          {useAI && (
-            <div style={{ marginBottom: 12 }}>
-              <textarea
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                placeholder="Optional — any details that'll help break this down (e.g. what the deliverable is, who it's for)."
-                rows={2}
-                style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-              />
-              <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller steps spread out before {date || "the due date"} — shown as one row you can expand.</div>
-              {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+          {date && !time && (
+            <div>
+              <div style={fieldLabelStyle}>Bigger than one sitting?</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: useAI ? 0.4 : 1 }}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    placeholder="Days"
+                    disabled={useAI}
+                    value={leadDays}
+                    onChange={(e) => setLeadDays(e.target.value)}
+                    title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
+                    style={{ ...inputStyle, width: 70 }}
+                  />
+                  <span style={{ fontSize: 12, color: "#93A0AD" }}>days needed</span>
+                </div>
+                <span style={{ fontSize: 11, color: "#C2C9D1" }}>or</span>
+                <button
+                  onClick={() => setUseAI((x) => !x)}
+                  style={{
+                    padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                    border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                    background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                    color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                  }}
+                  title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
+                >
+                  <Sparkles size={11} strokeWidth={2.3} /> Break it down for me
+                </button>
+              </div>
+
+              {useAI && (
+                <div style={{ marginTop: 10 }}>
+                  <textarea
+                    value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder="Optional details to help break it down (what's the deliverable, who's it for)"
+                    rows={2}
+                    style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+                  />
+                  {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+                </div>
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {inboxItems && inboxItems.length > 0 && (
