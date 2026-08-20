@@ -23,6 +23,7 @@ import JournalView from "./components/journal/JournalView";
 import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
+import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -290,11 +291,6 @@ function ScaffoldApp({ userId, onSignOut }) {
         onOpenSettings={() => setShowSettings(true)}
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
-        reminderItems={inboxItems}
-        onCapture={handleQuickCapture}
-        onTurnIntoTask={turnInboxIntoTask}
-        onGoToEducation={() => setView("education")}
-        onDiscardReminder={removeInboxItem}
       />
 
       <div
@@ -489,6 +485,8 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setShowWeeklyReview(false)}
         />
       )}
+
+      {!tourOpen && <StickyNoteCorner onCapture={handleQuickCapture} />}
 
       {tourOpen && (
         <TourOverlay
