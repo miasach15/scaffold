@@ -34,6 +34,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
   const primary = [
     { key: "calendar", label: "Calendar", icon: CalendarIcon },
     { key: "tasks", label: "Tasks", icon: CheckSquare },
+    { key: "education", label: "Education", icon: GraduationCap },
     { key: "goals", label: "Goals", icon: Target },
     { key: "habits", label: "Habits", icon: Repeat },
     { key: "journal", label: "Journal", icon: BookOpen },
@@ -82,7 +83,6 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
             ))}
           </div>
           <div style={{ width: 1, height: 20, background: "#E2E8F0", margin: "0 4px", flexShrink: 0 }} />
-          <NavTab active={view === "education"} onClick={() => setView("education")} label="Education" Icon={GraduationCap} />
 
           <div style={{ position: "relative", flexShrink: 0 }}>
             <button

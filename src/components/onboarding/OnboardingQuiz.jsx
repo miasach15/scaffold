@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, PRIMARY_TINT, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 
@@ -10,15 +10,14 @@ export default function OnboardingQuiz({ onComplete }) {
   const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
   const [lifestylePages, setLifestylePages] = useState([]);
-  const [workStyle, setWorkStyle] = useState("Mix of both");
 
   const toggleFocus = (c) => setFocusAreas((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
   const toggleHabit = (h) => setHabitPicks((hs) => (hs.includes(h) ? hs.filter((x) => x !== h) : [...hs, h]));
   const toggleLifestylePage = (key) => setLifestylePages((ps) => (ps.includes(key) ? ps.filter((x) => x !== key) : [...ps, key]));
 
-  const steps = ["Name", "Focus", "Habits", "Extras", "Style", "Done"];
+  const steps = ["Name", "Focus", "Habits", "Extras", "Done"];
   const lastStep = steps.length - 1;
-  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, lifestylePages, workStyle });
+  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, lifestylePages, workStyle: "Mix of both" });
   const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], lifestylePages: [], workStyle: "Mix of both" });
 
   return (
@@ -124,35 +123,11 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 4 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>How do you like to work?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Sets your default Focus Timer length.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {["Short focused bursts", "Mix of both", "Long deep sessions"].map((w) => (
-                <button
-                  key={w}
-                  onClick={() => setWorkStyle(w)}
-                  style={{
-                    padding: "12px 14px", borderRadius: 10, fontSize: 14, fontWeight: 600, textAlign: "left",
-                    border: `1.5px solid ${workStyle === w ? PRIMARY : "#E5E9ED"}`,
-                    background: workStyle === w ? PRIMARY_TINT : "#fff",
-                    color: "#000000",
-                  }}
-                >
-                  {w} <span style={{ float: "right", fontWeight: 400, color: "#93A0AD" }}>{w === "Short focused bursts" ? "15 min" : w === "Long deep sessions" ? "50 min" : "25 min"}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
             <div style={{ fontSize: 13.5, color: "#5A6472", lineHeight: 1.6, marginBottom: 6 }}>
               {focusAreas.length > 0 && <>Focusing on {focusAreas.join(", ")}. </>}
               {habitPicks.length > 0 && <>Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}. </>}
               {lifestylePages.length > 0 && <>Added {lifestylePages.length} extra page{lifestylePages.length === 1 ? "" : "s"}. </>}
-              Focus sessions default to {workStyle === "Short focused bursts" ? "15" : workStyle === "Long deep sessions" ? "50" : "25"} minutes.
             </div>
           </div>
         )}

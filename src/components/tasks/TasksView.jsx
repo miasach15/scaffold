@@ -16,6 +16,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [category, setCategory] = useState("Personal");
+  const [showMore, setShowMore] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it down" — for a task that's really a multi-day project
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
@@ -23,7 +24,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false);
+    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -81,10 +82,15 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     resetForm();
   };
 
+  // Tasks linked to an Education item (the auto-generated "Work on"/"Study" sessions for
+  // assignments/tests/homework) live on their Calendar day only — they'd otherwise flood
+  // this list with a dozen near-identical rows. See them on Education or the Calendar.
+  const plainTasks = tasks.filter((t) => !t.eduId);
+
   // Done tasks drop off the list entirely rather than sticking around struck through.
   // One flat list — undated tasks (no due-by set) float to the top since they're the
   // ones still needing a date, rather than being split into a separate "Backlog".
-  const activeTasks = tasks
+  const activeTasks = plainTasks
     .filter((t) => !t.done)
     .sort((a, b) => {
       if (!a.date && !b.date) return 0;
@@ -97,73 +103,92 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     <div>
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
 
-      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
+      <TodaySection tasks={plainTasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
+
       <div data-tour="tasks-add">
         <AddRow>
-          <input placeholder="Add a task..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, alignSelf: "flex-end" }} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 2 }}>
-            <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Due by</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
-          </div>
-          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1, alignSelf: "flex-end" }}>
+          <input
+            autoFocus
+            placeholder="Write a task and hit Enter..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            style={{ ...inputStyle, flex: 1 }}
+          />
+          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
           </button>
         </AddRow>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
-        {date && !useAI && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
-            <span>Time (optional):</span>
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
-            <span style={{ fontSize: 11, color: "#B4BCC5" }}>{time ? "Locked to this exact date & time" : "Leave blank and we'll pick the least busy day up to your date"}</span>
-          </div>
-        )}
-        <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 12, color: "#93A0AD" }}>Category:</span>
-          {CATEGORY_KEYS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              style={{
-                padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                border: `1px solid ${category === c ? CATEGORY_COLORS[c].border : "#E5E9ED"}`,
-                background: category === c ? CATEGORY_COLORS[c].bg : "#fff",
-                color: category === c ? CATEGORY_COLORS[c].text : "#93A0AD",
-              }}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        {date && (
-          <button
-            onClick={() => setUseAI((x) => !x)}
-            style={{
-              padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-              border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-              background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-              color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}
-            title="For a bigger task that'll take more than one sitting — spreads it into several smaller tasks leading up to this date"
-          >
-            <Sparkles size={11} strokeWidth={2.3} /> Break it down
-          </button>
-        )}
+        <button
+          onClick={() => setShowMore((x) => !x)}
+          style={{ background: "none", border: "none", padding: 0, fontSize: 12, color: "#93A0AD", cursor: "pointer", marginBottom: showMore ? 10 : 16 }}
+        >
+          {showMore ? "Hide options" : "+ Due date, category, or break it down for a bigger task"}
+        </button>
       </div>
 
-      {useAI && (
-        <div style={{ marginBottom: 12 }}>
-          <textarea
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="Optional — any details that'll help break this down (e.g. what the deliverable is, who it's for)."
-            rows={2}
-            style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-          />
-          <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller tasks spread out before {date || "the due date"}, instead of adding it as one task.</div>
-          {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
-        </div>
+      {showMore && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Due by</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
+            </div>
+            {date && !useAI && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
+                <span>Time (optional):</span>
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
+                <span style={{ fontSize: 11, color: "#B4BCC5" }}>{time ? "Locked to this exact date & time" : "Leave blank and we'll pick the least busy day up to your date"}</span>
+              </div>
+            )}
+            <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, color: "#93A0AD" }}>Category:</span>
+              {CATEGORY_KEYS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  style={{
+                    padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                    border: `1px solid ${category === c ? CATEGORY_COLORS[c].border : "#E5E9ED"}`,
+                    background: category === c ? CATEGORY_COLORS[c].bg : "#fff",
+                    color: category === c ? CATEGORY_COLORS[c].text : "#93A0AD",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            {date && (
+              <button
+                onClick={() => setUseAI((x) => !x)}
+                style={{
+                  padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                  border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                  background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                  color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                }}
+                title="For a bigger task that'll take more than one sitting — spreads it into several smaller tasks leading up to this date"
+              >
+                <Sparkles size={11} strokeWidth={2.3} /> Break it down
+              </button>
+            )}
+          </div>
+
+          {useAI && (
+            <div style={{ marginBottom: 12 }}>
+              <textarea
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                placeholder="Optional — any details that'll help break this down (e.g. what the deliverable is, who it's for)."
+                rows={2}
+                style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+              />
+              <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller tasks spread out before {date || "the due date"}, instead of adding it as one task.</div>
+              {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+            </div>
+          )}
+        </>
       )}
 
       {inboxItems && inboxItems.length > 0 && (

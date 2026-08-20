@@ -1,10 +1,14 @@
 import { TONE } from "../../lib/constants";
 import { daysUntil, toISO } from "../../lib/dateHelpers";
 
-export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick }) {
+export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick, emphasis }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`, borderBottom: "1px solid #EDEDED", minHeight: 28 }}>
-      <div style={{ fontSize: 10, color: "#9CA3AF", padding: "5px 6px", textAlign: "right", fontWeight: 600 }}>{label}</div>
+    <div style={{
+      display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`,
+      borderBottom: emphasis ? "1.5px solid #E5E9ED" : "1px solid #EDEDED", minHeight: emphasis ? 54 : 28,
+      background: emphasis ? "#FAFAFC" : "transparent",
+    }}>
+      <div style={{ fontSize: emphasis ? 12 : 10, color: emphasis ? "#4A5568" : "#9CA3AF", padding: "8px 6px", textAlign: "right", fontWeight: 700 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
         const dayChips = chips.filter((c) => c.date === iso);
@@ -20,17 +24,17 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 if (data.taskId) onDropTask(data.taskId, iso);
               } catch {}
             } : undefined}
-            style={{ borderLeft: "1px solid #F4F6F8", padding: "3px", display: "flex", flexDirection: "column", gap: 3, cursor: onAddClick ? "pointer" : undefined, minWidth: 0 }}
+            style={{ borderLeft: "1px solid #F4F6F8", padding: emphasis ? "5px" : "3px", display: "flex", flexDirection: "column", gap: emphasis ? 4 : 3, cursor: onAddClick ? "pointer" : undefined, minWidth: 0 }}
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);
               const overdue = !c.done && daysUntil(c.date) < 0;
               const content = <>{chipLabel(c)}</>;
               const style = {
-                fontSize: 10.5, textAlign: "left", padding: "2px 6px", borderRadius: 6,
-                background: col.bg, border: `1px solid ${overdue ? TONE.danger.border : col.border}`, color: col.text,
+                fontSize: emphasis ? 11.5 : 10.5, textAlign: "left", padding: emphasis ? "4px 8px" : "2px 6px", borderRadius: 6,
+                background: col.bg, border: `${emphasis ? 1.5 : 1}px solid ${overdue ? TONE.danger.border : col.border}`, color: col.text,
                 boxShadow: overdue ? `inset 2px 0 0 ${TONE.danger.text}` : "none",
-                textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 600,
+                textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 700,
                 cursor: c.kind === "task" ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
               };

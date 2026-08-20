@@ -104,7 +104,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
               <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
             </div>
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
+              <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
