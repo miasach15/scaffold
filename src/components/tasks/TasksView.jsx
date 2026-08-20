@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckSquare, Sparkles, NotebookPen } from "lucide-react";
+import { CheckSquare, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
@@ -145,9 +145,16 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         </AddRow>
         <button
           onClick={() => setShowMore((x) => !x)}
-          style={{ background: "none", border: "none", padding: 0, fontSize: 12, color: "#93A0AD", cursor: "pointer", marginBottom: showMore ? 10 : 16 }}
+          className="hoverable"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+            border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "6px 12px 6px 9px",
+            fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+            marginBottom: showMore ? 10 : 16,
+          }}
         >
-          {showMore ? "Hide options" : "+ Due date, category, or break it down for a bigger task"}
+          {showMore ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
+          {showMore ? "Hide options" : "Due date, category, or break it down for a bigger task"}
         </button>
       </div>
 
