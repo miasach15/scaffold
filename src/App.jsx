@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./hooks/AuthProvider";
 import { useProfile } from "./hooks/useProfile";
 import { useEvents } from "./hooks/useEvents";
@@ -17,10 +17,6 @@ import CalendarView from "./components/calendar/CalendarView";
 import MonthView from "./components/calendar/MonthView";
 import QuickAddModal from "./components/calendar/QuickAddModal";
 import TasksView from "./components/tasks/TasksView";
-import GoalsView from "./components/goals/GoalsView";
-import HabitsView from "./components/habits/HabitsView";
-import JournalView from "./components/journal/JournalView";
-import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import StickyNoteCorner from "./components/shared/StickyNoteCorner";
@@ -33,13 +29,21 @@ import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
-import MoviesView from "./components/lifestyle/MoviesView";
-import BooksView from "./components/lifestyle/BooksView";
-import RestaurantsView from "./components/lifestyle/RestaurantsView";
-import BucketListView from "./components/lifestyle/BucketListView";
-import PackingListsView from "./components/lifestyle/PackingListsView";
-import GiftsView from "./components/lifestyle/GiftsView";
-import NotesView from "./components/lifestyle/NotesView";
+
+// These pages aren't needed for first paint (the app opens on Calendar) — loading them
+// as separate chunks keeps the initial bundle smaller. Calendar/Tasks stay eager since
+// they're where the app actually starts.
+const GoalsView = lazy(() => import("./components/goals/GoalsView"));
+const HabitsView = lazy(() => import("./components/habits/HabitsView"));
+const JournalView = lazy(() => import("./components/journal/JournalView"));
+const EducationView = lazy(() => import("./components/education/EducationView"));
+const MoviesView = lazy(() => import("./components/lifestyle/MoviesView"));
+const BooksView = lazy(() => import("./components/lifestyle/BooksView"));
+const RestaurantsView = lazy(() => import("./components/lifestyle/RestaurantsView"));
+const BucketListView = lazy(() => import("./components/lifestyle/BucketListView"));
+const PackingListsView = lazy(() => import("./components/lifestyle/PackingListsView"));
+const GiftsView = lazy(() => import("./components/lifestyle/GiftsView"));
+const NotesView = lazy(() => import("./components/lifestyle/NotesView"));
 
 import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
@@ -352,6 +356,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           overflowY: view === "calendar" ? "hidden" : "auto",
         }}
       >
+        <Suspense fallback={<div style={{ fontSize: 13, color: "#B4BCC5", padding: "40px 0", textAlign: "center" }}>Loading...</div>}>
         {view === "calendar" && monthView && (
           <MonthView
             monthDate={monthView}
@@ -448,6 +453,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         {view === "packing" && <PackingListsView userId={userId} />}
         {view === "gifts" && <GiftsView userId={userId} />}
         {view === "notes" && <NotesView userId={userId} />}
+        </Suspense>
       </div>
 
       {showManagePages && (
