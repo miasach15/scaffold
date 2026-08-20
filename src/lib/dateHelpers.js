@@ -43,14 +43,29 @@ export const daysUntil = (iso) => {
   const target = new Date(iso + "T00:00:00");
   return Math.round((target - today) / 86400000);
 };
-export const urgencyInfo = (iso, done) => {
+// leadDays is the "days needed" a task was created with — once today falls within that
+// many days of the due date, it's flagged urgent regardless of the generic day-count
+// thresholds below (e.g. a task due in 10 days that needs 5 days of work goes urgent at
+// day 5, not just in the last 3 days like everything else).
+export const urgencyInfo = (iso, done, leadDays) => {
   if (!iso || done) return null;
   const d = daysUntil(iso);
   if (d < 0) return { label: d === -1 ? "1 day overdue" : `${-d} days overdue`, tone: "danger" };
+  if (leadDays && d <= leadDays - 1) {
+    return { label: d === 0 ? "Due today" : `Urgent — ${d} day${d === 1 ? "" : "s"} left`, tone: "danger" };
+  }
   if (d === 0) return { label: "Due today", tone: "warn" };
   if (d === 1) return { label: "Due tomorrow", tone: "warn" };
   if (d <= 3) return { label: `In ${d} days`, tone: "soon" };
   return { label: `In ${d} days`, tone: "neutral" };
+};
+// True once a task with a due date + "days needed" has entered its work window (today is
+// within leadDays of the due date) but isn't yet actually due — the "show it every day,
+// but not urgent yet" vs. "urgent" split TodaySection needs.
+export const inLeadWindow = (iso, leadDays, done) => {
+  if (!iso || !leadDays || done) return false;
+  const d = daysUntil(iso);
+  return d >= 0 && d <= leadDays - 1;
 };
 export const dateRangeISO = (startISO, endISO) => {
   if (!startISO) return [];

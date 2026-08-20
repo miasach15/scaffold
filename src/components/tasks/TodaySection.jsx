@@ -1,27 +1,33 @@
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
-import { toISO } from "../../lib/dateHelpers";
+import { daysUntil, inLeadWindow, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
-// no delete buttons, nothing but a checkbox and a title. Only a task with NO due date at
-// all persists here every day, dimmed as "not urgent", until you finish it. Anything with
-// an actual date — a plain task, a step from a "break it down" task, an Education work
-// session, a homework/assignment/test deadline — only shows up here once that date
-// arrives (today or overdue), not before. The full Tasks list below has all the editing
-// controls; this is just the glance one.
+// no delete buttons, nothing but a checkbox and a title. Three ways a task ends up here:
+//   1. No due date at all — persists every day, dimmed as "not urgent", until you finish it.
+//   2. A due date + "days needed" (leadDays) — persists every day too, dimmed until today
+//      falls within that many days of the due date, then flips to a bold "Urgent" state.
+//   3. A plain due date (no leadDays), a step from a "break it down" task, an Education
+//      work session, or a homework/assignment/test deadline — only shows up once that
+//      date arrives (today or overdue), not before.
+// The full Tasks list below has all the editing controls; this is just the glance one.
 export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduItems, onSetEduDone, onGoToEducation }) {
   const CATEGORY_COLORS = useCategoryColors();
   const todayISO = toISO(new Date());
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   const taskItems = tasks
-    .filter((t) => !t.done && (!t.date || t.date <= todayISO))
-    .map((t) => ({ id: t.id, title: t.title, date: t.date, col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal, onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id) }));
+    .filter((t) => !t.done && (!t.date || t.leadDays || t.date <= todayISO))
+    .map((t) => ({
+      id: t.id, title: t.title, date: t.date, leadDays: t.leadDays,
+      col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
+      onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
+    }));
 
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
   const relevant = [...taskItems, ...eduDeadlineItems];
 
@@ -36,20 +42,32 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {relevant.map((it) => {
             const overdue = it.date && it.date < todayISO;
-            const hasDate = !!it.date; // dated items shown here are always due today or overdue
+            const dueToday = it.date === todayISO;
+            const urgent = inLeadWindow(it.date, it.leadDays, false);
+            const waitingOnWindow = it.date && it.leadDays && !overdue && !dueToday && !urgent; // has a date+leadDays but the window hasn't opened yet
+            const active = overdue || dueToday || urgent; // full-priority state
+            let tagLabel = null;
+            if (overdue) tagLabel = "Overdue";
+            else if (urgent && !dueToday) tagLabel = `Urgent — ${daysUntil(it.date)}d left`;
             return (
-              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 14, opacity: hasDate ? 1 : 0.65 }}>
+              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 14, opacity: active ? 1 : 0.65 }}>
                 <Checkbox checked={false} onClick={it.onToggle} color={it.col} />
                 <button
                   onClick={it.onOpen}
                   style={{
                     flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0,
-                    fontSize: hasDate ? 16.5 : 15, fontWeight: hasDate ? 500 : 400, color: overdue ? "#B03A3A" : "#000000",
+                    fontSize: active ? 16.5 : 15, fontWeight: active ? 500 : 400,
+                    color: overdue ? "#B03A3A" : urgent ? "#B0631F" : "#000000",
                   }}
                 >
                   {it.title}
                 </button>
-                {overdue && <div style={{ fontSize: 11, color: "#B03A3A", whiteSpace: "nowrap", fontWeight: 600 }}>Overdue</div>}
+                {tagLabel && (
+                  <div style={{ fontSize: 11, color: overdue ? "#B03A3A" : "#B0631F", whiteSpace: "nowrap", fontWeight: 700 }}>{tagLabel}</div>
+                )}
+                {waitingOnWindow && (
+                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap" }}>due {it.date}</div>
+                )}
               </div>
             );
           })}

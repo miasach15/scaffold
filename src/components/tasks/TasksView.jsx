@@ -18,6 +18,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [leadDays, setLeadDays] = useState(""); // "days needed" — shows every day, urgent once inside the window
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it down" — for a task that's really a multi-day project
@@ -27,7 +28,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setDetails(""); setUseAI(false); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -71,14 +72,18 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (!title.trim()) return;
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
+    const lead = date && !time && Number(leadDays) > 1 ? Number(leadDays) : null;
     // The date is just the due date now, stored as-is — no picking a "work day" for you.
-    // A task with a future (or no) due date just sits in Today until you get to it.
+    // A task with a future (or no) due date just sits in Today until you get to it, unless
+    // "days needed" is set — then it shows every day and goes urgent once you're that
+    // close to the due date (see TodaySection / urgencyInfo).
     onAddTask({
       title: title.trim(),
       date: date || null,
       start: hasTime ? timeToDecimal(time) : null,
       duration: hasTime ? 60 : null,
       category,
+      leadDays: lead,
     });
     resetForm();
   };
@@ -170,6 +175,21 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
                 <span>Time (optional):</span>
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
                 <span style={{ fontSize: 11, color: "#B4BCC5" }}>Only if it's a real appointment at a specific time</span>
+              </div>
+            )}
+            {date && !useAI && !time && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Days needed</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  placeholder="1"
+                  value={leadDays}
+                  onChange={(e) => setLeadDays(e.target.value)}
+                  title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
+                  style={{ ...inputStyle, width: 90 }}
+                />
               </div>
             )}
             <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>

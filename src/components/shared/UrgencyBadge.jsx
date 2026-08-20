@@ -1,8 +1,8 @@
 import { TONE } from "../../lib/constants";
 import { urgencyInfo } from "../../lib/dateHelpers";
 
-export default function UrgencyBadge({ iso, done }) {
-  const u = urgencyInfo(iso, done);
+export default function UrgencyBadge({ iso, done, leadDays }) {
+  const u = urgencyInfo(iso, done, leadDays);
   if (!u) return null;
   const t = TONE[u.tone];
   const plain = u.tone === "neutral";

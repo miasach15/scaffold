@@ -28,7 +28,7 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
       </button>
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
-      {showDate && t.date && <UrgencyBadge iso={t.date} done={t.done} />}
+      {showDate && t.date && <UrgencyBadge iso={t.date} done={t.done} leadDays={t.leadDays} />}
       {showDate && editingDate ? (
         <input
           type="date"

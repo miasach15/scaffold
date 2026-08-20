@@ -42,7 +42,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
             />
           ) : task.date ? (
             <div onClick={() => onSetDate && setEditingDate(true)} title={onSetDate ? "Click to change date" : undefined} style={{ fontSize: 12.5, color: "#8B95A1", cursor: onSetDate ? "pointer" : "default" }}>
-              {formatShortDate(task.date)}{task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}
+              {formatShortDate(task.date)}{task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}{task.leadDays ? ` · needs ${task.leadDays} day${task.leadDays === 1 ? "" : "s"}` : ""}
             </div>
           ) : onSetDate ? (
             <button
