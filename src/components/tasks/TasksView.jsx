@@ -83,8 +83,10 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   };
 
   // Tasks linked to an Education item (the auto-generated "Work on"/"Study" sessions for
-  // assignments/tests/homework) live on their Calendar day only — they'd otherwise flood
-  // this list with a dozen near-identical rows. See them on Education or the Calendar.
+  // assignments/tests/homework) stay out of the Upcoming Tasks list below — a week's
+  // worth of near-identical "Work on: Essay" rows is exactly the clutter this list
+  // shouldn't have. They still show up in Today (below) when they're due today, and
+  // always on the Calendar for their actual day.
   const plainTasks = tasks.filter((t) => !t.eduId);
 
   // Done tasks drop off the list entirely rather than sticking around struck through.
@@ -103,7 +105,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     <div>
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
 
-      <TodaySection tasks={plainTasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
+      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
 
       <div data-tour="tasks-add">
         <AddRow>

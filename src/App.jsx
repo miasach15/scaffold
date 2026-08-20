@@ -291,6 +291,10 @@ function ScaffoldApp({ userId, onSignOut }) {
         onOpenSettings={() => setShowSettings(true)}
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
+        reminderItems={inboxItems}
+        onTurnIntoTask={turnInboxIntoTask}
+        onGoToEducation={() => setView("education")}
+        onDiscardReminder={removeInboxItem}
       />
 
       <div

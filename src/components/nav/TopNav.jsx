@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, Film, BookMarked, UtensilsCrossed, Rocket, Luggage, Gift, StickyNote, ChevronDown, Settings, Plus } from "lucide-react";
 import { LIFESTYLE_PAGE_META, PRIMARY_TINT } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
+import ReminderNotes from "../shared/ReminderNotes";
 
 const LIFESTYLE_ICONS = {
   movies: Film,
@@ -30,7 +31,7 @@ function NavTab({ active, onClick, label, Icon }) {
   );
 }
 
-export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManagePages, onOpenSettings, onSignOut, enabledPages }) {
+export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManagePages, onOpenSettings, onSignOut, enabledPages, reminderItems, onTurnIntoTask, onGoToEducation, onDiscardReminder }) {
   const primary = [
     { key: "calendar", label: "Calendar", icon: CalendarIcon },
     { key: "tasks", label: "Tasks", icon: CheckSquare },
@@ -136,6 +137,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenManage
         </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, paddingBottom: 6, flexShrink: 0 }}>
+          <ReminderNotes items={reminderItems} onTurnIntoTask={onTurnIntoTask} onGoToEducation={onGoToEducation} onDiscard={onDiscardReminder} />
           <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={15} />
           </button>

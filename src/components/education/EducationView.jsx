@@ -179,10 +179,11 @@ export default function EducationView({
     hasFollowing: eduHasFollowing(e),
     onRemove: (mode) => onRemoveEduItem(e.id, mode),
   }));
+  // Only today's work sessions/homework show here — the full day-by-day breakdown of
+  // every assignment would otherwise turn this into a long, noisy list. The actual
+  // deadlines (Upcoming Tests/Assignments below) still show everything coming up.
   const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
-  const leftDone = [...sessionRows, ...homeworkRows].filter((i) => i.done);
   const leftTodayItems = leftNotDone.filter((i) => i.date === todayISOlocal);
-  const leftUpcomingItems = [...leftNotDone.filter((i) => i.date !== todayISOlocal), ...leftDone].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
 
   return (
     <div>
@@ -303,32 +304,20 @@ export default function EducationView({
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 22, marginTop: 16 }}>
-        <div>
-          <SubHeader>Upcoming Tasks</SubHeader>
-          {leftUpcomingItems.length === 0 ? (
-            <EmptyState text="Nothing to work on yet. Break down a test or assignment on the right, or add homework above." />
+      <div style={{ marginTop: 16 }}>
+        <SubHeader>Upcoming Tests</SubHeader>
+        {upcomingTests.length === 0 ? (
+          <EmptyState text="No upcoming tests." />
+        ) : (
+          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
+        )}
+        <div style={{ marginTop: 18 }}>
+          <SubHeader>Upcoming Assignments</SubHeader>
+          {upcomingAssignments.length === 0 ? (
+            <EmptyState text="No upcoming assignments." />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {leftUpcomingItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
-            </div>
+            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
-        </div>
-        <div>
-          <SubHeader>Upcoming Tests</SubHeader>
-          {upcomingTests.length === 0 ? (
-            <EmptyState text="No upcoming tests." />
-          ) : (
-            <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
-          )}
-          <div style={{ marginTop: 18 }}>
-            <SubHeader>Upcoming Assignments</SubHeader>
-            {upcomingAssignments.length === 0 ? (
-              <EmptyState text="No upcoming assignments." />
-            ) : (
-              <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
-            )}
-          </div>
         </div>
       </div>
 
