@@ -24,6 +24,8 @@ import EducationView from "./components/education/EducationView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import StickyNoteCorner from "./components/shared/StickyNoteCorner";
+import UndoToast from "./components/shared/UndoToast";
+import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
@@ -93,6 +95,26 @@ function ScaffoldApp({ userId, onSignOut }) {
     updateProfile({ tourSeen: true });
   };
 
+  // Deleting a task doesn't happen instantly anymore — it disappears from the UI right
+  // away, but the actual delete is held for a few seconds so a misclick (or change of
+  // mind) can be undone. Only one delete is "in flight" at a time; starting another
+  // commits the previous one immediately rather than juggling multiple toasts.
+  const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState(null);
+  const taskDeleteUndo = useUndoableDelete();
+  const visibleTasks = pendingDeleteTaskId ? tasks.filter((t) => t.id !== pendingDeleteTaskId) : tasks;
+  const requestRemoveTask = (id) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t) return;
+    setPendingDeleteTaskId(id);
+    taskDeleteUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" deleted`, () => {
+      removeTask(id);
+      setPendingDeleteTaskId((cur) => (cur === id ? null : cur));
+    });
+  };
+  const undoTaskDelete = () => {
+    if (taskDeleteUndo.undo()) setPendingDeleteTaskId(null);
+  };
+
   const openFocus = (id, title) => setFocusTask({ id, title });
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
@@ -138,11 +160,17 @@ function ScaffoldApp({ userId, onSignOut }) {
     eduItems.forEach((e) => {
       if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, done: e.done, type: e.type, subject: e.subject });
     });
-    tasks.forEach((t) => {
+    visibleTasks.forEach((t) => {
       if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category });
     });
     return chips;
-  }, [goals, eduItems, tasks]);
+  }, [goals, eduItems, visibleTasks]);
+
+  // Only individual goal actions have an independently-settable "done" — a goal deadline
+  // or milestone's done state is derived from whether all its actions are done, so those
+  // stay Calendar-only. Actions with a due date surface in Tasks/Today alongside plain
+  // tasks and Education deadlines, same shape as the chips the calendar already uses.
+  const goalChips = useMemo(() => dueChips.filter((c) => c.kind === "goal"), [dueChips]);
 
   const onChipClick = (chip) => {
     if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
@@ -319,7 +347,7 @@ function ScaffoldApp({ userId, onSignOut }) {
             onSetDayView={setDayView}
             onEnterMonth={enterMonth}
             events={events}
-            tasks={tasks}
+            tasks={visibleTasks}
             dueChips={dueChips}
             onCellClick={(date, hour) => setModal({ date, hour })}
             onToggleTask={setTaskDone}
@@ -331,11 +359,11 @@ function ScaffoldApp({ userId, onSignOut }) {
         )}
         {view === "tasks" && (
           <TasksView
-            tasks={tasks}
+            tasks={visibleTasks}
             onAddTask={addTask}
             onToggleDone={setTaskDone}
             onSetCategory={setTaskCategory}
-            onRemove={removeTask}
+            onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
             inboxItems={otherInboxItems}
@@ -344,6 +372,9 @@ function ScaffoldApp({ userId, onSignOut }) {
             eduItems={eduItems}
             onSetEduDone={setEduDone}
             onGoToEducation={() => setView("education")}
+            goalChips={goalChips}
+            onToggleGoalChip={onChipClick}
+            onGoToGoals={() => setView("goals")}
           />
         )}
         {view === "goals" && (
@@ -474,7 +505,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           onClose={() => setEditingTask(null)}
           onRename={renameTask}
           onToggleDone={setTaskDone}
-          onRemove={removeTask}
+          onRemove={requestRemoveTask}
           onOpenFocus={openFocus}
           onSetDate={setTaskDate}
           onSetNotes={setTaskNotes}
@@ -493,6 +524,8 @@ function ScaffoldApp({ userId, onSignOut }) {
       )}
 
       {!tourOpen && <StickyNoteCorner onCapture={handleQuickCapture} />}
+
+      {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
 
       {tourOpen && (
         <TourOverlay

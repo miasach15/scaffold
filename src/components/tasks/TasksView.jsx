@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckSquare, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -11,16 +11,18 @@ import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TodaySection from "./TodaySection";
 import GroupedTaskRow from "./GroupedTaskRow";
 import EduDeadlineRow from "./EduDeadlineRow";
+import GoalDeadlineRow from "./GoalDeadlineRow";
 import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [leadDays, setLeadDays] = useState(""); // "days needed" — shows every day, urgent once inside the window
+  const [repeat, setRepeat] = useState("None"); // ongoing recurring tasks (chores, gym days) — independent instances, not a group
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it down" — for a task that's really a multi-day project
@@ -30,7 +32,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setDetails(""); setUseAI(false); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setRepeat("None"); setDetails(""); setUseAI(false); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -74,6 +76,15 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (!title.trim()) return;
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
+    // A recurring task (chores, gym days) creates independent instances on each
+    // occurrence — not grouped like a breakdown, since each day stands on its own.
+    if (date && repeat !== "None") {
+      repeatDates(date, repeat).forEach((d) => {
+        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category });
+      });
+      resetForm();
+      return;
+    }
     const lead = date && !time && Number(leadDays) > 1 ? Number(leadDays) : null;
     // The date is just the due date now, stored as-is — no picking a "work day" for you.
     // A task with a future (or no) due date just sits in Today until you get to it, unless
@@ -118,12 +129,17 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   // too, so "what's due" is all in one place — homework, essays, everything.
   const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
 
+  // Goal actions with their own due date — not the goal or milestone itself (those are
+  // aggregates with no independently-settable "done"), just the concrete steps.
+  const goalDeadlines = (goalChips || []).filter((c) => !c.done);
+
   // Ordered by the day each is due, soonest first. Anything with no due date at all has
   // no "day due" to sort by, so it sinks to the bottom instead of breaking the order.
   const combined = [
     ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
     ...groupRows.map((g) => ({ type: "group", date: g.remainingItems[0]?.date || null, group: g })),
     ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
+    ...goalDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c })),
   ].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
@@ -135,7 +151,17 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     <div>
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
 
-      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} eduItems={eduItems} onSetEduDone={onSetEduDone} onGoToEducation={onGoToEducation} />
+      <TodaySection
+        tasks={tasks}
+        onToggleDone={onToggleDone}
+        onOpenDetail={onOpenTaskDetail}
+        eduItems={eduItems}
+        onSetEduDone={onSetEduDone}
+        onGoToEducation={onGoToEducation}
+        goalChips={goalChips}
+        onToggleGoalChip={onToggleGoalChip}
+        onGoToGoals={onGoToGoals}
+      />
 
       <div data-tour="tasks-add">
         <AddRow>
@@ -175,6 +201,14 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
               {date && !useAI && (
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Only if it's a real appointment at a specific time" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
               )}
+              {date && (
+                <select value={repeat} onChange={(e) => setRepeat(e.target.value)} title="For an ongoing chore or routine — creates a separate task on each occurrence" style={{ ...inputStyle, width: 140 }}>
+                  <option value="None">Doesn't repeat</option>
+                  <option value="Daily">Every day</option>
+                  <option value="Weekdays">Every weekday</option>
+                  <option value="Weekly">Every week</option>
+                </select>
+              )}
             </div>
           </div>
 
@@ -198,7 +232,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
             </div>
           </div>
 
-          {date && !time && (
+          {date && !time && repeat === "None" && (
             <div>
               <div style={fieldLabelStyle}>Bigger than one sitting?</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -277,6 +311,9 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
             }
             if (item.type === "edu") {
               return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
+            }
+            if (item.type === "goal") {
+              return <GoalDeadlineRow key={`goal-${item.chip.id}`} item={item.chip} onToggle={() => onToggleGoalChip(item.chip)} onOpen={onGoToGoals} />;
             }
             return (
               <GroupedTaskRow

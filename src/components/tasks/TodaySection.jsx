@@ -13,7 +13,7 @@ import Checkbox from "../shared/Checkbox";
 //      assignment/test deadline — only shows up once that date arrives (today or
 //      overdue), not before; these already have their own per-day/per-deadline scheduling.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduItems, onSetEduDone, onGoToEducation }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const todayISO = toISO(new Date());
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -30,9 +30,13 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
     .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
+  const goalItems = (goalChips || [])
+    .filter((c) => !c.done && c.date && c.date <= todayISO)
+    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
+
   // Overdue and due-soonest first; anything with no due date (a plain reminder that has
   // no "day it's due" to sort by) sinks to the bottom instead of interrupting the order.
-  const relevant = [...taskItems, ...eduDeadlineItems].sort((a, b) => {
+  const relevant = [...taskItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
