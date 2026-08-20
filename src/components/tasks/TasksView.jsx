@@ -3,11 +3,13 @@ import { CheckSquare, Sparkles, NotebookPen } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TodaySection from "./TodaySection";
+import GroupedTaskRow from "./GroupedTaskRow";
 import TaskRow from "./TaskRow";
 
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, inboxItems, onTurnIntoTask, onDiscardInbox }) {
@@ -54,8 +56,12 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   };
 
   const confirmPlan = () => {
-    if (!pendingPlan) return;
-    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category }));
+    if (!pendingPlan || pendingPlan.items.length === 0) return;
+    // More than one step — group them under one collapsed row in the Tasks list instead
+    // of showing a row per day. A single-step "breakdown" just becomes a normal task.
+    const groupId = pendingPlan.items.length > 1 ? uid() : null;
+    const groupTitle = groupId ? title.trim() : null;
+    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle }));
     setPendingPlan(null);
     resetForm();
   };
@@ -64,17 +70,11 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (!title.trim()) return;
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
-    let scheduledDate = date || null;
-    if (date && !hasTime) {
-      // No specific time given — the date is "needs to be done by", not "I'm doing it
-      // then". Pick whichever day between now and then has the fewest tasks already.
-      const todayISO = toISO(new Date());
-      const startISO = date > todayISO ? todayISO : date;
-      scheduledDate = distributeDatesByLoad(startISO, date, 1, tasks)[0];
-    }
+    // The date is just the due date now, stored as-is — no picking a "work day" for you.
+    // A task with a future (or no) due date just sits in Today until you get to it.
     onAddTask({
       title: title.trim(),
-      date: scheduledDate,
+      date: date || null,
       start: hasTime ? timeToDecimal(time) : null,
       duration: hasTime ? 60 : null,
       category,
@@ -89,17 +89,33 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   // always on the Calendar for their actual day.
   const plainTasks = tasks.filter((t) => !t.eduId);
 
+  // A "break it down" task collapses to one row (see GroupedTaskRow) instead of a row
+  // per step — the Tasks list should show one task, not every day you're working on it.
+  const byGroup = {};
+  plainTasks.forEach((t) => {
+    if (!t.groupId) return;
+    (byGroup[t.groupId] ||= []).push(t);
+  });
+  const groupRows = Object.entries(byGroup)
+    .map(([groupId, items]) => {
+      const remainingItems = items.filter((t) => !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      return { groupId, groupTitle: items.find((t) => t.groupTitle)?.groupTitle || "Task", items, remainingItems, doneCount: items.filter((t) => t.done).length, total: items.length };
+    })
+    .filter((g) => g.remainingItems.length > 0); // whole group drops off once every step is done
+
   // Done tasks drop off the list entirely rather than sticking around struck through.
-  // One flat list — undated tasks (no due-by set) float to the top since they're the
-  // ones still needing a date, rather than being split into a separate "Backlog".
-  const activeTasks = plainTasks
-    .filter((t) => !t.done)
-    .sort((a, b) => {
-      if (!a.date && !b.date) return 0;
-      if (!a.date) return -1;
-      if (!b.date) return 1;
-      return a.date.localeCompare(b.date) || (a.start ?? -1) - (b.start ?? -1);
-    });
+  // Undated tasks float to the top since they're the ones still needing a date.
+  const singleTasks = plainTasks.filter((t) => !t.groupId && !t.done);
+
+  const combined = [
+    ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
+    ...groupRows.map((g) => ({ type: "group", date: g.remainingItems[0]?.date || null, group: g })),
+  ].sort((a, b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return -1;
+    if (!b.date) return 1;
+    return a.date.localeCompare(b.date);
+  });
 
   return (
     <div>
@@ -134,13 +150,13 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Due by</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title={useAI ? "Due date — we'll space steps out before it" : "Needs to be done by — we'll pick the actual day for you, unless you set a time"} style={{ ...inputStyle, width: 150 }} />
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional — shows in Today until you finish it either way; a due date just tells you (and the Calendar) when it needs to be done by" style={{ ...inputStyle, width: 150 }} />
             </div>
             {date && !useAI && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
                 <span>Time (optional):</span>
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
-                <span style={{ fontSize: 11, color: "#B4BCC5" }}>{time ? "Locked to this exact date & time" : "Leave blank and we'll pick the least busy day up to your date"}</span>
+                <span style={{ fontSize: 11, color: "#B4BCC5" }}>Only if it's a real appointment at a specific time</span>
               </div>
             )}
             <div data-tour="tasks-category" style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -170,7 +186,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
                   color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                   display: "inline-flex", alignItems: "center", gap: 4,
                 }}
-                title="For a bigger task that'll take more than one sitting — spreads it into several smaller tasks leading up to this date"
+                title="For a bigger task that'll take more than one sitting — spreads it into several smaller steps leading up to this date, collapsed into one row on the list"
               >
                 <Sparkles size={11} strokeWidth={2.3} /> Break it down
               </button>
@@ -186,7 +202,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
                 rows={2}
                 style={{ ...inputStyle, width: "100%", resize: "vertical" }}
               />
-              <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller tasks spread out before {date || "the due date"}, instead of adding it as one task.</div>
+              <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 4 }}>We'll turn "{title || "your task"}" into a few smaller steps spread out before {date || "the due date"} — shown as one row you can expand.</div>
               {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
             </div>
           )}
@@ -211,10 +227,28 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       )}
 
       <SubHeader>Tasks</SubHeader>
-      {activeTasks.length === 0 ? (
+      {combined.length === 0 ? (
         <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
-        <List>{activeTasks.map((t) => <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />)}</List>
+        <List>
+          {combined.map((item) =>
+            item.type === "single" ? (
+              <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />
+            ) : (
+              <GroupedTaskRow
+                key={item.group.groupId}
+                groupTitle={item.group.groupTitle}
+                remainingItems={item.group.remainingItems}
+                doneCount={item.group.doneCount}
+                total={item.group.total}
+                onToggleDone={onToggleDone}
+                onSetCategory={onSetCategory}
+                onRemove={onRemove}
+                onOpenDetail={onOpenTaskDetail}
+              />
+            )
+          )}
+        </List>
       )}
 
       {pendingPlan && (

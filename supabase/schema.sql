@@ -53,6 +53,10 @@ create table if not exists tasks (
   edu_id uuid references edu_items(id) on delete cascade,
   priority text not null default 'Low',
   category text not null default 'Personal',
+  -- group_id ties together the individual steps of a "break it down" task so the Tasks
+  -- list can show one collapsed row (group_title) instead of a row per step.
+  group_id uuid,
+  group_title text,
   created_at timestamptz not null default now()
 );
 

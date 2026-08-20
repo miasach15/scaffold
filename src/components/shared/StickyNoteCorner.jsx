@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { StickyNote } from "lucide-react";
 
-// A literal sticky note sitting in the corner of the screen — no button to open it, no
-// "Add" to submit. Type directly into it, hit Enter, it captures what you wrote and
-// clears for the next thing. Always Personal category (keep it simple); review what's
-// been captured on the Tasks page's Quick capture section (or Education's, if it's an
-// assignment/test — add those from the Education page directly instead).
+// A literal sticky note in the corner — collapsed to a small tab by default so it's not
+// sitting in the way, click it to open. Once open, type directly onto it and hit Enter —
+// no "Add" button. Always Personal category (kept simple); review what's captured on the
+// Tasks page's Quick capture section, or add Education stuff from that page directly.
 export default function StickyNoteCorner({ onCapture }) {
+  const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
 
   const submit = () => {
@@ -14,16 +15,42 @@ export default function StickyNoteCorner({ onCapture }) {
     setText("");
   };
 
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        title="Sticky note — jot something down"
+        style={{
+          position: "fixed", bottom: 20, right: 20, zIndex: 80, width: 44, height: 44, borderRadius: "10px 10px 3px 10px",
+          background: "#FFF7D6", border: "1px solid #EFD98A", boxShadow: "0 6px 16px rgba(0,0,0,0.14)",
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#8A6F1F",
+        }}
+      >
+        <StickyNote size={18} strokeWidth={2} />
+      </button>
+    );
+  }
+
   return (
     <div
       style={{
-        position: "fixed", bottom: 20, right: 20, zIndex: 80, width: 180, height: 180,
+        position: "fixed", bottom: 20, right: 20, zIndex: 80, width: 190, height: 190,
         background: "#FFF7D6", border: "1px solid #EFD98A", borderRadius: 3,
         boxShadow: "0 10px 24px rgba(0,0,0,0.16)", transform: "rotate(-2deg)",
-        display: "flex", flexDirection: "column", padding: "14px 14px 12px",
+        display: "flex", flexDirection: "column", padding: "12px 12px 10px",
       }}
     >
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 2 }}>
+        <button
+          onClick={() => setOpen(false)}
+          title="Close"
+          style={{ background: "none", border: "none", cursor: "pointer", color: "#8A6F1F", opacity: 0.6, fontSize: 14, lineHeight: 1, padding: 2 }}
+        >
+          ×
+        </button>
+      </div>
       <textarea
+        autoFocus
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
@@ -31,6 +58,7 @@ export default function StickyNoteCorner({ onCapture }) {
             e.preventDefault();
             submit();
           }
+          if (e.key === "Escape") setOpen(false);
         }}
         placeholder="Jot something down..."
         style={{
