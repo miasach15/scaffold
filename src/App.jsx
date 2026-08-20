@@ -60,7 +60,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
@@ -337,9 +337,13 @@ function ScaffoldApp({ userId, onSignOut }) {
             onSetCategory={setTaskCategory}
             onRemove={removeTask}
             onOpenTaskDetail={openTaskDetail}
+            onSetDate={setTaskDate}
             inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}
             onDiscardInbox={removeInboxItem}
+            eduItems={eduItems}
+            onSetEduDone={setEduDone}
+            onGoToEducation={() => setView("education")}
           />
         )}
         {view === "goals" && (
@@ -472,6 +476,7 @@ function ScaffoldApp({ userId, onSignOut }) {
           onToggleDone={setTaskDone}
           onRemove={removeTask}
           onOpenFocus={openFocus}
+          onSetDate={setTaskDate}
         />
       )}
 

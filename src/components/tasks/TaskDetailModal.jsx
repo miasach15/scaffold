@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { TONE } from "../../lib/constants";
 import { decimalToTimeLabel, formatShortDate } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
-export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus }) {
+export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate }) {
   const [titleDraft, setTitleDraft] = useState(task.title);
+  const [editingDate, setEditingDate] = useState(false);
 
   const save = () => {
     if (titleDraft.trim() && titleDraft.trim() !== task.title) onRename(task.id, titleDraft);
@@ -28,9 +30,34 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
           rows={2}
           style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 15, fontWeight: 600 }}
         />
-        <div style={{ fontSize: 12.5, color: "#8B95A1", marginTop: 10 }}>
-          {task.date ? formatShortDate(task.date) : "No date"}
-          {task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}
+        <div style={{ marginTop: 10 }}>
+          {editingDate ? (
+            <input
+              type="date"
+              autoFocus
+              value={task.date || ""}
+              onChange={(e) => { onSetDate(task.id, e.target.value); setEditingDate(false); }}
+              onBlur={() => setEditingDate(false)}
+              style={{ ...inputStyle, width: 150, fontSize: 12.5, padding: "5px 8px" }}
+            />
+          ) : task.date ? (
+            <div onClick={() => onSetDate && setEditingDate(true)} title={onSetDate ? "Click to change date" : undefined} style={{ fontSize: 12.5, color: "#8B95A1", cursor: onSetDate ? "pointer" : "default" }}>
+              {formatShortDate(task.date)}{task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}
+            </div>
+          ) : onSetDate ? (
+            <button
+              onClick={() => setEditingDate(true)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3, background: "#fff", border: "1.5px dashed #D1D5DB",
+                borderRadius: 999, padding: "4px 10px 4px 7px", fontSize: 12, fontWeight: 700, color: "#93A0AD", cursor: "pointer",
+              }}
+            >
+              <Plus size={12} strokeWidth={2.5} />
+              Add date
+            </button>
+          ) : (
+            <div style={{ fontSize: 12.5, color: "#8B95A1" }}>No date</div>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 18, flexWrap: "wrap" }}>

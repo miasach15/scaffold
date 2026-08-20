@@ -10,9 +10,10 @@ import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Mi
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TodaySection from "./TodaySection";
 import GroupedTaskRow from "./GroupedTaskRow";
+import EduDeadlineRow from "./EduDeadlineRow";
 import TaskRow from "./TaskRow";
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, inboxItems, onTurnIntoTask, onDiscardInbox }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -107,9 +108,14 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   // Undated tasks float to the top since they're the ones still needing a date.
   const singleTasks = plainTasks.filter((t) => !t.groupId && !t.done);
 
+  // Homework/assignment/test deadlines (not the day-by-day work sessions) show up here
+  // too, so "what's due" is all in one place — homework, essays, everything.
+  const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
+
   const combined = [
     ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
     ...groupRows.map((g) => ({ type: "group", date: g.remainingItems[0]?.date || null, group: g })),
+    ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
   ].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return -1;
@@ -121,7 +127,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     <div>
       <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
 
-      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} />
+      <TodaySection tasks={tasks} onToggleDone={onToggleDone} onOpenDetail={onOpenTaskDetail} eduItems={eduItems} onSetEduDone={onSetEduDone} onGoToEducation={onGoToEducation} />
 
       <div data-tour="tasks-add">
         <AddRow>
@@ -231,10 +237,14 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
       ) : (
         <List>
-          {combined.map((item) =>
-            item.type === "single" ? (
-              <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} showDate />
-            ) : (
+          {combined.map((item) => {
+            if (item.type === "single") {
+              return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} showDate />;
+            }
+            if (item.type === "edu") {
+              return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
+            }
+            return (
               <GroupedTaskRow
                 key={item.group.groupId}
                 groupTitle={item.group.groupTitle}
@@ -245,9 +255,10 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
                 onSetCategory={onSetCategory}
                 onRemove={onRemove}
                 onOpenDetail={onOpenTaskDetail}
+                onSetDate={onSetDate}
               />
-            )
-          )}
+            );
+          })}
         </List>
       )}
 

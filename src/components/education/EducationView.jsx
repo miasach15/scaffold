@@ -35,7 +35,6 @@ export default function EducationView({
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [repeat, setRepeat] = useState("None");
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
   const [useAI, setUseAI] = useState(false); // break it down with AI, applied on top of whichever schedule above is picked
@@ -60,7 +59,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setRepeat("None"); setAssignmentDetails("");
+    setTitle(""); setDueDate(""); setAssignmentDetails("");
   };
 
   const schedulable = type === "Assignment" || type === "Test";
@@ -107,10 +106,10 @@ export default function EducationView({
     if (schedulable && useAI) { breakDownAssignment(); return; }
     if (schedulable) {
       const schedule = workMode === "everyday" ? "everyday" : workDays;
-      setPendingPlan({ schedule, repeatValue: repeat, items: previewSchedule(schedule) });
+      setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
-    onAddEduItem(title.trim(), type, subject, dueDate, repeat, null);
+    onAddEduItem(title.trim(), type, subject, dueDate, "None", null);
     resetAddForm();
   };
 
@@ -216,12 +215,6 @@ export default function EducationView({
           {knownSubjects.map((s) => <option key={s} value={s} />)}
         </datalist>
         <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, width: 150 }} />
-        <select value={repeat} onChange={(e) => setRepeat(e.target.value)} style={{ ...inputStyle, width: 140 }} title="Repeat">
-          <option value="None">Doesn't repeat</option>
-          <option value="Daily">Every day</option>
-          <option value="Weekdays">Every weekday</option>
-          <option value="Weekly">Every week</option>
-        </select>
         {schedulable && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
             <span>{workVerb} it:</span>
