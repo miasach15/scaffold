@@ -25,6 +25,7 @@ import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import UndoToast from "./components/shared/UndoToast";
+import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import ManagePagesModal from "./components/nav/ManagePagesModal";
@@ -82,6 +83,7 @@ function ScaffoldApp({ userId, onSignOut }) {
   const [showSettings, setShowSettings] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStarted, setTourStarted] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     if (profile && profile.onboarded && !profile.tourSeen && !tourStarted) {
@@ -89,6 +91,24 @@ function ScaffoldApp({ userId, onSignOut }) {
       setTourStarted(true);
     }
   }, [profile, tourStarted]);
+
+  // Cmd/Ctrl+K opens search from anywhere; "/" does too, as long as you're not already
+  // typing into something. Each modal still handles its own Escape-to-close.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const tag = document.activeElement?.tagName;
+      const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearch(true);
+      } else if (!typing && e.key === "/") {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const finishTour = () => {
     setTourOpen(false);
@@ -317,6 +337,7 @@ function ScaffoldApp({ userId, onSignOut }) {
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
         onOpenManagePages={() => setShowManagePages(true)}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenSearch={() => setShowSearch(true)}
         onSignOut={onSignOut}
         enabledPages={profile.enabledPages}
       />
@@ -526,6 +547,20 @@ function ScaffoldApp({ userId, onSignOut }) {
       {!tourOpen && <StickyNoteCorner onCapture={handleQuickCapture} />}
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
+
+      {showSearch && (
+        <SearchModal
+          tasks={visibleTasks}
+          eduItems={eduItems}
+          goals={goals}
+          habits={habits}
+          journalEntries={journalEntries}
+          events={events}
+          onClose={() => setShowSearch(false)}
+          onGoTo={setView}
+          onOpenTask={openTaskDetail}
+        />
+      )}
 
       {tourOpen && (
         <TourOverlay
