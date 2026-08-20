@@ -467,6 +467,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}
+          userId={userId}
           onClose={() => setShowSettings(false)}
         />
       )}

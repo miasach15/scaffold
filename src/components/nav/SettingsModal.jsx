@@ -1,8 +1,27 @@
-import { Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
+import { downloadJSON, exportAllData } from "../../lib/exportData";
+import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onReplayTour, darkMode, onToggleDarkMode, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onReplayTour, darkMode, onToggleDarkMode, userId, onClose }) {
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
+
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const data = await exportAllData(userId);
+      downloadJSON(data, `scaffold-backup-${toISO(new Date())}.json`);
+    } catch (e) {
+      setExportError(e.message || "Export failed — try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 440, maxHeight: "85vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
@@ -71,6 +90,15 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
           </button>
         )}
         <button onClick={onReplayTour} style={{ ...ghostBtn, width: "100%", marginTop: 8 }}>Replay page tour</button>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{ ...ghostBtn, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: exporting ? 0.6 : 1 }}
+        >
+          <Download size={14} strokeWidth={2.3} />
+          {exporting ? "Gathering everything..." : "Download a backup of everything"}
+        </button>
+        {exportError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6, textAlign: "center" }}>{exportError}</div>}
         <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 8 }}>Done</button>
       </div>
     </div>
