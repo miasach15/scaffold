@@ -67,6 +67,17 @@ export const inLeadWindow = (iso, leadDays, done) => {
   const d = daysUntil(iso);
   return d >= 0 && d <= leadDays - 1;
 };
+// A task that was given a due date but neither "bigger than one sitting" option (no
+// explicit "days needed", not broken into grouped steps) still shouldn't just vanish
+// until its due date arrives — it defaults to a 2-day window (shows every day, flips
+// urgent the day before it's due) same as if you'd typed "2" into Days needed. Grouped
+// steps and Education-generated sessions already have their own per-day scheduling, so
+// they're left out of this default and keep showing only on their assigned day.
+export const defaultLeadDays = (t) => {
+  if (t.leadDays) return t.leadDays;
+  if (t.groupId || t.eduId || !t.date) return null;
+  return 2;
+};
 export const dateRangeISO = (startISO, endISO) => {
   if (!startISO) return [];
   if (endISO < startISO) return [startISO];

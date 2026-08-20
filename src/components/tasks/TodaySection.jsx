@@ -1,16 +1,17 @@
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
-import { daysUntil, inLeadWindow, toISO } from "../../lib/dateHelpers";
+import { daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
 // no delete buttons, nothing but a checkbox and a title. Three ways a task ends up here:
 //   1. No due date at all — persists every day, dimmed as "not urgent", until you finish it.
-//   2. A due date + "days needed" (leadDays) — persists every day too, dimmed until today
-//      falls within that many days of the due date, then flips to a bold "Urgent" state.
-//   3. A plain due date (no leadDays), a step from a "break it down" task, an Education
-//      work session, or a homework/assignment/test deadline — only shows up once that
-//      date arrives (today or overdue), not before.
+//   2. A due date, and either "days needed" (leadDays) or nothing at all (defaults to a
+//      2-day window — see defaultLeadDays) — persists every day too, dimmed until today
+//      falls within that window, then flips to a bold "Urgent" state.
+//   3. A step from a "break it down" task, an Education work session, or a homework/
+//      assignment/test deadline — only shows up once that date arrives (today or
+//      overdue), not before; these already have their own per-day/per-deadline scheduling.
 // The full Tasks list below has all the editing controls; this is just the glance one.
 export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduItems, onSetEduDone, onGoToEducation }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -18,9 +19,9 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   const taskItems = tasks
-    .filter((t) => !t.done && (!t.date || t.leadDays || t.date <= todayISO))
+    .filter((t) => !t.done && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
-      id: t.id, title: t.title, date: t.date, leadDays: t.leadDays,
+      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t),
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
     }));
