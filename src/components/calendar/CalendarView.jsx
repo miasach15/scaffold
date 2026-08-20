@@ -37,8 +37,13 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     if (chip.kind === "edu") return `${chip.title}${chip.subject ? ` (${chip.subject})` : ""}`;
     return chip.title;
   };
-  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "edu");
-  const taskChipsOnly = dueChips.filter((c) => c.kind === "task" || c.kind === "goal");
+  // A plain task's date IS its due date now, so it belongs in "Due" with everything else
+  // that's a deadline (goal deadlines/milestones, Education). The "Tasks" row is reserved
+  // for the actual day-to-day doing: a step from a "break it down" task (its date is the
+  // day you work on that step, not the project's overall due date) and goal actions
+  // (already a concrete "do this on this day" step, not an aggregate deadline).
+  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "edu" || (c.kind === "task" && !c.groupId));
+  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && c.groupId));
   const allDayEventChips = events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category }));
 
   const isDay = !!dayView;
@@ -101,7 +106,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
               <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={(chip) => onEditEvent({ id: chip.id, title: chip.title, date: chip.date, start: null, duration: null, category: chip.category })} onAddClick={(iso) => onCellClick(iso, null)} />
             </div>
             <div data-tour="calendar-due" style={{ flexShrink: 0 }}>
-              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} />
+              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} />
             </div>
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
               <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} emphasis />
