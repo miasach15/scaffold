@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GripHorizontal, Sparkles } from "lucide-react";
-import { LIFESTYLE_PAGE_META, PRIMARY } from "../../lib/constants";
+import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 const CORE_STEPS = [
@@ -13,26 +13,13 @@ const CORE_STEPS = [
   { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },
 ];
 
-const LIFESTYLE_BULLETS = {
-  movies: ["Add movies or shows", "Mark watched + rate it", "See your watchlist anytime"],
-  books: ["Add books to read", "Track reading progress", "Rate it when finished"],
-  restaurants: ["Add places to try", "Mark tried + rate it", "Browse your list"],
-  bucket: ["Add dream goals", "Check them off", "Pick from suggestions"],
-  packing: ["Start from a template", "Check items as you pack", "Edit it anytime"],
-  gifts: ["Add gift ideas", "Track idea → bought → given", "Note the price"],
-  notes: ["Jot a quick note", "Pick a color", "Edit it anytime after saving"],
-};
-
 const MODAL_STEPS = [
   { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Replay this tour anytime"] },
   { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished", "Covers tasks, goals, habits", "Open it anytime up top"] },
 ];
 
-export default function TourOverlay({ setView, enabledPages, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
-  const lifestyleSteps = LIFESTYLE_PAGE_META
-    .filter((p) => enabledPages.includes(p.key))
-    .map((p) => ({ type: "view", view: p.key, title: p.label, bullets: LIFESTYLE_BULLETS[p.key] || [p.tagline] }));
-  const steps = [...CORE_STEPS, ...lifestyleSteps, ...MODAL_STEPS];
+export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
+  const steps = [...CORE_STEPS, ...MODAL_STEPS];
   const [i, setI] = useState(0);
   const step = steps[i];
   const isLast = i === steps.length - 1;

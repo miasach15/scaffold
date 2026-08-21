@@ -25,7 +25,6 @@ import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import { useDarkMode } from "./hooks/useDarkMode";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
-import ManagePagesModal from "./components/nav/ManagePagesModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
@@ -37,13 +36,6 @@ const GoalsView = lazy(() => import("./components/goals/GoalsView"));
 const HabitsView = lazy(() => import("./components/habits/HabitsView"));
 const JournalView = lazy(() => import("./components/journal/JournalView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
-const MoviesView = lazy(() => import("./components/lifestyle/MoviesView"));
-const BooksView = lazy(() => import("./components/lifestyle/BooksView"));
-const RestaurantsView = lazy(() => import("./components/lifestyle/RestaurantsView"));
-const BucketListView = lazy(() => import("./components/lifestyle/BucketListView"));
-const PackingListsView = lazy(() => import("./components/lifestyle/PackingListsView"));
-const GiftsView = lazy(() => import("./components/lifestyle/GiftsView"));
-const NotesView = lazy(() => import("./components/lifestyle/NotesView"));
 
 import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
@@ -86,7 +78,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const [focusTask, setFocusTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
-  const [showManagePages, setShowManagePages] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStarted, setTourStarted] = useState(false);
@@ -220,15 +211,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   };
 
   const completeOnboarding = async (answers) => {
-    await updateProfile({ name: answers.name, focusAreas: answers.focusAreas, workStyle: answers.workStyle, enabledPages: answers.lifestylePages, onboarded: true });
+    await updateProfile({ name: answers.name, focusAreas: answers.focusAreas, workStyle: answers.workStyle, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
-  };
-
-  const toggleLifestylePage = (key) => {
-    const current = profile.enabledPages || [];
-    const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key];
-    updateProfile({ enabledPages: next });
-    if (current.includes(key) && view === key) setView("calendar");
   };
 
   // mode: "one" (default) or "following" — for repeating edu items (no stored series id),
@@ -356,11 +340,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         view={view}
         setView={setView}
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
-        onOpenManagePages={() => setShowManagePages(true)}
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}
         onSignOut={onSignOut}
-        enabledPages={profile.enabledPages}
       />
 
       <div
@@ -461,23 +443,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onDiscardInbox={removeInboxItem}
           />
         )}
-        {view === "movies" && <MoviesView userId={userId} />}
-        {view === "books" && <BooksView userId={userId} />}
-        {view === "restaurants" && <RestaurantsView userId={userId} />}
-        {view === "bucket" && <BucketListView userId={userId} />}
-        {view === "packing" && <PackingListsView userId={userId} />}
-        {view === "gifts" && <GiftsView userId={userId} />}
-        {view === "notes" && <NotesView userId={userId} />}
         </Suspense>
       </div>
-
-      {showManagePages && (
-        <ManagePagesModal
-          enabledPages={profile.enabledPages}
-          onTogglePage={toggleLifestylePage}
-          onClose={() => setShowManagePages(false)}
-        />
-      )}
 
       {showSettings && (
         <SettingsModal
@@ -592,7 +559,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {tourOpen && (
         <TourOverlay
           setView={setView}
-          enabledPages={profile.enabledPages}
           onOpenSettings={() => setShowSettings(true)}
           onOpenWeeklyReview={() => setShowWeeklyReview(true)}
           onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); }}

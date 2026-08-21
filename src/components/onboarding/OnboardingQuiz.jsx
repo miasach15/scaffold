@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HABIT_COLOR, LIFESTYLE_COLORS, LIFESTYLE_PAGE_META, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { HABIT_COLOR, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 
@@ -9,16 +9,14 @@ export default function OnboardingQuiz({ onComplete }) {
   const [name, setName] = useState("");
   const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
-  const [lifestylePages, setLifestylePages] = useState([]);
 
   const toggleFocus = (c) => setFocusAreas((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
   const toggleHabit = (h) => setHabitPicks((hs) => (hs.includes(h) ? hs.filter((x) => x !== h) : [...hs, h]));
-  const toggleLifestylePage = (key) => setLifestylePages((ps) => (ps.includes(key) ? ps.filter((x) => x !== key) : [...ps, key]));
 
-  const steps = ["Name", "Focus", "Habits", "Extras", "Done"];
+  const steps = ["Name", "Focus", "Habits", "Done"];
   const lastStep = steps.length - 1;
-  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, lifestylePages, workStyle: "Mix of both" });
-  const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], lifestylePages: [], workStyle: "Mix of both" });
+  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, workStyle: "Mix of both" });
+  const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -94,40 +92,10 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 3 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Add any bonus "Lifestyle" pages?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are extra pages beyond Calendar/Tasks/Goals/Habits/Journal — things like a movie watchlist or packing lists. Totally optional. You can add or remove these anytime from the "Lifestyle" menu in the top bar.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {LIFESTYLE_PAGE_META.map((p) => {
-                const active = lifestylePages.includes(p.key);
-                const col = LIFESTYLE_COLORS[p.key];
-                return (
-                  <button
-                    key={p.key}
-                    onClick={() => toggleLifestylePage(p.key)}
-                    style={{
-                      padding: "10px 14px", borderRadius: 10, fontSize: 14, fontWeight: 700, textAlign: "left",
-                      border: `1.5px solid ${active ? col.border : "#E5E9ED"}`,
-                      background: active ? col.bg : "#fff",
-                      color: active ? col.text : "#000000",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}
-                  >
-                    <span>{p.label}</span>
-                    <span style={{ fontWeight: 400, fontSize: 12, color: active ? col.text : "#93A0AD", opacity: 0.85 }}>{p.tagline}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
             <div style={{ fontSize: 13.5, color: "#5A6472", lineHeight: 1.6, marginBottom: 6 }}>
               {focusAreas.length > 0 && <>Focusing on {focusAreas.join(", ")}. </>}
               {habitPicks.length > 0 && <>Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}. </>}
-              {lifestylePages.length > 0 && <>Added {lifestylePages.length} extra page{lifestylePages.length === 1 ? "" : "s"}. </>}
             </div>
           </div>
         )}

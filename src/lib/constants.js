@@ -178,34 +178,3 @@ export const JOURNAL_PROMPTS = {
 };
 
 export const ROW_H = 44; // px per hour
-
-// ---------- lifestyle pages (optional, user-selectable) ----------
-export const LIFESTYLE_COLORS = {
-  movies: { bg: "#FCE9E4", border: "#EFAE93", text: "#9B4A2A" },
-  books: { bg: "#E9F1FC", border: "#9DC0EE", text: "#2A5A8A" },
-  restaurants: { bg: "#FDF3DC", border: "#EFCE85", text: "#8A6A1F" },
-  bucket: { bg: "#F1E9FB", border: "#C6A9EE", text: "#5E3A8A" },
-  packing: { bg: "#E3F5F0", border: "#8ED9C4", text: "#1F7A5C" },
-  gifts: { bg: "#FDE7F0", border: "#EFA9C9", text: "#9B3568" },
-  notes: { bg: "#FFF7D6", border: "#F0DA85", text: "#8A6F1F" },
-};
-
-export const LIFESTYLE_PAGE_META = [
-  { key: "movies", label: "Movies & TV", tagline: "What to watch next" },
-  { key: "books", label: "Books", tagline: "What to read next" },
-  { key: "restaurants", label: "Restaurants", tagline: "Places to try" },
-  { key: "bucket", label: "Bucket List", tagline: "Dreams and adventures" },
-  { key: "packing", label: "Packing Lists", tagline: "Never forget your charger" },
-  { key: "gifts", label: "Gift Tracking", tagline: "Ideas for people you love" },
-  { key: "notes", label: "Notes", tagline: "Quick thoughts, anywhere" },
-];
-
-// palette a note card can be assigned, independent of the Notes nav color above
-export const NOTE_CARD_COLORS = {
-  yellow: { bg: "#FFF7D6", border: "#F0DA85", text: "#7A6420" },
-  pink: { bg: "#FCE7F1", border: "#EFA9C9", text: "#8A3A63" },
-  blue: { bg: "#E4F1FC", border: "#9DC8EE", text: "#295C82" },
-  green: { bg: "#E4F5E9", border: "#93D3A8", text: "#2C6B44" },
-  purple: { bg: "#EFE7FB", border: "#C1A6EE", text: "#5A3B8A" },
-  peach: { bg: "#FDEBE0", border: "#F0BB92", text: "#8A5424" },
-};
