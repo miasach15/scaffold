@@ -97,25 +97,14 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     .filter((c) => !c.done && c.date && c.date <= todayISO)
     .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
-  // Ordered by actual urgency — how soon it's really due — not by type. A group still
-  // always shows bold (see isGroup below), but that's a display choice, not a sorting
-  // one: a group due in a month shouldn't outrank a plain task due in 2 days just
-  // because it's always "active." So no isGroup override here — pure date proximity,
-  // same rule for everything: overdue, then due today, then in its urgent window, then
-  // has a date but not urgent yet, then no date at all. Soonest date first in each tier.
-  const urgencyTier = (it) => {
-    const overdue = it.date && it.date < todayISO;
-    const dueToday = it.date === todayISO;
-    const urgent = inLeadWindow(it.date, it.leadDays, false);
-    if (overdue) return 0;
-    if (dueToday) return 1;
-    if (urgent) return 2;
-    if (it.date) return 3;
-    return 4;
-  };
+  // Ordered by raw date proximity — whatever's due soonest (or most overdue) goes on
+  // top, full stop. No tier system based on each item's own "days needed"/urgent-window
+  // setting: that let a task with a bigger self-declared lead window jump ahead of one
+  // due sooner but with a smaller window, which isn't actually more urgent, just
+  // configured differently. Bold/dim display (below) is unaffected — that's still driven
+  // by each item's own urgency window; this only controls list order. Undated items have
+  // no due date to rank by, so they sink to the bottom regardless of how they're styled.
   const sortedAll = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
-    const diff = urgencyTier(a) - urgencyTier(b);
-    if (diff !== 0) return diff;
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
