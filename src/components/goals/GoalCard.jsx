@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Pencil, Check, X, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { Pencil, Check, X, ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
+export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(goal.title);
+  const [editingDeadline, setEditingDeadline] = useState(false);
   const [filling, setFilling] = useState(false);
   const [fillError, setFillError] = useState(null);
   // New, empty goals start expanded so it's obvious where to add the first milestone;
@@ -58,6 +60,9 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
           if (a.title) await onAddAction(goal.id, milestoneId, a.title, null);
         }
       }
+      // The goal already has an end date — spread it across everything that just got
+      // created undated, same cascade as setting the deadline manually.
+      if (goal.deadline && onSetGoalDeadline) await onSetGoalDeadline(goal.id, goal.deadline);
     } catch (e) {
       setFillError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
@@ -93,7 +98,32 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
               <div style={{ fontSize: 11, color: col.text, opacity: 0.75, fontWeight: 600 }}>{goal.category}</div>
-              {goal.deadline && <UrgencyBadge iso={goal.deadline} done={allDone} leadDays={2} />}
+              {onSetGoalDeadline && editingDeadline ? (
+                <input
+                  type="date"
+                  autoFocus
+                  value={goal.deadline || ""}
+                  onChange={(e) => { onSetGoalDeadline(goal.id, e.target.value); setEditingDeadline(false); }}
+                  onBlur={() => setEditingDeadline(false)}
+                  style={{ ...inputStyle, width: 138, fontSize: 11.5, padding: "3px 6px" }}
+                />
+              ) : goal.deadline ? (
+                <div
+                  onClick={() => onSetGoalDeadline && setEditingDeadline(true)}
+                  title={onSetGoalDeadline ? `${formatShortDate(goal.deadline)} — click to change. Changing this spreads dates across anything still undated underneath.` : undefined}
+                  style={{ cursor: onSetGoalDeadline ? "pointer" : "default" }}
+                >
+                  <UrgencyBadge iso={goal.deadline} done={allDone} leadDays={2} />
+                </div>
+              ) : onSetGoalDeadline ? (
+                <button
+                  onClick={() => setEditingDeadline(true)}
+                  title="Set an end date — spreads dates across every milestone and action underneath automatically"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "transparent", border: "1.5px dashed currentColor", color: col.text, opacity: 0.6, borderRadius: 999, padding: "2px 8px 2px 5px", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}
+                >
+                  <Plus size={11} strokeWidth={2.5} /> end date
+                </button>
+              ) : null}
               {!expanded && total > 0 && <div style={{ fontSize: 11, color: col.text, opacity: 0.75 }}>· {doneCount}/{total} done</div>}
             </div>
           </div>

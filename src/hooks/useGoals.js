@@ -132,6 +132,58 @@ export function useGoals(userId, tasks) {
     }
   }, [goals, tasks]);
 
+  // One end date for the whole goal, and everything undated underneath cascades from it:
+  // any milestone that doesn't already have its own due date gets one spread evenly (load-
+  // aware) up to the goal's deadline, and then — same rule setMilestoneDueDate already
+  // uses for a single milestone — every milestone that now has a date (whether it already
+  // had one or just got assigned one here) has its own undated actions spread up to that.
+  // Anything that already has a date of its own is left alone.
+  const setGoalDeadline = useCallback(async (goalId, deadline) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+
+    const todayISO = toISO(new Date());
+    const undatedMilestones = goal.milestones.filter((m) => !m.dueDate);
+    const milestoneDateFor = new Map();
+    if (deadline && undatedMilestones.length > 0) {
+      const startISO = deadline > todayISO ? todayISO : deadline;
+      const lastWorkDay = dayBefore(deadline);
+      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+      const autoDates = distributeDatesByLoad(startISO, endISO, undatedMilestones.length, tasks);
+      undatedMilestones.forEach((m, i) => milestoneDateFor.set(m.id, autoDates[i]));
+    }
+
+    const actionDateFor = new Map();
+    goal.milestones.forEach((m) => {
+      const mDueDate = milestoneDateFor.get(m.id) || m.dueDate;
+      const undatedActions = m.actions.filter((a) => !a.dueDate);
+      if (!mDueDate || undatedActions.length === 0) return;
+      const startISO = mDueDate > todayISO ? todayISO : mDueDate;
+      const lastWorkDay = dayBefore(mDueDate);
+      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+      const autoDates = distributeDatesByLoad(startISO, endISO, undatedActions.length, tasks);
+      undatedActions.forEach((a, i) => actionDateFor.set(a.id, autoDates[i]));
+    });
+
+    setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : {
+      ...g,
+      deadline: deadline || null,
+      milestones: g.milestones.map((m) => ({
+        ...m,
+        dueDate: milestoneDateFor.get(m.id) || m.dueDate,
+        actions: m.actions.map((a) => (actionDateFor.has(a.id) ? { ...a, dueDate: actionDateFor.get(a.id) } : a)),
+      })),
+    })));
+
+    await supabase.from("goals").update({ deadline: deadline || null }).eq("id", goalId);
+    for (const [milestoneId, d] of milestoneDateFor) {
+      await supabase.from("milestones").update({ due_date: d }).eq("id", milestoneId);
+    }
+    for (const [actionId, d] of actionDateFor) {
+      await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId);
+    }
+  }, [goals, tasks]);
+
   const addAction = useCallback(
     async (goalId, milestoneId, title, dueDate) => {
       if (!userId || !title.trim()) return;
@@ -212,5 +264,5 @@ export function useGoals(userId, tasks) {
     await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate };
+  return { goals, loading, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate };
 }

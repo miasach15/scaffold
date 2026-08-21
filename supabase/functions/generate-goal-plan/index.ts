@@ -55,13 +55,13 @@ serve(async (req) => {
 
     const prompt = `The user wants to achieve this outcome: "${outcome.trim()}"${category ? ` (category: ${category})` : ""}.
 
-Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-4 next actions — things that could go on a to-do list, not vague advice.
+Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-3 next actions — things that could go on a to-do list, not vague advice. Fewer, bigger actions beat many small ones here.
 
-Each action should be sized as ONE sitting of about 45 minutes to 1.5 hours of real, substantial focused work — err toward the longer end. This is NOT a quick checklist item: things like "check email", "inspect checklist", "review notes", "make a list", or "read the instructions" are all too small on their own — fold trivial steps like that into the larger piece of work they support (e.g. don't make "inspect checklist" its own action — it's part of "Draft the checklist" or whatever real task comes next). If a step you're considering would take less than 45 minutes by itself, merge it into a neighboring step rather than listing it separately. If it would take much more than 1.5 hours, split it into two.
+HARD FLOOR: every action must represent at least 45 minutes of real, substantial focused work by itself — most should land closer to 1-1.5 hours. This is a strict minimum, not a suggestion. Before finalizing each action, sanity-check it: "could a person plausibly spend 45+ minutes doing just this?" If the honest answer is no — if it's something you'd actually finish in 5-15 minutes — it is too small and must be merged into a bigger, adjacent piece of work, not listed on its own. Concretely too-small on their own: "check email", "look something up", "make a list", "read the instructions", "send a message", "set a reminder", "pick a date". Fold every one of those into whichever real chunk of work they support instead of giving them their own line.
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Milestone titles: max ~6 words.
-- Action titles: max ~4-5 words (aim under 30 characters). Lead with a verb (e.g. "Book flights", "Email advisor", "Draft outline") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about". If the full idea needs more words, cut it down to the core verb + object and drop the rest.`;
+- Action titles: max ~4-5 words (aim under 30 characters). Lead with a verb (e.g. "Book flights", "Email advisor", "Draft outline") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about". If the full idea needs more words, cut it down to the core verb + object and drop the rest. A short title is still fine even though the underlying action is a big chunk of work — the title doesn't need to describe every sub-step, just the headline.`;
 
     // Anthropic's API occasionally returns a transient overloaded_error / 429 —
     // retry a couple times with backoff before giving up.

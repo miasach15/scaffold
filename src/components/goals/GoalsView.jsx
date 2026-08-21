@@ -9,13 +9,14 @@ import GoalCard from "./GoalCard";
 
 const SUGGESTIONS_SHOWN = 6;
 
-export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
+export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [filter, setFilter] = useState("All");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(defaultCategory || "Personal");
   const [deadline, setDeadline] = useState("");
   const [outcome, setOutcome] = useState("");
+  const [outcomeDeadline, setOutcomeDeadline] = useState("");
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState(null);
   const [shuffleKey, setShuffleKey] = useState(0);
@@ -24,7 +25,8 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
     const tt = (t !== undefined ? t : title).trim();
     const c = cat || category;
     if (!tt) return;
-    onAddGoal(tt, c, useDeadline ? deadline || null : null);
+    const d = useDeadline ? deadline || null : null;
+    onAddGoal(tt, c, d);
     if (t === undefined) { setTitle(""); setDeadline(""); }
   };
 
@@ -42,7 +44,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       const milestones = data?.milestones || [];
       if (milestones.length === 0) throw new Error("No plan came back — try rephrasing.");
 
-      const goalId = await onAddGoal(desc, category, null);
+      const goalId = await onAddGoal(desc, category, outcomeDeadline || null);
       for (const m of milestones) {
         if (!m.title) continue;
         const milestoneId = await onAddMilestone(goalId, m.title);
@@ -50,7 +52,12 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
           if (a.title) await onAddAction(goalId, milestoneId, a.title, null);
         }
       }
+      // With an end date given, spread dates across every milestone and action that
+      // just got created undated — same cascade as setting/changing a goal's deadline
+      // manually.
+      if (outcomeDeadline && onSetGoalDeadline) await onSetGoalDeadline(goalId, outcomeDeadline);
       setOutcome("");
+      setOutcomeDeadline("");
     } catch (e) {
       setPlanError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
@@ -82,10 +89,17 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
           rows={2}
           style={{ ...inputStyle, width: "100%", resize: "vertical" }}
         />
-        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
           <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
             <option>Personal</option><option>Health</option><option>People</option>
           </select>
+          <input
+            type="date"
+            value={outcomeDeadline}
+            onChange={(e) => setOutcomeDeadline(e.target.value)}
+            title="Optional — give it an end date and every milestone/action gets a date spread automatically, instead of landing undated"
+            style={{ ...inputStyle, width: 150 }}
+          />
           <div style={{ flex: 1 }} />
           <button
             onClick={breakItDown}
@@ -144,6 +158,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
               goal={g}
               onRemoveGoal={onRemoveGoal}
               onRenameGoal={onRenameGoal}
+              onSetGoalDeadline={onSetGoalDeadline}
               onAddMilestone={onAddMilestone}
               onRemoveMilestone={onRemoveMilestone}
               onRenameMilestone={onRenameMilestone}
