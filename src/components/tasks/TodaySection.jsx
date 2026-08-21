@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Play } from "lucide-react";
+import { Clock, Play, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
-import { daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
+import { addDays, daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
+import WhatNowModal from "./WhatNowModal";
 
 const VISIBLE_CAP = 5; // more than this and it stops being a glance — collapse the rest behind "Show more"
 
@@ -22,25 +23,33 @@ const VISIBLE_CAP = 5; // more than this and it stops being a glance — collaps
 //   4. An Education deadline or goal action — only shows up once actually due/overdue
 //      (today or earlier); these already have their own per-day/per-deadline scheduling.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
+  const [whatNowOpen, setWhatNowOpen] = useState(false);
   const todayISO = toISO(new Date());
+  const tomorrowISO = toISO(addDays(new Date(), 1));
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
+  // Only a task/step you own gets a "Not today" button — pushing its date forward is
+  // safe since it's self-imposed. Education deadlines and goal actions are external
+  // commitments; snoozing those would just be lying to yourself about when they're due,
+  // so they don't get one.
   const taskItems = tasks
     .filter((t) => !t.done && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id,
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
+      onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
 
   // A "break it down" task always has 2+ steps (a single-step breakdown never gets
   // grouped in the first place — see confirmPlan), so every group here genuinely has
   // "multiple subtasks" and stays bold the whole time it's active, not just near its due
   // date. Shown as one row for the whole project; checking it off completes the earliest
-  // remaining step, and the sublabel names what that step is.
+  // remaining step, and the sublabel names what that step is. Snoozing pushes just that
+  // next step's work day forward, not the project's own due date.
   const byGroup = {};
   tasks.forEach((t) => {
     if (!t.groupId || t.done) return;
@@ -56,6 +65,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
       subLabel: `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(next.id, true), onOpen: () => onOpenDetail(next.id),
+      onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
     };
   });
 
@@ -63,11 +73,11 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
   const goalItems = (goalChips || [])
     .filter((c) => !c.done && c.date && c.date <= todayISO)
-    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
+    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
   // Overdue and due-soonest first; anything with no due date (a plain reminder, or a
   // breakdown whose group has no overall due date) sinks to the bottom instead of
@@ -83,8 +93,25 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
 
   return (
     <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>
-      <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: "#000000" }}>Today</div>
-      <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: "#000000" }}>Today</div>
+          <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
+        </div>
+        {allRelevant.length > 0 && (
+          <button
+            onClick={() => setWhatNowOpen(true)}
+            className="hoverable"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #E5E9ED",
+              borderRadius: 999, padding: "7px 13px 7px 10px", fontSize: 12.5, fontWeight: 700, color: "var(--primary-dark, #5849C4)", cursor: "pointer",
+            }}
+            title="Picks the one most pressing thing and hides everything else"
+          >
+            <Sparkles size={13} strokeWidth={2.3} /> What should I do right now?
+          </button>
+        )}
+      </div>
 
       {allRelevant.length === 0 ? (
         <div style={{ fontSize: 15, color: "#8FCBA3", padding: "8px 0 4px" }}>Nothing on your plate — nice work.</div>
@@ -100,7 +127,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
             if (overdue) tagLabel = "Overdue";
             else if (urgent && !dueToday) tagLabel = `Urgent — ${daysUntil(it.date)}d left`;
             return (
-              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 14, opacity: active ? 1 : 0.65 }}>
+              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: active ? 1 : 0.65 }}>
                 <Checkbox checked={false} onClick={it.onToggle} color={it.col} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button
@@ -121,6 +148,16 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                 )}
                 {waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {it.date}</div>
+                )}
+                {it.onSnooze && (
+                  <button
+                    onClick={it.onSnooze}
+                    title="Push this to tomorrow"
+                    className="hoverable"
+                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "#fff", border: "1.5px solid #E5E9ED", color: "#7B8794", flexShrink: 0, cursor: "pointer" }}
+                  >
+                    <Clock size={12} strokeWidth={2.3} />
+                  </button>
                 )}
                 {it.focusId && onOpenFocus && (
                   <button
@@ -153,6 +190,8 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
           )}
         </div>
       )}
+
+      {whatNowOpen && <WhatNowModal items={allRelevant} onClose={() => setWhatNowOpen(false)} onOpenFocus={onOpenFocus} />}
     </div>
   );
 }

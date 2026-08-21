@@ -168,6 +168,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         onToggleDone={onToggleDone}
         onOpenDetail={onOpenTaskDetail}
         onOpenFocus={onOpenFocus}
+        onSetDate={onSetDate}
         eduItems={eduItems}
         onSetEduDone={onSetEduDone}
         onGoToEducation={onGoToEducation}

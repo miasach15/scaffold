@@ -331,6 +331,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; transform: translateY(-1px); }
+        @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
