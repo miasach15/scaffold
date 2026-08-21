@@ -7,7 +7,7 @@ import { daysUntil, toISO } from "../../lib/dateHelpers";
 // even on a row that has this on (the All-day row now mixes events with Tests) — a past
 // event isn't "overdue," it just already happened, and events don't carry a real done
 // state to check against.
-export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick, emphasis, rollOverdueToToday }) {
+export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropItem, onAddClick, emphasis, rollOverdueToToday }) {
   const todayISO = toISO(new Date());
   return (
     <div style={{
@@ -26,12 +26,12 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
           <div
             key={iso}
             onClick={onAddClick ? () => onAddClick(iso) : undefined}
-            onDragOver={onDropTask ? (e) => e.preventDefault() : undefined}
-            onDrop={onDropTask ? (e) => {
+            onDragOver={onDropItem ? (e) => e.preventDefault() : undefined}
+            onDrop={onDropItem ? (e) => {
               e.preventDefault();
               try {
                 const data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
-                if (data.taskId) onDropTask(data.taskId, iso);
+                if (data.id) onDropItem(data.kind, data.id, iso);
               } catch {}
             } : undefined}
             style={{ borderLeft: "1px solid #F4F6F8", padding: emphasis ? "5px" : "3px", display: "flex", flexDirection: "column", gap: emphasis ? 4 : 3, cursor: onAddClick ? "pointer" : undefined, minWidth: 0 }}
@@ -45,10 +45,12 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 background: col.bg, border: `${emphasis ? 1.5 : 1}px solid ${overdue ? TONE.danger.border : col.border}`, color: col.text,
                 boxShadow: overdue ? `inset 2px 0 0 ${TONE.danger.text}` : "none",
                 textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 700,
-                cursor: c.kind === "task" ? "grab" : onChipClick ? "pointer" : "default",
+                cursor: c.kind === "task" || c.kind === "event" ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
               };
-              const dragProps = c.kind === "task" ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: c.id })) } : {};
+              const dragProps = c.kind === "task" || c.kind === "event"
+                ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ kind: c.kind, id: c.id })) }
+                : {};
               const fullLabel = chipLabel(c);
               return onChipClick ? (
                 <button key={c.kind + c.id} title={fullLabel} onClick={(e) => { e.stopPropagation(); onChipClick(c); }} style={style} {...dragProps}>{content}</button>

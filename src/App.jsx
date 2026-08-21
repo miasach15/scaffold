@@ -179,7 +179,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, done: e.done, type: e.type, subject: e.subject });
     });
     visibleTasks.forEach((t) => {
-      if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category, groupId: t.groupId });
+      if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category, groupId: t.groupId, eduId: t.eduId });
     });
     // One synthetic chip per "break it down" group, on its own overall due date — the
     // group's steps (above) are work days, not the deadline itself, so this is what
@@ -380,6 +380,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onChipClick={onChipClick}
             onOpenTaskDetail={openTaskDetail}
             onRescheduleTask={rescheduleTask}
+            onRescheduleEvent={(id, date) => updateEvent(id, { date })}
             onEditEvent={setEditingEvent}
           />
         )}

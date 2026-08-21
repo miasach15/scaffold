@@ -6,8 +6,9 @@ import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onEditEvent }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onRescheduleEvent, onEditEvent }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const onDropItem = (kind, id, iso) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, null));
   const scrollRef = useRef(null);
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 6 * ROW_H;
@@ -21,7 +22,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // task, a breakdown's overall due date, an Education deadline, a goal deadline/
   // milestone. Anything that's just a day of WORK toward something (a breakdown step, a
   // goal action) stays outline-only, same as before — it's not a deadline, it's a to-do.
-  const isDueKind = (chip) => (chip.kind === "task" && !chip.groupId) || chip.kind === "task-group-due" || chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
+  const isDueKind = (chip) => (chip.kind === "task" && !chip.groupId && !chip.eduId) || chip.kind === "task-group-due" || chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
   const chipStyle = (chip) => {
     if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     if (isDueKind(chip)) {
@@ -43,8 +44,11 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // day you work on that step, not the project's overall due date) and goal actions
   // (already a concrete "do this on this day" step, not an aggregate deadline). Tests sit
   // in "All day" instead — a test is the whole day it happens, not a step you work through.
-  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Test") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId));
-  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && c.groupId));
+  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Test") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId));
+  // An Education-generated "Work on:"/"Study" session is a plain (ungrouped) task, but
+  // it's still a work day, not a deadline — the deadline is the edu_item's own due date
+  // (the separate "edu" chip above). So it belongs here, same as a breakdown step.
+  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && (c.groupId || c.eduId)));
   const testChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Test");
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
@@ -116,6 +120,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 chipLabel={chipLabel}
                 onChipClick={(chip) => (chip.kind === "edu" ? onChipClick(chip) : onEditEvent({ id: chip.id, title: chip.title, date: chip.date, start: null, duration: null, category: chip.category }))}
                 onAddClick={(iso) => onCellClick(iso, null)}
+                onDropItem={onDropItem}
                 rollOverdueToToday
               />
             </div>
@@ -124,7 +129,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 the deadline-vs-work distinction, so splitting them into separate rows was
                 mostly redundant with that. */}
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Tasks" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} rollOverdueToToday emphasis />
+              <StripRow label="Tasks" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
