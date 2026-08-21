@@ -14,8 +14,16 @@ export const CATEGORY_COLOR_SWATCHES = {
   gray: { bg: "#F1F3F5", border: "#C9D0D8", text: "#4A5568" },
 };
 
-export const CATEGORY_KEYS = ["Education", "Personal", "Health", "People"];
+// The starting set before a user renames/adds/removes any — after that, the live list
+// lives on the profile (categoryKeys) and flows through CategoryColorsContext instead.
+// CATEGORY_KEYS is kept as an alias for any pre-load/fallback rendering.
+export const DEFAULT_CATEGORY_KEYS = ["Education", "Personal", "Health", "People"];
+export const CATEGORY_KEYS = DEFAULT_CATEGORY_KEYS;
 export const DEFAULT_CATEGORY_COLOR_KEYS = { Education: "blue", Personal: "pink", Health: "green", People: "purple" };
+// Colors assigned to a custom category that isn't one of the 4 defaults and hasn't been
+// explicitly recolored yet — cycles through so several new categories don't all end up
+// the same color.
+export const FALLBACK_CATEGORY_COLOR_ROTATION = ["teal", "orange", "indigo", "yellow", "red", "gray"];
 
 // Default-theme category colors, used as the CategoryColorsContext fallback and
 // anywhere rendered before a user's customization has loaded.

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CheckSquare, ChevronDown, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
-import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { TASK_COLOR } from "../../lib/constants";
+import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
@@ -18,6 +18,7 @@ const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, tex
 
 export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -268,7 +269,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
           <div data-tour="tasks-category">
             <div style={fieldLabelStyle}>Category</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {CATEGORY_KEYS.map((c) => (
+              {categoryKeys.map((c) => (
                 <button
                   key={c}
                   onClick={() => setCategory(c)}

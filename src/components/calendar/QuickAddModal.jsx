@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { TONE } from "../../lib/constants";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 
 export default function QuickAddModal({ initial, event, hasFollowing, onClose, onSave, onUpdate, onDelete }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const categoryKeys = useCategoryKeys();
   const isEdit = !!event;
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -44,7 +45,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
         <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chem lecture" style={inputStyle} />
         <label style={{ ...labelStyle, marginTop: 10 }}>Category</label>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {["Education", "Personal", "Health", "People"].map((c) => (
+          {categoryKeys.map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}

@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
-import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
+import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import CategoryEditor from "../shared/CategoryEditor";
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, onReplayTour, darkMode, onToggleDarkMode, userId, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, onReplayTour, darkMode, onToggleDarkMode, userId, onClose }) {
+  const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
 
@@ -50,10 +53,25 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
           })}
         </div>
 
+        {categoryKeys && (
+          <>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>
+              Categories — rename, add, or remove your own. Click the pencil to rename, × to remove.
+            </div>
+            <CategoryEditor
+              categoryKeys={categoryKeys}
+              categoryColors={resolvedColors}
+              onRename={onRenameCategory}
+              onAdd={onAddCategory}
+              onRemove={onRemoveCategory}
+            />
+          </>
+        )}
+
         <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Category colors — used across the calendar, goals, and onboarding.</div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {CATEGORY_KEYS.map((cat) => {
+          {(categoryKeys || []).map((cat) => {
             const activeKey = categoryColors?.[cat];
             return (
               <div key={cat}>

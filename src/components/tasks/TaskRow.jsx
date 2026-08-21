@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
-import { CATEGORY_KEYS, EDU_TYPE_COLORS } from "../../lib/constants";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { EDU_TYPE_COLORS } from "../../lib/constants";
+import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -10,6 +10,7 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 
 export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenDetail, onSetDate, onSetStart }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const categoryKeys = useCategoryKeys();
   const category = t.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
   const tinted = !t.done;
@@ -17,8 +18,10 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
 
   const cycleCategory = () => {
     if (!onSetCategory) return;
-    const i = CATEGORY_KEYS.indexOf(category);
-    onSetCategory(t.id, CATEGORY_KEYS[(i + 1) % CATEGORY_KEYS.length]);
+    const i = categoryKeys.indexOf(category);
+    // If the task's current category was renamed/removed since it was set, i is -1 —
+    // land on the first real category instead of NaN-ing the index math.
+    onSetCategory(t.id, categoryKeys[i === -1 ? 0 : (i + 1) % categoryKeys.length]);
   };
 
   return (

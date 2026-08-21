@@ -13,6 +13,9 @@ create table if not exists profiles (
   enabled_pages text[] not null default '{}',
   theme_color text not null default 'violet',
   category_colors jsonb not null default '{}'::jsonb,
+  -- null means "use the default Education/Personal/Health/People set" — once a user
+  -- customizes it, their own list is stored here (rename/add/remove, any names).
+  category_keys text[],
   tour_seen boolean not null default false,
   created_at timestamptz not null default now()
 );

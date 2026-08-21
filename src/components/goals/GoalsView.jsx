@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Target, Sparkles, Shuffle } from "lucide-react";
 import { SUGGESTED_GOALS, cardStyle } from "../../lib/constants";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
@@ -11,6 +11,10 @@ const SUGGESTIONS_SHOWN = 6;
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
+  // Goals used to hardcode Personal/Health/People (deliberately leaving out Education,
+  // since Education had its own separate system) — now that categories are user-defined,
+  // that exclusion doesn't make sense anymore; a goal can be any category the user has.
+  const categoryKeys = useCategoryKeys();
   const [filter, setFilter] = useState("All");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(defaultCategory || "Personal");
@@ -91,7 +95,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         />
         <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
           <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-            <option>Personal</option><option>Health</option><option>People</option>
+            {categoryKeys.map((c) => <option key={c}>{c}</option>)}
           </select>
           <input
             type="date"
@@ -114,7 +118,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       </div>
 
       <div data-tour="goals-filter" style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {["All", "Personal", "Health", "People"].map((c) => (
+        {["All", ...categoryKeys].map((c) => (
           <FilterPill key={c} label={c} active={filter === c} color={CATEGORY_COLORS[c]} onClick={() => setFilter(c)} />
         ))}
       </div>
@@ -123,7 +127,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         <AddRow>
           <input placeholder="Or add a goal manually..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
           <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-            <option>Personal</option><option>Health</option><option>People</option>
+            {categoryKeys.map((c) => <option key={c}>{c}</option>)}
           </select>
           <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
           <button onClick={() => addGoal()} className="btn-primary" style={primaryBtn}>Add</button>

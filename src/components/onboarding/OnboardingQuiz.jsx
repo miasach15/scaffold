@@ -1,22 +1,47 @@
 import { useState } from "react";
-import { HABIT_COLOR, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
+import CategoryEditor from "../shared/CategoryEditor";
 
 export default function OnboardingQuiz({ onComplete }) {
+  // No CategoryColorsProvider exists yet at this point (onboarding happens before one is
+  // ever set up), so this is just the plain default palette — fine for the original 4,
+  // but a brand-new custom category needs its own fallback color below.
   const CATEGORY_COLORS = useCategoryColors();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
+  const [categoryKeys, setCategoryKeys] = useState(DEFAULT_CATEGORY_KEYS);
   const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
+
+  const colorFor = (key, i) => CATEGORY_COLORS[key] || CATEGORY_COLOR_SWATCHES[FALLBACK_CATEGORY_COLOR_ROTATION[i % FALLBACK_CATEGORY_COLOR_ROTATION.length]];
+  const categoryColorMap = Object.fromEntries(categoryKeys.map((k, i) => [k, colorFor(k, i)]));
+
+  const renameCategory = (oldKey, newKey) => {
+    const trimmed = newKey.trim();
+    if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
+    setCategoryKeys((ks) => ks.map((k) => (k === oldKey ? trimmed : k)));
+    setFocusAreas((f) => f.map((k) => (k === oldKey ? trimmed : k)));
+  };
+  const addCategory = (name2) => {
+    const trimmed = name2.trim();
+    if (!trimmed || categoryKeys.includes(trimmed)) return;
+    setCategoryKeys((ks) => [...ks, trimmed]);
+  };
+  const removeCategory = (key) => {
+    if (categoryKeys.length <= 1) return;
+    setCategoryKeys((ks) => ks.filter((k) => k !== key));
+    setFocusAreas((f) => f.filter((k) => k !== key));
+  };
 
   const toggleFocus = (c) => setFocusAreas((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
   const toggleHabit = (h) => setHabitPicks((hs) => (hs.includes(h) ? hs.filter((x) => x !== h) : [...hs, h]));
 
   const steps = ["Name", "Focus", "Habits", "Done"];
   const lastStep = steps.length - 1;
-  const finish = () => onComplete({ name: name.trim(), focusAreas, habitPicks, workStyle: "Mix of both" });
-  const skip = () => onComplete({ name: "", focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
+  const finish = () => onComplete({ name: name.trim(), categoryKeys, focusAreas, habitPicks, workStyle: "Mix of both" });
+  const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -46,18 +71,22 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 1 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>What do you want to focus on right now?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Pick as many as you like, this shapes your Goals suggestions.</div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Your categories</div>
+            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are yours to change — rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
+            <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} />
+
+            <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
+            <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 10 }}>Pick as many as you like — this shapes your Goals suggestions.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {["Education", "Personal", "Health", "People"].map((c) => (
+              {categoryKeys.map((c) => (
                 <button
                   key={c}
                   onClick={() => toggleFocus(c)}
                   style={{
                     padding: "9px 16px", borderRadius: 999, fontSize: 13.5, fontWeight: 700,
-                    border: `1.5px solid ${focusAreas.includes(c) ? CATEGORY_COLORS[c].border : "#E5E9ED"}`,
-                    background: focusAreas.includes(c) ? CATEGORY_COLORS[c].bg : "#fff",
-                    color: focusAreas.includes(c) ? CATEGORY_COLORS[c].text : "#93A0AD",
+                    border: `1.5px solid ${focusAreas.includes(c) ? categoryColorMap[c].border : "#E5E9ED"}`,
+                    background: focusAreas.includes(c) ? categoryColorMap[c].bg : "#fff",
+                    color: focusAreas.includes(c) ? categoryColorMap[c].text : "#93A0AD",
                   }}
                 >
                   {c}

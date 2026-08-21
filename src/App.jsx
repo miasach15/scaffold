@@ -38,7 +38,7 @@ const JournalView = lazy(() => import("./components/journal/JournalView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 
 import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
-import { CATEGORY_COLOR_SWATCHES, CATEGORY_KEYS, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
+import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -211,7 +211,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   };
 
   const completeOnboarding = async (answers) => {
-    await updateProfile({ name: answers.name, focusAreas: answers.focusAreas, workStyle: answers.workStyle, onboarded: true });
+    await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, focusAreas: answers.focusAreas, workStyle: answers.workStyle, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
   };
 
@@ -293,18 +293,50 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
   const theme = THEME_PRESETS[profile.themeColor] || THEME_PRESETS[DEFAULT_THEME];
 
+  const categoryKeys = profile.categoryKeys;
   const resolvedCategoryColors = {};
-  for (const cat of CATEGORY_KEYS) {
-    const key = profile.categoryColors[cat] || DEFAULT_CATEGORY_COLOR_KEYS[cat];
-    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS[cat]];
-  }
+  categoryKeys.forEach((cat, i) => {
+    // Explicit choice > one of the original 4's default > a rotating fallback for a
+    // custom category that's never been recolored, so several new ones don't all end up
+    // looking identical.
+    const key = profile.categoryColors[cat] || DEFAULT_CATEGORY_COLOR_KEYS[cat] || FALLBACK_CATEGORY_COLOR_ROTATION[i % FALLBACK_CATEGORY_COLOR_ROTATION.length];
+    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.gray;
+  });
+  // A handful of places across the app fall back to CATEGORY_COLORS.Personal when a
+  // task/event's own category isn't recognized — safe when "Personal" is one of the
+  // defaults, but a user can rename or remove it entirely now. Keep it defined as a
+  // quiet safety net regardless, so nothing crashes; it just won't be offered as an
+  // actual pickable category unless it's genuinely still in categoryKeys.
+  if (!resolvedCategoryColors.Personal) resolvedCategoryColors.Personal = CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Personal];
 
   const setCategoryColor = (category, swatchKey) => {
     updateProfile({ categoryColors: { ...profile.categoryColors, [category]: swatchKey } });
   };
 
+  // Rename in place (keeps its color/order); the rename doesn't touch existing tasks/
+  // events already tagged with the old name — those keep whatever they were tagged with
+  // and just fall back to a default color since the old name is no longer in the active
+  // list (still fully functional, just not offered as a pick going forward).
+  const renameCategory = (oldKey, newKey) => {
+    const trimmed = newKey.trim();
+    if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
+    const nextKeys = categoryKeys.map((k) => (k === oldKey ? trimmed : k));
+    const nextColors = { ...profile.categoryColors };
+    if (nextColors[oldKey]) { nextColors[trimmed] = nextColors[oldKey]; delete nextColors[oldKey]; }
+    updateProfile({ categoryKeys: nextKeys, categoryColors: nextColors });
+  };
+  const addCategory = (name) => {
+    const trimmed = name.trim();
+    if (!trimmed || categoryKeys.includes(trimmed)) return;
+    updateProfile({ categoryKeys: [...categoryKeys, trimmed] });
+  };
+  const removeCategory = (key) => {
+    if (categoryKeys.length <= 1) return; // always keep at least one category to assign things to
+    updateProfile({ categoryKeys: categoryKeys.filter((k) => k !== key) });
+  };
+
   return (
-    <CategoryColorsProvider value={resolvedCategoryColors}>
+    <CategoryColorsProvider value={resolvedCategoryColors} keys={categoryKeys}>
     <div
       style={{
         "--primary": theme.primary,
@@ -409,7 +441,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         {view === "goals" && (
           <GoalsView
             goals={goals}
-            defaultCategory={["Personal", "Health", "People"].find((c) => profile.focusAreas.includes(c)) || "Personal"}
+            defaultCategory={categoryKeys.find((c) => profile.focusAreas.includes(c)) || categoryKeys[0]}
             onAddGoal={addGoal}
             onRemoveGoal={removeGoal}
             onRenameGoal={renameGoal}
@@ -456,6 +488,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onSetTheme={(key) => updateProfile({ themeColor: key })}
           categoryColors={profile.categoryColors}
           onSetCategoryColor={setCategoryColor}
+          categoryKeys={categoryKeys}
+          onRenameCategory={renameCategory}
+          onAddCategory={addCategory}
+          onRemoveCategory={removeCategory}
           onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}
