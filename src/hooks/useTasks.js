@@ -17,6 +17,7 @@ const fromRow = (row) => ({
   groupDueStart: row.group_due_start == null ? null : Number(row.group_due_start),
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
+  isRecurring: !!row.is_recurring,
 });
 
 export function useTasks(userId) {
@@ -36,7 +37,7 @@ export function useTasks(userId) {
   }, [load]);
 
   const addTask = useCallback(
-    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null }) => {
+    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null, isRecurring = false }) => {
       if (!userId) return;
       const row = {
         id: uid(),
@@ -54,6 +55,7 @@ export function useTasks(userId) {
         group_due_start: groupDueStart,
         lead_days: leadDays,
         notes,
+        is_recurring: isRecurring,
       };
       setTasks((ts) => [...ts, fromRow(row)]);
       await supabase.from("tasks").insert(row);

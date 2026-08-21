@@ -73,9 +73,14 @@ export const inLeadWindow = (iso, leadDays, done) => {
 // urgent the day before it's due) same as if you'd typed "2" into Days needed. Grouped
 // steps and Education-generated sessions already have their own per-day scheduling, so
 // they're left out of this default and keep showing only on their assigned day.
+// A recurring task's individual occurrences are excluded too: if you repeat something
+// daily, every occurrence sits one day after the last, so the "urgent 2 days out"
+// default would fire on almost every occurrence at once, permanently — a recurring task
+// is an expected routine, not a surprise creeping up, so it only needs to show up as
+// "Due today"/"Overdue" (which don't depend on this), not pre-emptively "Urgent."
 export const defaultLeadDays = (t) => {
   if (t.leadDays) return t.leadDays;
-  if (t.groupId || t.eduId || !t.date) return null;
+  if (t.groupId || t.eduId || t.isRecurring || !t.date) return null;
   return 2;
 };
 export const dateRangeISO = (startISO, endISO) => {

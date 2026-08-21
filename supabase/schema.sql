@@ -66,6 +66,9 @@ create table if not exists tasks (
   -- notes: overflow for a breakdown step whose day absorbed more than one generated step —
   -- title stays short, the rest lives here instead of getting jammed into the title.
   notes text,
+  -- one occurrence of a "Repeats" recurring task — excluded from the automatic
+  -- "urgent 2 days before due" default (see defaultLeadDays).
+  is_recurring boolean not null default false,
   created_at timestamptz not null default now()
 );
 

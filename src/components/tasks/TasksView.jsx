@@ -85,7 +85,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     // occurrence — not grouped like a breakdown, since each day stands on its own.
     if (date && repeat !== "None") {
       repeatDates(date, repeat).forEach((d) => {
-        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category });
+        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category, isRecurring: true });
       });
       resetForm();
       return;
