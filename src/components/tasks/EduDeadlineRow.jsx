@@ -1,4 +1,5 @@
 import { EDU_TYPE_COLORS } from "../../lib/constants";
+import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
@@ -20,8 +21,9 @@ export default function EduDeadlineRow({ item, onToggleDone, onOpen }) {
       >
         {item.title}{item.subject ? ` (${item.subject})` : ""}
       </button>
-      <UrgencyBadge iso={item.dueDate} done={item.done} />
-      <div style={{ fontSize: 12, color: "#93A0AD" }}>{item.dueDate}</div>
+      <div title={formatShortDate(item.dueDate)}>
+        <UrgencyBadge iso={item.dueDate} done={item.done} />
+      </div>
     </div>
   );
 }

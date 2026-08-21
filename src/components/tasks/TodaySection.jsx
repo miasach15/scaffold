@@ -1,7 +1,11 @@
+import { useState } from "react";
+import { Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
 import { daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
+
+const VISIBLE_CAP = 5; // more than this and it stops being a glance — collapse the rest behind "Show more"
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
 // no delete buttons, nothing but a checkbox and a title. How something ends up here,
@@ -18,15 +22,16 @@ import Checkbox from "../shared/Checkbox";
 //   4. An Education deadline or goal action — only shows up once actually due/overdue
 //      (today or earlier); these already have their own per-day/per-deadline scheduling.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const [expanded, setExpanded] = useState(false);
   const todayISO = toISO(new Date());
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   const taskItems = tasks
     .filter((t) => !t.done && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
-      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false,
+      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id,
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
     }));
@@ -47,37 +52,41 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
     const groupTitle = steps.find((s) => s.groupTitle)?.groupTitle || next.title;
     const groupDueDate = steps.find((s) => s.groupDueDate)?.groupDueDate || null;
     return {
-      id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true,
+      id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id,
       subLabel: `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(next.id, true), onOpen: () => onOpenDetail(next.id),
     };
   });
 
+  // Education deadlines and goal actions aren't real Tasks rows, so there's no Focus
+  // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
   const goalItems = (goalChips || [])
     .filter((c) => !c.done && c.date && c.date <= todayISO)
-    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
+    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
   // Overdue and due-soonest first; anything with no due date (a plain reminder, or a
   // breakdown whose group has no overall due date) sinks to the bottom instead of
   // interrupting the order.
-  const relevant = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
+  const allRelevant = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
     return a.date.localeCompare(b.date);
   });
+  const relevant = expanded ? allRelevant : allRelevant.slice(0, VISIBLE_CAP);
+  const hiddenCount = allRelevant.length - relevant.length;
 
   return (
     <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>
       <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: "#000000" }}>Today</div>
       <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
 
-      {relevant.length === 0 ? (
+      {allRelevant.length === 0 ? (
         <div style={{ fontSize: 15, color: "#8FCBA3", padding: "8px 0 4px" }}>Nothing on your plate — nice work.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -113,9 +122,35 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, eduIte
                 {waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {it.date}</div>
                 )}
+                {it.focusId && onOpenFocus && (
+                  <button
+                    onClick={() => onOpenFocus(it.focusId, it.title)}
+                    title="Start a focus timer on this now"
+                    className="hoverable"
+                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "#fff", border: "1.5px solid #E5E9ED", color: "#7B8794", flexShrink: 0, cursor: "pointer" }}
+                  >
+                    <Play size={11} strokeWidth={2.5} fill="currentColor" />
+                  </button>
+                )}
               </div>
             );
           })}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => setExpanded(true)}
+              style={{ alignSelf: "flex-start", background: "none", border: "none", padding: 0, fontSize: 12.5, color: "#93A0AD", fontWeight: 600, cursor: "pointer" }}
+            >
+              Show {hiddenCount} more
+            </button>
+          )}
+          {expanded && allRelevant.length > VISIBLE_CAP && (
+            <button
+              onClick={() => setExpanded(false)}
+              style={{ alignSelf: "flex-start", background: "none", border: "none", padding: 0, fontSize: 12.5, color: "#93A0AD", fontWeight: 600, cursor: "pointer" }}
+            >
+              Show less
+            </button>
+          )}
         </div>
       )}
     </div>

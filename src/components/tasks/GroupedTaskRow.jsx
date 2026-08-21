@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { decimalToTimeLabel } from "../../lib/dateHelpers";
+import { decimalToTimeLabel, formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import TaskRow from "./TaskRow";
 
@@ -26,9 +26,10 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
       >
         {expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />}
         <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupTitle}</div>
-        {groupDueDate && <UrgencyBadge iso={groupDueDate} done={false} />}
         {groupDueDate && (
-          <div style={{ fontSize: 12, color: "#93A0AD", whiteSpace: "nowrap" }}>{groupDueDate}{groupDueStart != null ? ` · ${decimalToTimeLabel(groupDueStart)}` : ""}</div>
+          <div title={`${formatShortDate(groupDueDate)}${groupDueStart != null ? ` · ${decimalToTimeLabel(groupDueStart)}` : ""}`}>
+            <UrgencyBadge iso={groupDueDate} done={false} />
+          </div>
         )}
         <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{doneCount}/{total} steps done</div>
       </button>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
 import { CATEGORY_KEYS, EDU_TYPE_COLORS } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { defaultLeadDays } from "../../lib/dateHelpers";
+import { defaultLeadDays, formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
@@ -30,7 +30,6 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
-      {showDate && t.date && <UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} />}
       {showDate && editingDate ? (
         <input
           type="date"
@@ -41,7 +40,12 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
           style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
         />
       ) : showDate && t.date ? (
-        <div onClick={() => setEditingDate(true)} title="Click to change date" style={{ fontSize: 12, color: "#93A0AD", cursor: "pointer" }}>{t.date}</div>
+        // One signal, not two — the badge already says "Overdue"/"Due tomorrow"/etc.,
+        // so a separate raw date string next to it would just be noise. The exact date
+        // is still there on hover, and clicking either lets you change it.
+        <button onClick={() => setEditingDate(true)} title={`${formatShortDate(t.date)} — click to change`} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" }}>
+          {t.done ? <span style={{ fontSize: 12, color: "#93A0AD" }}>{formatShortDate(t.date)}</span> : <UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} />}
+        </button>
       ) : showDate ? (
         <button
           onClick={() => setEditingDate(true)}

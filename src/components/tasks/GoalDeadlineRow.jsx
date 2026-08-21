@@ -1,4 +1,5 @@
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
@@ -21,8 +22,9 @@ export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
       >
         {item.title}
       </button>
-      <UrgencyBadge iso={item.date} done={item.done} />
-      <div style={{ fontSize: 12, color: "#93A0AD" }}>{item.date}</div>
+      <div title={formatShortDate(item.date)}>
+        <UrgencyBadge iso={item.date} done={item.done} />
+      </div>
     </div>
   );
 }

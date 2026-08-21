@@ -409,6 +409,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
+            onOpenFocus={openFocus}
             inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}
             onDiscardInbox={removeInboxItem}

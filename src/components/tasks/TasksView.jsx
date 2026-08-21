@@ -16,7 +16,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -25,6 +25,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [repeat, setRepeat] = useState("None"); // ongoing recurring tasks (chores, gym days) — independent instances, not a group
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
+  const [biggerOpen, setBiggerOpen] = useState(false); // one toggle first — the leadDays/breakdown choice only appears after saying "yes"
   const [useAI, setUseAI] = useState(false); // "Break it down" — for a task that's really a multi-day project
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
@@ -32,7 +33,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setRepeat("None"); setDetails(""); setUseAI(false); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setRepeat("None"); setDetails(""); setUseAI(false); setBiggerOpen(false); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -166,6 +167,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         tasks={tasks}
         onToggleDone={onToggleDone}
         onOpenDetail={onOpenTaskDetail}
+        onOpenFocus={onOpenFocus}
         eduItems={eduItems}
         onSetEduDone={onSetEduDone}
         onGoToEducation={onGoToEducation}
@@ -246,52 +248,87 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
           {date && repeat === "None" && (
             <div>
               <div style={fieldLabelStyle}>Bigger than one sitting?</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                {!time && (
-                  <>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: useAI ? 0.4 : 1 }}>
+              {!biggerOpen ? (
+                // One small button, nothing else — the actual choice only shows up once
+                // you've said yes, instead of two controls competing for attention up front.
+                <button
+                  onClick={() => setBiggerOpen(true)}
+                  className="hoverable"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                    borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+                  }}
+                >
+                  <Plus size={12} strokeWidth={2.5} /> Yes, give me options
+                </button>
+              ) : (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {!time && (
+                      <button
+                        onClick={() => setUseAI(false)}
+                        style={{
+                          padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                          border: `1px solid ${!useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                          background: !useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                          color: !useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                        }}
+                        title="Shows up every day, marked urgent once you're close to the due date"
+                      >
+                        Give myself some days
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setUseAI(true)}
+                      style={{
+                        padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                        border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                        background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                        color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                      }}
+                      title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
+                    >
+                      <Sparkles size={11} strokeWidth={2.3} /> Break it into steps
+                    </button>
+                    <button
+                      onClick={() => { setBiggerOpen(false); setUseAI(false); setLeadDays(""); }}
+                      title="Never mind"
+                      style={{ background: "none", border: "none", color: "#C2C9D1", fontSize: 15, cursor: "pointer", padding: "0 4px" }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {!useAI && !time && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
                       <input
                         type="number"
                         min={1}
                         max={60}
                         placeholder="Days"
-                        disabled={useAI}
                         value={leadDays}
                         onChange={(e) => setLeadDays(e.target.value)}
-                        title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
+                        title="How many days you need to get it done"
                         style={{ ...inputStyle, width: 70 }}
                       />
                       <span style={{ fontSize: 12, color: "#93A0AD" }}>days needed</span>
                     </div>
-                    <span style={{ fontSize: 11, color: "#C2C9D1" }}>or</span>
-                  </>
-                )}
-                <button
-                  onClick={() => setUseAI((x) => !x)}
-                  style={{
-                    padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                    border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                    background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                    color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                    display: "inline-flex", alignItems: "center", gap: 4,
-                  }}
-                  title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
-                >
-                  <Sparkles size={11} strokeWidth={2.3} /> Break it down for me
-                </button>
-              </div>
+                  )}
 
-              {useAI && (
-                <div style={{ marginTop: 10 }}>
-                  <textarea
-                    value={details}
-                    onChange={(e) => setDetails(e.target.value)}
-                    placeholder="Optional details to help break it down (what's the deliverable, who's it for)"
-                    rows={2}
-                    style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-                  />
-                  {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
-                </div>
+                  {useAI && (
+                    <div style={{ marginTop: 10 }}>
+                      <textarea
+                        value={details}
+                        onChange={(e) => setDetails(e.target.value)}
+                        placeholder="Optional details to help break it down (what's the deliverable, who's it for)"
+                        rows={2}
+                        style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+                      />
+                      {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

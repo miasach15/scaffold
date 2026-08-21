@@ -105,11 +105,12 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
             <div data-tour="calendar-allday" style={{ flexShrink: 0 }}>
               <StripRow label="All day" days={days} chips={allDayEventChips} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={(chip) => onEditEvent({ id: chip.id, title: chip.title, date: chip.date, start: null, duration: null, category: chip.category })} onAddClick={(iso) => onCellClick(iso, null)} />
             </div>
-            <div data-tour="calendar-due" style={{ flexShrink: 0 }}>
-              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} rollOverdueToToday />
-            </div>
+            {/* One row instead of two separate "Due"/"Tasks" strips — fewer rows to scan.
+                The chip styling itself (filled vs. outline, per chipStyle) already carries
+                the deadline-vs-work distinction, so splitting them into separate rows was
+                mostly redundant with that. */}
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Tasks" days={days} chips={taskChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} rollOverdueToToday emphasis />
+              <StripRow label="Tasks" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropTask={(taskId, iso) => onRescheduleTask(taskId, iso, null)} rollOverdueToToday emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
