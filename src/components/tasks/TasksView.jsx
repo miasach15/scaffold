@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { CheckSquare, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
+import { CheckSquare, ChevronDown, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
 import { CATEGORY_KEYS, TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -31,6 +31,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
+  const [showLater, setShowLater] = useState(false); // "Later" bucket in the main list stays collapsed by default — don't turn a long task list into its own wall of overwhelm
 
   const resetForm = () => {
     setTitle(""); setDate(""); setTime(""); setLeadDays(""); setRepeat("None"); setDetails(""); setUseAI(false); setBiggerOpen(false); setShowMore(false);
@@ -158,6 +159,41 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (!b.date) return -1;
     return a.date.localeCompare(b.date);
   });
+
+  // Same instinct as Today's cap — a long flat list is its own kind of overwhelm. Split
+  // into what actually needs attention this week (overdue counts as "this week" too) vs.
+  // everything further out or with no date at all, which stays collapsed until you ask.
+  const weekAheadISO = toISO(addDays(new Date(), 7));
+  const thisWeekItems = combined.filter((item) => item.date && item.date <= weekAheadISO);
+  const laterItems = combined.filter((item) => !item.date || item.date > weekAheadISO);
+
+  const renderComboItem = (item) => {
+    if (item.type === "single") {
+      return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} showDate />;
+    }
+    if (item.type === "edu") {
+      return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
+    }
+    if (item.type === "goal") {
+      return <GoalDeadlineRow key={`goal-${item.chip.id}`} item={item.chip} onToggle={() => onToggleGoalChip(item.chip)} onOpen={onGoToGoals} />;
+    }
+    return (
+      <GroupedTaskRow
+        key={item.group.groupId}
+        groupTitle={item.group.groupTitle}
+        groupDueDate={item.group.groupDueDate}
+        groupDueStart={item.group.groupDueStart}
+        remainingItems={item.group.remainingItems}
+        doneCount={item.group.doneCount}
+        total={item.group.total}
+        onToggleDone={onToggleDone}
+        onSetCategory={onSetCategory}
+        onRemove={onRemove}
+        onOpenDetail={onOpenTaskDetail}
+        onSetDate={onSetDate}
+      />
+    );
+  };
 
   return (
     <div>
@@ -353,39 +389,38 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         </div>
       )}
 
-      <SubHeader>Tasks</SubHeader>
       {combined.length === 0 ? (
-        <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
+        <>
+          <SubHeader>Tasks</SubHeader>
+          <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
+        </>
       ) : (
-        <List>
-          {combined.map((item) => {
-            if (item.type === "single") {
-              return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} showDate />;
-            }
-            if (item.type === "edu") {
-              return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
-            }
-            if (item.type === "goal") {
-              return <GoalDeadlineRow key={`goal-${item.chip.id}`} item={item.chip} onToggle={() => onToggleGoalChip(item.chip)} onOpen={onGoToGoals} />;
-            }
-            return (
-              <GroupedTaskRow
-                key={item.group.groupId}
-                groupTitle={item.group.groupTitle}
-                groupDueDate={item.group.groupDueDate}
-                groupDueStart={item.group.groupDueStart}
-                remainingItems={item.group.remainingItems}
-                doneCount={item.group.doneCount}
-                total={item.group.total}
-                onToggleDone={onToggleDone}
-                onSetCategory={onSetCategory}
-                onRemove={onRemove}
-                onOpenDetail={onOpenTaskDetail}
-                onSetDate={onSetDate}
-              />
-            );
-          })}
-        </List>
+        <>
+          <SubHeader>This week</SubHeader>
+          {thisWeekItems.length === 0 ? (
+            <EmptyState text="Nothing due this week." />
+          ) : (
+            <List>{thisWeekItems.map(renderComboItem)}</List>
+          )}
+
+          {laterItems.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowLater((x) => !x)}
+                className="hoverable"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                  borderRadius: 999, padding: "6px 12px 6px 9px", fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+                  marginTop: 14, marginBottom: showLater ? 10 : 0,
+                }}
+              >
+                {showLater ? <ChevronUp size={13} strokeWidth={2.5} /> : <ChevronDown size={13} strokeWidth={2.5} />}
+                {showLater ? "Hide later tasks" : `${laterItems.length} more later / no date`}
+              </button>
+              {showLater && <List>{laterItems.map(renderComboItem)}</List>}
+            </>
+          )}
+        </>
       )}
 
       {pendingPlan && (
