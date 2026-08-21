@@ -97,14 +97,16 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     .filter((c) => !c.done && c.date && c.date <= todayISO)
     .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
-  // Ordered by actual urgency, not just raw date order — overdue first, then due today,
-  // then anything in its urgent window (including a multi-step group, which is always
-  // "active" regardless of how far its due date is), then everything else with a date
-  // that isn't urgent yet, then undated reminders last. Within a tier, soonest date first.
+  // Ordered by actual urgency — how soon it's really due — not by type. A group still
+  // always shows bold (see isGroup below), but that's a display choice, not a sorting
+  // one: a group due in a month shouldn't outrank a plain task due in 2 days just
+  // because it's always "active." So no isGroup override here — pure date proximity,
+  // same rule for everything: overdue, then due today, then in its urgent window, then
+  // has a date but not urgent yet, then no date at all. Soonest date first in each tier.
   const urgencyTier = (it) => {
     const overdue = it.date && it.date < todayISO;
     const dueToday = it.date === todayISO;
-    const urgent = it.isGroup || inLeadWindow(it.date, it.leadDays, false);
+    const urgent = inLeadWindow(it.date, it.leadDays, false);
     if (overdue) return 0;
     if (dueToday) return 1;
     if (urgent) return 2;
