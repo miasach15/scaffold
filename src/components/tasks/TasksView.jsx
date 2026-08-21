@@ -84,10 +84,13 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
     // A recurring task (chores, gym days) creates independent instances on each
-    // occurrence — not grouped like a breakdown, since each day stands on its own.
+    // occurrence — not grouped like a breakdown, since each day stands on its own. They
+    // do share one recurringId though, so recategorizing any single occurrence later
+    // cascades to the whole series instead of leaving siblings mismatched.
     if (date && repeat !== "None") {
+      const recurringId = uid();
       repeatDates(date, repeat).forEach((d) => {
-        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category, isRecurring: true });
+        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category, isRecurring: true, recurringId });
       });
       resetForm();
       return;

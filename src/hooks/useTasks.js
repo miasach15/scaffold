@@ -18,6 +18,7 @@ const fromRow = (row) => ({
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
   isRecurring: !!row.is_recurring,
+  recurringId: row.recurring_id || null,
 });
 
 export function useTasks(userId) {
@@ -37,7 +38,7 @@ export function useTasks(userId) {
   }, [load]);
 
   const addTask = useCallback(
-    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null, isRecurring = false }) => {
+    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null, isRecurring = false, recurringId = null }) => {
       if (!userId) return;
       const row = {
         id: uid(),
@@ -56,6 +57,7 @@ export function useTasks(userId) {
         lead_days: leadDays,
         notes,
         is_recurring: isRecurring,
+        recurring_id: recurringId,
       };
       setTasks((ts) => [...ts, fromRow(row)]);
       await supabase.from("tasks").insert(row);
@@ -69,10 +71,23 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ done }).eq("id", id);
   }, []);
 
-  const setTaskCategory = useCallback(async (id, category) => {
-    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, category } : t)));
-    await supabase.from("tasks").update({ category }).eq("id", id);
-  }, []);
+  // Changing one occurrence of a recurring task's category cascades to every occurrence
+  // in that series — otherwise a "study every day" recurring task would end up with a
+  // different color per day the moment you recategorized any single instance, which
+  // reads as a mistake rather than "here's the whole series' new category."
+  const setTaskCategory = useCallback(
+    async (id, category) => {
+      const task = tasks.find((t) => t.id === id);
+      const recurringId = task?.recurringId;
+      setTasks((ts) => ts.map((t) => (t.id === id || (recurringId && t.recurringId === recurringId) ? { ...t, category } : t)));
+      if (recurringId) {
+        await supabase.from("tasks").update({ category }).eq("recurring_id", recurringId);
+      } else {
+        await supabase.from("tasks").update({ category }).eq("id", id);
+      }
+    },
+    [tasks]
+  );
 
   const renameTask = useCallback(async (id, title) => {
     if (!title.trim()) return;

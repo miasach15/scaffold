@@ -72,6 +72,9 @@ create table if not exists tasks (
   -- one occurrence of a "Repeats" recurring task — excluded from the automatic
   -- "urgent 2 days before due" default (see defaultLeadDays).
   is_recurring boolean not null default false,
+  -- ties every occurrence of one recurring task together, so changing one occurrence's
+  -- category cascades to the whole series (see setTaskCategory).
+  recurring_id uuid,
   created_at timestamptz not null default now()
 );
 
