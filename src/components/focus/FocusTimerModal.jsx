@@ -9,6 +9,14 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
   const intervalRef = useRef(null);
+  // Created inside the Start click (a real user gesture), not lazily when the timer
+  // actually ends minutes later — some browsers (Safari especially) block audio that
+  // isn't traceable back to a direct gesture, so creating it up front and just resuming
+  // it at zero is far more reliable than creating it fresh at that point.
+  const audioCtxRef = useRef(null);
+  const prevRemainingRef = useRef(initial);
+
+  useEffect(() => () => audioCtxRef.current?.close?.(), []);
 
   useEffect(() => {
     if (running) {
@@ -25,12 +33,55 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
     return () => clearInterval(intervalRef.current);
   }, [running]);
 
+  useEffect(() => {
+    if (remaining === 0 && prevRemainingRef.current !== 0) playChime();
+    prevRemainingRef.current = remaining;
+  }, [remaining]);
+
+  const playChime = () => {
+    try {
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      if (ctx.state === "suspended") ctx.resume();
+      const now = ctx.currentTime;
+      // A gentle two-note chime rather than a harsh alarm beep.
+      [{ freq: 880, start: 0 }, { freq: 1174.66, start: 0.18 }].forEach(({ freq, start }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, now + start);
+        gain.gain.linearRampToValueAtTime(0.25, now + start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + start);
+        osc.stop(now + start + 0.55);
+      });
+    } catch {
+      // Web Audio unavailable/blocked — the visual "Time's up" state still shows either way.
+    }
+  };
+
+  const toggleRunning = () => {
+    if (!running && !audioCtxRef.current) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioCtx();
+      } catch {
+        /* Web Audio unavailable — timer still works, just silently */
+      }
+    }
+    setRunning((r) => !r);
+  };
+
   const setPreset = (mins) => {
     setRunning(false);
     setTotalSeconds(mins * 60);
     setRemaining(mins * 60);
+    prevRemainingRef.current = mins * 60;
   };
-  const reset = () => { setRunning(false); setRemaining(totalSeconds); };
+  const reset = () => { setRunning(false); setRemaining(totalSeconds); prevRemainingRef.current = totalSeconds; };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const pct = totalSeconds > 0 ? ((totalSeconds - remaining) / totalSeconds) * 100 : 0;
@@ -75,7 +126,7 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
         )}
 
         <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <button onClick={() => setRunning((r) => !r)} disabled={finished} style={{ ...primaryBtn, flex: 1, opacity: finished ? 0.4 : 1 }}>{running ? "Pause" : "Start"}</button>
+          <button onClick={toggleRunning} disabled={finished} style={{ ...primaryBtn, flex: 1, opacity: finished ? 0.4 : 1 }}>{running ? "Pause" : "Start"}</button>
           <button onClick={reset} className="btn-ghost" style={ghostBtn}>Reset</button>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
