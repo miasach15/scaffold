@@ -97,10 +97,23 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     .filter((c) => !c.done && c.date && c.date <= todayISO)
     .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
-  // Overdue and due-soonest first; anything with no due date (a plain reminder, or a
-  // breakdown whose group has no overall due date) sinks to the bottom instead of
-  // interrupting the order.
+  // Ordered by actual urgency, not just raw date order — overdue first, then due today,
+  // then anything in its urgent window (including a multi-step group, which is always
+  // "active" regardless of how far its due date is), then everything else with a date
+  // that isn't urgent yet, then undated reminders last. Within a tier, soonest date first.
+  const urgencyTier = (it) => {
+    const overdue = it.date && it.date < todayISO;
+    const dueToday = it.date === todayISO;
+    const urgent = it.isGroup || inLeadWindow(it.date, it.leadDays, false);
+    if (overdue) return 0;
+    if (dueToday) return 1;
+    if (urgent) return 2;
+    if (it.date) return 3;
+    return 4;
+  };
   const sortedAll = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
+    const diff = urgencyTier(a) - urgencyTier(b);
+    if (diff !== 0) return diff;
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
