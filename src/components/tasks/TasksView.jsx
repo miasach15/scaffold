@@ -67,7 +67,11 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     // of showing a row per day. A single-step "breakdown" just becomes a normal task.
     const groupId = pendingPlan.items.length > 1 ? uid() : null;
     const groupTitle = groupId ? title.trim() : null;
-    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle, notes: it.notes || null }));
+    // The group's own overall due date/time (separate from each step's work day) so it
+    // shows up in the calendar's "Due" row like everything else that's actually due.
+    const groupDueDate = groupId ? date : null;
+    const groupDueStart = groupId && time ? timeToDecimal(time) : null;
+    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle, groupDueDate, groupDueStart, notes: it.notes || null }));
     setPendingPlan(null);
     resetForm();
   };
@@ -118,7 +122,14 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   const groupRows = Object.entries(byGroup)
     .map(([groupId, items]) => {
       const remainingItems = items.filter((t) => !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-      return { groupId, groupTitle: items.find((t) => t.groupTitle)?.groupTitle || "Task", items, remainingItems, doneCount: items.filter((t) => t.done).length, total: items.length };
+      const withDueInfo = items.find((t) => t.groupDueDate);
+      return {
+        groupId,
+        groupTitle: items.find((t) => t.groupTitle)?.groupTitle || "Task",
+        groupDueDate: withDueInfo?.groupDueDate || null,
+        groupDueStart: withDueInfo?.groupDueStart ?? null,
+        items, remainingItems, doneCount: items.filter((t) => t.done).length, total: items.length,
+      };
     })
     .filter((g) => g.remainingItems.length > 0); // whole group drops off once every step is done
 
@@ -137,7 +148,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   // no "day due" to sort by, so it sinks to the bottom instead of breaking the order.
   const combined = [
     ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
-    ...groupRows.map((g) => ({ type: "group", date: g.remainingItems[0]?.date || null, group: g })),
+    ...groupRows.map((g) => ({ type: "group", date: g.groupDueDate || g.remainingItems[0]?.date || null, group: g })),
     ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
     ...goalDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c })),
   ].sort((a, b) => {
@@ -198,8 +209,8 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
             <div style={fieldLabelStyle}>Due by</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional — a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
-              {date && !useAI && (
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Only if it's a real appointment at a specific time" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
+              {date && (
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Optional — a specific time it's due, works fine alongside breaking it down" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
               )}
               {date && (
                 <select value={repeat} onChange={(e) => setRepeat(e.target.value)} title="For an ongoing chore or routine — creates a separate task on each occurrence" style={{ ...inputStyle, width: 140 }}>
@@ -232,25 +243,29 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
             </div>
           </div>
 
-          {date && !time && repeat === "None" && (
+          {date && repeat === "None" && (
             <div>
               <div style={fieldLabelStyle}>Bigger than one sitting?</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: useAI ? 0.4 : 1 }}>
-                  <input
-                    type="number"
-                    min={1}
-                    max={60}
-                    placeholder="Days"
-                    disabled={useAI}
-                    value={leadDays}
-                    onChange={(e) => setLeadDays(e.target.value)}
-                    title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
-                    style={{ ...inputStyle, width: 70 }}
-                  />
-                  <span style={{ fontSize: 12, color: "#93A0AD" }}>days needed</span>
-                </div>
-                <span style={{ fontSize: 11, color: "#C2C9D1" }}>or</span>
+                {!time && (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: useAI ? 0.4 : 1 }}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={60}
+                        placeholder="Days"
+                        disabled={useAI}
+                        value={leadDays}
+                        onChange={(e) => setLeadDays(e.target.value)}
+                        title="How many days you need to get it done — it'll show up every day and turn urgent once you're that close to the due date"
+                        style={{ ...inputStyle, width: 70 }}
+                      />
+                      <span style={{ fontSize: 12, color: "#93A0AD" }}>days needed</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "#C2C9D1" }}>or</span>
+                  </>
+                )}
                 <button
                   onClick={() => setUseAI((x) => !x)}
                   style={{
@@ -319,6 +334,8 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
               <GroupedTaskRow
                 key={item.group.groupId}
                 groupTitle={item.group.groupTitle}
+                groupDueDate={item.group.groupDueDate}
+                groupDueStart={item.group.groupDueStart}
                 remainingItems={item.group.remainingItems}
                 doneCount={item.group.doneCount}
                 total={item.group.total}

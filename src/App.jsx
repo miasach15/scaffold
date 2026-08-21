@@ -190,6 +190,17 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     visibleTasks.forEach((t) => {
       if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category, groupId: t.groupId });
     });
+    // One synthetic chip per "break it down" group, on its own overall due date — the
+    // group's steps (above) are work days, not the deadline itself, so this is what
+    // actually belongs in the calendar's "Due" row alongside everything else that's due.
+    const seenGroups = new Set();
+    visibleTasks.forEach((t) => {
+      if (!t.groupId || !t.groupDueDate || seenGroups.has(t.groupId)) return;
+      seenGroups.add(t.groupId);
+      const groupTasks = visibleTasks.filter((x) => x.groupId === t.groupId);
+      const groupDone = groupTasks.length > 0 && groupTasks.every((x) => x.done);
+      chips.push({ id: t.groupId, kind: "task-group-due", title: t.groupTitle || t.title, date: t.groupDueDate, done: groupDone, category: t.category });
+    });
     return chips;
   }, [goals, eduItems, visibleTasks]);
 
@@ -203,6 +214,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
     else if (chip.kind === "edu") setEduDone(chip.id, !chip.done);
     else if (chip.kind === "task") openTaskDetail(chip.id);
+    // A group's due chip represents several rows at once — no single task to open, so
+    // just jump to the Tasks page where the collapsed group row lives (expand it there).
+    else if (chip.kind === "task-group-due") setView("tasks");
   };
 
   const completeOnboarding = async (answers) => {

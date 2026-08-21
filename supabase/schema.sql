@@ -57,6 +57,9 @@ create table if not exists tasks (
   -- list can show one collapsed row (group_title) instead of a row per step.
   group_id uuid,
   group_title text,
+  -- the group's own overall due date/time, separate from each step's individual work day
+  group_due_date date,
+  group_due_start numeric,
   -- lead_days: "days needed" — a task with a due date and lead_days stays visible every
   -- day (not just once due) and is flagged urgent once today is within lead_days of date.
   lead_days integer,

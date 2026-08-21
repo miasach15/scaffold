@@ -1,7 +1,13 @@
 import { TONE } from "../../lib/constants";
 import { daysUntil, toISO } from "../../lib/dateHelpers";
 
-export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick, emphasis }) {
+// rollOverdueToToday: an item that's overdue and still not done stops showing on its
+// original (past) date and shows on today instead, every day, until it's done — so it
+// doesn't just sit invisible on a date you've scrolled away from. Only meaningful for
+// rows of actual "due" things (Due/Tasks); the All-day events row leaves this off since
+// a past event isn't "overdue," it just already happened.
+export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropTask, onAddClick, emphasis, rollOverdueToToday }) {
+  const todayISO = toISO(new Date());
   return (
     <div style={{
       display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`,
@@ -11,7 +17,10 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
       <div style={{ fontSize: emphasis ? 12 : 10, color: emphasis ? "#4A5568" : "#9CA3AF", padding: "8px 6px", textAlign: "right", fontWeight: 700 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
-        const dayChips = chips.filter((c) => c.date === iso);
+        const dayChips = chips.filter((c) => {
+          if (rollOverdueToToday && !c.done && daysUntil(c.date) < 0) return iso === todayISO;
+          return c.date === iso;
+        });
         return (
           <div
             key={iso}

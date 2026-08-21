@@ -13,6 +13,8 @@ const fromRow = (row) => ({
   category: row.category || "Personal",
   groupId: row.group_id || null,
   groupTitle: row.group_title || null,
+  groupDueDate: row.group_due_date || null,
+  groupDueStart: row.group_due_start == null ? null : Number(row.group_due_start),
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
 });
@@ -34,7 +36,7 @@ export function useTasks(userId) {
   }, [load]);
 
   const addTask = useCallback(
-    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, leadDays = null, notes = null }) => {
+    async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null }) => {
       if (!userId) return;
       const row = {
         id: uid(),
@@ -48,6 +50,8 @@ export function useTasks(userId) {
         category,
         group_id: groupId,
         group_title: groupTitle,
+        group_due_date: groupDueDate,
+        group_due_start: groupDueStart,
         lead_days: leadDays,
         notes,
       };
