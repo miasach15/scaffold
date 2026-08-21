@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Clock, Play, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BatteryLow, Clock, Play, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
 import { addDays, daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
@@ -7,6 +7,7 @@ import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
 
 const VISIBLE_CAP = 5; // more than this and it stops being a glance — collapse the rest behind "Show more"
+const LOW_ENERGY_KEY = "scaffold-low-energy";
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
 // no delete buttons, nothing but a checkbox and a title. How something ends up here,
@@ -27,6 +28,23 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
+  // Persisted, not just session state — a low-energy day doesn't end when you close a
+  // tab, so this should still be on next time you open the app rather than silently
+  // reverting and putting the big stuff back in front of you.
+  const [lowEnergy, setLowEnergy] = useState(() => {
+    try {
+      return localStorage.getItem(LOW_ENERGY_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOW_ENERGY_KEY, lowEnergy ? "1" : "0");
+    } catch {
+      /* private-browsing or storage disabled — just won't persist across reloads */
+    }
+  }, [lowEnergy]);
   const todayISO = toISO(new Date());
   const tomorrowISO = toISO(addDays(new Date(), 1));
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -82,14 +100,20 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Overdue and due-soonest first; anything with no due date (a plain reminder, or a
   // breakdown whose group has no overall due date) sinks to the bottom instead of
   // interrupting the order.
-  const allRelevant = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
+  const sortedAll = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
     return a.date.localeCompare(b.date);
   });
+  // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+
+  // steps by construction (see confirmPlan), so it's the one category that's honestly
+  // never "quick." Nothing that's actually due gets hidden — this only trims what's
+  // heaviest, not what's real.
+  const allRelevant = lowEnergy ? sortedAll.filter((it) => !it.isGroup) : sortedAll;
   const relevant = expanded ? allRelevant : allRelevant.slice(0, VISIBLE_CAP);
   const hiddenCount = allRelevant.length - relevant.length;
+  const hiddenForEnergy = lowEnergy ? sortedAll.length - allRelevant.length : 0;
 
   return (
     <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>
@@ -98,23 +122,46 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
           <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: "#000000" }}>Today</div>
           <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
         </div>
-        {allRelevant.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button
-            onClick={() => setWhatNowOpen(true)}
+            onClick={() => setLowEnergy((x) => !x)}
             className="hoverable"
+            title="Hides multi-step projects — just the quick, one-shot stuff for a day when even small things feel big"
             style={{
-              display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #E5E9ED",
-              borderRadius: 999, padding: "7px 13px 7px 10px", fontSize: 12.5, fontWeight: 700, color: "var(--primary-dark, #5849C4)", cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "7px 12px 7px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+              background: lowEnergy ? "var(--primary-tint, #E7E3FC)" : "#fff",
+              border: `1.5px solid ${lowEnergy ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+              color: lowEnergy ? "var(--primary-dark, #5849C4)" : "#93A0AD",
             }}
-            title="Picks the one most pressing thing and hides everything else"
           >
-            <Sparkles size={13} strokeWidth={2.3} /> What should I do right now?
+            <BatteryLow size={13} strokeWidth={2.3} /> Low energy
           </button>
-        )}
+          {allRelevant.length > 0 && (
+            <button
+              onClick={() => setWhatNowOpen(true)}
+              className="hoverable"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #E5E9ED",
+                borderRadius: 999, padding: "7px 13px 7px 10px", fontSize: 12.5, fontWeight: 700, color: "var(--primary-dark, #5849C4)", cursor: "pointer",
+              }}
+              title="Picks the one most pressing thing and hides everything else"
+            >
+              <Sparkles size={13} strokeWidth={2.3} /> What should I do right now?
+            </button>
+          )}
+        </div>
       </div>
 
+      {lowEnergy && hiddenForEnergy > 0 && (
+        <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -14, marginBottom: 14 }}>
+          {hiddenForEnergy} bigger {hiddenForEnergy === 1 ? "project" : "projects"} hidden while low energy is on.
+        </div>
+      )}
+
       {allRelevant.length === 0 ? (
-        <div style={{ fontSize: 15, color: "#8FCBA3", padding: "8px 0 4px" }}>Nothing on your plate — nice work.</div>
+        <div style={{ fontSize: 15, color: sortedAll.length > 0 ? "#93A0AD" : "#8FCBA3", padding: "8px 0 4px" }}>
+          {sortedAll.length > 0 ? "Everything left today is a bigger project — turn off Low energy to see it." : "Nothing on your plate — nice work."}
+        </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {relevant.map((it) => {
