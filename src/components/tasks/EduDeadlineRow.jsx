@@ -22,7 +22,7 @@ export default function EduDeadlineRow({ item, onToggleDone, onOpen }) {
         {item.title}{item.subject ? ` (${item.subject})` : ""}
       </button>
       <div title={formatShortDate(item.dueDate)}>
-        <UrgencyBadge iso={item.dueDate} done={item.done} />
+        <UrgencyBadge iso={item.dueDate} done={item.done} leadDays={2} />
       </div>
     </div>
   );

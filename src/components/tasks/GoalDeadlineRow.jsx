@@ -23,7 +23,7 @@ export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
         {item.title}
       </button>
       <div title={formatShortDate(item.date)}>
-        <UrgencyBadge iso={item.date} done={item.done} />
+        <UrgencyBadge iso={item.date} done={item.done} leadDays={2} />
       </div>
     </div>
   );
