@@ -1,14 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Scaffold">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#C4694A"/>
-      <stop offset="1" stop-color="#94452A"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="116" fill="url(#g)"/>
-  <g fill="#F7F3EC">
-    <rect x="104" y="316" width="304" height="52" rx="26"/>
-    <rect x="104" y="230" width="220" height="52" rx="26" opacity="0.86"/>
-    <rect x="104" y="144" width="136" height="52" rx="26" opacity="0.68"/>
-  </g>
+  <rect x="40" y="40" width="432" height="432" rx="64" fill="none" stroke="#0F1F4D" stroke-width="18"/>
+  <path d="M470,124 C494,158 424,190 400,224 C378,256 372,292 350,324 C328,356 322,392 300,424"
+        fill="none" stroke="#0F1F4D" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="280" y="90" width="190" height="68" rx="34" fill="#82C9BE"/>
+  <rect x="190" y="190" width="210" height="68" rx="34" fill="#8FB4E8"/>
+  <rect x="140" y="290" width="210" height="68" rx="34" fill="#A79BD9"/>
+  <rect x="90" y="390" width="210" height="68" rx="34" fill="#E7A0B5"/>
 </svg>
