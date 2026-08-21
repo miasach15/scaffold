@@ -27,7 +27,7 @@ export default function EduItemRow({ item, onToggleDone, onRemove, onAddSession,
             {item.subject && <div style={{ fontSize: 10, color: "#93A0AD" }}>{item.subject}</div>}
           </div>
         </div>
-        {tag ? <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 600 }}>{tag}</div> : <UrgencyBadge iso={item.dueDate} done={item.done} />}
+        {tag ? <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 600 }}>{tag}</div> : <UrgencyBadge iso={item.dueDate} done={item.done} leadDays={2} />}
         {confirmDelete ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <button onClick={() => onRemove(item.id, "one")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>This one</button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle } from "../../lib/styles";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -78,10 +79,9 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
             style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
           />
         ) : milestone.dueDate ? (
-          <>
-            <UrgencyBadge iso={milestone.dueDate} done={milestoneDone} />
-            <div onClick={() => setEditingMilestoneDate(true)} title="Click to change target date" style={{ fontSize: 10.5, color: "#93A0AD", cursor: "pointer", whiteSpace: "nowrap" }}>{milestone.dueDate}</div>
-          </>
+          <div onClick={() => setEditingMilestoneDate(true)} title={`${formatShortDate(milestone.dueDate)} — click to change`} style={{ cursor: "pointer" }}>
+            <UrgencyBadge iso={milestone.dueDate} done={milestoneDone} leadDays={2} />
+          </div>
         ) : (
           <button onClick={() => setEditingMilestoneDate(true)} title="Set a target date — this will auto-fill dates for actions below" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ target date</button>
         )}
@@ -141,10 +141,9 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                   style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
                 />
               ) : a.dueDate ? (
-                <>
-                  <UrgencyBadge iso={a.dueDate} done={a.done} />
-                  <div onClick={() => setEditingDateId(a.id)} title="Click to change date" style={{ fontSize: 10.5, color: "#93A0AD", cursor: "pointer" }}>{a.dueDate}</div>
-                </>
+                <div onClick={() => setEditingDateId(a.id)} title={`${formatShortDate(a.dueDate)} — click to change`} style={{ cursor: "pointer" }}>
+                  <UrgencyBadge iso={a.dueDate} done={a.done} leadDays={2} />
+                </div>
               ) : (
                 <button onClick={() => setEditingDateId(a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ date</button>
               )}

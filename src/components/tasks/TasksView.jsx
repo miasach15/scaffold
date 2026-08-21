@@ -91,7 +91,9 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       resetForm();
       return;
     }
-    const lead = date && !time && Number(leadDays) > 1 ? Number(leadDays) : null;
+    // >= 1, not > 1 — typing "1" is a deliberate "I only need today," and was silently
+    // getting dropped in favor of the default-2 fallback instead of being respected.
+    const lead = date && !time && Number(leadDays) >= 1 ? Number(leadDays) : null;
     // The date is just the due date now, stored as-is — no picking a "work day" for you.
     // A task with a future (or no) due date just sits in Today until you get to it, unless
     // "days needed" is set — then it shows every day and goes urgent once you're that

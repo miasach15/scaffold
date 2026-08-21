@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { BatteryLow, Clock, Play, Sparkles } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
-import { addDays, daysUntil, defaultLeadDays, inLeadWindow, toISO } from "../../lib/dateHelpers";
+import { EDU_TYPE_COLORS, TONE, cardStyle, serifFont } from "../../lib/constants";
+import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
 
@@ -171,12 +171,15 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
           {relevant.map((it) => {
             const overdue = it.date && it.date < todayISO;
             const dueToday = it.date === todayISO;
-            const urgent = inLeadWindow(it.date, it.leadDays, false);
+            // Same urgencyInfo everything else in the app uses — so the label here reads
+            // exactly like every other "N days overdue"/"Urgent — N days left" badge,
+            // instead of a hand-rolled duplicate that drifted from it ("Overdue" with no
+            // count, "Urgent — Nd left" abbreviated differently).
+            const info = it.date ? urgencyInfo(it.date, false, it.leadDays) : null;
+            const urgent = !overdue && !dueToday && info?.tone === "danger";
             const waitingOnWindow = !it.isGroup && it.date && it.leadDays && !overdue && !dueToday && !urgent; // has a date+leadDays but the window hasn't opened yet
             const active = it.isGroup || overdue || dueToday || urgent; // full-priority state
-            let tagLabel = null;
-            if (overdue) tagLabel = "Overdue";
-            else if (urgent && !dueToday) tagLabel = `Urgent — ${daysUntil(it.date)}d left`;
+            const tagLabel = overdue || urgent ? info.label : null;
             return (
               <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: active ? 1 : 0.65 }}>
                 <Checkbox checked={false} onClick={it.onToggle} color={it.col} />
@@ -186,7 +189,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                     style={{
                       display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0,
                       fontSize: active ? 16.5 : 15, fontWeight: active ? 500 : 400,
-                      color: overdue ? "#B03A3A" : urgent ? "#B0631F" : "#000000",
+                      color: overdue ? TONE.danger.text : urgent ? TONE.warn.text : "#000000",
                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}
                   >
@@ -195,10 +198,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                   {it.isGroup && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>
                 {tagLabel && (
-                  <div style={{ fontSize: 11, color: overdue ? "#B03A3A" : "#B0631F", whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
+                  <div style={{ fontSize: 11, color: overdue ? TONE.danger.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
                 )}
                 {waitingOnWindow && (
-                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {it.date}</div>
+                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>
                 )}
                 {it.onSnooze && (
                   <button

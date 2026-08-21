@@ -93,8 +93,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onAddMilest
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
               <div style={{ fontSize: 11, color: col.text, opacity: 0.75, fontWeight: 600 }}>{goal.category}</div>
-              {goal.deadline && <div style={{ fontSize: 11, color: col.text, opacity: 0.75 }}>· deadline {goal.deadline}</div>}
-              {goal.deadline && <UrgencyBadge iso={goal.deadline} done={allDone} />}
+              {goal.deadline && <UrgencyBadge iso={goal.deadline} done={allDone} leadDays={2} />}
               {!expanded && total > 0 && <div style={{ fontSize: 11, color: col.text, opacity: 0.75 }}>· {doneCount}/{total} done</div>}
             </div>
           </div>
