@@ -85,6 +85,15 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: date || null }).eq("id", id);
   }, []);
 
+  // Setting a specific time is what actually makes a task "due at" that time — it's what
+  // moves it from the Due/Tasks strip into a real timed block on the calendar grid, same
+  // as if you'd set it when the task was first created.
+  const setTaskStart = useCallback(async (id, start) => {
+    const duration = start == null ? null : 60;
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, start, duration } : t)));
+    await supabase.from("tasks").update({ start, duration }).eq("id", id);
+  }, []);
+
   const setTaskNotes = useCallback(async (id, notes) => {
     const trimmed = notes && notes.trim() ? notes.trim() : null;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, notes: trimmed } : t)));
@@ -107,5 +116,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask };
 }

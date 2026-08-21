@@ -8,7 +8,7 @@ import TaskRow from "./TaskRow";
 // A "break it down" task collapses to one row here — the Tasks list should show one
 // task, not one row per day you're working on it. Click to expand and see (and check
 // off) the individual steps, each still showing its own date.
-export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onSetCategory, onRemove, onOpenDetail, onSetDate }) {
+export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onSetCategory, onRemove, onOpenDetail, onSetDate, onSetStart }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const category = remainingItems[0]?.category || "Personal";
@@ -36,7 +36,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4, marginLeft: 22 }}>
           {remainingItems.map((t) => (
-            <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenDetail} onSetDate={onSetDate} showDate />
+            <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenDetail} onSetDate={onSetDate} onSetStart={onSetStart} showDate />
           ))}
         </div>
       )}

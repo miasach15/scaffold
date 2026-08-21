@@ -16,7 +16,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -169,7 +169,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
 
   const renderComboItem = (item) => {
     if (item.type === "single") {
-      return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} showDate />;
+      return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
     }
     if (item.type === "edu") {
       return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
@@ -191,6 +191,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         onRemove={onRemove}
         onOpenDetail={onOpenTaskDetail}
         onSetDate={onSetDate}
+        onSetStart={onSetStart}
       />
     );
   };

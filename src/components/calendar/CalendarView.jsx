@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { EDU_TYPE_COLORS, PRIMARY, ROW_H, TASK_COLOR, cardStyle, serifFont } from "../../lib/constants";
+import { EDU_TYPE_COLORS, PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dayLabel, dateLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
@@ -17,24 +17,24 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const now = new Date();
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
 
+  // Anything that's actually DUE (a deadline) is filled solid in its own color — a plain
+  // task, a breakdown's overall due date, an Education deadline, a goal deadline/
+  // milestone. Anything that's just a day of WORK toward something (a breakdown step, a
+  // goal action) stays outline-only, same as before — it's not a deadline, it's a to-do.
+  const isDueKind = (chip) => (chip.kind === "task" && !chip.groupId) || chip.kind === "task-group-due" || chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
   const chipStyle = (chip) => {
-    if (chip.kind === "goal-deadline" || chip.kind === "goal-milestone") {
-      const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+    if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+    if (isDueKind(chip)) {
+      const c = chip.kind === "edu" ? (EDU_TYPE_COLORS[chip.type] || EDU_TYPE_COLORS.Homework) : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
       return { bg: c.border, border: c.border, text: "#fff" };
     }
-    if (chip.kind === "edu") return EDU_TYPE_COLORS[chip.type] || EDU_TYPE_COLORS.Homework;
-    if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
-    // "goal" (small actions) and "task" chips: colored outline only, by category, no fill
-    if (chip.kind === "goal" || chip.kind === "task") {
-      const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
-      return { ...c, bg: "#fff" };
-    }
-    return { ...TASK_COLOR, bg: "#fff" };
+    // "goal" (small actions) and grouped "task" (breakdown steps): colored outline only —
+    // work days, not deadlines.
+    const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+    return { ...c, bg: "#fff" };
   };
   const chipLabel = (chip) => {
-    if (chip.kind === "goal-deadline") return `Goal due: ${chip.title}`;
-    if (chip.kind === "goal-milestone") return chip.title;
-    if (chip.kind === "edu") return `${chip.title}${chip.subject ? ` (${chip.subject})` : ""}`;
+    if (isDueKind(chip)) return `Due: ${chip.title}${chip.subject ? ` (${chip.subject})` : ""}`;
     return chip.title;
   };
   // A plain task's date IS its due date now, so it belongs in "Due" with everything else

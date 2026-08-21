@@ -62,7 +62,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
@@ -392,6 +392,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
+            onSetStart={setTaskStart}
             onOpenFocus={openFocus}
             inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}
@@ -524,6 +525,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onRemove={requestRemoveTask}
           onOpenFocus={openFocus}
           onSetDate={setTaskDate}
+          onSetStart={setTaskStart}
           onSetNotes={setTaskNotes}
         />
       )}

@@ -2,13 +2,13 @@ import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
 import { CATEGORY_KEYS, EDU_TYPE_COLORS } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { defaultLeadDays, formatShortDate } from "../../lib/dateHelpers";
+import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenDetail, onSetDate }) {
+export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenDetail, onSetDate, onSetStart }) {
   const CATEGORY_COLORS = useCategoryColors();
   const category = t.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
@@ -31,19 +31,39 @@ export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, show
       {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
       {showDate && editingDate ? (
-        <input
-          type="date"
-          autoFocus
-          value={t.date || ""}
-          onChange={(e) => { onSetDate(t.id, e.target.value); setEditingDate(false); }}
-          onBlur={() => setEditingDate(false)}
-          style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
-        />
+        <div
+          // Blur-when-focus-leaves-the-group, not blur-on-either-field — so tabbing from
+          // the date into the time input doesn't slam the editor shut before you can use it.
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDate(false); }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+        >
+          <input
+            type="date"
+            autoFocus
+            value={t.date || ""}
+            onChange={(e) => onSetDate(t.id, e.target.value)}
+            style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
+          />
+          {onSetStart && (
+            <input
+              type="time"
+              value={decimalToTimeInput(t.start)}
+              onChange={(e) => onSetStart(t.id, e.target.value ? timeToDecimal(e.target.value) : null)}
+              title="Optional — a specific time it's due"
+              style={{ ...inputStyle, width: 96, fontSize: 11.5, padding: "3px 6px" }}
+            />
+          )}
+        </div>
       ) : showDate && t.date ? (
         // One signal, not two — the badge already says "Overdue"/"Due tomorrow"/etc.,
         // so a separate raw date string next to it would just be noise. The exact date
-        // is still there on hover, and clicking either lets you change it.
-        <button onClick={() => setEditingDate(true)} title={`${formatShortDate(t.date)} — click to change`} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" }}>
+        // (and time, if it has one) is still there on hover, and clicking either lets
+        // you change them.
+        <button
+          onClick={() => setEditingDate(true)}
+          title={`${formatShortDate(t.date)}${t.start != null ? ` · ${decimalToTimeLabel(t.start)}` : ""} — click to change`}
+          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" }}
+        >
           {t.done ? <span style={{ fontSize: 12, color: "#93A0AD" }}>{formatShortDate(t.date)}</span> : <UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} />}
         </button>
       ) : showDate ? (

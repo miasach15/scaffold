@@ -37,6 +37,14 @@ export const decimalToTimeLabel = (dec) => {
   if (disp === 0) disp = 12;
   return `${disp}:${pad(m)} ${ampm}`;
 };
+// The reverse of timeToDecimal, for pre-filling an <input type="time"> from a stored
+// decimal-hours value.
+export const decimalToTimeInput = (dec) => {
+  if (dec == null) return "";
+  const h = Math.floor(dec);
+  const m = Math.round((dec - h) * 60);
+  return `${pad(h)}:${pad(m)}`;
+};
 export const daysUntil = (iso) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
