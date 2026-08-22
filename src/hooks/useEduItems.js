@@ -9,6 +9,8 @@ const fromRow = (row) => ({
   subject: row.subject,
   dueDate: row.due_date,
   done: row.done,
+  scoreEarned: row.score_earned == null ? null : Number(row.score_earned),
+  scorePossible: row.score_possible == null ? null : Number(row.score_possible),
 });
 
 export function useEduItems(userId) {
@@ -58,5 +60,12 @@ export function useEduItems(userId) {
     await supabase.from("edu_items").delete().eq("id", id); // cascades to linked tasks server-side
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem };
+  // Either value can be null to clear it — e.g. entering just "18" out of nothing yet,
+  // or clearing a mis-entered score back to blank.
+  const setScore = useCallback(async (id, scoreEarned, scorePossible) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, scoreEarned, scorePossible } : x)));
+    await supabase.from("edu_items").update({ score_earned: scoreEarned, score_possible: scorePossible }).eq("id", id);
+  }, []);
+
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore };
 }

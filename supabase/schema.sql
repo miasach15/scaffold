@@ -41,6 +41,10 @@ create table if not exists edu_items (
   subject text,
   due_date date not null,
   done boolean not null default false,
+  -- optional score tracking — points earned / points possible (percentage grades just
+  -- use possible = 100). Both null until entered.
+  score_earned numeric,
+  score_possible numeric,
   created_at timestamptz not null default now()
 );
 

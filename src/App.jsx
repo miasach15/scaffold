@@ -66,7 +66,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
-  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw } = useEduItems(userId);
+  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore } = useEduItems(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem } = useInbox(userId);
 
   const [view, setView] = useState("calendar");
@@ -475,6 +475,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             tasks={tasks}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
+            onSetEduScore={setEduScore}
             onRemoveEduItem={removeEduItem}
             onAddSession={addEduSession}
             onRemoveSession={removeTask}

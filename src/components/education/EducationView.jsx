@@ -7,6 +7,7 @@ import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
+import GradeRow from "./GradeRow";
 import WorkItemRow from "./WorkItemRow";
 
 export default function EducationView({
@@ -14,6 +15,7 @@ export default function EducationView({
   tasks,
   onAddEduItem,
   onSetEduDone,
+  onSetEduScore,
   onRemoveEduItem,
   onAddSession,
   onRemoveSession,
@@ -158,6 +160,25 @@ export default function EducationView({
 
   const upcomingTests = eduItems.filter((e) => e.type === "Test" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const upcomingAssignments = eduItems.filter((e) => e.type === "Assignment" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  // Grades: completed items only — this is the one place done items don't just vanish.
+  const gradedItems = eduItems.filter((e) => e.done && bySubject(e)).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
+  const scoredAll = eduItems.filter((e) => e.done && e.scoreEarned != null && e.scorePossible > 0);
+  // Points-weighted average per subject (sum earned / sum possible), not a simple mean of
+  // percentages — a 9/10 quiz shouldn't count the same as a 90/100 test.
+  const subjectAveragesBySub = {};
+  scoredAll.forEach((e) => {
+    const key = e.subject || "No subject";
+    if (!subjectAveragesBySub[key]) subjectAveragesBySub[key] = { earned: 0, possible: 0 };
+    subjectAveragesBySub[key].earned += e.scoreEarned;
+    subjectAveragesBySub[key].possible += e.scorePossible;
+  });
+  const subjectAverages = Object.entries(subjectAveragesBySub).map(([subject, { earned, possible }]) => ({
+    subject, pct: possible > 0 ? Math.round((earned / possible) * 1000) / 10 : null,
+  })).sort((a, b) => a.subject.localeCompare(b.subject));
+  const overallAverage = scoredAll.length > 0
+    ? Math.round((scoredAll.reduce((s, e) => s + e.scoreEarned, 0) / scoredAll.reduce((s, e) => s + e.scorePossible, 0)) * 1000) / 10
+    : null;
 
   const sessionRows = tasks.filter((t) => t.eduId).map((t) => {
     const parent = eduItems.find((e) => e.id === t.eduId);
@@ -312,6 +333,27 @@ export default function EducationView({
             <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
         </div>
+      </div>
+
+      <div style={{ marginTop: 18 }}>
+        <SubHeader>Grades</SubHeader>
+        {overallAverage != null && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: CATEGORY_COLORS.Education.bg, color: CATEGORY_COLORS.Education.text, border: `1px solid ${CATEGORY_COLORS.Education.border}` }}>
+              Overall: {overallAverage}%
+            </div>
+            {subjectAverages.filter((s) => s.pct != null).map((s) => (
+              <div key={s.subject} style={{ fontSize: 11.5, padding: "4px 10px", borderRadius: 999, background: "#F4F5F7", color: "#5A6472", border: "1px solid #E5E9ED" }}>
+                {s.subject}: {s.pct}%
+              </div>
+            ))}
+          </div>
+        )}
+        {gradedItems.length === 0 ? (
+          <EmptyState text="Nothing completed yet — finished assignments and tests will show up here, with room to log a score." />
+        ) : (
+          <div>{gradedItems.map((e) => <GradeRow key={e.id} item={e} onSetScore={onSetEduScore} onRemove={onRemoveEduItem} />)}</div>
+        )}
       </div>
 
       {pendingPlan && (
