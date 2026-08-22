@@ -45,6 +45,7 @@ export default function ClassCard({
   onRenameCategory,
   onSetCategoryWeight,
   onRemoveCategory,
+  onRemoveClass,
   onSetScore,
   onSetItemCategory,
   onRemoveItem,
@@ -96,6 +97,16 @@ export default function ClassCard({
         <div style={{ fontSize: 15, fontWeight: 700, color: col.text, minWidth: 52, textAlign: "right" }}>
           {overallPct != null ? `${overallPct}%` : "—"}
         </div>
+
+        {cls && (
+          <button
+            onClick={() => onRemoveClass(cls.id)}
+            title={items.length > 0 ? "Remove this class's grading setup (it'll come back in Total points mode if you still have items in it)" : "Remove this class"}
+            style={{ ...deleteBtn, color: col.text, opacity: 0.6 }}
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {expanded && (

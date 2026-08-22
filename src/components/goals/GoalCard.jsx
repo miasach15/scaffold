@@ -4,8 +4,8 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
-import { ProgressBar } from "../shared/Misc";
 import UrgencyBadge from "../shared/UrgencyBadge";
+import GoalPath from "./GoalPath";
 import MilestoneBlock from "./MilestoneBlock";
 
 export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
@@ -132,9 +132,9 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
           </button>
           <button onClick={() => onRemoveGoal(goal.id)} style={{ ...deleteBtn, color: col.text }}>×</button>
         </div>
-        {total > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <ProgressBar done={doneCount} total={total} color={col} track="rgba(255,255,255,0.55)" />
+        {goal.milestones.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <GoalPath milestones={goal.milestones} col={col} />
           </div>
         )}
       </div>

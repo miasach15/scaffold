@@ -4,18 +4,24 @@ import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 const CORE_STEPS = [
+  { type: "view", view: "calendar", title: "Welcome to Scaffold", bullets: [
+    "This is meant to be on your side, not another thing keeping score on you.",
+    "Nothing you don't finish gets buried — it just carries forward to today, no red marks for being late.",
+    "One day at a time: today's list, a clear next step, and everything else can wait its turn.",
+  ] },
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
   { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner — type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
-  { type: "view", view: "tasks", title: "Tasks", bullets: ["Type a task, hit Add", "Tag it with a category", "Check it off when done"] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["Add a goal + deadline", "Break it into small steps", "Check off each step"] },
+  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today — everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
+  { type: "view", view: "goals", title: "Goals", bullets: ["Add a goal + when you want it done", "It breaks into milestones, then small steps toward each one", "Watch your path toward it fill in as you go"] },
   { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },
   { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt, or free write", "Type your thoughts", "Save when you're done"] },
   { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },
+  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories — Tests 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime — it comes right back in Total points mode if you still have items in it"] },
 ];
 
 const MODAL_STEPS = [
-  { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Replay this tour anytime"] },
-  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished", "Covers tasks, goals, habits", "Open it anytime up top"] },
+  { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Turn on \"What now?\" reminders — a nudge toward whatever's most worth doing right now", "Replay this tour anytime"] },
+  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished this week", "Wins only — no guilt trip about what's still pending", "Open it anytime up top"] },
 ];
 
 export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {

@@ -89,5 +89,14 @@ export function useGrades(userId) {
     await supabase.from("grade_categories").delete().eq("id", categoryId); // edu_items.grade_category_id nulls out server-side
   }, []);
 
-  return { classes, loading, ensureClass, setGradingMode, addCategory, renameCategory, setCategoryWeight, removeCategory };
+  // Removes a class's grading setup (mode + categories) — not its graded items, which
+  // live on edu_items keyed by subject text, not this row. If the subject still has
+  // items in it, the class reappears next load in default points mode; if not, it's
+  // just gone, since there was nothing else to derive it from.
+  const removeClass = useCallback(async (classId) => {
+    setClasses((cs) => cs.filter((c) => c.id !== classId));
+    await supabase.from("grade_classes").delete().eq("id", classId); // cascades grade_categories, nulls edu_items.grade_category_id
+  }, []);
+
+  return { classes, loading, ensureClass, setGradingMode, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
 }

@@ -16,6 +16,7 @@ export default function GradesView({
   onRenameCategory,
   onSetCategoryWeight,
   onRemoveCategory,
+  onRemoveClass,
   onSetScore,
   onSetItemCategory,
   onRemoveItem,
@@ -76,6 +77,7 @@ export default function GradesView({
             onRenameCategory={onRenameCategory}
             onSetCategoryWeight={onSetCategoryWeight}
             onRemoveCategory={onRemoveCategory}
+            onRemoveClass={onRemoveClass}
             onSetScore={onSetScore}
             onSetItemCategory={onSetItemCategory}
             onRemoveItem={onRemoveItem}
