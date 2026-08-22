@@ -12,6 +12,7 @@ import WorkItemRow from "./WorkItemRow";
 export default function EducationView({
   eduItems,
   tasks,
+  events,
   onAddEduItem,
   onSetEduDone,
   onRemoveEduItem,
@@ -73,10 +74,10 @@ export default function EducationView({
     const lastWorkDay = dayBefore(dueDate);
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
-      const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks);
+      const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
       return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
     }
-    const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks);
+    const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
     return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
   };
 

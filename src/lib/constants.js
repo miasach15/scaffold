@@ -82,26 +82,18 @@ export const cardStyle = {
 
 // Outcome-shaped goals (a finish line, not an ongoing daily habit — recurring things
 // like "drink more water" or "read every day" belong on the Habits page instead).
-export const SUGGESTED_GOALS = {
-  Personal: [
-    "Read 12 books this year", "Declutter your whole apartment", "Learn to cook 5 new recipes",
-    "Finish an online course", "Get your finances organized", "Learn conversational Spanish",
-    "Build a personal website", "Write a short story", "Deep clean and organize your closet",
-    "Finish a DIY project you've been putting off", "Learn to play a song on an instrument", "Redecorate a room",
-  ],
-  Health: [
-    "Run a 5k", "Complete a 30-day fitness challenge", "Get a full check-up done",
-    "Fix your sleep schedule", "Train for a hike", "Build a workout routine that sticks",
-    "Cut back on sugar for a month", "Try a new sport", "Finish a couch-to-5k program",
-    "Set up a home workout space", "Hit a specific fitness milestone", "Improve your posture",
-  ],
-  People: [
-    "Plan a trip with friends", "Reconnect with an old friend", "Host a dinner party",
-    "Write letters to family", "Plan a surprise for someone", "Volunteer for a cause",
-    "Organize a group hangout", "Plan a milestone celebration", "Mend a strained relationship",
-    "Meet your partner's/friend's family", "Plan a reunion", "Start a small tradition with someone",
-  ],
-};
+// Goals is for the big things — a real project, not a stray errand (that's what Tasks
+// is for). One flat list rather than keyed by category, since categories are now fully
+// user-defined (see useCategoryKeys) and can't be reliably matched to fixed keys anymore.
+export const SUGGESTED_GOALS = [
+  "Launch a small business", "Build and ship an app", "Start a nonprofit or community org",
+  "Start a club at school", "Publish original research", "Win a hackathon or case competition",
+  "Build a portfolio for college apps", "Launch a podcast or YouTube channel",
+  "Organize a fundraiser for a cause", "Get a research position with a professor",
+  "Start a tutoring or small side business", "Write and publish a book or zine",
+  "Build an online presence/brand", "Lead a major school event", "Land an internship",
+  "Earn a certification or credential", "Start a passion project you'd put on a resume",
+];
 
 // pre-filled starter checklist for a new packing list, organized loosely by category
 export const PACKING_LIST_TEMPLATE = [

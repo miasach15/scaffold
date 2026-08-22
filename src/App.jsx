@@ -65,7 +65,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
+  const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory } = useEduItems(userId);
@@ -277,12 +277,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         const lastWorkDay = dayBefore(row.dueDate);
         const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
         if (isAiSteps) {
-          const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks);
+          const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks, events);
           effectiveSchedule.steps.forEach((stepTitle, i) => {
             addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: "Education" });
           });
         } else {
-          const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks);
+          const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
           for (const d of dates) {
             addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
           }
@@ -426,6 +426,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         {view === "tasks" && (
           <TasksView
             tasks={visibleTasks}
+            events={events}
             onAddTask={addTask}
             onToggleDone={setTaskDone}
             onSetCategory={setTaskCategory}
@@ -476,6 +477,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           <EducationView
             eduItems={eduItems}
             tasks={tasks}
+            events={events}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
             onRemoveEduItem={removeEduItem}

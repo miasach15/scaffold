@@ -57,6 +57,8 @@ serve(async (req) => {
 
 Break this into 3-5 concrete milestones that build toward the outcome in order. For each milestone, give 2-3 next actions — things that could go on a to-do list, not vague advice. Fewer, bigger actions beat many small ones here.
 
+If this is a substantial undertaking — starting a business, building and shipping an app, launching a nonprofit or club, a real research or portfolio project — lean toward the upper end of both ranges (5 milestones, 3 actions each) and make the milestones read like real project phases in order (e.g. validate the idea, build the first version, launch, grow/sustain it), not a flat checklist. A goal that size deserves a real plan, not a to-do list pretending to be one.
+
 HARD FLOOR: every action must represent at least 45 minutes of real, substantial focused work by itself — most should land closer to 1-1.5 hours. This is a strict minimum, not a suggestion. Before finalizing each action, sanity-check it: "could a person plausibly spend 45+ minutes doing just this?" If the honest answer is no — if it's something you'd actually finish in 5-15 minutes — it is too small and must be merged into a bigger, adjacent piece of work, not listed on its own. Concretely too-small on their own: "check email", "look something up", "make a list", "read the instructions", "send a message", "set a reminder", "pick a date". Fold every one of those into whichever real chunk of work they support instead of giving them their own line.
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:

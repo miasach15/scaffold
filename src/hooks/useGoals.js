@@ -30,7 +30,7 @@ const goalFromRow = (row) => ({
     .map(milestoneFromRow),
 });
 
-export function useGoals(userId, tasks) {
+export function useGoals(userId, tasks, events) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +113,7 @@ export function useGoals(userId, tasks) {
       // still be working the day it's due.
       const lastWorkDay = dayBefore(dueDate);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDatesByLoad(startISO, endISO, undated.length, tasks);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undated.length, tasks, events);
       undated.forEach((a, i) => dateForAction.set(a.id, autoDates[i]));
     }
 
@@ -130,7 +130,7 @@ export function useGoals(userId, tasks) {
     for (const [actionId, d] of dateForAction) {
       await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId);
     }
-  }, [goals, tasks]);
+  }, [goals, tasks, events]);
 
   // One end date for the whole goal, and everything undated underneath cascades from it:
   // any milestone that doesn't already have its own due date gets one spread evenly (load-
@@ -149,7 +149,7 @@ export function useGoals(userId, tasks) {
       const startISO = deadline > todayISO ? todayISO : deadline;
       const lastWorkDay = dayBefore(deadline);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDatesByLoad(startISO, endISO, undatedMilestones.length, tasks);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undatedMilestones.length, tasks, events);
       undatedMilestones.forEach((m, i) => milestoneDateFor.set(m.id, autoDates[i]));
     }
 
@@ -161,7 +161,7 @@ export function useGoals(userId, tasks) {
       const startISO = mDueDate > todayISO ? todayISO : mDueDate;
       const lastWorkDay = dayBefore(mDueDate);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDatesByLoad(startISO, endISO, undatedActions.length, tasks);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undatedActions.length, tasks, events);
       undatedActions.forEach((a, i) => actionDateFor.set(a.id, autoDates[i]));
     });
 
@@ -182,7 +182,7 @@ export function useGoals(userId, tasks) {
     for (const [actionId, d] of actionDateFor) {
       await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId);
     }
-  }, [goals, tasks]);
+  }, [goals, tasks, events]);
 
   const addAction = useCallback(
     async (goalId, milestoneId, title, dueDate) => {

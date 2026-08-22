@@ -16,7 +16,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -55,7 +55,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       const startISO = date > todayISO ? todayISO : date;
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks);
+      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
       setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] }))) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");

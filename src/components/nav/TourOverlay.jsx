@@ -12,7 +12,7 @@ const CORE_STEPS = [
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
   { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner — type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
   { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today — everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["Add a goal + when you want it done", "It breaks into milestones, then small steps toward each one", "Watch your path toward it fill in as you go"] },
+  { type: "view", view: "goals", title: "Goals", bullets: ["This is for the big stuff — a business, an app, a nonprofit, a real project (small errands go on Tasks)", "Give it an end date and it schedules milestones + steps around your actual calendar for you", "Watch your path toward it fill in as you go"] },
   { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },
   { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt, or free write", "Type your thoughts", "Save when you're done"] },
   { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },

@@ -70,26 +70,26 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   };
 
   const filtered = filter === "All" ? goals : goals.filter((g) => g.category === filter);
-  const addedTitles = new Set(goals.filter((g) => g.category === category).map((g) => g.title.toLowerCase()));
-  const suggestionPool = (SUGGESTED_GOALS[category] || []).filter((s) => !addedTitles.has(s.toLowerCase()));
+  const addedTitles = new Set(goals.map((g) => g.title.toLowerCase()));
+  const suggestionPool = SUGGESTED_GOALS.filter((s) => !addedTitles.has(s.toLowerCase()));
   const suggestions = useMemo(() => {
     const shuffled = [...suggestionPool].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, SUGGESTIONS_SHOWN);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shuffleKey, category, suggestionPool.length]);
+  }, [shuffleKey, suggestionPool.length]);
 
   return (
     <div>
-      <SectionHeader title="Goals" subtitle="Goal, then milestones, then the next small action." Icon={Target} tint={CATEGORY_COLORS.People} />
+      <SectionHeader title="Goals" subtitle="The big things you're building — a business, an app, a nonprofit, a real project — broken into a clear, day-by-day path." Icon={Target} tint={CATEGORY_COLORS.People} />
 
       <div style={{ ...cardStyle, padding: 14, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, marginBottom: 6 }}>
-          <Sparkles size={14} color={CATEGORY_COLORS[category]?.text} strokeWidth={2.3} /> Describe the outcome, we'll break it down
+          <Sparkles size={14} color={CATEGORY_COLORS[category]?.text} strokeWidth={2.3} /> Describe what you're building, we'll break it down
         </div>
         <textarea
           value={outcome}
           onChange={(e) => setOutcome(e.target.value)}
-          placeholder="e.g. Run a 10k by next spring"
+          placeholder="e.g. Launch a small tutoring business by the end of the school year"
           rows={2}
           style={{ ...inputStyle, width: "100%", resize: "vertical" }}
         />
@@ -101,7 +101,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             type="date"
             value={outcomeDeadline}
             onChange={(e) => setOutcomeDeadline(e.target.value)}
-            title="Optional — give it an end date and every milestone/action gets a date spread automatically, instead of landing undated"
+            title="Give it an end date and every milestone/action gets a date spread automatically around your existing events and tasks, instead of landing undated"
             style={{ ...inputStyle, width: 150 }}
           />
           <div style={{ flex: 1 }} />
@@ -125,7 +125,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
       <div data-tour="goals-add">
         <AddRow>
-          <input placeholder="Or add a goal manually..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
+          <input placeholder="Or add a goal manually (a real project, not a quick errand)..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
           <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
             {categoryKeys.map((c) => <option key={c}>{c}</option>)}
           </select>
@@ -136,7 +136,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
       {suggestions.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
-          <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested for {category}:</span>
+          <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Big things to build:</span>
           {suggestions.map((s) => (
             <button key={s} onClick={() => addGoal(s, category, false)} style={suggestionChip}>+ {s}</button>
           ))}
@@ -153,7 +153,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState text="No goals here yet." />
+        <EmptyState text="No goals here yet — this is the place for the big stuff: a business, an app, a nonprofit, a real project. Small errands belong on Tasks." />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((g) => (

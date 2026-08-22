@@ -163,11 +163,13 @@ export const distributeDates = (startISO, endISO, count) => {
   return offsets.map((o) => toISO(addDays(start, o)));
 };
 // Like distributeDates — starts from the same even spread across the whole window — but
-// then nudges any picked day that already has more tasks on it than some unused day in
-// the window toward that quieter day. On an empty calendar this is identical to
+// then nudges any picked day that already has more on it than some unused day in the
+// window toward that quieter day. "More on it" counts both tasks AND calendar events —
+// a day full of classes/practice/appointments is just as booked as a day full of tasks,
+// so both count toward the same load. On an empty calendar this is identical to
 // distributeDates (evenly spread, not clumped at the start); the more the calendar
 // already has booked, the more it pulls new items away from your busier days.
-export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) => {
+export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
@@ -195,6 +197,10 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks) =>
   (existingTasks || []).forEach((t) => {
     if (!t.date) return;
     loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
+  });
+  (existingEvents || []).forEach((e) => {
+    if (!e.date) return;
+    loadByDate[e.date] = (loadByDate[e.date] || 0) + 1;
   });
   const loadOf = (offset) => loadByDate[toISO(addDays(start, offset))] || 0;
 
