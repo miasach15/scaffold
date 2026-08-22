@@ -1,16 +1,30 @@
 import { useState } from "react";
-import { Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { Bell, Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
-import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
+import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 import CategoryEditor from "../shared/CategoryEditor";
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, onReplayTour, darkMode, onToggleDarkMode, userId, onClose }) {
+const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
+
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
+  const push = usePushNotifications(userId);
+
+  const toggleWhatnow = async () => {
+    if (whatnowNotifications) {
+      await push.unsubscribe();
+      onUpdateProfile({ whatnowNotifications: false });
+      return;
+    }
+    const ok = await push.subscribe();
+    if (ok) onUpdateProfile({ whatnowNotifications: true });
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -97,6 +111,62 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
             );
           })}
         </div>
+
+        {onUpdateProfile && (
+          <div style={{ marginTop: 22 }}>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
+              "What now?" reminders — a push notification to your phone/desktop pointing at whatever's most worth doing right now.
+            </div>
+            <button
+              onClick={toggleWhatnow}
+              disabled={push.busy}
+              style={{
+                ...ghostBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                opacity: push.busy ? 0.6 : 1,
+                border: `1px solid ${whatnowNotifications ? PRIMARY : "#E2E8F0"}`,
+                color: whatnowNotifications ? PRIMARY : "#4A5568",
+              }}
+            >
+              <Bell size={14} strokeWidth={2.3} />
+              {push.busy ? "Working on it..." : whatnowNotifications ? "Reminders are on — turn off" : "Turn on reminders"}
+            </button>
+            {!push.supported && (
+              <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
+                Not supported in this browser (or the app isn't set up for push yet).
+              </div>
+            )}
+            {push.error && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{push.error}</div>}
+
+            {whatnowNotifications && (
+              <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#5A6472" }}>Every</span>
+                <select
+                  value={whatnowIntervalMinutes}
+                  onChange={(e) => onUpdateProfile({ whatnowIntervalMinutes: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                >
+                  {[30, 60, 90, 120].map((m) => <option key={m} value={m}>{m < 60 ? `${m} min` : `${m / 60}h`}</option>)}
+                </select>
+                <span style={{ fontSize: 12, color: "#5A6472" }}>between</span>
+                <select
+                  value={whatnowWindowStart}
+                  onChange={(e) => onUpdateProfile({ whatnowWindowStart: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                >
+                  {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
+                </select>
+                <span style={{ fontSize: 12, color: "#5A6472" }}>and</span>
+                <select
+                  value={whatnowWindowEnd}
+                  onChange={(e) => onUpdateProfile({ whatnowWindowEnd: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                >
+                  {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
 
         {onToggleDarkMode && (
           <button

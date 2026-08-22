@@ -127,6 +127,10 @@ export default function AuthScreen() {
           </button>
         )}
       </form>
+      <div style={{ position: "fixed", bottom: 18, fontSize: 11.5, color: "#B4BCC5", display: "flex", gap: 12 }}>
+        <a href="/terms.html" style={{ color: "inherit" }}>Terms</a>
+        <a href="/privacy.html" style={{ color: "inherit" }}>Privacy</a>
+      </div>
     </div>
   );
 }

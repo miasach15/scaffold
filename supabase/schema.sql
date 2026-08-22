@@ -17,6 +17,12 @@ create table if not exists profiles (
   -- customizes it, their own list is stored here (rename/add/remove, any names).
   category_keys text[],
   tour_seen boolean not null default false,
+  -- "What now?" push notifications — periodic nudges toward whatever's most worth doing
+  -- right now. Window is in the subscriber's own local hour (see push_subscriptions.timezone).
+  whatnow_notifications boolean not null default false,
+  whatnow_interval_minutes integer not null default 60,
+  whatnow_window_start integer not null default 8,
+  whatnow_window_end integer not null default 21,
   created_at timestamptz not null default now()
 );
 
@@ -77,6 +83,18 @@ do $$ begin
     foreign key (grade_category_id) references grade_categories(id) on delete set null;
 exception when duplicate_object then null;
 end $$;
+
+-- ---------- push_subscriptions (Web Push endpoints for "What now?" notifications) ----------
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth_key text not null,
+  timezone text not null default 'UTC',
+  last_sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
 
 -- ---------- tasks ----------
 create table if not exists tasks (
@@ -271,6 +289,7 @@ alter table habit_done_dates enable row level security;
 alter table edu_items enable row level security;
 alter table grade_classes enable row level security;
 alter table grade_categories enable row level security;
+alter table push_subscriptions enable row level security;
 alter table journal_entries enable row level security;
 alter table watch_items enable row level security;
 alter table books enable row level security;
@@ -328,6 +347,10 @@ create policy "own grade_classes" on grade_classes for all
 
 drop policy if exists "own grade_categories" on grade_categories;
 create policy "own grade_categories" on grade_categories for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own push_subscriptions" on push_subscriptions;
+create policy "own push_subscriptions" on push_subscriptions for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own journal_entries" on journal_entries;

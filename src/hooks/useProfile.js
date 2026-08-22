@@ -14,6 +14,10 @@ const fromRow = (row) => ({
   // user renamed/added/removed to is stored verbatim, in their chosen order.
   categoryKeys: row.category_keys && row.category_keys.length > 0 ? row.category_keys : DEFAULT_CATEGORY_KEYS,
   tourSeen: !!row.tour_seen,
+  whatnowNotifications: !!row.whatnow_notifications,
+  whatnowIntervalMinutes: row.whatnow_interval_minutes ?? 60,
+  whatnowWindowStart: row.whatnow_window_start ?? 8,
+  whatnowWindowEnd: row.whatnow_window_end ?? 21,
 });
 
 export function useProfile(userId) {
@@ -50,6 +54,10 @@ export function useProfile(userId) {
       if ("categoryColors" in patch) dbPatch.category_colors = patch.categoryColors;
       if ("categoryKeys" in patch) dbPatch.category_keys = patch.categoryKeys;
       if ("tourSeen" in patch) dbPatch.tour_seen = patch.tourSeen;
+      if ("whatnowNotifications" in patch) dbPatch.whatnow_notifications = patch.whatnowNotifications;
+      if ("whatnowIntervalMinutes" in patch) dbPatch.whatnow_interval_minutes = patch.whatnowIntervalMinutes;
+      if ("whatnowWindowStart" in patch) dbPatch.whatnow_window_start = patch.whatnowWindowStart;
+      if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
       const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
       if (error) console.error("updateProfile failed:", error.message);
     },

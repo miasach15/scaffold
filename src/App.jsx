@@ -519,6 +519,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}
           userId={userId}
+          whatnowNotifications={profile.whatnowNotifications}
+          whatnowIntervalMinutes={profile.whatnowIntervalMinutes}
+          whatnowWindowStart={profile.whatnowWindowStart}
+          whatnowWindowEnd={profile.whatnowWindowEnd}
+          onUpdateProfile={updateProfile}
           onClose={() => setShowSettings(false)}
         />
       )}
