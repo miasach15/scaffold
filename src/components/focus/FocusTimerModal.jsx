@@ -106,7 +106,6 @@ export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose
     prevRemainingRef.current = mins * 60;
   };
   const reset = () => { setRunning(false); setRemaining(totalSeconds); prevRemainingRef.current = totalSeconds; };
-  const addMinute = () => { setTotalSeconds((s) => s + 60); setRemaining((r) => r + 60); };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const pct = totalSeconds > 0 ? ((totalSeconds - remaining) / totalSeconds) * 100 : 0;
@@ -148,13 +147,10 @@ export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose
         {finished ? (
           <div style={{ fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginBottom: 14 }}>Time's up. Nice focus session.</div>
         ) : (
-          <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
             {[15, 25, 50].map((m) => (
               <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : "#4A5568" }}>{m}m</button>
             ))}
-            {running && (
-              <button onClick={addMinute} title="Add a minute without resetting" style={{ ...ghostBtn, padding: "6px 10px", background: "#fff" }}>+1 min</button>
-            )}
           </div>
         )}
 

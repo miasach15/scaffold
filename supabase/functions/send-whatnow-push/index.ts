@@ -186,6 +186,14 @@ serve(async (_req) => {
       if (hour < profile.whatnow_window_start || hour >= profile.whatnow_window_end) return null;
       const intervalMs = (profile.whatnow_interval_minutes || 60) * 60 * 1000;
       if (lastSentAt && Date.now() - new Date(lastSentAt).getTime() < intervalMs) return null;
+      // Stay quiet if a calendar event is happening right now — you're already occupied
+      // (in class, at practice, whatever it is), so a "what now" nudge is pointless at
+      // best and an interruption at worst. Doesn't touch the interval/last_sent_at, so
+      // the very next tick after the event ends is free to notify normally.
+      const inEventNow = (events || []).some(
+        (ev) => ev.user_id === userId && ev.date === today && ev.start != null && hourDecimal >= ev.start && hourDecimal < ev.start + (ev.duration ?? 0.5)
+      );
+      if (inEventNow) return null;
       const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || []);
       return pickWhatNow(items, hourDecimal, today);
     }
