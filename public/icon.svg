@@ -1,9 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Scaffold">
-  <rect x="40" y="40" width="432" height="432" rx="64" fill="none" stroke="#0F1F4D" stroke-width="18"/>
-  <path d="M470,124 C494,158 424,190 400,224 C378,256 372,292 350,324 C328,356 322,392 300,424"
-        fill="none" stroke="#0F1F4D" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="280" y="90" width="190" height="68" rx="34" fill="#82C9BE"/>
-  <rect x="190" y="190" width="210" height="68" rx="34" fill="#8FB4E8"/>
-  <rect x="140" y="290" width="210" height="68" rx="34" fill="#A79BD9"/>
-  <rect x="90" y="390" width="210" height="68" rx="34" fill="#E7A0B5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Scaffold">
+  <defs>
+    <linearGradient id="g" x1="0.1" y1="0.95" x2="0.85" y2="0.05">
+      <stop offset="0%" stop-color="#1F9E8C"/>
+      <stop offset="100%" stop-color="#7FE0C9"/>
+    </linearGradient>
+  </defs>
+  <path d="M338,112
+           C 215,145 162,198 158,270
+           C 154,342 218,378 300,378
+           C 385,378 436,415 434,472
+           C 432,518 395,560 330,568
+           C 285,573 250,558 232,528
+           C 218,505 222,478 248,462
+           C 268,450 292,458 296,478"
+        fill="none" stroke="url(#g)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="338" cy="112" r="27" fill="url(#g)"/>
+  <circle cx="296" cy="478" r="15" fill="#ffffff" stroke="url(#g)" stroke-width="13"/>
 </svg>
