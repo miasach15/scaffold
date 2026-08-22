@@ -450,7 +450,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         {view === "goals" && (
           <GoalsView
             goals={goals}
-            defaultCategory={categoryKeys.find((c) => profile.focusAreas.includes(c)) || categoryKeys[0]}
+            defaultCategory={categoryKeys.includes("Personal") ? "Personal" : categoryKeys[0]}
             onAddGoal={addGoal}
             onRemoveGoal={removeGoal}
             onRenameGoal={renameGoal}
