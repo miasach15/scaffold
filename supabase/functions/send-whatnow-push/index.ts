@@ -38,7 +38,7 @@ const APNS_TOPIC = Deno.env.get("APNS_TOPIC");
 const APNS_AUTH_KEY = Deno.env.get("APNS_AUTH_KEY");
 const APNS_HOST = Deno.env.get("APNS_SANDBOX") === "true" ? "api.sandbox.push.apple.com" : "api.push.apple.com";
 
-type Item = { title: string; category: string | null; start: number | null; duration: number | null };
+type Item = { title: string; category: string | null; start: number | null; duration: number | null; date: string };
 type Pick = { title: string; body: string };
 
 const CATEGORY_RANK = (c: string | null) => (c === "Education" ? 0 : c === "Personal" ? 2 : 1);
@@ -60,36 +60,49 @@ function formatTime(decimal: number) {
 }
 
 // Same three-tier idea as WhatNowModal: something happening right now beats something
-// merely scheduled later today, which beats something just due today with no set time.
-function pickWhatNow(items: Item[], nowHour: number): Pick | null {
+// merely scheduled later today, which beats something just sitting there with no set
+// time — which includes anything carried over from a previous day (see itemsForUser;
+// mirrors the in-app rollOverdueToToday behavior, so nothing that slipped just goes
+// quiet). A carried-over item gets its own gentler framing instead of blending into
+// "Do this next" — same spirit as the "Carried over" badge language in dateHelpers.js.
+function pickWhatNow(items: Item[], nowHour: number, today: string): Pick | null {
+  // Only an item actually scheduled for today has a start time worth trusting — a
+  // carried-over item's old start time was relative to a day that's already gone.
   const happeningNow = items
-    .filter((it) => it.start != null && nowHour >= it.start! && nowHour < it.start! + (it.duration ?? 0.5))
+    .filter((it) => it.date === today && it.start != null && nowHour >= it.start! && nowHour < it.start! + (it.duration ?? 0.5))
     .sort((a, b) => CATEGORY_RANK(a.category) - CATEGORY_RANK(b.category));
   if (happeningNow.length > 0) return { title: "Right now", body: happeningNow[0].title };
 
   const upcoming = items
-    .filter((it) => it.start != null && it.start! > nowHour)
+    .filter((it) => it.date === today && it.start != null && it.start! > nowHour)
     .sort((a, b) => a.start! - b.start!);
   if (upcoming.length > 0) return { title: "Coming up", body: `${upcoming[0].title} at ${formatTime(upcoming[0].start!)}` };
 
+  // Oldest first (mirrors the app's own date-first sort), category as the tie-break.
   const untimed = items
-    .filter((it) => it.start == null)
-    .sort((a, b) => CATEGORY_RANK(a.category) - CATEGORY_RANK(b.category));
-  if (untimed.length > 0) return { title: "Do this next", body: untimed[0].title };
+    .filter((it) => it.date !== today || it.start == null)
+    .sort((a, b) => a.date.localeCompare(b.date) || CATEGORY_RANK(a.category) - CATEGORY_RANK(b.category));
+  if (untimed.length > 0) {
+    const it = untimed[0];
+    return it.date < today ? { title: "Carried over", body: it.title } : { title: "Do this next", body: it.title };
+  }
 
   return null;
 }
 
+// Includes anything still open from before today, not just today's own items — same
+// "carry it forward, don't let it go quiet" rule the in-app Today list applies.
 function itemsForUser(userId: string, today: string, tasks: any[], eduItems: any[], goalActions: any[], events: any[]): Item[] {
   return [
-    ...tasks.filter((t) => t.user_id === userId && t.date === today)
-      .map((t) => ({ title: t.title, category: t.category, start: t.start, duration: t.duration })),
-    ...eduItems.filter((e) => e.user_id === userId && e.due_date === today)
-      .map((e) => ({ title: `${e.title} (${e.type})`, category: "Education", start: null, duration: null })),
-    ...goalActions.filter((a) => a.user_id === userId && a.due_date === today && !a.done)
-      .map((a) => ({ title: a.title, category: null, start: null, duration: null })),
+    ...tasks.filter((t) => t.user_id === userId && t.date && t.date <= today)
+      .map((t) => ({ title: t.title, category: t.category, start: t.start, duration: t.duration, date: t.date })),
+    ...eduItems.filter((e) => e.user_id === userId && e.due_date && e.due_date <= today)
+      .map((e) => ({ title: `${e.title} (${e.type})`, category: "Education", start: null, duration: null, date: e.due_date })),
+    ...goalActions.filter((a) => a.user_id === userId && a.due_date && a.due_date <= today && !a.done)
+      .map((a) => ({ title: a.title, category: null, start: null, duration: null, date: a.due_date })),
+    // Events aren't "carried over" — a past event already happened, it's not still owed.
     ...events.filter((ev) => ev.user_id === userId && ev.date === today)
-      .map((ev) => ({ title: ev.title, category: ev.category, start: ev.start, duration: ev.duration })),
+      .map((ev) => ({ title: ev.title, category: ev.category, start: ev.start, duration: ev.duration, date: ev.date })),
   ];
 }
 
@@ -174,7 +187,7 @@ serve(async (_req) => {
       const intervalMs = (profile.whatnow_interval_minutes || 60) * 60 * 1000;
       if (lastSentAt && Date.now() - new Date(lastSentAt).getTime() < intervalMs) return null;
       const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || []);
-      return pickWhatNow(items, hourDecimal);
+      return pickWhatNow(items, hourDecimal, today);
     }
 
     if (webPushReady) {

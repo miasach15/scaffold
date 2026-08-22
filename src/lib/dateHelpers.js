@@ -58,7 +58,11 @@ export const daysUntil = (iso) => {
 export const urgencyInfo = (iso, done, leadDays) => {
   if (!iso || done) return null;
   const d = daysUntil(iso);
-  if (d < 0) return { label: d === -1 ? "1 day overdue" : `${-d} days overdue`, tone: "danger" };
+  // "Overdue" reads as a verdict on you; "carried over" reads as the app doing the work
+  // of keeping it in front of you. Same fact (it rolls onto Today either way — see
+  // rollOverdueToToday), softer frame, and deliberately not the same alarm color as
+  // something genuinely due today/soon (below) — that distinction is the whole point.
+  if (d < 0) return { label: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" };
   if (leadDays && d <= leadDays - 1) {
     return { label: d === 0 ? "Due today" : `Urgent — ${d} day${d === 1 ? "" : "s"} left`, tone: "danger" };
   }

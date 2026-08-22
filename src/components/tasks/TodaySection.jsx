@@ -195,7 +195,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                     style={{
                       display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0,
                       fontSize: active ? 16.5 : 15, fontWeight: active ? 500 : 400,
-                      color: overdue ? TONE.danger.text : urgent ? TONE.warn.text : "#000000",
+                      color: overdue ? TONE.carried.text : urgent ? TONE.warn.text : "#000000",
                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}
                   >
@@ -204,7 +204,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                   {it.isGroup && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>
                 {tagLabel && (
-                  <div style={{ fontSize: 11, color: overdue ? TONE.danger.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
+                  <div style={{ fontSize: 11, color: overdue ? TONE.carried.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
                 )}
                 {waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>

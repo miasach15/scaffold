@@ -65,6 +65,11 @@ export const TONE = {
   warn: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
   soon: { bg: "#F1F3F5", border: "#DCE1E6", text: "#5A6472" },
   neutral: { bg: "transparent", border: "transparent", text: "#93A0AD" },
+  // Overdue-but-not-forgotten — deliberately NOT a stoplight color. Something that
+  // slipped is still visibly held onto (it rolls onto Today automatically either way),
+  // but it's framed as the app carrying it forward for you, not as a red mark against
+  // you — hence the brand purple instead of an alarm color.
+  carried: { bg: "#EDEAFB", border: "#C9BFF0", text: "#5849C4" },
 };
 export const serifFont = "'Playfair Display', 'Georgia', serif";
 export const cardStyle = {

@@ -53,14 +53,14 @@ serve(async (_req) => {
     const errors: string[] = [];
 
     for (const user of users) {
-      const items: { title: string; sub: string; tone: "danger" | "warn" }[] = [];
+      const items: { title: string; sub: string; tone: "carried" | "warn" }[] = [];
 
       (tasks || [])
         .filter((t) => t.user_id === user.id && t.date && !t.group_id && !t.edu_id)
         .forEach((t) => {
           const d = daysUntil(t.date, today);
           const lead = t.lead_days || 2; // same default as the app's TodaySection
-          if (d < 0) items.push({ title: t.title, sub: `${-d} day${-d === 1 ? "" : "s"} overdue`, tone: "danger" });
+          if (d < 0) items.push({ title: t.title, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: t.title, sub: "Due today", tone: "warn" });
           else if (d <= lead - 1) items.push({ title: t.title, sub: `Due in ${d} day${d === 1 ? "" : "s"}`, tone: "warn" });
         });
@@ -69,7 +69,7 @@ serve(async (_req) => {
         .filter((e) => e.user_id === user.id && e.due_date)
         .forEach((e) => {
           const d = daysUntil(e.due_date, today);
-          if (d < 0) items.push({ title: `${e.title} (${e.type})`, sub: `${-d} day${-d === 1 ? "" : "s"} overdue`, tone: "danger" });
+          if (d < 0) items.push({ title: `${e.title} (${e.type})`, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: `${e.title} (${e.type})`, sub: "Due today", tone: "warn" });
         });
 
@@ -77,7 +77,7 @@ serve(async (_req) => {
         .filter((a) => a.user_id === user.id && a.due_date)
         .forEach((a) => {
           const d = daysUntil(a.due_date, today);
-          if (d < 0) items.push({ title: a.title, sub: `${-d} day${-d === 1 ? "" : "s"} overdue`, tone: "danger" });
+          if (d < 0) items.push({ title: a.title, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: a.title, sub: "Due today", tone: "warn" });
         });
 
@@ -91,7 +91,7 @@ serve(async (_req) => {
           (it) => `
         <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #EDEDED;">
           <span style="font-size:14px; color:#2A2A2A;">${escapeHtml(it.title)}</span>
-          <span style="font-size:12px; font-weight:700; color:${it.tone === "danger" ? "#B03A3A" : "#8A5424"}; white-space:nowrap;">${it.sub}</span>
+          <span style="font-size:12px; font-weight:700; color:${it.tone === "carried" ? "#5849C4" : "#8A5424"}; white-space:nowrap;">${it.sub}</span>
         </div>`
         )
         .join("");

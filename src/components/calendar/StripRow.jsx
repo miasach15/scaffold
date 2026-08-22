@@ -42,8 +42,8 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
               const content = <>{chipLabel(c)}</>;
               const style = {
                 fontSize: emphasis ? 11.5 : 10.5, textAlign: "left", padding: emphasis ? "4px 8px" : "2px 6px", borderRadius: 6,
-                background: col.bg, border: `${emphasis ? 1.5 : 1}px solid ${overdue ? TONE.danger.border : col.border}`, color: col.text,
-                boxShadow: overdue ? `inset 2px 0 0 ${TONE.danger.text}` : "none",
+                background: col.bg, border: `${emphasis ? 1.5 : 1}px solid ${overdue ? TONE.carried.border : col.border}`, color: col.text,
+                boxShadow: overdue ? `inset 2px 0 0 ${TONE.carried.text}` : "none",
                 textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 700,
                 cursor: c.kind === "task" || c.kind === "event" ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
