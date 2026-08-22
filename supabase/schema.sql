@@ -96,6 +96,17 @@ create table if not exists push_subscriptions (
   created_at timestamptz not null default now()
 );
 
+-- ---------- device_push_tokens (native APNs tokens — the App Store build) ----------
+create table if not exists device_push_tokens (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  platform text not null default 'ios',
+  token text not null unique,
+  timezone text not null default 'UTC',
+  last_sent_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- tasks ----------
 create table if not exists tasks (
   id uuid primary key default gen_random_uuid(),
@@ -290,6 +301,7 @@ alter table edu_items enable row level security;
 alter table grade_classes enable row level security;
 alter table grade_categories enable row level security;
 alter table push_subscriptions enable row level security;
+alter table device_push_tokens enable row level security;
 alter table journal_entries enable row level security;
 alter table watch_items enable row level security;
 alter table books enable row level security;
@@ -351,6 +363,10 @@ create policy "own grade_categories" on grade_categories for all
 
 drop policy if exists "own push_subscriptions" on push_subscriptions;
 create policy "own push_subscriptions" on push_subscriptions for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own device_push_tokens" on device_push_tokens;
+create policy "own device_push_tokens" on device_push_tokens for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own journal_entries" on journal_entries;
