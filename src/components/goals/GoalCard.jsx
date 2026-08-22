@@ -96,7 +96,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                 <button onClick={startEditTitle} title="Rename goal" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.55, padding: 2, display: "flex" }}><Pencil size={12.5} strokeWidth={2.3} /></button>
               </div>
             )}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
               <div style={{ fontSize: 11, color: col.text, opacity: 0.75, fontWeight: 600 }}>{goal.category}</div>
               {onSetGoalDeadline && editingDeadline ? (
                 <input

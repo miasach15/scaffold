@@ -55,7 +55,7 @@ export default function App() {
 
 function FullScreenMessage({ text }) {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'Inter', -apple-system, sans-serif" }}>
       {text}
     </div>
   );
@@ -74,7 +74,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
   const [view, setView] = useState("calendar");
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
-  const [dayView, setDayViewRaw] = useState(null); // ISO date string, or null for week view
+  // ISO date string, or null for week view. A cramped 7-column week grid is hard to use
+  // on a phone-width screen, so start narrow screens on today's single-day view instead
+  // — still just a starting point, switching to week view from there works the same as ever.
+  const [dayView, setDayViewRaw] = useState(() => (typeof window !== "undefined" && window.innerWidth < 640 ? toISO(new Date()) : null));
   const [monthView, setMonthView] = useState(null); // Date anchor, or null when not in month mode
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -349,8 +352,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         "--primary": theme.primary,
         "--primary-dark": theme.primaryDark,
         "--primary-tint": theme.primaryTint,
-        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, height: "100vh", color: "#000000",
+        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, height: "100dvh", color: "#000000",
         display: "flex", flexDirection: "column", overflow: "hidden",
+        // Keeps content clear of a notch/Dynamic Island and the home-indicator bar on
+        // iPhone (both in the installed PWA and the native app) — a no-op everywhere else.
+        paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)",
+        paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)",
       }}
     >
       <style>{`

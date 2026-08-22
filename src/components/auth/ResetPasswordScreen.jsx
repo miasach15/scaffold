@@ -30,7 +30,7 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }

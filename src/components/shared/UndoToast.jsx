@@ -4,7 +4,7 @@ export default function UndoToast({ label, onUndo }) {
   return (
     <div
       style={{
-        position: "fixed", bottom: 22, left: "50%", transform: "translateX(-50%)", zIndex: 200,
+        position: "fixed", bottom: "calc(22px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", zIndex: 200,
         display: "flex", alignItems: "center", gap: 12, background: "#232833", color: "#fff",
         padding: "10px 10px 10px 16px", borderRadius: 12, boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
         fontSize: 13.5, fontFamily: "'Inter', sans-serif",

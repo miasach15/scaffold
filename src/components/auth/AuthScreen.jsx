@@ -57,7 +57,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; }
@@ -127,7 +127,7 @@ export default function AuthScreen() {
           </button>
         )}
       </form>
-      <div style={{ position: "fixed", bottom: 18, fontSize: 11.5, color: "#B4BCC5", display: "flex", gap: 12 }}>
+      <div style={{ position: "fixed", bottom: "calc(18px + env(safe-area-inset-bottom))", fontSize: 11.5, color: "#B4BCC5", display: "flex", gap: 12 }}>
         <a href="/terms.html" style={{ color: "inherit" }}>Terms</a>
         <a href="/privacy.html" style={{ color: "inherit" }}>Privacy</a>
       </div>

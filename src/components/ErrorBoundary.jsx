@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
         <div style={{ ...cardStyle, width: 420, maxWidth: "100%", padding: 28, textAlign: "center" }}>
           <div style={{ fontSize: 30, marginBottom: 8 }}>⚠️</div>
           <div style={{ fontSize: 17, fontWeight: 700, color: "#000000", marginBottom: 6 }}>Something went wrong</div>

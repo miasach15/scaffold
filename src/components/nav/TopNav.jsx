@@ -1,4 +1,4 @@
-import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, Percent, Settings, Search } from "lucide-react";
+import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, ListChecks, LogOut, Percent, Settings, Search } from "lucide-react";
 import { PRIMARY_TINT } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 
@@ -31,7 +31,10 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenSettin
 
   return (
     <div style={{ borderBottom: "1px solid rgba(226,226,226,0.7)", position: "sticky", top: 0, background: "rgba(250,250,250,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 20 }}>
-      <div style={{ padding: "10px 20px 0", display: "flex", alignItems: "center", gap: 20 }}>
+      {/* Below ~640px, "Weekly Review"/"Sign out" collapse to icon-only — with both text
+          labels the right-side cluster doesn't fit next to the nav tabs on an iPhone. */}
+      <style>{`@media (max-width: 640px) { .topnav-label { display: none; } }`}</style>
+      <div style={{ padding: "10px 12px 0", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, flexShrink: 0 }}>
           Scaffold
         </div>
@@ -48,8 +51,12 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenSettin
           <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={{ ...ghostBtn, width: 34, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Settings size={15} />
           </button>
-          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} className="btn-ghost" style={ghostBtn}>Weekly Review</button>
-          <button onClick={onSignOut} className="btn-ghost" style={ghostBtn}>Sign out</button>
+          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="btn-ghost" style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <ListChecks size={14} strokeWidth={2.3} /> <span className="topnav-label">Weekly Review</span>
+          </button>
+          <button onClick={onSignOut} title="Sign out" className="btn-ghost" style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <LogOut size={14} strokeWidth={2.3} /> <span className="topnav-label">Sign out</span>
+          </button>
         </div>
       </div>
     </div>

@@ -71,13 +71,13 @@ export default function ClassCard({
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 12, transition: "box-shadow .15s ease, transform .15s ease" }}>
-      <div style={{ background: col.bg, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ background: col.bg, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 8 }}>
         <button onClick={() => setExpanded((x) => !x)} title={expanded ? "Collapse" : "Expand"} style={{ background: "none", border: "none", cursor: "pointer", color: col.text, padding: 4, display: "flex" }}>
           {expanded ? <ChevronDown size={16} strokeWidth={2.3} /> : <ChevronRight size={16} strokeWidth={2.3} />}
         </button>
-        <div style={{ flex: 1, fontWeight: 700, fontSize: 15, color: col.text }}>{label}</div>
+        <div style={{ flex: 1, minWidth: 80, fontWeight: 700, fontSize: 15, color: col.text }}>{label}</div>
 
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {["points", "weighted"].map((m) => (
             <button
               key={m}
