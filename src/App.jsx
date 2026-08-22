@@ -7,6 +7,7 @@ import { useGoals } from "./hooks/useGoals";
 import { useHabits } from "./hooks/useHabits";
 import { useJournal } from "./hooks/useJournal";
 import { useEduItems } from "./hooks/useEduItems";
+import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
 
 import AuthScreen from "./components/auth/AuthScreen";
@@ -36,6 +37,7 @@ const GoalsView = lazy(() => import("./components/goals/GoalsView"));
 const HabitsView = lazy(() => import("./components/habits/HabitsView"));
 const JournalView = lazy(() => import("./components/journal/JournalView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
+const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
@@ -66,7 +68,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
-  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore } = useEduItems(userId);
+  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory } = useEduItems(userId);
+  const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem } = useInbox(userId);
 
   const [view, setView] = useState("calendar");
@@ -475,7 +478,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             tasks={tasks}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
-            onSetEduScore={setEduScore}
             onRemoveEduItem={removeEduItem}
             onAddSession={addEduSession}
             onRemoveSession={removeTask}
@@ -483,6 +485,21 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onOpenFocus={openFocus}
             inboxItems={eduInboxItems}
             onDiscardInbox={removeInboxItem}
+          />
+        )}
+        {view === "grades" && (
+          <GradesView
+            eduItems={eduItems}
+            classes={gradeClasses}
+            onSetGradingMode={setGradeMode}
+            onAddCategory={addGradeCategory}
+            onRenameCategory={renameGradeCategory}
+            onSetCategoryWeight={setGradeCategoryWeight}
+            onRemoveCategory={removeGradeCategory}
+            onSetScore={setEduScore}
+            onSetItemCategory={setEduGradeCategory}
+            onRemoveItem={removeEduItem}
+            onEnsureClass={ensureGradeClass}
           />
         )}
         </Suspense>

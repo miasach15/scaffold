@@ -45,8 +45,38 @@ create table if not exists edu_items (
   -- use possible = 100). Both null until entered.
   score_earned numeric,
   score_possible numeric,
+  -- which grade_categories row (if any) this item counts toward, in a weighted class
+  grade_category_id uuid,
   created_at timestamptz not null default now()
 );
+
+-- ---------- grades (per-class grading setup, matched to edu_items.subject by name) ----------
+create table if not exists grade_classes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  subject text not null,
+  -- 'points': overall % = sum(earned) / sum(possible) across every scored item.
+  -- 'weighted': overall % = weighted average of each category's own points-weighted %.
+  grading_mode text not null default 'points',
+  created_at timestamptz not null default now(),
+  unique (user_id, subject)
+);
+
+create table if not exists grade_categories (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  class_id uuid not null references grade_classes(id) on delete cascade,
+  name text not null,
+  weight numeric not null default 0, -- percent, only used in 'weighted' mode
+  order_index integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+do $$ begin
+  alter table edu_items add constraint edu_items_grade_category_id_fkey
+    foreign key (grade_category_id) references grade_categories(id) on delete set null;
+exception when duplicate_object then null;
+end $$;
 
 -- ---------- tasks ----------
 create table if not exists tasks (
@@ -239,6 +269,8 @@ alter table goal_actions enable row level security;
 alter table habits enable row level security;
 alter table habit_done_dates enable row level security;
 alter table edu_items enable row level security;
+alter table grade_classes enable row level security;
+alter table grade_categories enable row level security;
 alter table journal_entries enable row level security;
 alter table watch_items enable row level security;
 alter table books enable row level security;
@@ -288,6 +320,14 @@ create policy "own habit_done_dates" on habit_done_dates for all
 
 drop policy if exists "own edu_items" on edu_items;
 create policy "own edu_items" on edu_items for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own grade_classes" on grade_classes;
+create policy "own grade_classes" on grade_classes for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own grade_categories" on grade_categories;
+create policy "own grade_categories" on grade_categories for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own journal_entries" on journal_entries;

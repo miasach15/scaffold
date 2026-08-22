@@ -11,6 +11,7 @@ const fromRow = (row) => ({
   done: row.done,
   scoreEarned: row.score_earned == null ? null : Number(row.score_earned),
   scorePossible: row.score_possible == null ? null : Number(row.score_possible),
+  gradeCategoryId: row.grade_category_id,
 });
 
 export function useEduItems(userId) {
@@ -67,5 +68,11 @@ export function useEduItems(userId) {
     await supabase.from("edu_items").update({ score_earned: scoreEarned, score_possible: scorePossible }).eq("id", id);
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore };
+  // categoryId null = "no category" (excluded from a weighted class's percent until assigned)
+  const setGradeCategory = useCallback(async (id, categoryId) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, gradeCategoryId: categoryId } : x)));
+    await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
+  }, []);
+
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory };
 }

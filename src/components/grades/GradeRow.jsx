@@ -5,8 +5,9 @@ import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Swatch from "../shared/Swatch";
 
 // A completed Education item with an optional score — click "Add score" (or the
-// existing score) to edit earned/possible inline, e.g. 18/20 or 92/100.
-export default function GradeRow({ item, onSetScore, onRemove }) {
+// existing score) to edit earned/possible inline, e.g. 18/20 or 92/100. When the class
+// has categories set up, a dropdown lets you pick which one this item counts toward.
+export default function GradeRow({ item, categories, onSetScore, onSetCategory, onRemove }) {
   const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
   const [editing, setEditing] = useState(false);
   const [earned, setEarned] = useState(item.scoreEarned ?? "");
@@ -19,6 +20,8 @@ export default function GradeRow({ item, onSetScore, onRemove }) {
 
   const hasScore = item.scoreEarned != null && item.scorePossible != null && item.scorePossible > 0;
   const pct = hasScore ? Math.round((item.scoreEarned / item.scorePossible) * 1000) / 10 : null;
+  const hasCategories = categories && categories.length > 0;
+  const uncategorized = hasCategories && !categories.some((c) => c.id === item.gradeCategoryId);
 
   const save = () => {
     const e = earned === "" ? null : Number(earned);
@@ -35,16 +38,27 @@ export default function GradeRow({ item, onSetScore, onRemove }) {
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: "#fff" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
         <Swatch color={col} />
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 140 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>
           <div style={{ display: "flex", gap: 5, marginTop: 2, alignItems: "center" }}>
             <div style={{ fontSize: 10, color: col.text, background: col.bg, display: "inline-block", padding: "1px 6px", borderRadius: 5, fontWeight: 600 }}>{item.type}</div>
-            {item.subject && <div style={{ fontSize: 10, color: "#93A0AD" }}>{item.subject}</div>}
             <div style={{ fontSize: 10, color: "#B4BCC5" }}>{formatShortDate(item.dueDate)}</div>
           </div>
         </div>
+
+        {hasCategories && (
+          <select
+            value={item.gradeCategoryId || ""}
+            onChange={(e) => onSetCategory(item.id, e.target.value || null)}
+            title="Which category this counts toward"
+            style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 118, color: uncategorized ? "#B03A3A" : undefined }}
+          >
+            <option value="">No category</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        )}
 
         {editing ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -77,6 +91,9 @@ export default function GradeRow({ item, onSetScore, onRemove }) {
 
         <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>
       </div>
+      {hasScore && uncategorized && (
+        <div style={{ fontSize: 10.5, color: "#B03A3A", marginTop: 6 }}>Pick a category above to count this toward the grade.</div>
+      )}
     </div>
   );
 }

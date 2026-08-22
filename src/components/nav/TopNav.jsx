@@ -1,4 +1,4 @@
-import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, Settings, Search } from "lucide-react";
+import { Calendar as CalendarIcon, CheckSquare, Target, Repeat, BookOpen, GraduationCap, Percent, Settings, Search } from "lucide-react";
 import { PRIMARY_TINT } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 
@@ -23,6 +23,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenSettin
     { key: "calendar", label: "Calendar", icon: CalendarIcon },
     { key: "tasks", label: "Tasks", icon: CheckSquare },
     { key: "education", label: "Education", icon: GraduationCap },
+    { key: "grades", label: "Grades", icon: Percent },
     { key: "goals", label: "Goals", icon: Target },
     { key: "habits", label: "Habits", icon: Repeat },
     { key: "journal", label: "Journal", icon: BookOpen },
