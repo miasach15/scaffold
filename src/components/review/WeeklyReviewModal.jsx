@@ -70,12 +70,11 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
   const entriesThisWeek = journalEntries.filter((e) => inWeek(e.date));
 
   const totalWins = tasksDone.length + eduDone.length + actionsDone.length;
-  const dow = new Date().getDay();
-  const isEndOfWeek = dow === 0 || dow === 6; // Saturday or Sunday
+  const isSunday = new Date().getDay() === 0;
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      {isEndOfWeek && <Confetti />}
+      {isSunday && <Confetti />}
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
         <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 16 }}>{weekStart} to {weekEnd}</div>
