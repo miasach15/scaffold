@@ -197,9 +197,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
   // Only individual goal actions have an independently-settable "done" — a goal deadline
   // or milestone's done state is derived from whether all its actions are done, so those
-  // stay Calendar-only. Actions with a due date surface in Tasks/Today alongside plain
-  // tasks and Education deadlines, same shape as the chips the calendar already uses.
-  const goalChips = useMemo(() => dueChips.filter((c) => c.kind === "goal"), [dueChips]);
+  // stay Calendar-only for the goal/deadline itself — but a milestone's own due date IS
+  // a real deadline (unlike an action, which is a day-to-day step), so it belongs on the
+  // Tasks page's main list alongside plain tasks and Education deadlines. Actions surface
+  // in Today only, once actually due — same "small stuff only shows up when it matters"
+  // rule everything else there follows.
+  const goalActionChips = useMemo(() => dueChips.filter((c) => c.kind === "goal"), [dueChips]);
+  const goalMilestoneChips = useMemo(() => dueChips.filter((c) => c.kind === "goal-milestone"), [dueChips]);
 
   const onChipClick = (chip) => {
     if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
@@ -433,7 +437,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             eduItems={eduItems}
             onSetEduDone={setEduDone}
             onGoToEducation={() => setView("education")}
-            goalChips={goalChips}
+            goalActionChips={goalActionChips}
+            goalMilestoneChips={goalMilestoneChips}
             onToggleGoalChip={onChipClick}
             onGoToGoals={() => setView("goals")}
           />

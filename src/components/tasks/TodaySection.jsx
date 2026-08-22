@@ -57,6 +57,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     .filter((t) => !t.done && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id,
+      category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
@@ -81,6 +82,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     return {
       id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id,
       subLabel: `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
+      category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => onToggleDone(next.id, true), onOpen: () => onOpenDetail(next.id),
       onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
@@ -91,24 +93,28 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: "Education", col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
   const goalItems = (goalChips || [])
     .filter((c) => !c.done && c.date && c.date <= todayISO)
-    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
+    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: c.category || "Personal", col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
 
-  // Ordered by raw date proximity — whatever's due soonest (or most overdue) goes on
-  // top, full stop. No tier system based on each item's own "days needed"/urgent-window
-  // setting: that let a task with a bigger self-declared lead window jump ahead of one
-  // due sooner but with a smaller window, which isn't actually more urgent, just
-  // configured differently. Bold/dim display (below) is unaffected — that's still driven
-  // by each item's own urgency window; this only controls list order. Undated items have
-  // no due date to rank by, so they sink to the bottom regardless of how they're styled.
+  // Date still wins outright — whatever's due soonest (or most overdue) goes on top no
+  // matter what category it is. Category only breaks a tie when two things land on the
+  // exact same date: Education first, then everything else, Personal last — a small
+  // nudge for same-day ties, never enough to override actual proximity to the due date.
+  const categoryRank = (it) => {
+    if (it.category === "Education") return 0;
+    if (it.category === "Personal") return 2;
+    return 1;
+  };
   const sortedAll = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
+    if (!a.date && !b.date) return categoryRank(a) - categoryRank(b);
     if (!a.date) return 1;
     if (!b.date) return -1;
-    return a.date.localeCompare(b.date);
+    const dateDiff = a.date.localeCompare(b.date);
+    if (dateDiff !== 0) return dateDiff;
+    return categoryRank(a) - categoryRank(b);
   });
   // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+
   // steps by construction (see confirmPlan), so it's the one category that's honestly

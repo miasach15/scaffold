@@ -3,9 +3,9 @@ import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
-// A goal action with its own due date, shown alongside plain tasks so "what's due" is
-// all in one place — not the goal or milestone itself (those are aggregates whose "done"
-// is derived from their actions, not independently settable), just the concrete step.
+// A milestone's own due date — a real deadline, unlike an action (which is just a day-to-
+// day step and shows in Today instead). A milestone's "done" is derived from whether all
+// its actions are done, not independently settable, so the checkbox just opens Goals too.
 export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
   const CATEGORY_COLORS = useCategoryColors();
   const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
@@ -14,7 +14,7 @@ export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={onToggle} color={col} />
-      <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>Goal</div>
+      <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>Milestone</div>
       <button
         onClick={onOpen}
         title="Go to Goals"

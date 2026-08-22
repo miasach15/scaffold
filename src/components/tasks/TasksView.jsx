@@ -16,7 +16,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -148,9 +148,9 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
   // too, so "what's due" is all in one place — homework, essays, everything.
   const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
 
-  // Goal actions with their own due date — not the goal or milestone itself (those are
-  // aggregates with no independently-settable "done"), just the concrete steps.
-  const goalDeadlines = (goalChips || []).filter((c) => !c.done);
+  // Milestone due dates only — those are real deadlines. Individual goal actions are the
+  // day-to-day small steps, so they show in Today instead, not here.
+  const milestoneDeadlines = (goalMilestoneChips || []).filter((c) => !c.done);
 
   // Ordered by the day each is due, soonest first. Anything with no due date at all has
   // no "day due" to sort by, so it sinks to the bottom instead of breaking the order.
@@ -158,7 +158,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
     ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
     ...groupRows.map((g) => ({ type: "group", date: g.groupDueDate || g.remainingItems[0]?.date || null, group: g })),
     ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
-    ...goalDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c })),
+    ...milestoneDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c })),
   ].sort((a, b) => {
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
@@ -181,7 +181,10 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
       return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
     }
     if (item.type === "goal") {
-      return <GoalDeadlineRow key={`goal-${item.chip.id}`} item={item.chip} onToggle={() => onToggleGoalChip(item.chip)} onOpen={onGoToGoals} />;
+      // A milestone's "done" is derived from whether all its actions are done — there's
+      // no independent toggle for it, so the checkbox just takes you to Goals too, same
+      // as clicking the row itself.
+      return <GoalDeadlineRow key={`goal-${item.chip.id}`} item={item.chip} onToggle={onGoToGoals} onOpen={onGoToGoals} />;
     }
     return (
       <GroupedTaskRow
@@ -215,7 +218,7 @@ export default function TasksView({ tasks, onAddTask, onToggleDone, onSetCategor
         eduItems={eduItems}
         onSetEduDone={onSetEduDone}
         onGoToEducation={onGoToEducation}
-        goalChips={goalChips}
+        goalChips={goalActionChips}
         onToggleGoalChip={onToggleGoalChip}
         onGoToGoals={onGoToGoals}
       />
