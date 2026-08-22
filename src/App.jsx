@@ -139,7 +139,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     if (taskDeleteUndo.undo()) setPendingDeleteTaskId(null);
   };
 
-  const openFocus = (id, title) => setFocusTask({ id, title });
+  // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
+  // down" breakdown) so the Focus Timer can show the whole checklist alongside it —
+  // every call site still just passes (id, title), the lookup happens here.
+  const openFocus = (id, title) => {
+    const full = tasks.find((t) => t.id === id);
+    setFocusTask({ id, title, groupId: full?.groupId || null });
+  };
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
@@ -586,6 +592,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {focusTask && (
         <FocusTimerModal
           task={focusTask}
+          tasks={tasks}
+          onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
           onComplete={() => { setTaskDone(focusTask.id, true); setFocusTask(null); }}
           defaultMinutes={profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25}

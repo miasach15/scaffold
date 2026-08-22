@@ -2,8 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { TASK_COLOR, TONE } from "../../lib/constants";
 import { pad } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import Checkbox from "../shared/Checkbox";
 
-export default function FocusTimerModal({ task, onClose, onComplete, defaultMinutes }) {
+// Fires a real system notification when a session ends — not just the in-app chime,
+// which only helps if you happen to be looking at this tab. Reuses whatever Notification
+// permission the browser already has (e.g. from turning on "What now?" reminders); if it's
+// never been asked, this asks once. Silently does nothing if blocked — the chime still
+// covers that case, this is a bonus, not a requirement.
+async function notifySessionDone(title) {
+  try {
+    if (!("Notification" in window)) return;
+    let permission = Notification.permission;
+    if (permission === "default") permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+    const payload = { body: `${title} — nice focus session.`, icon: "/icon-192.png", tag: "focus-session" };
+    const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    if (reg) reg.showNotification("Focus session done", payload);
+    else new Notification("Focus session done", payload);
+  } catch {
+    // Notifications unavailable/blocked — the in-app chime already covers this moment.
+  }
+}
+
+export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose, onComplete, defaultMinutes }) {
   const initial = (defaultMinutes || 25) * 60;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
@@ -34,9 +55,12 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
   }, [running]);
 
   useEffect(() => {
-    if (remaining === 0 && prevRemainingRef.current !== 0) playChime();
+    if (remaining === 0 && prevRemainingRef.current !== 0) {
+      playChime();
+      notifySessionDone(task.title);
+    }
     prevRemainingRef.current = remaining;
-  }, [remaining]);
+  }, [remaining, task.title]);
 
   const playChime = () => {
     try {
@@ -82,10 +106,16 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
     prevRemainingRef.current = mins * 60;
   };
   const reset = () => { setRunning(false); setRemaining(totalSeconds); prevRemainingRef.current = totalSeconds; };
+  const addMinute = () => { setTotalSeconds((s) => s + 60); setRemaining((r) => r + 60); };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const pct = totalSeconds > 0 ? ((totalSeconds - remaining) / totalSeconds) * 100 : 0;
   const finished = remaining === 0;
+
+  // The rest of this task's breakdown (if it's one step of a "break it down" group) —
+  // shown as a checklist so you can see the whole thing and check off steps without
+  // leaving the timer.
+  const steps = task.groupId ? (tasks || []).filter((t) => t.groupId === task.groupId).sort((a, b) => (a.date || "").localeCompare(b.date || "")) : [];
 
   return (
     <div style={overlayStyle} onClick={onClose}>
@@ -118,10 +148,13 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
         {finished ? (
           <div style={{ fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginBottom: 14 }}>Time's up. Nice focus session.</div>
         ) : (
-          <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginBottom: 14 }}>
             {[15, 25, 50].map((m) => (
               <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : "#4A5568" }}>{m}m</button>
             ))}
+            {running && (
+              <button onClick={addMinute} title="Add a minute without resetting" style={{ ...ghostBtn, padding: "6px 10px", background: "#fff" }}>+1 min</button>
+            )}
           </div>
         )}
 
@@ -129,10 +162,28 @@ export default function FocusTimerModal({ task, onClose, onComplete, defaultMinu
           <button onClick={toggleRunning} disabled={finished} style={{ ...primaryBtn, flex: 1, opacity: finished ? 0.4 : 1 }}>{running ? "Pause" : "Start"}</button>
           <button onClick={reset} className="btn-ghost" style={ghostBtn}>Reset</button>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: steps.length > 0 ? 16 : 0 }}>
           <button onClick={onClose} style={{ ...ghostBtn, flex: 1 }}>Close</button>
           <button onClick={onComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
         </div>
+
+        {steps.length > 0 && (
+          <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
+            <div style={{ fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+              Whole breakdown
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {steps.map((s) => (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={TASK_COLOR} />
+                  <div style={{ flex: 1, fontSize: 13, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1, fontWeight: s.id === task.id ? 700 : 400 }}>
+                    {s.title}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
