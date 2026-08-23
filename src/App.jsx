@@ -9,6 +9,7 @@ import { useJournal } from "./hooks/useJournal";
 import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
+import { useUsageTracking } from "./hooks/useUsageTracking";
 
 import AuthScreen from "./components/auth/AuthScreen";
 import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
@@ -73,6 +74,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem } = useInbox(userId);
 
   const [view, setView] = useState("calendar");
+  useUsageTracking(userId, view);
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   // ISO date string, or null for week view. A cramped 7-column week grid is hard to use
   // on a phone-width screen, so start narrow screens on today's single-day view instead

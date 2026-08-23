@@ -84,6 +84,14 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+-- ---------- usage_events (coarse, aggregate "which section did they open" tracking) ----------
+create table if not exists usage_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  event text not null,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- push_subscriptions (Web Push endpoints for "What now?" notifications) ----------
 create table if not exists push_subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -300,6 +308,7 @@ alter table habit_done_dates enable row level security;
 alter table edu_items enable row level security;
 alter table grade_classes enable row level security;
 alter table grade_categories enable row level security;
+alter table usage_events enable row level security;
 alter table push_subscriptions enable row level security;
 alter table device_push_tokens enable row level security;
 alter table journal_entries enable row level security;
@@ -359,6 +368,10 @@ create policy "own grade_classes" on grade_classes for all
 
 drop policy if exists "own grade_categories" on grade_categories;
 create policy "own grade_categories" on grade_categories for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own usage_events" on usage_events;
+create policy "own usage_events" on usage_events for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own push_subscriptions" on push_subscriptions;
