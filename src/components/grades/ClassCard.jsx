@@ -40,6 +40,7 @@ export default function ClassCard({
   label,
   cls, // { id, gradingMode, categories } — undefined/default when never configured
   items, // all edu items for this subject
+  educationCategory,
   onSetGradingMode,
   onAddCategory,
   onRenameCategory,
@@ -51,7 +52,7 @@ export default function ClassCard({
   onRemoveItem,
 }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const col = CATEGORY_COLORS.Education;
+  const col = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const [expanded, setExpanded] = useState(true);
   const [newCatName, setNewCatName] = useState("");
   const [newCatWeight, setNewCatWeight] = useState("");

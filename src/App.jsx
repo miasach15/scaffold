@@ -64,14 +64,14 @@ function FullScreenMessage({ text }) {
 
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
-  const { events, addEvents, updateEvent, removeEvent } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask } = useTasks(userId);
-  const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate } = useGoals(userId, tasks, events);
+  const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks } = useTasks(userId);
+  const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone, setDoneToday } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
-  const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem } = useInbox(userId);
+  const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
   const [view, setView] = useState("calendar");
   useUsageTracking(userId, view);
@@ -161,8 +161,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // and shows up as a reminder later: Education captures at the top of the Education
   // page, everything else in the Inbox at the top of the Tasks page.
   const handleQuickCapture = (text, category) => addInboxItem(text, category);
-  const eduInboxItems = inboxItems.filter((it) => it.category === "Education");
-  const otherInboxItems = inboxItems.filter((it) => it.category !== "Education");
+  const eduInboxItems = inboxItems.filter((it) => it.category === profile.educationCategory);
+  const otherInboxItems = inboxItems.filter((it) => it.category !== profile.educationCategory);
 
   const days = useMemo(
     () => (dayView ? [new Date(dayView + "T00:00:00")] : Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))),
@@ -263,7 +263,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       // A homework item gets a single reminder task the day before it's due.
       for (const row of rows) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
-        addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: "Education" });
+        addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
       }
     } else if ((type === "Assignment" || type === "Test") && workDays) {
       const workVerb = type === "Test" ? "Study" : "Work on";
@@ -278,7 +278,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
           previewItems.forEach((it) => {
-            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: "Education", notes: it.notes || null });
+            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: profile.educationCategory, notes: it.notes || null });
           });
           return;
         }
@@ -290,12 +290,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         if (isAiSteps) {
           const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks, events);
           effectiveSchedule.steps.forEach((stepTitle, i) => {
-            addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: "Education" });
+            addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: profile.educationCategory });
           });
         } else {
           const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
           for (const d of dates) {
-            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: "Education" });
+            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
           }
         }
       });
@@ -303,7 +303,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   };
 
   const addEduSession = (eduId, sessionTitle, date, time, duration, isAllDay) => {
-    addTask({ title: sessionTitle, date, start: isAllDay ? null : timeToDecimal(time), duration: isAllDay ? null : duration, eduId, category: "Education" });
+    addTask({ title: sessionTitle, date, start: isAllDay ? null : timeToDecimal(time), duration: isAllDay ? null : duration, eduId, category: profile.educationCategory });
   };
 
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
@@ -331,17 +331,24 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     updateProfile({ categoryColors: { ...profile.categoryColors, [category]: swatchKey } });
   };
 
-  // Rename in place (keeps its color/order); the rename doesn't touch existing tasks/
-  // events already tagged with the old name — those keep whatever they were tagged with
-  // and just fall back to a default color since the old name is no longer in the active
-  // list (still fully functional, just not offered as a pick going forward).
+  // Rename in place (keeps its color/order) AND carries every task/event/goal/inbox
+  // item already tagged with the old name over to the new one, so nothing silently
+  // falls back to a default color or drops out of a filter dropdown. If this was the
+  // category currently playing the "Education" role, that tracking moves with it too —
+  // see profile.educationCategory.
   const renameCategory = (oldKey, newKey) => {
     const trimmed = newKey.trim();
     if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
     const nextKeys = categoryKeys.map((k) => (k === oldKey ? trimmed : k));
     const nextColors = { ...profile.categoryColors };
     if (nextColors[oldKey]) { nextColors[trimmed] = nextColors[oldKey]; delete nextColors[oldKey]; }
-    updateProfile({ categoryKeys: nextKeys, categoryColors: nextColors });
+    const patch = { categoryKeys: nextKeys, categoryColors: nextColors };
+    if (oldKey === profile.educationCategory) patch.educationCategory = trimmed;
+    updateProfile(patch);
+    renameCategoryInTasks(oldKey, trimmed);
+    renameCategoryInEvents(oldKey, trimmed);
+    renameCategoryInGoals(oldKey, trimmed);
+    renameCategoryInInbox(oldKey, trimmed);
   };
   const addCategory = (name) => {
     const trimmed = name.trim();
@@ -460,6 +467,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             goalMilestoneChips={goalMilestoneChips}
             onToggleGoalChip={onChipClick}
             onGoToGoals={() => setView("goals")}
+            educationCategory={profile.educationCategory}
           />
         )}
         {view === "goals" && (
@@ -493,6 +501,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             eduItems={eduItems}
             tasks={tasks}
             events={events}
+            educationCategory={profile.educationCategory}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
             onRemoveEduItem={removeEduItem}
@@ -508,6 +517,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           <GradesView
             eduItems={eduItems}
             classes={gradeClasses}
+            educationCategory={profile.educationCategory}
             onSetGradingMode={setGradeMode}
             onAddCategory={addGradeCategory}
             onRenameCategory={renameGradeCategory}

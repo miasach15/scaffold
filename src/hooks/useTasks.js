@@ -131,5 +131,14 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
   }, []);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask };
+  // Renaming a category (see App.jsx's renameCategory) only touched the category list
+  // itself — every task already tagged with the old name silently fell back to a
+  // default color and dropped out of the filter dropdown instead of following the
+  // rename. This carries every matching task over to the new name.
+  const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
+    setTasks((ts) => ts.map((t) => (t.category === oldKey ? { ...t, category: newKey } : t)));
+    await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+  }, [userId]);
+
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere };
 }

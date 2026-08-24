@@ -23,6 +23,9 @@ create table if not exists profiles (
   whatnow_interval_minutes integer not null default 60,
   whatnow_window_start integer not null default 8,
   whatnow_window_end integer not null default 21,
+  -- which of the user's own categories currently plays the "Education" role — tracks a
+  -- rename so Education/Grades pages and priority sorting don't hardcode the name.
+  education_category text not null default 'Education',
   created_at timestamptz not null default now()
 );
 

@@ -13,6 +13,7 @@ export default function EducationView({
   eduItems,
   tasks,
   events,
+  educationCategory,
   onAddEduItem,
   onSetEduDone,
   onRemoveEduItem,
@@ -166,7 +167,7 @@ export default function EducationView({
     return {
       key: `s-${t.id}`, title: t.title, subtitle: parent ? parent.title : null,
       done: t.done, date: t.date, dateLabel: t.start != null ? `${t.date} · ${decimalToTimeLabel(t.start)}` : `${t.date} · all-day`,
-      colorKind: "task",
+      colorKind: "task", category: t.category,
       onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
@@ -187,7 +188,7 @@ export default function EducationView({
 
   return (
     <div>
-      <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." Icon={GraduationCap} tint={CATEGORY_COLORS.Education} />
+      <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." Icon={GraduationCap} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
 
       {inboxItems && inboxItems.length > 0 && (
         <div style={{ marginBottom: 16 }}>

@@ -1,35 +1,25 @@
 import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
 import { EDU_TYPE_COLORS } from "../../lib/constants";
-import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
-import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
-export default function TaskRow({ t, onToggleDone, onSetCategory, onRemove, showDate, onOpenDetail, onSetDate, onSetStart }) {
+// Notion-plain by design: a checkbox and the title, nothing decorative competing for
+// attention. Category is still there (border tint, and still assignable from Task
+// Detail) — it just isn't a separate clickable dot cluttering every row in the list.
+export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDetail, onSetDate, onSetStart }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const categoryKeys = useCategoryKeys();
   const category = t.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
   const tinted = !t.done;
   const [editingDate, setEditingDate] = useState(false);
 
-  const cycleCategory = () => {
-    if (!onSetCategory) return;
-    const i = categoryKeys.indexOf(category);
-    // If the task's current category was renamed/removed since it was set, i is -1 —
-    // land on the first real category instead of NaN-ing the index math.
-    onSetCategory(t.id, categoryKeys[i === -1 ? 0 : (i + 1) % categoryKeys.length]);
-  };
-
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
-      <button onClick={cycleCategory} title={`${category} — click to change category`} style={{ background: "none", border: "none", padding: 0, cursor: onSetCategory ? "pointer" : "default" }}>
-        <Swatch color={col} />
-      </button>
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
       {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}

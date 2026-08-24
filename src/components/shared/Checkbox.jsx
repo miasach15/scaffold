@@ -22,17 +22,17 @@ export default function Checkbox({ checked, onClick, color }) {
     <button
       onClick={onClick}
       style={{
-        width: 20, height: 20, borderRadius: 999, border: `2px solid ${checked ? color.border : "#D1D5DB"}`,
+        width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${checked ? color.border : "#D1D5DB"}`,
         background: checked ? color.border : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", transform: pop ? "scale(1.3)" : "scale(1)",
         transition: "transform 240ms cubic-bezier(.34,1.56,.64,1), background-color 150ms, border-color 150ms",
       }}
     >
-      {checked && <Check size={13} strokeWidth={3} color="#fff" />}
+      {checked && <Check size={12} strokeWidth={3} color="#fff" />}
       {pop && (
         <span
           style={{
-            position: "absolute", inset: -4, borderRadius: 999, border: `2px solid ${color.border}`,
+            position: "absolute", inset: -4, borderRadius: 6, border: `2px solid ${color.border}`,
             animation: "checkboxPingOut 420ms ease-out forwards", pointerEvents: "none",
           }}
         />

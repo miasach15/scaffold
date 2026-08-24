@@ -11,6 +11,7 @@ const NO_SUBJECT_LABEL = "No subject";
 export default function GradesView({
   eduItems,
   classes,
+  educationCategory,
   onSetGradingMode,
   onAddCategory,
   onRenameCategory,
@@ -48,7 +49,7 @@ export default function GradesView({
 
   return (
     <div>
-      <SectionHeader title="Grades" subtitle="One setup per class — total points, or your own weighted categories." Icon={Percent} tint={CATEGORY_COLORS.Education} />
+      <SectionHeader title="Grades" subtitle="One setup per class — total points, or your own weighted categories." Icon={Percent} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
 
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <input
@@ -72,6 +73,7 @@ export default function GradesView({
             label={key || NO_SUBJECT_LABEL}
             cls={classes.find((c) => c.subject === key)}
             items={itemsBySubject(key)}
+            educationCategory={educationCategory}
             onSetGradingMode={onSetGradingMode}
             onAddCategory={onAddCategory}
             onRenameCategory={onRenameCategory}

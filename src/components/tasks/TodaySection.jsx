@@ -24,7 +24,7 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //   4. An Education deadline or goal action — only shows up once actually due/overdue
 //      (today or earlier); these already have their own per-day/per-deadline scheduling.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: "Education", col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: educationCategory, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
 
   const goalItems = (goalChips || [])
     .filter((c) => !c.done && c.date && c.date <= todayISO)
@@ -104,7 +104,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // exact same date: Education first, then everything else, Personal last — a small
   // nudge for same-day ties, never enough to override actual proximity to the due date.
   const categoryRank = (it) => {
-    if (it.category === "Education") return 0;
+    if (it.category === educationCategory) return 0;
     if (it.category === "Personal") return 2;
     return 1;
   };

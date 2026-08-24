@@ -18,6 +18,11 @@ const fromRow = (row) => ({
   whatnowIntervalMinutes: row.whatnow_interval_minutes ?? 60,
   whatnowWindowStart: row.whatnow_window_start ?? 8,
   whatnowWindowEnd: row.whatnow_window_end ?? 21,
+  // Whichever of the user's own categories currently plays the "this is Education-linked
+  // stuff" role — starts as "Education" but tracks a rename (see App.jsx's
+  // renameCategory), so the Education/Grades pages and Today's priority sort keep working
+  // no matter what it's actually called.
+  educationCategory: row.education_category || "Education",
 });
 
 export function useProfile(userId) {
@@ -58,6 +63,7 @@ export function useProfile(userId) {
       if ("whatnowIntervalMinutes" in patch) dbPatch.whatnow_interval_minutes = patch.whatnowIntervalMinutes;
       if ("whatnowWindowStart" in patch) dbPatch.whatnow_window_start = patch.whatnowWindowStart;
       if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
+      if ("educationCategory" in patch) dbPatch.education_category = patch.educationCategory;
       const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
       if (error) console.error("updateProfile failed:", error.message);
     },

@@ -62,5 +62,12 @@ export function useEvents(userId) {
     await supabase.from("events").delete().eq("id", id);
   }, []);
 
-  return { events, loading, addEvents, updateEvent, removeEvent };
+  // See useTasks' renameCategoryEverywhere — same idea, carries every event already
+  // tagged with the old category name over to the new one instead of orphaning it.
+  const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
+    setEvents((es) => es.map((e) => (e.category === oldKey ? { ...e, category: newKey } : e)));
+    await supabase.from("events").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+  }, [userId]);
+
+  return { events, loading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere };
 }

@@ -37,5 +37,12 @@ export function useInbox(userId) {
     await supabase.from("inbox_items").delete().eq("id", id);
   }, []);
 
-  return { items, loading, addItem, removeItem };
+  // See useTasks' renameCategoryEverywhere — carries every inbox item already tagged
+  // with the old category name over to the new one.
+  const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
+    setItems((its) => its.map((it) => (it.category === oldKey ? { ...it, category: newKey } : it)));
+    await supabase.from("inbox_items").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+  }, [userId]);
+
+  return { items, loading, addItem, removeItem, renameCategoryEverywhere };
 }

@@ -264,5 +264,12 @@ export function useGoals(userId, tasks, events) {
     await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
   }, []);
 
-  return { goals, loading, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate };
+  // See useTasks' renameCategoryEverywhere — carries every goal already tagged with the
+  // old category name over to the new one.
+  const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
+    setGoals((gs) => gs.map((g) => (g.category === oldKey ? { ...g, category: newKey } : g)));
+    await supabase.from("goals").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+  }, [userId]);
+
+  return { goals, loading, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere };
 }

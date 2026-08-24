@@ -8,9 +8,9 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 
 export default function WorkItemRow({ item }) {
   const CATEGORY_COLORS = useCategoryColors();
-  // Session/task rows here are always Education-category work sessions, so they're
-  // outlined in the Education category color rather than a fixed task pink.
-  const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : CATEGORY_COLORS.Education;
+  // Session/task rows here are Education-linked work sessions, outlined in whichever
+  // category they're actually tagged with (item.category) rather than a fixed task pink.
+  const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : (CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal);
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
