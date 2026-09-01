@@ -367,7 +367,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         "--primary": theme.primary,
         "--primary-dark": theme.primaryDark,
         "--primary-tint": theme.primaryTint,
-        fontFamily: "'Inter', -apple-system, sans-serif", background: `radial-gradient(circle at 15% 0%, #FFFFFF 0%, ${PAPER_BG} 45%)`, height: "100dvh", color: "#000000",
+        fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, height: "100dvh", color: "#000000",
         display: "flex", flexDirection: "column", overflow: "hidden",
         // Keeps content clear of a notch/Dynamic Island and the home-indicator bar on
         // iPhone (both in the installed PWA and the native app) — a no-op everywhere else.

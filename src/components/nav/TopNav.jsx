@@ -30,7 +30,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenSettin
   ];
 
   return (
-    <div style={{ borderBottom: "1px solid rgba(226,226,226,0.7)", position: "sticky", top: 0, background: "rgba(250,250,250,0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", zIndex: 20 }}>
+    <div style={{ borderBottom: "1px solid #E5E5E5", position: "sticky", top: 0, background: "#FAFAFA", zIndex: 20 }}>
       {/* Below ~640px, "Weekly Review"/"Sign out" collapse to icon-only — with both text
           labels the right-side cluster doesn't fit next to the nav tabs on an iPhone. */}
       <style>{`@media (max-width: 640px) { .topnav-label { display: none; } }`}</style>

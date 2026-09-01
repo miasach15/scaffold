@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 function starPoints(cx, cy, outerR, innerR) {
   const pts = [];
   for (let i = 0; i < 10; i++) {
@@ -14,12 +12,10 @@ function starPoints(cx, cy, outerR, innerR) {
 // goal itself. Built for a visual, at-a-glance sense of "where am I, how far have I
 // come, what's the very next stop" instead of reading a percentage or a checklist —
 // the same idea as a game's level path (Duolingo, etc), which tends to land better for
-// ADHD/visual learners than a plain progress bar. Curved, gradient, a little glow on
-// wherever you currently are — meant to feel alive, not like a corporate flowchart.
+// ADHD/visual learners than a plain progress bar. Flat color, a static ring marks
+// wherever you currently are — no gradient, nothing perpetually animating.
 export default function GoalPath({ milestones, col }) {
   const n = milestones.length;
-  const rawId = useId();
-  const gid = rawId.replace(/[^a-zA-Z0-9]/g, "");
   if (n === 0) return null;
 
   const isDone = (m) => m.actions.length > 0 && m.actions.every((a) => a.done);
@@ -55,25 +51,12 @@ export default function GoalPath({ milestones, col }) {
     ? "Every milestone's done — you're on the home stretch."
     : `${doneCount} of ${n} milestone${n === 1 ? "" : "s"} done — next stop: ${milestones[currentIndex].title}`;
 
-  const dropShadow = { filter: "drop-shadow(0 2px 3px rgba(15,23,42,0.16))" };
-
   return (
     <div style={{ marginBottom: 4 }}>
-      <style>{`
-        @keyframes glowPulse-${gid} { 0%, 100% { transform: scale(1); opacity: .38; } 50% { transform: scale(1.3); opacity: .12; } }
-        .glow-${gid} { animation: glowPulse-${gid} 1.9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-      `}</style>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block", overflow: "visible" }}>
-        <defs>
-          <linearGradient id={`grad-${gid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor={col.border} />
-            <stop offset="100%" stopColor={col.text} />
-          </linearGradient>
-        </defs>
-
         {remainD && <path d={remainD} fill="none" stroke="#DCE1E6" strokeWidth={3} strokeDasharray="1 10" strokeLinecap="round" />}
         {walkedD !== `M ${points[0].x} ${points[0].y}` && (
-          <path d={walkedD} fill="none" stroke={`url(#grad-${gid})`} strokeWidth={5} strokeLinecap="round" style={dropShadow} />
+          <path d={walkedD} fill="none" stroke={col.text} strokeWidth={5} strokeLinecap="round" />
         )}
 
         {milestones.map((m, i) => {
@@ -81,11 +64,11 @@ export default function GoalPath({ milestones, col }) {
           const done = isDone(m);
           const current = i === currentIndex;
           return (
-            <g key={m.id} style={dropShadow}>
-              {current && <circle cx={p.x} cy={p.y} r={17} fill={col.text} className={`glow-${gid}`} />}
+            <g key={m.id}>
+              {current && <circle cx={p.x} cy={p.y} r={17} fill="none" stroke={col.text} strokeWidth={1.5} opacity={0.35} />}
               <circle
                 cx={p.x} cy={p.y} r={current ? 13 : 11}
-                fill={done ? `url(#grad-${gid})` : "#fff"}
+                fill={done ? col.text : "#fff"}
                 stroke={done ? "none" : current ? col.text : "#DCE1E6"}
                 strokeWidth={current ? 2.5 : 2}
               />
@@ -104,9 +87,9 @@ export default function GoalPath({ milestones, col }) {
         {(() => {
           const p = points[n];
           return (
-            <g style={dropShadow}>
-              {atFlag && <circle cx={p.x} cy={p.y} r={20} fill={col.text} className={`glow-${gid}`} />}
-              <circle cx={p.x} cy={p.y} r={15} fill={atFlag ? `url(#grad-${gid})` : "#fff"} stroke={col.text} strokeWidth={2.5} />
+            <g>
+              {atFlag && <circle cx={p.x} cy={p.y} r={20} fill="none" stroke={col.text} strokeWidth={1.5} opacity={0.35} />}
+              <circle cx={p.x} cy={p.y} r={15} fill={atFlag ? col.text : "#fff"} stroke={col.text} strokeWidth={2.5} />
               <polygon points={starPoints(p.x, p.y, 7.5, 3.2)} fill={atFlag ? "#fff" : col.border} />
             </g>
           );
