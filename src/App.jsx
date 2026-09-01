@@ -14,7 +14,7 @@ import { useUsageTracking } from "./hooks/useUsageTracking";
 import AuthScreen from "./components/auth/AuthScreen";
 import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
 import OnboardingQuiz from "./components/onboarding/OnboardingQuiz";
-import TopNav from "./components/nav/TopNav";
+import Sidebar from "./components/nav/Sidebar";
 import CalendarView from "./components/calendar/CalendarView";
 import MonthView from "./components/calendar/MonthView";
 import QuickAddModal from "./components/calendar/QuickAddModal";
@@ -41,7 +41,7 @@ const EducationView = lazy(() => import("./components/education/EducationView"))
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
-import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
+import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -51,18 +51,18 @@ export default function App() {
   if (authLoading) return <FullScreenMessage text="Loading..." />;
   if (passwordRecovery) return <ResetPasswordScreen />;
   if (!user) return <AuthScreen />;
-  return <ScaffoldApp userId={user.id} onSignOut={signOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
+  return <ScaffoldApp userId={user.id} email={user.email} onSignOut={signOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
 }
 
 function FullScreenMessage({ text }) {
   return (
-    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'IBM Plex Sans', -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'Inter', -apple-system, sans-serif" }}>
       {text}
     </div>
   );
 }
 
-function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
+function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
   const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks } = useTasks(userId);
@@ -363,12 +363,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   return (
     <CategoryColorsProvider value={resolvedCategoryColors} keys={categoryKeys}>
     <div
+      className="app-shell"
       style={{
         "--primary": theme.primary,
         "--primary-dark": theme.primaryDark,
         "--primary-tint": theme.primaryTint,
-        fontFamily: "'IBM Plex Sans', -apple-system, sans-serif", background: PAPER_BG, height: "100dvh", color: "#000000",
-        display: "flex", flexDirection: "column", overflow: "hidden",
+        fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, height: "100dvh", color: INK,
+        display: "flex", overflow: "hidden",
         // Keeps content clear of a notch/Dynamic Island and the home-indicator bar on
         // iPhone (both in the installed PWA and the native app) — a no-op everywhere else.
         paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)",
@@ -376,7 +377,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
@@ -385,14 +386,18 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         input:focus, select:focus, textarea:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: #D9D9D9; border-radius: 4px; }
-        .topnav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-        .topnav-scroll::-webkit-scrollbar { display: none; }
         .btn-primary:hover:not(:disabled) { box-shadow: 0 3px 10px rgba(110,147,183,0.35); transform: translateY(-1px); }
         .btn-ghost:hover:not(:disabled) { background: #F5F5F5 !important; border-color: #D1D5DB !important; }
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; transform: translateY(-1px); }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
+        /* Sidebar nav is a column (mobile top bar, then page content) below 861px, and a
+           row (fixed-width rail beside content) at desktop widths — see Sidebar.jsx. */
+        .app-shell { flex-direction: column; }
+        @media (min-width: 861px) {
+          .app-shell { flex-direction: row; }
+        }
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
@@ -402,9 +407,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         }
       `}</style>
 
-      <TopNav
+      <Sidebar
         view={view}
         setView={setView}
+        profile={profile}
+        email={email}
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}

@@ -43,13 +43,15 @@ export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };
 // PRIMARY/PRIMARY_DARK/PRIMARY_TINT resolve to whatever accent theme is currently
 // applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
-// properties on the root element). The fallback values are the default "Violet" theme.
-export const PRIMARY = "var(--primary, #7B6EF0)";
-export const PRIMARY_DARK = "var(--primary-dark, #5849C4)";
-export const PRIMARY_TINT = "var(--primary-tint, #E7E3FC)";
+// properties on the root element). The fallback values are the default "Violet" theme,
+// which is also Scaffold's actual brand color (Blue Violet, #5957B1 — see the Figma
+// brand kit this was matched against).
+export const PRIMARY = "var(--primary, #5957B1)";
+export const PRIMARY_DARK = "var(--primary-dark, #45438C)";
+export const PRIMARY_TINT = "var(--primary-tint, #E4E3F5)";
 
 export const THEME_PRESETS = {
-  violet: { label: "Violet", primary: "#7B6EF0", primaryDark: "#5849C4", primaryTint: "#E7E3FC" },
+  violet: { label: "Violet", primary: "#5957B1", primaryDark: "#45438C", primaryTint: "#E4E3F5" },
   blue: { label: "Blue", primary: "#3E7BFA", primaryDark: "#2A5FD1", primaryTint: "#DCE7FD" },
   green: { label: "Green", primary: "#34A870", primaryDark: "#247A50", primaryTint: "#DBF3E6" },
   rose: { label: "Rose", primary: "#E8608F", primaryDark: "#C23F6C", primaryTint: "#FBE0EA" },
@@ -59,7 +61,15 @@ export const THEME_PRESETS = {
 };
 export const DEFAULT_THEME = "violet";
 
-export const PAPER_BG = "#FAFAFA";
+// Warm paper background + ink/muted/border tones, matched to the Figma brand kit
+// (Instrument Serif + Inter + JetBrains Mono, "Blue Violet" palette). INK replaces
+// pure black for headline/body text, MUTED replaces the old cool grays for secondary
+// text, BORDER replaces the old cool #E5E5E5-ish borders — all warmer to sit right
+// against PAPER_BG. Screens adopt these as each one gets ported to the new look.
+export const PAPER_BG = "#FAF8F5";
+export const INK = "#36302B";
+export const MUTED = "#847B72";
+export const BORDER = "#E4DCD0";
 export const TONE = {
   danger: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
   warn: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
@@ -69,14 +79,21 @@ export const TONE = {
   // slipped is still visibly held onto (it rolls onto Today automatically either way),
   // but it's framed as the app carrying it forward for you, not as a red mark against
   // you — hence the brand purple instead of an alarm color.
-  carried: { bg: "#EDEAFB", border: "#C9BFF0", text: "#5849C4" },
+  carried: { bg: "#EDEAFB", border: "#C9BFF0", text: "#45438C" },
 };
-export const serifFont = "'Playfair Display', 'Georgia', serif";
+// Display/headline accent — Instrument Serif (from the Figma brand kit), replacing
+// Playfair Display. Every screen that already read this constant (Journal, TodaySection,
+// MonthView, CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
+// HabitHistoryModal, SettingsModal) picks up the new font automatically.
+export const serifFont = "'Instrument Serif', Georgia, serif";
+// Small mono accent for tag/label chips (category pills, timers, streak badges) — new
+// in the Figma brand kit, used sparingly, not as a body font.
+export const monoFont = "'JetBrains Mono', 'SF Mono', monospace";
 export const cardStyle = {
   background: "#fff",
-  border: "1px solid #ECECEC",
+  border: `1px solid ${BORDER}`,
   borderRadius: 18,
-  boxShadow: "0 6px 24px rgba(15,23,42,0.05)",
+  boxShadow: "0 4px 24px rgba(54,48,43,0.05)",
   transition: "box-shadow .15s ease, transform .15s ease",
 };
 
