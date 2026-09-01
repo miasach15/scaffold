@@ -1,7 +1,15 @@
 import { useState } from "react";
+import { Calendar as CalendarIcon, Target, Repeat, BookOpen } from "lucide-react";
 import { useAuth } from "../../hooks/AuthProvider";
-import { PAPER_BG, PRIMARY, cardStyle } from "../../lib/constants";
+import { PAPER_BG, PRIMARY, PRIMARY_TINT, cardStyle, serifFont } from "../../lib/constants";
 import { inputStyle, primaryBtn, ghostBtn } from "../../lib/styles";
+
+const MODULE_PREVIEWS = [
+  { icon: CalendarIcon, label: "Today", sub: "3 events, 2 tasks", rot: "-1.1deg" },
+  { icon: Target, label: "Goals", sub: "Finish the draft", rot: "0.9deg" },
+  { icon: Repeat, label: "Habits", sub: "12 day streak", rot: "-0.8deg" },
+  { icon: BookOpen, label: "Journal", sub: "Evening reflection", rot: "1deg" },
+];
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
@@ -67,9 +75,59 @@ export default function AuthScreen() {
         @media (max-width: 640px) {
           input { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
+
+        .auth-shell { display: flex; gap: 36px; width: 100%; max-width: 940px; align-items: center; }
+        .auth-showcase { flex: 1 1 380px; background: ${PRIMARY_TINT}; border-radius: 24px; padding: 44px 40px; display: flex; flex-direction: column; gap: 24px; }
+        .auth-modules { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+        .auth-module-card { background: #fff; border: 1px solid #ECECEC; border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; width: fit-content; box-shadow: 0 6px 24px rgba(15,23,42,0.05); }
+        .auth-formwrap { flex: 1 1 380px; max-width: 400px; }
+
+        @keyframes authFadeUp {
+          from { opacity: 0; transform: translateY(14px) rotate(var(--rot, 0deg)); }
+          to { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
+        }
+        .auth-fade { opacity: 0; animation: authFadeUp 0.55s cubic-bezier(.16,1,.3,1) both; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .auth-fade { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+        }
+
+        @media (max-width: 860px) {
+          .auth-shell { flex-direction: column; max-width: 420px; }
+          .auth-showcase { padding: 24px 22px; width: 100%; }
+          .auth-modules { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+          .auth-module-card { --rot: 0deg !important; }
+          .auth-module-sub { display: none; }
+          .auth-form-title { display: none; }
+        }
       `}</style>
-      <form onSubmit={submit} style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
-        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
+      <div className="auth-shell">
+        <div className="auth-showcase">
+          <div className="auth-fade" style={{ fontFamily: serifFont, fontStyle: "italic", fontWeight: 600, fontSize: 38, color: "#000000", letterSpacing: -0.3 }}>
+            Scaffold
+          </div>
+          <div className="auth-fade" style={{ animationDelay: "70ms", fontSize: 14.5, color: "#5A6472", lineHeight: 1.5, maxWidth: 260 }}>
+            A calm place to plan your day, your goals, and everything in between.
+          </div>
+          <div className="auth-modules">
+            {MODULE_PREVIEWS.map((m, i) => (
+              <div
+                key={m.label}
+                className="auth-fade auth-module-card"
+                style={{ "--rot": m.rot, animationDelay: `${160 + i * 90}ms` }}
+              >
+                <m.icon size={16} strokeWidth={2} color={PRIMARY} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#000000" }}>{m.label}</div>
+                  <div className="auth-module-sub" style={{ fontSize: 11.5, color: "#93A0AD" }}>{m.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="auth-formwrap">
+      <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, animationDelay: "90ms", width: "100%", padding: 28 }}>
+        <div className="auth-form-title" style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 24, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
         <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>
           {mode === "sign-in" ? "Welcome back." : mode === "sign-up" ? "Create an account to save your data." : "We'll email you a link to reset your password."}
         </div>
@@ -127,6 +185,8 @@ export default function AuthScreen() {
           </button>
         )}
       </form>
+        </div>
+      </div>
       <div style={{ position: "fixed", bottom: "calc(18px + env(safe-area-inset-bottom))", fontSize: 11.5, color: "#B4BCC5", display: "flex", gap: 12 }}>
         <a href="/terms.html" style={{ color: "inherit" }}>Terms</a>
         <a href="/privacy.html" style={{ color: "inherit" }}>Privacy</a>
