@@ -396,6 +396,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+          button:active:not(:disabled), .btn-primary:hover:not(:disabled), .hoverable:hover { transform: none !important; }
+        }
       `}</style>
 
       <TopNav
