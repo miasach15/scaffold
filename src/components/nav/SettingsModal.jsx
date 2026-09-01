@@ -60,7 +60,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                   background: active ? theme.primaryTint : "#fff",
                 }}
               >
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryDark})`, boxShadow: active ? `0 0 0 3px ${theme.primaryTint}` : "none" }} />
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: theme.primaryDark, boxShadow: active ? `0 0 0 3px ${theme.primaryTint}` : "none" }} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: active ? theme.primaryDark : "#4A5568" }}>{theme.label}</span>
               </button>
             );
