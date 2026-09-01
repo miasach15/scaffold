@@ -87,7 +87,7 @@ Titles matter a lot here because they get shown as small chips on a calendar, so
 
     if (!res || !res.ok) {
       const friendly = lastErrText.includes("overloaded_error")
-        ? "Claude is a bit overloaded right now — try again in a few seconds."
+        ? "Claude is a bit overloaded right now. Try again in a few seconds."
         : lastErrText;
       return new Response(JSON.stringify({ error: friendly }), { status: 502, headers: corsHeaders });
     }

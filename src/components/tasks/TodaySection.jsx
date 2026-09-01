@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BatteryLow, Clock, Play, Sparkles } from "lucide-react";
+import { BatteryLow, Clock, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { EDU_TYPE_COLORS, TONE, cardStyle, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
@@ -136,7 +136,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
           <button
             onClick={() => setLowEnergy((x) => !x)}
             className="hoverable"
-            title="Hides multi-step projects — just the quick, one-shot stuff for a day when even small things feel big"
+            title="Hides multi-step projects. Just the quick, one-shot stuff for a day when even small things feel big"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "7px 12px 7px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
               background: lowEnergy ? "var(--primary-tint, #E7E3FC)" : "#fff",
@@ -156,7 +156,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
               }}
               title="Picks the one most pressing thing and hides everything else"
             >
-              <Sparkles size={13} strokeWidth={2.3} /> What should I do right now?
+              What should I do right now?
             </button>
           )}
         </div>
@@ -170,7 +170,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
 
       {allRelevant.length === 0 ? (
         <div style={{ fontSize: 15, color: sortedAll.length > 0 ? "#93A0AD" : "#8FCBA3", padding: "8px 0 4px" }}>
-          {sortedAll.length > 0 ? "Everything left today is a bigger project — turn off Low energy to see it." : "Nothing on your plate — nice work."}
+          {sortedAll.length > 0 ? "Everything left today is a bigger project. Turn off Low energy to see it." : "Nothing on your plate. Nice work."}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

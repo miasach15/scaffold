@@ -50,7 +50,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
                   type="time"
                   value={decimalToTimeInput(task.start)}
                   onChange={(e) => onSetStart(task.id, e.target.value ? timeToDecimal(e.target.value) : null)}
-                  title="Optional — a specific time it's due"
+                  title="Optional: a specific time it's due"
                   style={{ ...inputStyle, width: 110, fontSize: 12.5, padding: "5px 8px" }}
                 />
               )}
@@ -81,7 +81,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
             <textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
-              placeholder="Anything extra — e.g. other steps that landed on this same day"
+              placeholder="Anything extra, e.g. other steps that landed on this same day"
               rows={2}
               style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 12.5, marginTop: 3 }}
             />

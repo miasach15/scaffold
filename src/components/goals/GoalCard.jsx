@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Check, X, ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -52,7 +52,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const milestones = data?.milestones || [];
-      if (milestones.length === 0) throw new Error("No plan came back — try renaming the goal to be more specific.");
+      if (milestones.length === 0) throw new Error("No plan came back. Try renaming the goal to be more specific.");
       for (const m of milestones) {
         if (!m.title) continue;
         const milestoneId = await onAddMilestone(goal.id, m.title);
@@ -110,7 +110,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
               ) : goal.deadline ? (
                 <div
                   onClick={() => onSetGoalDeadline && setEditingDeadline(true)}
-                  title={onSetGoalDeadline ? `${formatShortDate(goal.deadline)} — click to change. Changing this spreads dates across anything still undated underneath.` : undefined}
+                  title={onSetGoalDeadline ? `${formatShortDate(goal.deadline)} (click to change). Changing this spreads dates across anything still undated underneath.` : undefined}
                   style={{ cursor: onSetGoalDeadline ? "pointer" : "default" }}
                 >
                   <UrgencyBadge iso={goal.deadline} done={allDone} leadDays={2} />
@@ -118,7 +118,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
               ) : onSetGoalDeadline ? (
                 <button
                   onClick={() => setEditingDeadline(true)}
-                  title="Set an end date — spreads dates across every milestone and action underneath automatically"
+                  title="Set an end date: spreads dates across every milestone and action underneath automatically"
                   style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "transparent", border: "1.5px dashed currentColor", color: col.text, opacity: 0.6, borderRadius: 999, padding: "2px 8px 2px 5px", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}
                 >
                   <Plus size={11} strokeWidth={2.5} /> end date
@@ -148,7 +148,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                 disabled={filling}
                 style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5, opacity: filling ? 0.6 : 1 }}
               >
-                <Sparkles size={12} strokeWidth={2.3} /> {filling ? "Filling it in..." : "Fill this in for me"}
+                {filling ? "Filling it in..." : "Fill this in for me"}
               </button>
               {fillError && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{fillError}</div>}
             </div>

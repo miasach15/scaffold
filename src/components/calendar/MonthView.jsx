@@ -91,7 +91,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
           })}
         </div>
       </div>
-      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>Click any day to zoom in. Tasks aren't shown at this zoom level — switch to Day or Week to see them.</div>
+      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>Click any day to zoom in. Tasks aren't shown at this zoom level: switch to Day or Week to see them.</div>
     </div>
   );
 }

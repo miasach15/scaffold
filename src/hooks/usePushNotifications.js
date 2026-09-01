@@ -79,7 +79,7 @@ export function usePushNotifications(userId) {
       try {
         const status = await PushNotifications.requestPermissions();
         if (status.receive !== "granted") {
-          setError("Notifications were blocked — allow them for Scaffold in iOS Settings to turn this on.");
+          setError("Notifications were blocked. Allow them for Scaffold in iOS Settings to turn this on.");
           setBusy(false);
           return false;
         }
@@ -95,7 +95,7 @@ export function usePushNotifications(userId) {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setError("Notifications were blocked — allow them for this site in your browser settings to turn this on.");
+        setError("Notifications were blocked. Allow them for this site in your browser settings to turn this on.");
         return false;
       }
       const reg = await navigator.serviceWorker.ready;

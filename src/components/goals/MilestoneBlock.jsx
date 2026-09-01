@@ -79,11 +79,11 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
             style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
           />
         ) : milestone.dueDate ? (
-          <div onClick={() => setEditingMilestoneDate(true)} title={`${formatShortDate(milestone.dueDate)} — click to change`} style={{ cursor: "pointer" }}>
+          <div onClick={() => setEditingMilestoneDate(true)} title={`${formatShortDate(milestone.dueDate)} (click to change)`} style={{ cursor: "pointer" }}>
             <UrgencyBadge iso={milestone.dueDate} done={milestoneDone} leadDays={2} />
           </div>
         ) : (
-          <button onClick={() => setEditingMilestoneDate(true)} title="Set a target date — this will auto-fill dates for actions below" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ target date</button>
+          <button onClick={() => setEditingMilestoneDate(true)} title="Set a target date: this will auto-fill dates for actions below" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: "#B4BCC5", fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ target date</button>
         )}
         <button onClick={onRemoveMilestone} className="btn-delete" style={deleteBtn}>×</button>
       </div>
@@ -141,7 +141,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                   style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
                 />
               ) : a.dueDate ? (
-                <div onClick={() => setEditingDateId(a.id)} title={`${formatShortDate(a.dueDate)} — click to change`} style={{ cursor: "pointer" }}>
+                <div onClick={() => setEditingDateId(a.id)} title={`${formatShortDate(a.dueDate)} (click to change)`} style={{ cursor: "pointer" }}>
                   <UrgencyBadge iso={a.dueDate} done={a.done} leadDays={2} />
                 </div>
               ) : (

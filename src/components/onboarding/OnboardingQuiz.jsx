@@ -72,11 +72,11 @@ export default function OnboardingQuiz({ onComplete }) {
         {step === 1 && (
           <div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Your categories</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are yours to change — rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
+            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} />
 
             <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
-            <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 10 }}>Pick as many as you like — this shapes your Goals suggestions.</div>
+            <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 10 }}>Pick as many as you like. This shapes your Goals suggestions.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {categoryKeys.map((c) => (
                 <button

@@ -60,7 +60,7 @@ serve(async (_req) => {
         .forEach((t) => {
           const d = daysUntil(t.date, today);
           const lead = t.lead_days || 2; // same default as the app's TodaySection
-          if (d < 0) items.push({ title: t.title, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
+          if (d < 0) items.push({ title: t.title, sub: d === -1 ? "Carried over" : `Carried over: ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: t.title, sub: "Due today", tone: "warn" });
           else if (d <= lead - 1) items.push({ title: t.title, sub: `Due in ${d} day${d === 1 ? "" : "s"}`, tone: "warn" });
         });
@@ -69,7 +69,7 @@ serve(async (_req) => {
         .filter((e) => e.user_id === user.id && e.due_date)
         .forEach((e) => {
           const d = daysUntil(e.due_date, today);
-          if (d < 0) items.push({ title: `${e.title} (${e.type})`, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
+          if (d < 0) items.push({ title: `${e.title} (${e.type})`, sub: d === -1 ? "Carried over" : `Carried over: ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: `${e.title} (${e.type})`, sub: "Due today", tone: "warn" });
         });
 
@@ -77,7 +77,7 @@ serve(async (_req) => {
         .filter((a) => a.user_id === user.id && a.due_date)
         .forEach((a) => {
           const d = daysUntil(a.due_date, today);
-          if (d < 0) items.push({ title: a.title, sub: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" });
+          if (d < 0) items.push({ title: a.title, sub: d === -1 ? "Carried over" : `Carried over: ${-d}d`, tone: "carried" });
           else if (d === 0) items.push({ title: a.title, sub: "Due today", tone: "warn" });
         });
 
@@ -97,9 +97,9 @@ serve(async (_req) => {
         .join("");
 
       const html = `
-        <div style="font-family: -apple-system, 'Inter', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #FAFAFA;">
+        <div style="font-family: -apple-system, 'IBM Plex Sans', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #FAFAFA;">
           <div style="font-family: Georgia, 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #000000; margin-bottom: 4px;">Scaffold</div>
-          <p style="font-size: 13px; color: #9CA3AF; margin-top: 0;">What's due — ${today}</p>
+          <p style="font-size: 13px; color: #9CA3AF; margin-top: 0;">What's due: ${today}</p>
           <div style="background:#fff; border-radius:12px; padding: 6px 16px; margin-top: 16px;">${rows}</div>
         </div>`;
 

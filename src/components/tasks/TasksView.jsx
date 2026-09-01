@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckSquare, ChevronDown, ChevronUp, Sparkles, NotebookPen, Plus } from "lucide-react";
+import { CheckSquare, ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { TASK_COLOR } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
@@ -49,7 +49,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
-      if (steps.length === 0) throw new Error("No steps came back — try adding a bit more detail.");
+      if (steps.length === 0) throw new Error("No steps came back. Try adding a bit more detail.");
 
       const todayISO = toISO(new Date());
       const startISO = date > todayISO ? todayISO : date;
@@ -258,12 +258,12 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
           <div>
             <div style={fieldLabelStyle}>Due by</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional — a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional: a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
               {date && (
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Optional — a specific time it's due, works fine alongside breaking it down" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Optional: a specific time it's due, works fine alongside breaking it down" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
               )}
               {date && (
-                <select value={repeat} onChange={(e) => setRepeat(e.target.value)} title="For an ongoing chore or routine — creates a separate task on each occurrence" style={{ ...inputStyle, width: 140 }}>
+                <select value={repeat} onChange={(e) => setRepeat(e.target.value)} title="For an ongoing chore or routine: creates a separate task on each occurrence" style={{ ...inputStyle, width: 140 }}>
                   <option value="None">Doesn't repeat</option>
                   <option value="Daily">Every day</option>
                   <option value="Weekdays">Every weekday</option>
@@ -337,7 +337,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                       }}
                       title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
                     >
-                      <Sparkles size={11} strokeWidth={2.3} /> Break it into steps
+                      Break it into steps
                     </button>
                     <button
                       onClick={() => { setBiggerOpen(false); setUseAI(false); setLeadDays(""); }}
@@ -386,7 +386,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       {inboxItems && inboxItems.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <SubHeader>Quick capture ({inboxItems.length})</SubHeader>
-          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier — turn each into a real task, or discard it.</div>
+          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier. Turn each into a real task, or discard it.</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {inboxItems.map((it) => (
               <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Target, Sparkles, Shuffle } from "lucide-react";
+import { Target, Shuffle } from "lucide-react";
 import { SUGGESTED_GOALS, cardStyle } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
@@ -46,7 +46,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const milestones = data?.milestones || [];
-      if (milestones.length === 0) throw new Error("No plan came back — try rephrasing.");
+      if (milestones.length === 0) throw new Error("No plan came back. Try rephrasing.");
 
       const goalId = await onAddGoal(desc, category, outcomeDeadline || null);
       for (const m of milestones) {
@@ -80,11 +80,11 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
   return (
     <div>
-      <SectionHeader title="Goals" subtitle="The big things you're building — a business, an app, a nonprofit, a real project — broken into a clear, day-by-day path." Icon={Target} tint={CATEGORY_COLORS.People} />
+      <SectionHeader title="Goals" subtitle="The big things you're building: a business, an app, a nonprofit, a real project. Broken into a clear, day-by-day path." Icon={Target} tint={CATEGORY_COLORS.People} />
 
       <div style={{ ...cardStyle, padding: 14, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, marginBottom: 6 }}>
-          <Sparkles size={14} color={CATEGORY_COLORS[category]?.text} strokeWidth={2.3} /> Describe what you're building, we'll break it down
+          Describe what you're building, we'll break it down
         </div>
         <textarea
           value={outcome}
@@ -153,7 +153,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState text="No goals here yet — this is the place for the big stuff: a business, an app, a nonprofit, a real project. Small errands belong on Tasks." />
+        <EmptyState text="No goals here yet. This is the place for the big stuff: a business, an app, a nonprofit, a real project. Small errands belong on Tasks." />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((g) => (

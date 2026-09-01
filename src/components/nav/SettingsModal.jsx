@@ -33,7 +33,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
       const data = await exportAllData(userId);
       downloadJSON(data, `scaffold-backup-${toISO(new Date())}.json`);
     } catch (e) {
-      setExportError(e.message || "Export failed — try again.");
+      setExportError(e.message || "Export failed. Try again.");
     } finally {
       setExporting(false);
     }
@@ -70,7 +70,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         {categoryKeys && (
           <>
             <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>
-              Categories — rename, add, or remove your own. Click the pencil to rename, × to remove.
+              Categories: rename, add, or remove your own. Click the pencil to rename, × to remove.
             </div>
             <CategoryEditor
               categoryKeys={categoryKeys}
@@ -82,7 +82,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
           </>
         )}
 
-        <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Category colors — used across the calendar, goals, and onboarding.</div>
+        <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Category colors: used across the calendar, goals, and onboarding.</div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {(categoryKeys || []).map((cat) => {
@@ -115,7 +115,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
             <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
-              "What now?" reminders — a push notification to your phone/desktop pointing at whatever's most worth doing right now.
+              "What now?" reminders: a push notification to your phone/desktop pointing at whatever's most worth doing right now.
             </div>
             <button
               onClick={toggleWhatnow}
@@ -128,7 +128,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
               }}
             >
               <Bell size={14} strokeWidth={2.3} />
-              {push.busy ? "Working on it..." : whatnowNotifications ? "Reminders are on — turn off" : "Turn on reminders"}
+              {push.busy ? "Working on it..." : whatnowNotifications ? "Turn off reminders" : "Turn on reminders"}
             </button>
             {!push.supported && (
               <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>

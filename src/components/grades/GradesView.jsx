@@ -49,7 +49,7 @@ export default function GradesView({
 
   return (
     <div>
-      <SectionHeader title="Grades" subtitle="One setup per class — total points, or your own weighted categories." Icon={Percent} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
+      <SectionHeader title="Grades" subtitle="One setup per class: total points, or your own weighted categories." Icon={Percent} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
 
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <input

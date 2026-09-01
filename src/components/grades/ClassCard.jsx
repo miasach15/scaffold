@@ -115,7 +115,7 @@ export default function ClassCard({
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet — add one below (e.g. Tests, Homework, Participation) and give it a weight.</div>
+                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Tests, Homework, Participation) and give it a weight.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
                   {categories.map((cat) => {
@@ -142,7 +142,7 @@ export default function ClassCard({
                     );
                   })}
                   <div style={{ fontSize: 10.5, color: weightSum === 100 ? "#93A0AD" : "#B0873A" }}>
-                    Weights add up to {weightSum}%{weightSum !== 100 ? " — that's fine, the grade is calculated from whatever's set up so far" : ""}.
+                    Weights add up to {weightSum}%{weightSum !== 100 ? " (that's fine, the grade is calculated from whatever's set up so far)" : ""}.
                   </div>
                 </div>
               )}
@@ -167,7 +167,7 @@ export default function ClassCard({
           )}
 
           {gradedItems.length === 0 ? (
-            <EmptyState text="Nothing completed in this class yet — finished assignments and tests will show up here to score." />
+            <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score." />
           ) : (
             <div>
               {gradedItems.map((item) => (

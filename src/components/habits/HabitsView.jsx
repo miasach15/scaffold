@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Repeat, History, Shuffle } from "lucide-react";
+import { Check, Repeat, History, Shuffle } from "lucide-react";
 import { HABIT_COLOR, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
@@ -74,7 +74,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 >
                   <div style={{ fontWeight: 600, fontSize: 14.5 }}>{h.title}</div>
                   <div style={{ fontSize: 11.5, color: "#8B95A1", marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
-                    <History size={11} strokeWidth={2.3} /> {h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total — view history
+                    <History size={11} strokeWidth={2.3} /> {h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total, view history
                   </div>
                 </button>
                 <button
@@ -85,9 +85,11 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                     border: `1.5px solid ${doneToday ? HABIT_COLOR.border : "#E2E8F0"}`,
                     background: doneToday ? HABIT_COLOR.bg : "#fff",
                     color: doneToday ? HABIT_COLOR.text : "#8A93A0",
+                    display: "inline-flex", alignItems: "center", gap: 5,
                   }}
                 >
-                  {doneToday ? "✓ Done today" : "Mark done"}
+                  {doneToday && <Check size={13} strokeWidth={2.5} />}
+                  {doneToday ? "Done today" : "Mark done"}
                 </button>
                 <button onClick={() => onRemoveHabit(h.id)} className="btn-delete" style={deleteBtn}>×</button>
               </div>

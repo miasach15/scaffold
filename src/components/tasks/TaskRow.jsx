@@ -42,7 +42,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
               type="time"
               value={decimalToTimeInput(t.start)}
               onChange={(e) => onSetStart(t.id, e.target.value ? timeToDecimal(e.target.value) : null)}
-              title="Optional — a specific time it's due"
+              title="Optional: a specific time it's due"
               style={{ ...inputStyle, width: 96, fontSize: 11.5, padding: "3px 6px" }}
             />
           )}
@@ -54,7 +54,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
         // you change them.
         <button
           onClick={() => setEditingDate(true)}
-          title={`${formatShortDate(t.date)}${t.start != null ? ` · ${decimalToTimeLabel(t.start)}` : ""} — click to change`}
+          title={`${formatShortDate(t.date)}${t.start != null ? ` · ${decimalToTimeLabel(t.start)}` : ""} (click to change)`}
           style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" }}
         >
           {t.done ? <span style={{ fontSize: 12, color: "#93A0AD" }}>{formatShortDate(t.date)}</span> : <UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} />}

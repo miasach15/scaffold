@@ -19,7 +19,7 @@ export default function StickyNoteCorner({ onCapture }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        title="Sticky note — jot something down"
+        title="Sticky note: jot something down"
         style={{
           position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: "calc(20px + env(safe-area-inset-right))", zIndex: 80, width: 44, height: 44, borderRadius: "10px 10px 3px 10px",
           background: "#FFF7D6", border: "1px solid #EFD98A", boxShadow: "0 6px 16px rgba(0,0,0,0.14)",

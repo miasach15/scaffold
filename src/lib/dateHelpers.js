@@ -62,9 +62,9 @@ export const urgencyInfo = (iso, done, leadDays) => {
   // of keeping it in front of you. Same fact (it rolls onto Today either way — see
   // rollOverdueToToday), softer frame, and deliberately not the same alarm color as
   // something genuinely due today/soon (below) — that distinction is the whole point.
-  if (d < 0) return { label: d === -1 ? "Carried over" : `Carried over — ${-d}d`, tone: "carried" };
+  if (d < 0) return { label: d === -1 ? "Carried over" : `Carried over: ${-d}d`, tone: "carried" };
   if (leadDays && d <= leadDays - 1) {
-    return { label: d === 0 ? "Due today" : `Urgent — ${d} day${d === 1 ? "" : "s"} left`, tone: "danger" };
+    return { label: d === 0 ? "Due today" : `Urgent: ${d} day${d === 1 ? "" : "s"} left`, tone: "danger" };
   }
   if (d === 0) return { label: "Due today", tone: "warn" };
   if (d === 1) return { label: "Due tomorrow", tone: "warn" };

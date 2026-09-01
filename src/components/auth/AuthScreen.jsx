@@ -35,7 +35,7 @@ export default function AuthScreen() {
         setError(err.message);
         return;
       }
-      setInfo("If an account exists for that email, a reset link is on its way — check your inbox.");
+      setInfo("If an account exists for that email, a reset link is on its way. Check your inbox.");
       return;
     }
 

@@ -48,8 +48,8 @@ export default function GoalPath({ milestones, col }) {
   }
 
   const caption = atFlag
-    ? "Every milestone's done — you're on the home stretch."
-    : `${doneCount} of ${n} milestone${n === 1 ? "" : "s"} done — next stop: ${milestones[currentIndex].title}`;
+    ? "Every milestone's done. You're on the home stretch."
+    : `${doneCount} of ${n} milestone${n === 1 ? "" : "s"} done. Next stop: ${milestones[currentIndex].title}`;
 
   return (
     <div style={{ marginBottom: 4 }}>

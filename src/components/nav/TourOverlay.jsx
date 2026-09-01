@@ -1,27 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { GripHorizontal, Sparkles } from "lucide-react";
+import { GripHorizontal } from "lucide-react";
 import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 const CORE_STEPS = [
   { type: "view", view: "calendar", title: "Welcome to Scaffold", bullets: [
     "This is meant to be on your side, not another thing keeping score on you.",
-    "Nothing you don't finish gets buried — it just carries forward to today, no red marks for being late.",
+    "Nothing you don't finish gets buried. It just carries forward to today, no red marks for being late.",
     "One day at a time: today's list, a clear next step, and everything else can wait its turn.",
   ] },
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
-  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner — type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
-  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today — everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["This is for the big stuff — a business, an app, a nonprofit, a real project (small errands go on Tasks)", "Give it an end date and it schedules milestones + steps around your actual calendar for you", "Watch your path toward it fill in as you go"] },
+  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner: type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
+  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
+  { type: "view", view: "goals", title: "Goals", bullets: ["This is for the big stuff: a business, an app, a nonprofit, a real project (small errands go on Tasks)", "Give it an end date and it schedules milestones + steps around your actual calendar for you", "Watch your path toward it fill in as you go"] },
   { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },
   { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt, or free write", "Type your thoughts", "Save when you're done"] },
   { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },
-  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories — Tests 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime — it comes right back in Total points mode if you still have items in it"] },
+  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories: Tests 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime. It comes right back in Total points mode if you still have items in it"] },
 ];
 
 const MODAL_STEPS = [
-  { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Turn on \"What now?\" reminders — a nudge toward whatever's most worth doing right now", "Replay this tour anytime"] },
-  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished this week", "Wins only — no guilt trip about what's still pending", "Open it anytime up top"] },
+  { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Turn on \"What now?\" reminders: a nudge toward whatever's most worth doing right now", "Replay this tour anytime"] },
+  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished this week", "Wins only, no guilt trip about what's still pending", "Open it anytime up top"] },
 ];
 
 export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
@@ -85,7 +85,7 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.4 }}>
           <GripHorizontal size={13} strokeWidth={2.3} color="#B4BCC5" />
-          <Sparkles size={13} strokeWidth={2.3} /> {i + 1} of {steps.length}
+          {i + 1} of {steps.length}
         </div>
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip tour</button>
       </div>

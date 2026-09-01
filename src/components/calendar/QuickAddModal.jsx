@@ -118,7 +118,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
         )}
         {isEdit && repeat !== "None" && (
           <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, lineHeight: 1.4 }}>
-            This turns this event into a repeating series — future occurrences will be added when you save.
+            This turns this event into a repeating series. Future occurrences will be added when you save.
           </div>
         )}
         {isEdit && confirmDelete ? (

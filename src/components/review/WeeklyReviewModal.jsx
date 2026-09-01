@@ -87,13 +87,13 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
               <ReviewSection title={`Tasks completed (${tasksDone.length})`} items={tasksDone.map((t) => t.title)} color={TASK_COLOR} />
             )}
             {actionsDone.length > 0 && (
-              <ReviewSection title={`Goal actions completed (${actionsDone.length})`} items={actionsDone.map((a) => `${a.title} — ${a.goal}`)} color={CATEGORY_COLORS.Personal} />
+              <ReviewSection title={`Goal actions completed (${actionsDone.length})`} items={actionsDone.map((a) => `${a.title} · ${a.goal}`)} color={CATEGORY_COLORS.Personal} />
             )}
             {eduDone.length > 0 && (
               <ReviewSection title={`Education items completed (${eduDone.length})`} items={eduDone.map((e) => `${e.type}: ${e.title}`)} color={EDU_TYPE_COLORS.Assignment} />
             )}
             {habitStats.length > 0 && (
-              <ReviewSection title="Habits kept up" items={habitStats.map((h) => `${h.title} — ${h.count}x this week`)} color={HABIT_COLOR} />
+              <ReviewSection title="Habits kept up" items={habitStats.map((h) => `${h.title} · ${h.count}x this week`)} color={HABIT_COLOR} />
             )}
             {entriesThisWeek.length > 0 && (
               <div style={{ fontSize: 13, color: "#5A6472", marginBottom: 6 }}>{entriesThisWeek.length} journal {entriesThisWeek.length === 1 ? "entry" : "entries"} written this week.</div>

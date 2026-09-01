@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { GraduationCap, NotebookPen, Sparkles } from "lucide-react";
+import { GraduationCap, NotebookPen } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -93,7 +93,7 @@ export default function EducationView({
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
-      if (steps.length === 0) throw new Error("No steps came back — try adding more detail.");
+      if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
       const schedule = { steps };
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
     } catch (e) {
@@ -193,7 +193,7 @@ export default function EducationView({
       {inboxItems && inboxItems.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <SubHeader>Quick capture ({inboxItems.length})</SubHeader>
-          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier — file each one in properly, or discard it.</div>
+          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier. File each one in properly, or discard it.</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {inboxItems.map((it) => (
               <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>
@@ -261,14 +261,14 @@ export default function EducationView({
               display: "inline-flex", alignItems: "center", gap: 4,
             }}
           >
-            <Sparkles size={11} strokeWidth={2.3} /> Break it down with AI
+            Break it down with AI
           </button>
           {useAI && (
             <div style={{ marginTop: 8 }}>
               <textarea
                 value={assignmentDetails}
                 onChange={(e) => setAssignmentDetails(e.target.value)}
-                placeholder="Paste or describe the assignment instructions — we'll turn them into ordered work steps leading up to the due date."
+                placeholder="Paste or describe the assignment instructions. We'll turn them into ordered work steps leading up to the due date."
                 rows={3}
                 style={{ ...inputStyle, width: "100%", resize: "vertical" }}
               />

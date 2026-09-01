@@ -15,7 +15,7 @@ async function notifySessionDone(title) {
     let permission = Notification.permission;
     if (permission === "default") permission = await Notification.requestPermission();
     if (permission !== "granted") return;
-    const payload = { body: `${title} — nice focus session.`, icon: "/icon-192.png", tag: "focus-session" };
+    const payload = { body: `${title}. Nice focus session.`, icon: "/icon-192.png", tag: "focus-session" };
     const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
     if (reg) reg.showNotification("Focus session done", payload);
     else new Notification("Focus session done", payload);

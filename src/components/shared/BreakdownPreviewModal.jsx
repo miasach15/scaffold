@@ -18,10 +18,10 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
       <div style={{ ...modalStyle, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>Here's the plan</div>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{heading}</div>
-        <div style={{ fontSize: 11.5, color: "#B4BCC5", marginBottom: 12 }}>Edit or remove anything before it's added — one task per day.</div>
+        <div style={{ fontSize: 11.5, color: "#B4BCC5", marginBottom: 12 }}>Edit or remove anything before it's added: one task per day.</div>
 
         {items.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: "#B4BCC5", marginBottom: 18, padding: "10px 0" }}>Nothing left to add — cancel, or go back and try again.</div>
+          <div style={{ fontSize: 12.5, color: "#B4BCC5", marginBottom: 18, padding: "10px 0" }}>Nothing left to add. Cancel, or go back and try again.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {items.map((it, i) => (

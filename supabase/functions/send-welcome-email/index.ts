@@ -24,9 +24,9 @@ serve(async (req) => {
     }
 
     const html = `
-      <div style="font-family: -apple-system, 'Inter', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #FAFAFA;">
+      <div style="font-family: -apple-system, 'IBM Plex Sans', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #FAFAFA;">
         <div style="font-family: Georgia, 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: #000000; margin-bottom: 6px;">Scaffold</div>
-        <p style="font-size: 15px; color: #2A2A2A; line-height: 1.5;">Welcome — your calendar, tasks, goals, habits, and journal, all in one quiet place.</p>
+        <p style="font-size: 15px; color: #2A2A2A; line-height: 1.5;">Welcome. Your calendar, tasks, goals, habits, and journal, all in one quiet place.</p>
         <p style="font-size: 14px; color: #5A6472; line-height: 1.5;">Once you confirm your email and sign in, a quick tour will walk you through every page.</p>
         <p style="font-size: 12px; color: #9CA3AF; margin-top: 32px;">You're getting this because you signed up at Scaffold.</p>
       </div>
