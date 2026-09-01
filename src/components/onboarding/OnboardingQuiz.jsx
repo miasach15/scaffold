@@ -44,9 +44,9 @@ export default function OnboardingQuiz({ onComplete }) {
   const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'IBM Plex Sans', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
@@ -54,7 +54,7 @@ export default function OnboardingQuiz({ onComplete }) {
         input:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
       `}</style>
       <div style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
+        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>
           {steps.map((s, i) => (
             <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY : "#E5E7EB" }} />

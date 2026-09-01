@@ -35,7 +35,7 @@ export default function TopNav({ view, setView, onOpenWeeklyReview, onOpenSettin
           labels the right-side cluster doesn't fit next to the nav tabs on an iPhone. */}
       <style>{`@media (max-width: 640px) { .topnav-label { display: none; } }`}</style>
       <div style={{ padding: "10px 12px 0", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, flexShrink: 0 }}>
+        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 21, color: "#000000", fontWeight: 600, letterSpacing: -0.3, flexShrink: 0 }}>
           Scaffold
         </div>
         <div className="topnav-scroll" style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "nowrap", overflowX: "auto", minWidth: 0 }}>

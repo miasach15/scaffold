@@ -30,7 +30,7 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'IBM Plex Sans', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
@@ -41,7 +41,7 @@ export default function ResetPasswordScreen() {
         }
       `}</style>
       <form onSubmit={submit} style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Set a new password</div>
+        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Set a new password</div>
         <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>Choose a new password for your Scaffold account.</div>
 
         <label style={{ fontSize: 11.5, fontWeight: 600, color: "#93A0AD", display: "block", marginBottom: 4 }}>New password</label>

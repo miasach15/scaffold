@@ -57,9 +57,9 @@ export default function AuthScreen() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'IBM Plex Sans', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
@@ -69,7 +69,7 @@ export default function AuthScreen() {
         }
       `}</style>
       <form onSubmit={submit} style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
+        <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
         <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>
           {mode === "sign-in" ? "Welcome back." : mode === "sign-up" ? "Create an account to save your data." : "We'll email you a link to reset your password."}
         </div>

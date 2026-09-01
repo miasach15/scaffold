@@ -102,7 +102,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                   >
                     <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 700, letterSpacing: 0.6 }}>{dayLabel(d).toUpperCase()}</div>
                     <div style={{
-                      fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 700, marginTop: 3, width: 32, height: 32, lineHeight: "32px",
+                      fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 15, fontWeight: 700, marginTop: 3, width: 32, height: 32, lineHeight: "32px",
                       borderRadius: "50%", margin: "3px auto 0",
                       background: isToday ? PRIMARY : "transparent", color: isToday ? "#fff" : "#000000",
                     }}>{dateLabel(d)}</div>
