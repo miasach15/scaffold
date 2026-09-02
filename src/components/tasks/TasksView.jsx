@@ -26,18 +26,16 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it into steps" — for a task that's really a multi-day project
-  const [scheduleMode, setScheduleMode] = useState("every"); // "every" = every day up to the due date, "pick" = only chosen weekdays
-  const [pickedDays, setPickedDays] = useState([1, 2, 3, 4, 5]); // day-of-week ints (0=Sun..6=Sat), only used in "pick" mode
+  const [scheduleMode, setScheduleMode] = useState("every"); // "every" = use the whole window, "pick" = cap it to N free days
+  const [pickDaysCount, setPickDaysCount] = useState(""); // how many days, not which — see distributeDatesByLoad's maxDays
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
   const [showLater, setShowLater] = useState(false); // "Later" bucket in the main list stays collapsed by default — don't turn a long task list into its own wall of overwhelm
 
-  const togglePickedDay = (d) => setPickedDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
-
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setRepeat("None"); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickedDays([1, 2, 3, 4, 5]); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setRepeat("None"); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -57,8 +55,8 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       const startISO = date > todayISO ? todayISO : date;
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const allowedDays = scheduleMode === "pick" ? pickedDays : null;
-      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events, allowedDays);
+      const maxDays = scheduleMode === "pick" && Number(pickDaysCount) >= 1 ? Number(pickDaysCount) : null;
+      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events, maxDays);
       setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] }))) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
@@ -350,30 +348,24 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                           background: scheduleMode === "pick" ? "var(--primary-tint, #E7E3FC)" : "#fff",
                           color: scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
-                        title="Only land steps on specific days of the week"
+                        title="Only use a set number of your least-busy days — this figures out which ones"
                       >
                         Pick days
                       </button>
                     </div>
                     {scheduleMode === "pick" && (
-                      <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
-                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label, d) => {
-                          const active = pickedDays.includes(d);
-                          return (
-                            <button
-                              key={label}
-                              onClick={() => togglePickedDay(d)}
-                              style={{
-                                width: 40, padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
-                                border: `1.5px solid ${active ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                                background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                                color: active ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                              }}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          placeholder="Days"
+                          value={pickDaysCount}
+                          onChange={(e) => setPickDaysCount(e.target.value)}
+                          title="How many days you're free to spread this across — picks your quietest days automatically"
+                          style={{ ...inputStyle, width: 70 }}
+                        />
+                        <span style={{ fontSize: 12, color: "#93A0AD" }}>days you're free</span>
                       </div>
                     )}
                   </div>

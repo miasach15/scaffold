@@ -182,27 +182,44 @@ export const distributeDates = (startISO, endISO, count) => {
 // so both count toward the same load. On an empty calendar this is identical to
 // distributeDates (evenly spread, not clumped at the start); the more the calendar
 // already has booked, the more it pulls new items away from your busier days.
-// allowedDays: optional array of day-of-week ints (0=Sun..6=Sat) — restricts which days in
-// the window are eligible ("pick days" mode, e.g. only Mon/Wed/Fri). Omitted, empty, or a
-// selection that matches nothing in the window all fall back to every day in the window
-// ("every day" mode — also the original, pre-existing behavior when this param is unused).
-export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, allowedDays) => {
+// maxDays: optional cap on how many distinct calendar days to use ("pick days" mode) —
+// this is a COUNT, not a choice of which weekdays. It picks the maxDays quietest/freest
+// days anywhere in the window (ties broken toward the earlier date) and spreads/packs the
+// steps across just those, so "pick days" reads as "I only have N days free for this,"
+// with this figuring out which N — not "only ever on Mondays." Omitted, 0, or >= the
+// window size all fall back to using every day in the window ("every day" mode — also the
+// original, pre-existing behavior when this param is unused).
+export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, maxDays) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
   const totalDays = Math.max(0, Math.round((end - start) / 86400000));
 
+  const loadByDate = {};
+  (existingTasks || []).forEach((t) => {
+    if (!t.date) return;
+    loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
+  });
+  (existingEvents || []).forEach((e) => {
+    if (!e.date) return;
+    loadByDate[e.date] = (loadByDate[e.date] || 0) + 1;
+  });
+  const loadOf = (offset) => loadByDate[toISO(addDays(start, offset))] || 0;
+
   let pool = [];
   for (let o = 0; o <= totalDays; o++) pool.push(o);
-  if (allowedDays && allowedDays.length) {
-    const restricted = pool.filter((o) => allowedDays.includes(addDays(start, o).getDay()));
-    if (restricted.length) pool = restricted;
+  if (maxDays && maxDays > 0 && maxDays < pool.length) {
+    pool = pool
+      .slice()
+      .sort((a, b) => loadOf(a) - loadOf(b) || a - b)
+      .slice(0, maxDays)
+      .sort((a, b) => a - b);
   }
   const availableSlots = pool.length;
 
   if (count > availableSlots) {
     // Not enough distinct eligible days — pack multiple items onto the same days, evenly,
-    // but never past endISO or off the allowed days (load-balancing doesn't apply here
+    // but never past endISO or off the chosen days (load-balancing doesn't apply here
     // since every eligible day in the window is going to get used regardless).
     return Array.from({ length: count }, (_, i) => toISO(addDays(start, pool[Math.min(pool.length - 1, Math.floor((i * availableSlots) / count))])));
   }
@@ -217,17 +234,6 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
     if (idxs[i] >= idxs[i + 1]) idxs[i] = idxs[i + 1] - 1;
   }
   let offsets = idxs.map((idx) => pool[idx]);
-
-  const loadByDate = {};
-  (existingTasks || []).forEach((t) => {
-    if (!t.date) return;
-    loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
-  });
-  (existingEvents || []).forEach((e) => {
-    if (!e.date) return;
-    loadByDate[e.date] = (loadByDate[e.date] || 0) + 1;
-  });
-  const loadOf = (offset) => loadByDate[toISO(addDays(start, offset))] || 0;
 
   const chosen = new Set(offsets);
   let guard = 0;

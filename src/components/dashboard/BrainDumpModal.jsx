@@ -48,14 +48,15 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
   const organize = () => {
     const lines = dump.split("\n").map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) return;
-    setDrafts(lines.map((text) => ({ id: uid(), title: cleanupTaskTitle(text), category: "Personal", date: "", breakdown: false })));
+    setDrafts(lines.map((text) => ({ id: uid(), title: cleanupTaskTitle(text), category: "Personal", date: "", breakdown: false, scheduleMode: "every", pickDaysCount: "" })));
   };
 
   const updateDraft = (id, patch) => setDrafts((ds) => ds.map((d) => (d.id === id ? { ...d, ...patch } : d)));
   const removeDraft = (id) => setDrafts((ds) => ds.filter((d) => d.id !== id));
 
   // Mirrors TasksView's breakDownTask + confirmPlan: same edge function, same
-  // load-balanced date spread, same single-step-collapses-to-a-plain-task rule.
+  // load-balanced date spread (with the same "pick days" = a count of your quietest
+  // free days, not a choice of weekdays), same single-step-collapses-to-a-plain-task rule.
   const addAsBreakdown = async (d) => {
     const { data, error } = await supabase.functions.invoke("generate-task-plan", {
       body: { title: d.title, details: "", dueDate: d.date },
@@ -71,7 +72,8 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
     const startISO = d.date > todayISO ? todayISO : d.date;
     const lastWorkDay = dayBefore(d.date);
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-    const dates = distributeDatesByLoad(startISO, endISO, stepTitles.length, tasks, events);
+    const maxDays = d.scheduleMode === "pick" && Number(d.pickDaysCount) >= 1 ? Number(d.pickDaysCount) : null;
+    const dates = distributeDatesByLoad(startISO, endISO, stepTitles.length, tasks, events, maxDays);
     const grouped = groupItemsByDate(stepTitles.map((title, i) => ({ title, date: dates[i] })));
     const groupId = grouped.length > 1 ? uid() : null;
     grouped.forEach((it) =>
@@ -190,6 +192,51 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                         </button>
                       )}
                     </div>
+                    {d.date && d.breakdown && (
+                      <div style={{ marginTop: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <button
+                            onClick={() => updateDraft(d.id, { scheduleMode: "every" })}
+                            style={{
+                              padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                              border: `1px solid ${d.scheduleMode === "every" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                              background: d.scheduleMode === "every" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              color: d.scheduleMode === "every" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                            }}
+                            title="Steps can land on any day between now and the due date"
+                          >
+                            Every day
+                          </button>
+                          <button
+                            onClick={() => updateDraft(d.id, { scheduleMode: "pick" })}
+                            style={{
+                              padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                              border: `1px solid ${d.scheduleMode === "pick" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                              background: d.scheduleMode === "pick" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              color: d.scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                            }}
+                            title="Only use a set number of your least-busy days — this figures out which ones"
+                          >
+                            Pick days
+                          </button>
+                        </div>
+                        {d.scheduleMode === "pick" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+                            <input
+                              type="number"
+                              min={1}
+                              max={30}
+                              placeholder="Days"
+                              value={d.pickDaysCount}
+                              onChange={(e) => updateDraft(d.id, { pickDaysCount: e.target.value })}
+                              title="How many days you're free to spread this across — picks your quietest days automatically"
+                              style={{ ...inputStyle, width: 60, fontSize: 11.5, padding: "3px 6px" }}
+                            />
+                            <span style={{ fontSize: 11, color: "#93A0AD" }}>days you're free</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
