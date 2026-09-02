@@ -1,8 +1,14 @@
 import { useMemo, useState } from "react";
 import { Brain, Clock, Flame, RotateCw } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
+
+// Flat experiment: no white card fill/border/shadow, sections just sit directly on the
+// page's own background — one continuous surface instead of white boxes on gray. Spacing
+// alone carries the separation between sections now, so the gaps around it were widened
+// a bit to compensate for losing the card outlines.
+const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -51,7 +57,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ ...flatSection, padding: "14px 24px 6px", marginBottom: 20, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
           {greeting()}{firstName ? `, ${firstName}` : ""}
         </div>
@@ -66,11 +72,11 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14, flex: 1, minHeight: 0 }} className="dashboard-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr !important; } }`}</style>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, minHeight: 0 }}>
-          <div style={{ ...cardStyle, padding: "14px 20px", flexShrink: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
+          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
             </div>
@@ -96,7 +102,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
             {timeline.length === 0 && todaysUntimed.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
@@ -107,7 +113,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                   return (
                     <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0 }}>{decimalToTimeLabel(item.start)}</div>
-                      <div style={{ flex: 1, background: "#F5F7FA", borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
+                      <div style={{ flex: 1, background: "#fff", borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
                         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
                       </div>
@@ -134,8 +140,8 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, minHeight: 0 }}>
-          <div style={{ ...cardStyle, padding: "22px 24px", flexShrink: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
+          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
               <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
               <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
@@ -171,7 +177,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...cardStyle, padding: "14px 20px", flexShrink: 0 }}>
+          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Goal Progress</div>
               <button onClick={() => setView("goals")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: PRIMARY_DARK, padding: 0 }}>View All</button>
@@ -191,7 +197,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>No habits yet.</div>
@@ -216,7 +222,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing due soon.</div>
