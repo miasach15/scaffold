@@ -10,6 +10,7 @@ import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
 import { useUsageTracking } from "./hooks/useUsageTracking";
+import { supabase } from "./lib/supabase";
 
 import AuthScreen from "./components/auth/AuthScreen";
 import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
@@ -365,6 +366,18 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     updateProfile({ categoryKeys: categoryKeys.filter((k) => k !== key) });
   };
 
+  // Every table's user_id column is "references auth.users(id) on delete cascade" (see
+  // schema.sql), so deleting the auth user is enough — Postgres wipes everything else
+  // (profile, tasks, events, goals, habits, journal, all of it) on its own. The edge
+  // function verifies the caller's own JWT server-side before doing anything; it never
+  // trusts a client-supplied id for something this destructive.
+  const deleteAccount = async () => {
+    const { data, error } = await supabase.functions.invoke("delete-account", {});
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    await onSignOut();
+  };
+
   return (
     <CategoryColorsProvider value={resolvedCategoryColors} keys={categoryKeys}>
     <div
@@ -592,6 +605,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           whatnowWindowStart={profile.whatnowWindowStart}
           whatnowWindowEnd={profile.whatnowWindowEnd}
           onUpdateProfile={updateProfile}
+          onDeleteAccount={deleteAccount}
           onClose={() => setShowSettings(false)}
         />
       )}
