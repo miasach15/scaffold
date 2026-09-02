@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, PAPER_BG, PRIMARY, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, PAPER_BG, PRIMARY_DARK, SUGGESTED_HABITS, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { Monogram } from "../shared/Misc";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 import CategoryEditor from "../shared/CategoryEditor";
 
@@ -51,32 +52,41 @@ export default function OnboardingQuiz({ onComplete }) {
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
+        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.14); }
+
+        @keyframes onboardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .onboard-card { animation: onboardIn 0.5s cubic-bezier(.16,1,.3,1) both; }
+        @media (prefers-reduced-motion: reduce) {
+          .onboard-card { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+        }
       `}</style>
-      <div style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
+      <div className="onboard-card" style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <Monogram size={26} />
+          <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
+        </div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>
           {steps.map((s, i) => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY : "#E5E7EB" }} />
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY_DARK : BORDER, transition: "background-color .2s ease" }} />
           ))}
         </div>
 
         {step === 0 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>What should we call you?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>Just for a personal touch, totally optional.</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>What should we call you?</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Just for a personal touch, totally optional.</div>
             <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" style={{ ...inputStyle, width: "100%" }} onKeyDown={(e) => e.key === "Enter" && setStep(1)} />
           </div>
         )}
 
         {step === 1 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Your categories</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} />
 
-            <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
-            <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 10 }}>Pick as many as you like. This shapes your Goals suggestions.</div>
+            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
+            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 10 }}>Pick as many as you like. This shapes your Goals suggestions.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {categoryKeys.map((c) => (
                 <button
@@ -84,9 +94,9 @@ export default function OnboardingQuiz({ onComplete }) {
                   onClick={() => toggleFocus(c)}
                   style={{
                     padding: "9px 16px", borderRadius: 999, fontSize: 13.5, fontWeight: 700,
-                    border: `1.5px solid ${focusAreas.includes(c) ? categoryColorMap[c].border : "#E5E9ED"}`,
+                    border: `1.5px solid ${focusAreas.includes(c) ? categoryColorMap[c].border : BORDER}`,
                     background: focusAreas.includes(c) ? categoryColorMap[c].bg : "#fff",
-                    color: focusAreas.includes(c) ? categoryColorMap[c].text : "#93A0AD",
+                    color: focusAreas.includes(c) ? categoryColorMap[c].text : MUTED,
                   }}
                 >
                   {c}
@@ -98,8 +108,8 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 2 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>Any habits you want to start with?</div>
-            <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 14 }}>These'll already be in your Habits list. You can always add more later.</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Any habits you want to start with?</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These'll already be in your Habits list. You can always add more later.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {SUGGESTED_HABITS.map((h) => (
                 <button
@@ -107,9 +117,9 @@ export default function OnboardingQuiz({ onComplete }) {
                   onClick={() => toggleHabit(h)}
                   style={{
                     padding: "8px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600,
-                    border: `1.5px solid ${habitPicks.includes(h) ? HABIT_COLOR.border : "#E5E9ED"}`,
+                    border: `1.5px solid ${habitPicks.includes(h) ? HABIT_COLOR.border : BORDER}`,
                     background: habitPicks.includes(h) ? HABIT_COLOR.bg : "#fff",
-                    color: habitPicks.includes(h) ? HABIT_COLOR.text : "#93A0AD",
+                    color: habitPicks.includes(h) ? HABIT_COLOR.text : MUTED,
                   }}
                 >
                   {h}
@@ -121,8 +131,8 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 3 && (
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
-            <div style={{ fontSize: 13.5, color: "#5A6472", lineHeight: 1.6, marginBottom: 6 }}>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
+            <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, marginBottom: 6 }}>
               {focusAreas.length > 0 && <>Focusing on {focusAreas.join(", ")}. </>}
               {habitPicks.length > 0 && <>Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}. </>}
             </div>
@@ -133,13 +143,13 @@ export default function OnboardingQuiz({ onComplete }) {
           {step > 0 && <button onClick={() => setStep((s) => s - 1)} style={ghostBtn}>Back</button>}
           <div style={{ flex: 1 }} />
           {step < lastStep ? (
-            <button onClick={() => setStep((s) => s + 1)} style={primaryBtn}>Next</button>
+            <button onClick={() => setStep((s) => s + 1)} className="btn-primary" style={primaryBtn}>Next</button>
           ) : (
-            <button onClick={finish} style={primaryBtn}>Get started</button>
+            <button onClick={finish} className="btn-primary" style={primaryBtn}>Get started</button>
           )}
         </div>
         {step < lastStep && (
-          <button onClick={skip} style={{ ...ghostBtn, border: "none", background: "none", marginTop: 10, fontSize: 12, color: "#9CA3AF", padding: 0 }}>Skip for now</button>
+          <button onClick={skip} style={{ ...ghostBtn, border: "none", background: "none", marginTop: 10, fontSize: 12, color: MUTED, padding: 0 }}>Skip for now</button>
         )}
       </div>
     </div>
