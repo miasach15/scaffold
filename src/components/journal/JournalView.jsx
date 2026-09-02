@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BookOpen } from "lucide-react";
-import { JOURNAL_PROMPTS, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, JOURNAL_PROMPTS, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -32,7 +32,7 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
     <div>
       <SectionHeader title="Journal" Icon={BookOpen} tint={CATEGORY_COLORS.Personal} />
 
-      <div style={{ ...cardStyle, padding: 16, marginBottom: 20 }}>
+      <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 16, marginBottom: 20 }}>
         <div data-tour="journal-prompt" style={{ display: "flex", gap: 6, marginBottom: 12 }}>
           {Object.keys(JOURNAL_PROMPTS).map((c) => (
             <FilterPill key={c} label={c} active={category === c} onClick={() => { setCategory(c); shuffle(c); }} />
@@ -65,9 +65,9 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
       {sorted.length === 0 ? (
         <EmptyState text="No entries yet. Your first one is right above." />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {sorted.map((e) => (
-            <div key={e.id} className="hoverable" style={{ ...cardStyle, padding: "12px 14px" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {sorted.map((e, i) => (
+            <div key={e.id} className="hoverable" style={{ borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, padding: "12px 0" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                 <div style={{ fontSize: 11.5, color: "#8B95A1", fontWeight: 600 }}>{e.date}</div>
                 <button onClick={() => onRemoveEntry(e.id)} className="btn-delete" style={deleteBtn}>×</button>

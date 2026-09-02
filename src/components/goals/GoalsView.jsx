@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Target } from "lucide-react";
-import { cardStyle } from "../../lib/constants";
+import { BORDER } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
@@ -72,7 +72,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
     <div>
       <SectionHeader title="Goals" subtitle="The big things you're building: a business, an app, a nonprofit, a real project. Broken into a clear, day-by-day path." Icon={Target} tint={CATEGORY_COLORS.People} />
 
-      <div style={{ ...cardStyle, padding: 14, marginBottom: 16 }}>
+      <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 16, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, marginBottom: 6 }}>
           Describe what you're building, we'll break it down
         </div>

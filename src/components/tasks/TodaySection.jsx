@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BatteryLow, Clock, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { EDU_TYPE_COLORS, TONE, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, EDU_TYPE_COLORS, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
@@ -144,7 +144,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   const actionable = allRelevant.filter((it) => !it.done);
 
   return (
-    <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>
+    <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 500, color: "#000000" }}>Today</div>

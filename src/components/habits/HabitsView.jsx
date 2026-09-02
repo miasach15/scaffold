@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Flame } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
@@ -82,14 +82,17 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           </div>
           <div style={{ borderTop: `1px solid ${BORDER}`, marginBottom: 14 }} />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {habits.map((h) => {
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {habits.map((h, i) => {
               const streak = currentStreak(h.doneDates);
               return (
                 <div
                   key={h.id}
                   className="hoverable"
-                  style={{ ...cardStyle, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}
+                  style={{
+                    borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, padding: "16px 0",
+                    display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+                  }}
                 >
                   <button
                     onClick={() => setHistoryHabitId(h.id)}
