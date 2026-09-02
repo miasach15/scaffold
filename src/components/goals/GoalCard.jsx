@@ -8,7 +8,7 @@ import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-const RING_TRACK = "#DBEAFE";
+const RING_TRACK = "#DDE1EE";
 
 // A goal's overall completion, at a glance — separate from each category's own color
 // (the tag chip), this ring is always the same brand accent so it reads as one

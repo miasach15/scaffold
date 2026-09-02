@@ -43,25 +43,32 @@ export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };
 // PRIMARY/PRIMARY_DARK/PRIMARY_TINT resolve to whatever accent theme is currently
 // applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
-// properties on the root element). The fallback values are the default "Ocean" theme —
-// Scaffold's actual brand color per the connected Figma identity kit. The kit's own
-// "Ocean Blue" (#93C5FD) is a pale accent, not dark enough for white-on-color text, so
-// PRIMARY_DARK is a deeper blue in the same hue for buttons/rings/anything that needs
-// real contrast — PRIMARY stays the lighter accent for borders/strokes/chip text.
-export const PRIMARY = "var(--primary, #93C5FD)";
-export const PRIMARY_DARK = "var(--primary-dark, #2563EB)";
-export const PRIMARY_TINT = "var(--primary-tint, #EFF6FF)";
+// properties on the root element). The fallback values are the default "Ocean" theme,
+// matched to the connected Figma identity kit's settings-accent-color-picker — its
+// main brand color moved from a pale sky blue to this indigo/purple-leaning blue.
+// PRIMARY_DARK is a deeper shade of the same hue for buttons/rings/anything that needs
+// real white-on-color contrast; PRIMARY stays the source accent for borders/strokes/text.
+export const PRIMARY = "var(--primary, #3C5FD0)";
+export const PRIMARY_DARK = "var(--primary-dark, #2140A3)";
+export const PRIMARY_TINT = "var(--primary-tint, #DDE1EE)";
 
+// Matched 1:1 to the Figma kit's 10-swatch accent picker (settings-accent-color-picker),
+// hex-sampled directly from its color-dot assets. primaryDark/primaryTint are derived
+// from each swatch's own hue (not part of the kit) so every theme gets a legible
+// button/ring shade and a soft wash, the same way the original 7 presets did.
 export const THEME_PRESETS = {
-  violet: { label: "Ocean", primary: "#93C5FD", primaryDark: "#2563EB", primaryTint: "#EFF6FF" },
-  blue: { label: "Blue", primary: "#3E7BFA", primaryDark: "#2A5FD1", primaryTint: "#DCE7FD" },
-  green: { label: "Green", primary: "#34A870", primaryDark: "#247A50", primaryTint: "#DBF3E6" },
-  rose: { label: "Rose", primary: "#E8608F", primaryDark: "#C23F6C", primaryTint: "#FBE0EA" },
-  orange: { label: "Orange", primary: "#F0923B", primaryDark: "#C96F1F", primaryTint: "#FCE7D2" },
-  teal: { label: "Teal", primary: "#2CAFA0", primaryDark: "#1D8478", primaryTint: "#D8F2EE" },
-  slate: { label: "Slate", primary: "#5B6472", primaryDark: "#3F4653", primaryTint: "#E4E7EB" },
+  ocean: { label: "Ocean", primary: "#3C5FD0", primaryDark: "#2140A3", primaryTint: "#DDE1EE" },
+  blue: { label: "Blue", primary: "#3B9FE3", primaryDark: "#1476B8", primaryTint: "#DBE8F0" },
+  green: { label: "Green", primary: "#22A06B", primaryDark: "#126844", primaryTint: "#DCEFE7" },
+  rose: { label: "Rose", primary: "#FF8EAE", primaryDark: "#CC003A", primaryTint: "#F2D9E0" },
+  orange: { label: "Orange", primary: "#FF9C44", primaryDark: "#CC6000", primaryTint: "#F2E5D9" },
+  teal: { label: "Teal", primary: "#00B8A9", primaryDark: "#007A70", primaryTint: "#D9F2F0" },
+  slate: { label: "Slate", primary: "#6B7280", primaryDark: "#464E5D", primaryTint: "#E4E5E7" },
+  coral: { label: "Coral", primary: "#FF6F61", primaryDark: "#CC1200", primaryTint: "#F2DBD9" },
+  lavender: { label: "Lavender", primary: "#8B5CF6", primaryDark: "#4006C6", primaryTint: "#E1D9F2" },
+  sky: { label: "Sky", primary: "#D08FF1", primaryDark: "#8212BA", primaryTint: "#E9DBF0" },
 };
-export const DEFAULT_THEME = "violet";
+export const DEFAULT_THEME = "ocean";
 
 // Cool surface + ink/muted/border tones, matched to the connected Figma identity kit
 // ("Fresh, Modern, Airy" — Instrument Serif + Inter). INK replaces pure black for
@@ -80,7 +87,7 @@ export const TONE = {
   // slipped is still visibly held onto (it rolls onto Today automatically either way),
   // but it's framed as the app carrying it forward for you, not as a red mark against
   // you — hence the brand color instead of an alarm color.
-  carried: { bg: "#EFF6FF", border: "#BFDBFE", text: "#2563EB" },
+  carried: { bg: "#DDE1EE", border: "#B1BBDD", text: "#2140A3" },
 };
 // Display/headline accent — Instrument Serif (from the Figma identity kit). Every
 // screen that already reads this constant (Journal, TodaySection, MonthView,

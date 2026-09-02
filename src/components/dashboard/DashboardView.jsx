@@ -73,7 +73,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                     onClick={() => { onSelectDay(iso); setView("calendar"); }}
                     style={{
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 2px",
-                      borderRadius: 10, background: isToday ? "#EFF6FF" : "transparent", border: `1px solid ${isToday ? "#BFDBFE" : "transparent"}`,
+                      borderRadius: 10, background: isToday ? "#DDE1EE" : "transparent", border: `1px solid ${isToday ? "#B1BBDD" : "transparent"}`,
                       cursor: "pointer",
                     }}
                   >
@@ -134,7 +134,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
             <div style={{ position: "relative", width: 148, height: 148, margin: "0 auto 20px" }}>
               <svg width={148} height={148} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={74} cy={74} r={63} fill="none" stroke="#EFEAE3" strokeWidth={13} />
+                <circle cx={74} cy={74} r={63} fill="none" stroke="#DDE1EE" strokeWidth={13} />
                 <circle
                   cx={74} cy={74} r={63} fill="none" stroke={PRIMARY_DARK} strokeWidth={13} strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 63} strokeDashoffset={2 * Math.PI * 63 * 0.04}
@@ -171,7 +171,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                   <div style={{ fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeGoal.goal.title}</div>
                   <div style={{ fontWeight: 700, color: PRIMARY_DARK, flexShrink: 0, marginLeft: 8 }}>{activeGoal.pct}%</div>
                 </div>
-                <div style={{ height: 6, borderRadius: 3, background: "#DBEAFE", overflow: "hidden" }}>
+                <div style={{ height: 6, borderRadius: 3, background: "#DDE1EE", overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${activeGoal.pct}%`, background: PRIMARY_DARK, borderRadius: 3 }} />
                 </div>
               </div>
