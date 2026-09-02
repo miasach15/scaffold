@@ -233,7 +233,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   };
 
   const completeOnboarding = async (answers) => {
-    await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, focusAreas: answers.focusAreas, workStyle: answers.workStyle, onboarded: true });
+    await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, focusAreas: answers.focusAreas, workStyle: answers.workStyle, educationCategory: answers.educationCategory, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
   };
 
@@ -338,8 +338,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   // Rename in place (keeps its color/order) AND carries every task/event/goal/inbox
   // item already tagged with the old name over to the new one, so nothing silently
   // falls back to a default color or drops out of a filter dropdown. If this was the
-  // category currently playing the "Education" role, that tracking moves with it too —
-  // see profile.educationCategory.
+  // category currently playing the "School"/Education role, that tracking moves with
+  // it too — see profile.educationCategory.
   const renameCategory = (oldKey, newKey) => {
     const trimmed = newKey.trim();
     if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
@@ -361,6 +361,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   };
   const removeCategory = (key) => {
     if (categoryKeys.length <= 1) return; // always keep at least one category to assign things to
+    if (key === profile.educationCategory) return; // permanent — Education/Grades tasks always need somewhere to land
     updateProfile({ categoryKeys: categoryKeys.filter((k) => k !== key) });
   };
 
@@ -581,6 +582,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           onRenameCategory={renameCategory}
           onAddCategory={addCategory}
           onRemoveCategory={removeCategory}
+          protectedCategory={profile.educationCategory}
           onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}

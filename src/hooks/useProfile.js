@@ -19,10 +19,11 @@ const fromRow = (row) => ({
   whatnowWindowStart: row.whatnow_window_start ?? 8,
   whatnowWindowEnd: row.whatnow_window_end ?? 21,
   // Whichever of the user's own categories currently plays the "this is Education-linked
-  // stuff" role — starts as "Education" but tracks a rename (see App.jsx's
-  // renameCategory), so the Education/Grades pages and Today's priority sort keep working
-  // no matter what it's actually called.
-  educationCategory: row.education_category || "Education",
+  // stuff" role — starts as "School" but tracks a rename (see App.jsx's renameCategory),
+  // so the Education/Grades pages and Today's priority sort keep working no matter what
+  // it's actually called. This is the one category CategoryEditor won't let get removed
+  // (see protectedKey) — Education/Grades tasks always need somewhere to land.
+  educationCategory: row.education_category || "School",
 });
 
 export function useProfile(userId) {

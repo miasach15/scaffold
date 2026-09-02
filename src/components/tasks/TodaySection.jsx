@@ -28,6 +28,12 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
+  // Checking something off here shouldn't yank it out of the list mid-glance — it stays
+  // put, just visibly checked, so there's a moment of "yes, that's done" instead of it
+  // vanishing instantly. This is session-local (resets on reload), not a real "recently
+  // completed" log — once you leave and come back, done items fall out of Today as usual.
+  const [justDone, setJustDone] = useState(() => new Set());
+  const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
   // Persisted, not just session state — a low-energy day doesn't end when you close a
   // tab, so this should still be on next time you open the app rather than silently
   // reverting and putting the big stuff back in front of you.
@@ -54,12 +60,12 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // commitments; snoozing those would just be lying to yourself about when they're due,
   // so they don't get one.
   const taskItems = tasks
-    .filter((t) => !t.done && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
+    .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
-      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id,
+      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done,
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
-      onToggle: () => onToggleDone(t.id, true), onOpen: () => onOpenDetail(t.id),
+      onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenDetail(t.id),
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
 
@@ -80,7 +86,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     const groupTitle = steps.find((s) => s.groupTitle)?.groupTitle || next.title;
     const groupDueDate = steps.find((s) => s.groupDueDate)?.groupDueDate || null;
     return {
-      id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id,
+      id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: false,
       subLabel: `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
@@ -92,12 +98,20 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Education deadlines and goal actions aren't real Tasks rows, so there's no Focus
   // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
-    .filter((e) => !e.done && e.dueDate && e.dueDate <= todayISO)
-    .map((e) => ({ id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: educationCategory, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework, onToggle: () => onSetEduDone(e.id, true), onOpen: onGoToEducation }));
+    .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO)
+    .map((e) => ({
+      id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, done: e.done,
+      category: educationCategory, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework,
+      onToggle: () => { if (!e.done) markJustDone(`edu-${e.id}`); onSetEduDone(e.id, !e.done); }, onOpen: onGoToEducation,
+    }));
 
   const goalItems = (goalChips || [])
-    .filter((c) => !c.done && c.date && c.date <= todayISO)
-    .map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, category: c.category || "Personal", col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal, onToggle: () => onToggleGoalChip(c), onOpen: onGoToGoals }));
+    .filter((c) => (!c.done || justDone.has(`goal-${c.id}`)) && c.date && c.date <= todayISO)
+    .map((c) => ({
+      id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, done: c.done,
+      category: c.category || "Personal", col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal,
+      onToggle: () => { if (!c.done) markJustDone(`goal-${c.id}`); onToggleGoalChip(c); }, onOpen: onGoToGoals,
+    }));
 
   // Date still wins outright — whatever's due soonest (or most overdue) goes on top no
   // matter what category it is. Category only breaks a tie when two things land on the
@@ -124,6 +138,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   const relevant = expanded ? allRelevant : allRelevant.slice(0, VISIBLE_CAP);
   const hiddenCount = allRelevant.length - relevant.length;
   const hiddenForEnergy = lowEnergy ? sortedAll.length - allRelevant.length : 0;
+  // Items kept visible purely because they were just checked off (see justDone) don't
+  // count as "still on your plate" — "What should I do right now?" should only ever
+  // suggest something not actually done yet.
+  const actionable = allRelevant.filter((it) => !it.done);
 
   return (
     <div style={{ ...cardStyle, padding: "26px 28px", marginBottom: 22, boxShadow: "0 4px 18px rgba(15,23,42,0.04)" }}>
@@ -146,7 +164,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
           >
             <BatteryLow size={13} strokeWidth={2.3} /> Low energy
           </button>
-          {allRelevant.length > 0 && (
+          {actionable.length > 0 && (
             <button
               onClick={() => setWhatNowOpen(true)}
               className="hoverable"
@@ -187,15 +205,16 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
             const active = it.isGroup || overdue || dueToday || urgent; // full-priority state
             const tagLabel = overdue || urgent ? info.label : null;
             return (
-              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: active ? 1 : 0.65 }}>
-                <Checkbox checked={false} onClick={it.onToggle} color={it.col} />
+              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: it.done ? 0.5 : active ? 1 : 0.65 }}>
+                <Checkbox checked={!!it.done} onClick={it.onToggle} color={it.col} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button
                     onClick={it.onOpen}
                     style={{
                       display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0,
-                      fontSize: active ? 16.5 : 15, fontWeight: active ? 500 : 400,
-                      color: overdue ? TONE.carried.text : urgent ? TONE.warn.text : "#000000",
+                      fontSize: active && !it.done ? 16.5 : 15, fontWeight: active && !it.done ? 500 : 400,
+                      color: it.done ? "#000000" : overdue ? TONE.carried.text : urgent ? TONE.warn.text : "#000000",
+                      textDecoration: it.done ? "line-through" : "none",
                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}
                   >
@@ -203,13 +222,13 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                   </button>
                   {it.isGroup && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>
-                {tagLabel && (
+                {!it.done && tagLabel && (
                   <div style={{ fontSize: 11, color: overdue ? TONE.carried.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
                 )}
-                {waitingOnWindow && (
+                {!it.done && waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>
                 )}
-                {it.onSnooze && (
+                {!it.done && it.onSnooze && (
                   <button
                     onClick={it.onSnooze}
                     title="Push this to tomorrow"
@@ -219,7 +238,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                     <Clock size={12} strokeWidth={2.3} />
                   </button>
                 )}
-                {it.focusId && onOpenFocus && (
+                {!it.done && it.focusId && onOpenFocus && (
                   <button
                     onClick={() => onOpenFocus(it.focusId, it.title)}
                     title="Start a focus timer on this now"
@@ -251,7 +270,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
         </div>
       )}
 
-      {whatNowOpen && <WhatNowModal items={allRelevant} onClose={() => setWhatNowOpen(false)} onOpenFocus={onOpenFocus} />}
+      {whatNowOpen && <WhatNowModal items={actionable} onClose={() => setWhatNowOpen(false)} onOpenFocus={onOpenFocus} />}
     </div>
   );
 }

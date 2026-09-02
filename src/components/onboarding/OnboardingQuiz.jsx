@@ -16,6 +16,10 @@ export default function OnboardingQuiz({ onComplete }) {
   const [categoryKeys, setCategoryKeys] = useState(DEFAULT_CATEGORY_KEYS);
   const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
+  // Whichever category plays the Education/Grades role — starts as "School" (the
+  // permanent one, see CategoryEditor's protectedKey) but tracks a rename here too, same
+  // as App.jsx's renameCategory does post-onboarding.
+  const [eduKey, setEduKey] = useState(DEFAULT_CATEGORY_KEYS[0]);
 
   const colorFor = (key, i) => CATEGORY_COLORS[key] || CATEGORY_COLOR_SWATCHES[FALLBACK_CATEGORY_COLOR_ROTATION[i % FALLBACK_CATEGORY_COLOR_ROTATION.length]];
   const categoryColorMap = Object.fromEntries(categoryKeys.map((k, i) => [k, colorFor(k, i)]));
@@ -25,6 +29,7 @@ export default function OnboardingQuiz({ onComplete }) {
     if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
     setCategoryKeys((ks) => ks.map((k) => (k === oldKey ? trimmed : k)));
     setFocusAreas((f) => f.map((k) => (k === oldKey ? trimmed : k)));
+    if (oldKey === eduKey) setEduKey(trimmed);
   };
   const addCategory = (name2) => {
     const trimmed = name2.trim();
@@ -33,6 +38,7 @@ export default function OnboardingQuiz({ onComplete }) {
   };
   const removeCategory = (key) => {
     if (categoryKeys.length <= 1) return;
+    if (key === eduKey) return; // permanent — Education/Grades tasks always need somewhere to land
     setCategoryKeys((ks) => ks.filter((k) => k !== key));
     setFocusAreas((f) => f.filter((k) => k !== key));
   };
@@ -42,8 +48,8 @@ export default function OnboardingQuiz({ onComplete }) {
 
   const steps = ["Name", "Focus", "Habits", "Done"];
   const lastStep = steps.length - 1;
-  const finish = () => onComplete({ name: name.trim(), categoryKeys, focusAreas, habitPicks, workStyle: "Mix of both" });
-  const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both" });
+  const finish = () => onComplete({ name: name.trim(), categoryKeys, focusAreas, habitPicks, workStyle: "Mix of both", educationCategory: eduKey });
+  const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both", educationCategory: DEFAULT_CATEGORY_KEYS[0] });
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -83,8 +89,8 @@ export default function OnboardingQuiz({ onComplete }) {
         {step === 1 && (
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
-            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. Not everyone needs "Education", and yours might need one this doesn't have.</div>
-            <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} />
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. "School" is the one permanent category — Education and Grades tasks always need it — but you can rename it to whatever fits, and yours might need one this doesn't have.</div>
+            <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} protectedKey={eduKey} />
 
             <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
             <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 10 }}>Pick as many as you like. This shapes your Goals suggestions.</div>

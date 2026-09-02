@@ -10,7 +10,7 @@ import CategoryEditor from "../shared/CategoryEditor";
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -78,6 +78,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
               onRename={onRenameCategory}
               onAdd={onAddCategory}
               onRemove={onRemoveCategory}
+              protectedKey={protectedCategory}
             />
           </>
         )}

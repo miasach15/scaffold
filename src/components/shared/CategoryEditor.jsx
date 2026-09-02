@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Pencil, Plus, X } from "lucide-react";
+import { Lock, Pencil, Plus, X } from "lucide-react";
 import { ghostBtn, inputStyle } from "../../lib/styles";
 
 // Rename, add, or remove categories — shown as editable pill chips in the user's own
 // colors. Used in both Settings and the onboarding quiz so the same controls work
-// everywhere the category set can be changed.
-export default function CategoryEditor({ categoryKeys, categoryColors, onRename, onAdd, onRemove }) {
+// everywhere the category set can be changed. protectedKey (optional) is a category that
+// can be renamed but never removed — its × is replaced with a small lock instead.
+export default function CategoryEditor({ categoryKeys, categoryColors, onRename, onAdd, onRemove, protectedKey }) {
   const [editingKey, setEditingKey] = useState(null);
   const [draft, setDraft] = useState("");
   const [newName, setNewName] = useState("");
@@ -55,10 +56,16 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
               <button onClick={() => startEdit(key)} title="Rename" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
                 <Pencil size={11} strokeWidth={2.3} />
               </button>
-              {categoryKeys.length > 1 && (
-                <button onClick={() => onRemove(key)} title="Remove" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
-                  <X size={12} strokeWidth={2.3} />
-                </button>
+              {key === protectedKey ? (
+                <span title="Always here — this category can't be removed" style={{ color: col.text, opacity: 0.5, padding: 3, display: "flex" }}>
+                  <Lock size={11} strokeWidth={2.3} />
+                </span>
+              ) : (
+                categoryKeys.length > 1 && (
+                  <button onClick={() => onRemove(key)} title="Remove" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
+                    <X size={12} strokeWidth={2.3} />
+                  </button>
+                )
               )}
             </div>
           );

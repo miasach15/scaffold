@@ -16,10 +16,13 @@ export const CATEGORY_COLOR_SWATCHES = {
 
 // The starting set before a user renames/adds/removes any — after that, the live list
 // lives on the profile (categoryKeys) and flows through CategoryColorsContext instead.
-// CATEGORY_KEYS is kept as an alias for any pre-load/fallback rendering.
-export const DEFAULT_CATEGORY_KEYS = ["Education", "Personal", "Health", "People"];
+// CATEGORY_KEYS is kept as an alias for any pre-load/fallback rendering. "School" is the
+// one permanent category — see profile.educationCategory / CategoryEditor's protectedKey
+// — since Education/Grades tasks always need somewhere to land; it can be renamed but
+// never removed.
+export const DEFAULT_CATEGORY_KEYS = ["School", "Personal", "Health", "People"];
 export const CATEGORY_KEYS = DEFAULT_CATEGORY_KEYS;
-export const DEFAULT_CATEGORY_COLOR_KEYS = { Education: "blue", Personal: "pink", Health: "green", People: "purple" };
+export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "blue", Personal: "pink", Health: "green", People: "purple" };
 // Colors assigned to a custom category that isn't one of the 4 defaults and hasn't been
 // explicitly recolored yet — cycles through so several new categories don't all end up
 // the same color.
@@ -28,7 +31,7 @@ export const FALLBACK_CATEGORY_COLOR_ROTATION = ["teal", "orange", "indigo", "ye
 // Default-theme category colors, used as the CategoryColorsContext fallback and
 // anywhere rendered before a user's customization has loaded.
 export const CATEGORY_COLORS = {
-  Education: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Education],
+  School: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.School],
   Personal: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Personal],
   Health: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Health],
   People: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.People],
