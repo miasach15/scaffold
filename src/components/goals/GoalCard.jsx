@@ -3,24 +3,31 @@ import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { INK, MUTED, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
+// Matched to the connected Figma file: every goal card uses this same calm blue
+// (its "Cornflower / secondary" brand swatch) for its border, regardless of the
+// goal's own category color — category identity lives in the tag chip instead, so
+// the card itself stays calm rather than the whole page going full of saturated washes.
+export const GOAL_CARD_BORDER = "#96BEE3";
+const RING_TRACK = "#CDE2F5";
+
 // A goal's overall completion, at a glance — separate from each category's own color
-// (the tag chip/card wash), this ring is always the same brand accent so it reads as
-// one consistent "how done is this" marker across every goal on the page.
-function CompletionRing({ pct, size = 40 }) {
+// (the tag chip), this ring is always the same brand accent so it reads as one
+// consistent "how done is this" marker across every goal on the page.
+function CompletionRing({ pct, size = 48 }) {
   const stroke = 3.5;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEAE3" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={RING_TRACK} strokeWidth={stroke} />
         <circle
-          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={PRIMARY_DARK} strokeWidth={stroke}
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={PRIMARY} strokeWidth={stroke}
           strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} strokeLinecap="round"
         />
       </svg>
@@ -95,12 +102,12 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 20, overflow: "hidden", background: col.bg, transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ border: `1px solid ${GOAL_CARD_BORDER}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <div style={{ padding: "20px 22px 14px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: "#fff", border: `1px solid ${col.border}`, marginBottom: 8 }}>
-              <div style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{goal.category}</div>
+            <div style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: col.bg, border: `1px solid ${PRIMARY_DARK}`, marginBottom: 8 }}>
+              <div style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: INK, textTransform: "uppercase" }}>{goal.category}</div>
             </div>
             {editingTitle ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -112,14 +119,14 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                     if (e.key === "Enter") saveTitle();
                     if (e.key === "Escape") cancelTitle();
                   }}
-                  style={{ ...inputStyle, fontFamily: serifFont, fontSize: 26, fontWeight: 500, padding: "4px 8px", flex: 1, minWidth: 0 }}
+                  style={{ ...inputStyle, fontFamily: serifFont, fontSize: 32, fontWeight: 500, padding: "4px 8px", flex: 1, minWidth: 0 }}
                 />
                 <button onClick={saveTitle} title="Save" style={{ background: "none", border: "none", cursor: "pointer", color: INK, padding: 4, display: "flex" }}><Check size={16} strokeWidth={2.5} /></button>
                 <button onClick={cancelTitle} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, display: "flex" }}><X size={16} strokeWidth={2.5} /></button>
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.2 }}>{goal.title}</div>
+                <div style={{ fontFamily: serifFont, fontSize: 32, color: INK, letterSpacing: -0.2 }}>{goal.title}</div>
                 <button onClick={startEditTitle} title="Rename goal" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex" }}><Pencil size={12.5} strokeWidth={2.3} /></button>
               </div>
             )}
@@ -155,7 +162,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontSize: 12, color: MUTED, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
+                <div style={{ fontFamily: monoFont, fontSize: 11, fontWeight: 600, color: PRIMARY_DARK, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
                 <CompletionRing pct={pct} />
               </div>
             )}
@@ -168,6 +175,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
       </div>
       {expanded && (
         <div style={{ padding: "0 22px 20px" }}>
+          {goal.milestones.length > 0 && <div style={{ borderTop: `1px solid ${BORDER}`, marginBottom: 14 }} />}
           {goal.milestones.length === 0 ? (
             <div style={{ marginBottom: 10 }}>
               <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>No milestones yet. Add the first big step below, or let AI fill it in for you.</div>

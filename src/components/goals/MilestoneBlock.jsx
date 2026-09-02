@@ -2,20 +2,30 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle } from "../../lib/styles";
-import { INK, MUTED, PRIMARY_DARK, monoFont } from "../../lib/constants";
+import { INK, MUTED, PRIMARY, PRIMARY_DARK, monoFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
+import { GOAL_CARD_BORDER } from "./GoalCard";
+
+// A settled/done milestone gets the calm blue border (same brand accent as the outer
+// goal card); the still-active one gets a neutral border with a thicker ink-tinted
+// left edge instead — a "you are here" marker, matched to the Figma reference.
+const CURRENT_BORDER = "rgba(42,42,53,0.2)";
+// The milestone checkbox is a fixed ink color when checked (a "settled" marker,
+// distinct from category color) — action checkboxes below stay category-colored,
+// matching how Checkbox is used everywhere else in the app.
+const INK_CHECK_COLOR = { border: INK };
 
 // Thin inline bar + percentage, matched to the goal header's CompletionRing — same
 // fixed brand accent, so "how done is this" reads consistently at both levels.
 function MiniProgressBar({ pct }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-      <div style={{ width: 56, height: 5, borderRadius: 3, background: "#EFEAE3", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: "100%", background: PRIMARY_DARK, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
+      <div style={{ width: 56, height: 5, borderRadius: 3, background: "#CDE2F5", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: "100%", background: PRIMARY, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
       </div>
-      <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: MUTED, width: 28, textAlign: "right" }}>{pct}%</div>
+      <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, width: 28, textAlign: "right" }}>{pct}%</div>
     </div>
   );
 }
@@ -68,11 +78,17 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
   };
 
   return (
-    <div style={{ border: `1px solid ${col.border}`, borderRadius: 14, padding: "12px 14px", background: "#fff" }}>
+    <div
+      style={{
+        borderRadius: 14, padding: "12px 14px", background: "#fff",
+        border: `1px solid ${milestoneDone ? GOAL_CARD_BORDER : CURRENT_BORDER}`,
+        borderLeftWidth: milestoneDone ? 1 : 3,
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap", rowGap: 6 }}>
         {total > 0 ? (
           <div title={milestoneDone ? "Mark all not done" : "Mark all done"}>
-            <Checkbox checked={milestoneDone} onClick={toggleAll} color={col} />
+            <Checkbox checked={milestoneDone} onClick={toggleAll} color={INK_CHECK_COLOR} />
           </div>
         ) : (
           <div style={{ width: 18, height: 18, borderRadius: 5, border: "1.5px solid #D1D5DB", flexShrink: 0 }} />
@@ -95,7 +111,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
             title="Click to edit"
             style={{
               flex: "1 1 140px", fontSize: 14, fontWeight: 600, cursor: "text",
-              color: milestoneDone ? col.text : INK,
+              color: milestoneDone ? PRIMARY_DARK : INK,
               textDecoration: milestoneDone ? "line-through" : "none", opacity: milestoneDone ? 0.75 : 1,
             }}
           >
