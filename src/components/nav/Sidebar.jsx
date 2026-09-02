@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
-  Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat, BookOpen,
+  Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat, BookOpen,
   Search, ListChecks, Settings, LogOut, Menu, X,
 } from "lucide-react";
 import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 
 const NAV_ITEMS = [
+  { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
   { key: "education", label: "Education", icon: GraduationCap },

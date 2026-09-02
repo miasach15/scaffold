@@ -15,6 +15,7 @@ import AuthScreen from "./components/auth/AuthScreen";
 import ResetPasswordScreen from "./components/auth/ResetPasswordScreen";
 import OnboardingQuiz from "./components/onboarding/OnboardingQuiz";
 import Sidebar from "./components/nav/Sidebar";
+import DashboardView from "./components/dashboard/DashboardView";
 import CalendarView from "./components/calendar/CalendarView";
 import MonthView from "./components/calendar/MonthView";
 import QuickAddModal from "./components/calendar/QuickAddModal";
@@ -73,7 +74,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
-  const [view, setView] = useState("calendar");
+  const [view, setView] = useState("dashboard");
   useUsageTracking(userId, view);
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   // ISO date string, or null for week view. A cramped 7-column week grid is hard to use
@@ -426,6 +427,19 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         }}
       >
         <Suspense fallback={<div style={{ fontSize: 13, color: "#B4BCC5", padding: "40px 0", textAlign: "center" }}>Loading...</div>}>
+        {view === "dashboard" && (
+          <DashboardView
+            profile={profile}
+            events={events}
+            tasks={visibleTasks}
+            goals={goals}
+            habits={habits}
+            dueChips={dueChips}
+            onSetHabitDone={setHabitDone}
+            setView={setView}
+            onSelectDay={setDayView}
+          />
+        )}
         {view === "calendar" && monthView && (
           <MonthView
             monthDate={monthView}

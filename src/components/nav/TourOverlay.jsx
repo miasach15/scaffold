@@ -4,11 +4,12 @@ import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 const CORE_STEPS = [
-  { type: "view", view: "calendar", title: "Welcome to Scaffold", bullets: [
+  { type: "view", view: "dashboard", title: "Welcome to Scaffold", bullets: [
     "This is meant to be on your side, not another thing keeping score on you.",
     "Nothing you don't finish gets buried. It just carries forward to today, no red marks for being late.",
     "One day at a time: today's list, a clear next step, and everything else can wait its turn.",
   ] },
+  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["Today's plan, your top goal's progress, today's habits, and what's due soon, all in one place", "Tap any day in the week strip to jump to it on the Calendar", "This is where the app opens every time"] },
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
   { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner: type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
   { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
