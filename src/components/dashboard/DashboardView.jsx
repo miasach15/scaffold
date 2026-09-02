@@ -5,10 +5,12 @@ import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
-// page's own background — one continuous surface instead of white boxes on gray. Spacing
-// alone carries the separation between sections now, so the gaps around it were widened
-// a bit to compensate for losing the card outlines.
+// page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
+// A plain hairline between sections — no fill, so it reads as a divider on the same flat
+// background rather than a boxed-off panel. Applied to every section after the first one
+// in each column.
+const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -57,7 +59,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...flatSection, padding: "14px 24px 6px", marginBottom: 20, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
           {greeting()}{firstName ? `, ${firstName}` : ""}
         </div>
@@ -102,7 +104,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
             {timeline.length === 0 && todaysUntimed.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
@@ -177,7 +179,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Goal Progress</div>
               <button onClick={() => setView("goals")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: PRIMARY_DARK, padding: 0 }}>View All</button>
@@ -197,7 +199,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>No habits yet.</div>
@@ -222,7 +224,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing due soon.</div>
