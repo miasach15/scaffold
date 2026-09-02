@@ -182,29 +182,41 @@ export const distributeDates = (startISO, endISO, count) => {
 // so both count toward the same load. On an empty calendar this is identical to
 // distributeDates (evenly spread, not clumped at the start); the more the calendar
 // already has booked, the more it pulls new items away from your busier days.
-export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents) => {
+// allowedDays: optional array of day-of-week ints (0=Sun..6=Sat) — restricts which days in
+// the window are eligible ("pick days" mode, e.g. only Mon/Wed/Fri). Omitted, empty, or a
+// selection that matches nothing in the window all fall back to every day in the window
+// ("every day" mode — also the original, pre-existing behavior when this param is unused).
+export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, allowedDays) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
   const totalDays = Math.max(0, Math.round((end - start) / 86400000));
-  const availableSlots = totalDays + 1;
+
+  let pool = [];
+  for (let o = 0; o <= totalDays; o++) pool.push(o);
+  if (allowedDays && allowedDays.length) {
+    const restricted = pool.filter((o) => allowedDays.includes(addDays(start, o).getDay()));
+    if (restricted.length) pool = restricted;
+  }
+  const availableSlots = pool.length;
 
   if (count > availableSlots) {
-    // Not enough distinct days — pack multiple items onto the same days, evenly, but
-    // capped at totalDays so nothing ever lands after endISO (load-balancing doesn't
-    // apply here since every day in the window is going to get used regardless).
-    return Array.from({ length: count }, (_, i) => toISO(addDays(start, Math.min(totalDays, Math.floor((i * availableSlots) / count)))));
+    // Not enough distinct eligible days — pack multiple items onto the same days, evenly,
+    // but never past endISO or off the allowed days (load-balancing doesn't apply here
+    // since every eligible day in the window is going to get used regardless).
+    return Array.from({ length: count }, (_, i) => toISO(addDays(start, pool[Math.min(pool.length - 1, Math.floor((i * availableSlots) / count))])));
   }
 
-  let offsets = [];
+  let idxs = [];
   for (let i = 1; i <= count; i++) {
-    let offset = Math.round((totalDays * i) / count);
-    if (offsets.length && offset <= offsets[offsets.length - 1]) offset = offsets[offsets.length - 1] + 1;
-    offsets.push(Math.min(offset, totalDays));
+    let idx = Math.round(((availableSlots - 1) * i) / count);
+    if (idxs.length && idx <= idxs[idxs.length - 1]) idx = idxs[idxs.length - 1] + 1;
+    idxs.push(Math.min(idx, availableSlots - 1));
   }
-  for (let i = offsets.length - 2; i >= 0; i--) {
-    if (offsets[i] >= offsets[i + 1]) offsets[i] = offsets[i + 1] - 1;
+  for (let i = idxs.length - 2; i >= 0; i--) {
+    if (idxs[i] >= idxs[i + 1]) idxs[i] = idxs[i + 1] - 1;
   }
+  let offsets = idxs.map((idx) => pool[idx]);
 
   const loadByDate = {};
   (existingTasks || []).forEach((t) => {
@@ -227,11 +239,11 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
     });
     if (busiestLoad <= 0) break; // nothing left worth moving off of
 
-    // Among unused days that are a strict improvement, prefer the one nearest to the
-    // busy day it's replacing — keeps the spread intact instead of dragging everything
+    // Among unused eligible days that are a strict improvement, prefer the one nearest to
+    // the busy day it's replacing — keeps the spread intact instead of dragging everything
     // toward whichever quiet day happens to be earliest in the window.
     let bestOffset = -1, bestLoad = Infinity, bestDist = Infinity;
-    for (let o = 0; o <= totalDays; o++) {
+    for (const o of pool) {
       if (chosen.has(o)) continue;
       const l = loadOf(o);
       if (l >= busiestLoad) continue;

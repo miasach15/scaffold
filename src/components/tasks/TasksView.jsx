@@ -22,20 +22,22 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [leadDays, setLeadDays] = useState(""); // "days needed" — shows every day, urgent once inside the window
   const [repeat, setRepeat] = useState("None"); // ongoing recurring tasks (chores, gym days) — independent instances, not a group
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
-  const [biggerOpen, setBiggerOpen] = useState(false); // one toggle first — the leadDays/breakdown choice only appears after saying "yes"
-  const [useAI, setUseAI] = useState(false); // "Break it down" — for a task that's really a multi-day project
+  const [useAI, setUseAI] = useState(false); // "Break it into steps" — for a task that's really a multi-day project
+  const [scheduleMode, setScheduleMode] = useState("every"); // "every" = every day up to the due date, "pick" = only chosen weekdays
+  const [pickedDays, setPickedDays] = useState([1, 2, 3, 4, 5]); // day-of-week ints (0=Sun..6=Sat), only used in "pick" mode
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
   const [showLater, setShowLater] = useState(false); // "Later" bucket in the main list stays collapsed by default — don't turn a long task list into its own wall of overwhelm
 
+  const togglePickedDay = (d) => setPickedDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
+
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setLeadDays(""); setRepeat("None"); setDetails(""); setUseAI(false); setBiggerOpen(false); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setRepeat("None"); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickedDays([1, 2, 3, 4, 5]); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -55,7 +57,8 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       const startISO = date > todayISO ? todayISO : date;
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
+      const allowedDays = scheduleMode === "pick" ? pickedDays : null;
+      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events, allowedDays);
       setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] }))) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
@@ -95,20 +98,15 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       resetForm();
       return;
     }
-    // >= 1, not > 1 — typing "1" is a deliberate "I only need today," and was silently
-    // getting dropped in favor of the default-2 fallback instead of being respected.
-    const lead = date && !time && Number(leadDays) >= 1 ? Number(leadDays) : null;
     // The date is just the due date now, stored as-is — no picking a "work day" for you.
-    // A task with a future (or no) due date just sits in Today until you get to it, unless
-    // "days needed" is set — then it shows every day and goes urgent once you're that
-    // close to the due date (see TodaySection / urgencyInfo).
+    // A task with a future (or no) due date just sits in Today until you get to it, and
+    // goes urgent a couple days out on its own (see TodaySection / defaultLeadDays).
     onAddTask({
       title: title.trim(),
       date: date || null,
       start: hasTime ? timeToDecimal(time) : null,
       duration: hasTime ? 60 : null,
       category,
-      leadDays: lead,
     });
     resetForm();
   };
@@ -254,7 +252,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       </div>
 
       {showMore && (
-        <div style={{ background: "#FAFAF8", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={fieldLabelStyle}>Due by</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -296,51 +294,33 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
           {date && repeat === "None" && (
             <div>
               <div style={fieldLabelStyle}>Bigger than one sitting?</div>
-              {!biggerOpen ? (
-                // One small button, nothing else — the actual choice only shows up once
-                // you've said yes, instead of two controls competing for attention up front.
+              {!useAI ? (
+                // One small button — the schedule/details choices only show up once you've
+                // turned it on, instead of competing for attention up front.
                 <button
-                  onClick={() => setBiggerOpen(true)}
+                  onClick={() => setUseAI(true)}
                   className="hoverable"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
                     borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                   }}
                 >
-                  <Plus size={12} strokeWidth={2.5} /> Yes, give me options
+                  <Plus size={12} strokeWidth={2.5} /> Break it into steps
                 </button>
               ) : (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    {!time && (
-                      <button
-                        onClick={() => setUseAI(false)}
-                        style={{
-                          padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                          border: `1px solid ${!useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                          background: !useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                          color: !useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                        }}
-                        title="Shows up every day, marked urgent once you're close to the due date"
-                      >
-                        Give myself some days
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setUseAI(true)}
+                    <div
                       style={{
                         padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                        border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                        background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                        color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                        display: "inline-flex", alignItems: "center", gap: 4,
+                        border: "1px solid var(--primary, #7B6EF0)", background: "var(--primary-tint, #E7E3FC)", color: "var(--primary-dark, #5849C4)",
                       }}
                       title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
                     >
                       Break it into steps
-                    </button>
+                    </div>
                     <button
-                      onClick={() => { setBiggerOpen(false); setUseAI(false); setLeadDays(""); }}
+                      onClick={() => { setUseAI(false); setScheduleMode("every"); setPickedDays([1, 2, 3, 4, 5]); }}
                       title="Never mind"
                       style={{ background: "none", border: "none", color: "#C2C9D1", fontSize: 15, cursor: "pointer", padding: "0 4px" }}
                     >
@@ -348,34 +328,66 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                     </button>
                   </div>
 
-                  {!useAI && !time && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
-                      <input
-                        type="number"
-                        min={1}
-                        max={60}
-                        placeholder="Days"
-                        value={leadDays}
-                        onChange={(e) => setLeadDays(e.target.value)}
-                        title="How many days you need to get it done"
-                        style={{ ...inputStyle, width: 70 }}
-                      />
-                      <span style={{ fontSize: 12, color: "#93A0AD" }}>days needed</span>
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <button
+                        onClick={() => setScheduleMode("every")}
+                        style={{
+                          padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                          border: `1px solid ${scheduleMode === "every" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                          background: scheduleMode === "every" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                          color: scheduleMode === "every" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                        }}
+                        title="Steps can land on any day between now and the due date"
+                      >
+                        Every day
+                      </button>
+                      <button
+                        onClick={() => setScheduleMode("pick")}
+                        style={{
+                          padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                          border: `1px solid ${scheduleMode === "pick" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                          background: scheduleMode === "pick" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                          color: scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                        }}
+                        title="Only land steps on specific days of the week"
+                      >
+                        Pick days
+                      </button>
                     </div>
-                  )}
+                    {scheduleMode === "pick" && (
+                      <div style={{ display: "flex", gap: 4, marginTop: 8, flexWrap: "wrap" }}>
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label, d) => {
+                          const active = pickedDays.includes(d);
+                          return (
+                            <button
+                              key={label}
+                              onClick={() => togglePickedDay(d)}
+                              style={{
+                                width: 40, padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
+                                border: `1.5px solid ${active ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                                background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                                color: active ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                              }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
-                  {useAI && (
-                    <div style={{ marginTop: 10 }}>
-                      <textarea
-                        value={details}
-                        onChange={(e) => setDetails(e.target.value)}
-                        placeholder="Optional details to help break it down (what's the deliverable, who's it for)"
-                        rows={2}
-                        style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-                      />
-                      {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
-                    </div>
-                  )}
+                  <div style={{ marginTop: 10 }}>
+                    <textarea
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
+                      placeholder="Optional details to help break it down (what's the deliverable, who's it for)"
+                      rows={2}
+                      style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+                    />
+                    {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+                  </div>
                 </>
               )}
             </div>
