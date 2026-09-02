@@ -1,20 +1,11 @@
 import { useMemo } from "react";
-import { Flame } from "lucide-react";
+import { Flame, Timer } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, handwrittenFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
+import { primaryBtn } from "../../lib/styles";
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
-
-// The kit's "zero shame" voice system — a rotating coaching note, same lines the
-// brand kit itself defines, styled the same handwritten way as the Habits footer.
-const COACHING_NOTES = [
-  "you've got this, take a breath",
-  "show up for 30 minutes, that's the whole plan",
-  "no streaks, no guilt, just you building something",
-  "your dreams are real work",
-  "one step at a time",
-];
 
 function greeting() {
   const h = new Date().getHours();
@@ -23,12 +14,11 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay }) {
+export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus }) {
   const CATEGORY_COLORS = useCategoryColors();
   const todayISO = toISO(new Date());
   const weekStart = startOfWeek(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
-  const note = useMemo(() => COACHING_NOTES[Math.floor(Math.random() * COACHING_NOTES.length)], []);
   const firstName = (profile?.name || "").trim().split(" ")[0];
 
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null);
@@ -56,19 +46,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div>
-      <div style={{ ...cardStyle, padding: "28px 32px", marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 260 }}>
-          <div style={{ display: "inline-flex", background: "#EFF6FF", color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", marginBottom: 10 }}>
-            Ready to build?
-          </div>
-          <div style={{ fontFamily: serifFont, fontSize: 40, color: INK, letterSpacing: -0.3 }}>
-            {greeting()}{firstName ? `, ${firstName}` : ""}
-          </div>
-          <div style={{ fontSize: 14, color: MUTED, marginTop: 4 }}>Your ambitions are real work. Let's tackle them in loose, shame-free steps today.</div>
+      <div style={{ ...cardStyle, padding: "28px 32px", marginBottom: 20 }}>
+        <div style={{ display: "inline-flex", background: "#EFF6FF", color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", marginBottom: 10 }}>
+          Ready to build?
         </div>
-        <div style={{ textAlign: "right", maxWidth: 320 }}>
-          <div style={{ fontFamily: handwrittenFont, fontSize: 26, color: PRIMARY_DARK }}>&ldquo;{note}&rdquo;</div>
-          <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>— Scaffold coaching note</div>
+        <div style={{ fontFamily: serifFont, fontSize: 40, color: INK, letterSpacing: -0.3 }}>
+          {greeting()}{firstName ? `, ${firstName}` : ""}
         </div>
       </div>
 
@@ -141,6 +124,26 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+          <div style={{ ...cardStyle, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <Timer size={15} color={PRIMARY_DARK} strokeWidth={2} />
+              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Focus Timer</div>
+            </div>
+            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 12 }}>Pick a length and just start. No task required.</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[15, 25, 50].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onStartFocus(m)}
+                  className="btn-primary"
+                  style={{ ...primaryBtn, flex: 1, padding: "9px 0", fontSize: 13 }}
+                >
+                  {m}m
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={{ ...cardStyle, padding: 20 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Goal Progress</div>

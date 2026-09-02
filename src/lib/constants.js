@@ -64,8 +64,8 @@ export const THEME_PRESETS = {
 export const DEFAULT_THEME = "violet";
 
 // Cool surface + ink/muted/border tones, matched to the connected Figma identity kit
-// ("Fresh, Modern, Airy" — Instrument Serif + Inter + Caveat). INK replaces pure black
-// for headline/body text, MUTED is secondary text, BORDER is the standard hairline —
+// ("Fresh, Modern, Airy" — Instrument Serif + Inter). INK replaces pure black for
+// headline/body text, MUTED is secondary text, BORDER is the standard hairline —
 // all cooler than the previous warm-cream pass to sit right against PAPER_BG.
 export const PAPER_BG = "#F5F7FA";
 export const INK = "#1A1A2E";
@@ -87,10 +87,6 @@ export const TONE = {
 // CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
 // HabitHistoryModal, SettingsModal, Goals, Habits) picks up the font automatically.
 export const serifFont = "'Instrument Serif', Georgia, serif";
-// Handwritten accent for small motivational asides/coaching annotations ("you've got
-// this", footer taglines) — from the Figma identity kit's "zero shame" voice system.
-// Used sparingly, never for anything that needs to be quickly scannable.
-export const handwrittenFont = "'Caveat', cursive";
 export const cardStyle = {
   background: "#fff",
   border: `1px solid ${BORDER}`,

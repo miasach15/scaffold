@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Flame, Shuffle } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, cardStyle, handwrittenFont, serifFont } from "../../lib/constants";
-import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
+import { Check, ChevronLeft, ChevronRight, Flame } from "lucide-react";
+import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
+import { deleteBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
-const SUGGESTIONS_SHOWN = 6;
 const STREAK_BG = "#DBEAFE";
 const DONE_BG = "rgba(37,99,235,0.1)";
 
@@ -18,7 +17,6 @@ const navBtnStyle = {
 export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDone }) {
   const [title, setTitle] = useState("");
   const [historyHabitId, setHistoryHabitId] = useState(null);
-  const [shuffleKey, setShuffleKey] = useState(0);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const todayISO = toISO(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -28,13 +26,6 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
     if (t === undefined) setTitle("");
   };
 
-  const addedTitles = new Set(habits.map((h) => h.title.toLowerCase()));
-  const pool = SUGGESTED_HABITS.filter((s) => !addedTitles.has(s.toLowerCase()));
-  const available = useMemo(() => {
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, SUGGESTIONS_SHOWN);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shuffleKey, pool.length]);
   const historyHabit = habits.find((h) => h.id === historyHabitId) || null;
 
   const totalCells = habits.length * 7;
@@ -60,24 +51,6 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           <button onClick={() => addHabit()} className="btn-primary" style={primaryBtn}>Add</button>
         </AddRow>
       </div>
-
-      {available.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
-          <span style={{ fontSize: 11.5, color: MUTED, alignSelf: "center", marginRight: 2 }}>Suggested:</span>
-          {available.map((s) => (
-            <button key={s} onClick={() => addHabit(s)} style={suggestionChip}>+ {s}</button>
-          ))}
-          {pool.length > SUGGESTIONS_SHOWN && (
-            <button
-              onClick={() => setShuffleKey((k) => k + 1)}
-              title="Show different suggestions"
-              style={{ ...ghostBtn, padding: "5px 10px", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5 }}
-            >
-              <Shuffle size={12} strokeWidth={2.3} /> Shuffle
-            </button>
-          )}
-        </div>
-      )}
 
       {habits.length === 0 ? (
         <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." />
@@ -155,12 +128,6 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 </div>
               );
             })}
-          </div>
-
-          <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
-            <div style={{ fontFamily: handwrittenFont, fontSize: 24, color: PRIMARY_DARK, opacity: 0.85 }}>
-              every check counts. no streaks lost here, just fresh starts.
-            </div>
           </div>
         </>
       )}

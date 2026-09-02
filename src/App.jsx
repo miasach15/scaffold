@@ -149,6 +149,9 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     const full = tasks.find((t) => t.id === id);
     setFocusTask({ id, title, groupId: full?.groupId || null });
   };
+  // A plain focus session started from the Dashboard, with no specific task attached —
+  // FocusTimerModal already handles a taskless session (id: null hides "Mark complete").
+  const openGenericFocus = (minutes) => setFocusTask({ id: null, title: "Focus Session", groupId: null, minutes });
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
@@ -378,7 +381,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
@@ -438,6 +441,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onSetHabitDone={setHabitDone}
             setView={setView}
             onSelectDay={setDayView}
+            onStartFocus={openGenericFocus}
           />
         )}
         {view === "calendar" && monthView && (
@@ -632,8 +636,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           tasks={tasks}
           onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
-          onComplete={() => { setTaskDone(focusTask.id, true); setFocusTask(null); }}
-          defaultMinutes={profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25}
+          onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); setFocusTask(null); }}
+          defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
         />
       )}
 

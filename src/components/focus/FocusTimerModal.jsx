@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { TASK_COLOR, TONE } from "../../lib/constants";
+import { INK, MUTED, TASK_COLOR, TONE } from "../../lib/constants";
 import { pad } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -119,27 +119,21 @@ export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 320, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>Focus session</div>
-        <div style={{ fontSize: 16, fontWeight: 700, margin: "4px 0 18px", color: "#000000" }}>{task.title}</div>
+        <div style={{ fontSize: 11.5, color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>Focus session</div>
+        <div style={{ fontSize: 16, fontWeight: 700, margin: "4px 0 18px", color: INK }}>{task.title}</div>
 
         <div style={{ position: "relative", width: 160, height: 160, margin: "0 auto 18px" }}>
           <svg width="160" height="160" viewBox="0 0 160 160" style={{ transform: "rotate(-90deg)" }}>
-            <defs>
-              <linearGradient id="focusRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#F0B9CE" />
-                <stop offset="100%" stopColor="#B5AEEA" />
-              </linearGradient>
-            </defs>
             <circle cx="80" cy="80" r="70" fill="none" stroke="#EDEDED" strokeWidth="10" />
             <circle
-              cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : "url(#focusRingGradient)"} strokeWidth="10"
+              cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : TASK_COLOR.text} strokeWidth="10"
               strokeDasharray={2 * Math.PI * 70}
               strokeDashoffset={2 * Math.PI * 70 * (1 - pct / 100)}
               strokeLinecap="round"
               style={{ transition: "stroke-dashoffset .3s linear" }}
             />
           </svg>
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, color: "#000000" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, color: INK }}>
             {pad(mm)}:{pad(ss)}
           </div>
         </div>
@@ -149,7 +143,7 @@ export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose
         ) : (
           <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
             {[15, 25, 50].map((m) => (
-              <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : "#4A5568" }}>{m}m</button>
+              <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : MUTED }}>{m}m</button>
             ))}
           </div>
         )}
@@ -160,12 +154,14 @@ export default function FocusTimerModal({ task, tasks, onToggleStepDone, onClose
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: steps.length > 0 ? 16 : 0 }}>
           <button onClick={onClose} style={{ ...ghostBtn, flex: 1 }}>Close</button>
-          <button onClick={onComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
+          {task.id && (
+            <button onClick={onComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
+          )}
         </div>
 
         {steps.length > 0 && (
           <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-            <div style={{ fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+            <div style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
               Whole breakdown
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
