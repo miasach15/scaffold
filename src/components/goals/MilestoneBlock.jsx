@@ -2,11 +2,10 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle } from "../../lib/styles";
-import { INK, MUTED, PRIMARY, PRIMARY_DARK, monoFont } from "../../lib/constants";
+import { INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, monoFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
-import { GOAL_CARD_BORDER } from "./GoalCard";
 
 // A settled/done milestone gets the calm blue border (same brand accent as the outer
 // goal card); the still-active one gets a neutral border with a thicker ink-tinted
@@ -81,7 +80,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
     <div
       style={{
         borderRadius: 14, padding: "12px 14px", background: "#fff",
-        border: `1px solid ${milestoneDone ? GOAL_CARD_BORDER : CURRENT_BORDER}`,
+        border: `1px solid ${milestoneDone ? SECONDARY : CURRENT_BORDER}`,
         borderLeftWidth: milestoneDone ? 1 : 3,
       }}
     >

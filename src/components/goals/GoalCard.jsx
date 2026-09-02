@@ -3,16 +3,11 @@ import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, monoFont, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-// Matched to the connected Figma file: every goal card uses this same calm blue
-// (its "Cornflower / secondary" brand swatch) for its border, regardless of the
-// goal's own category color — category identity lives in the tag chip instead, so
-// the card itself stays calm rather than the whole page going full of saturated washes.
-export const GOAL_CARD_BORDER = "#96BEE3";
 const RING_TRACK = "#CDE2F5";
 
 // A goal's overall completion, at a glance — separate from each category's own color
@@ -102,7 +97,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${GOAL_CARD_BORDER}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ border: `1px solid ${SECONDARY}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <div style={{ padding: "20px 22px 14px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>

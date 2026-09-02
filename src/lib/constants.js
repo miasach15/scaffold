@@ -67,6 +67,10 @@ export const DEFAULT_THEME = "violet";
 // text, BORDER replaces the old cool #E5E5E5-ish borders — all warmer to sit right
 // against PAPER_BG. Screens adopt these as each one gets ported to the new look.
 export const PAPER_BG = "#FAF8F5";
+// The brand kit's "Cornflower/secondary" blue — used as a fixed, calm accent for
+// card borders/done-state markers on screens ported from the connected Figma file
+// (Goals, Habits, ...), regardless of a goal/habit's own category color.
+export const SECONDARY = "#96BEE3";
 export const INK = "#36302B";
 export const MUTED = "#847B72";
 export const BORDER = "#E4DCD0";

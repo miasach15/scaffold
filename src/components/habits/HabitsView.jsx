@@ -1,19 +1,27 @@
 import { useMemo, useState } from "react";
-import { Check, Repeat, History, Shuffle } from "lucide-react";
-import { HABIT_COLOR, SUGGESTED_HABITS, cardStyle } from "../../lib/constants";
+import { Check, ChevronLeft, ChevronRight, Flame, Shuffle } from "lucide-react";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, SUGGESTED_HABITS, cardStyle, monoFont, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
-import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
-import Swatch from "../shared/Swatch";
-import { toISO } from "../../lib/dateHelpers";
+import { AddRow, EmptyState } from "../shared/Misc";
+import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
 const SUGGESTIONS_SHOWN = 6;
+const STREAK_BG = "#CDE2F5";
+const DONE_BG = "rgba(89,87,177,0.1)";
 
-export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDoneToday, onSetDone }) {
+const navBtnStyle = {
+  width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
+  display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0,
+};
+
+export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDone }) {
   const [title, setTitle] = useState("");
   const [historyHabitId, setHistoryHabitId] = useState(null);
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const todayISO = toISO(new Date());
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
   const addHabit = (t) => {
     onAddHabit(t !== undefined ? t : title);
@@ -29,9 +37,22 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
   }, [shuffleKey, pool.length]);
   const historyHabit = habits.find((h) => h.id === historyHabitId) || null;
 
+  const totalCells = habits.length * 7;
+  const doneCells = habits.reduce((sum, h) => sum + weekDays.filter((d) => h.doneDates.includes(toISO(d))).length, 0);
+  const weeklyPct = totalCells > 0 ? Math.round((doneCells / totalCells) * 100) : 0;
+
   return (
     <div>
-      <SectionHeader title="Habits" subtitle="Progress over perfection. Missing a day doesn't reset anything." Icon={Repeat} tint={HABIT_COLOR} />
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 2 }}>
+        <div style={{ fontFamily: serifFont, fontSize: 40, color: INK }}>Habits</div>
+        {habits.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: monoFont, fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
+            <span style={{ fontFamily: monoFont, fontSize: 14, fontWeight: 800, color: INK }}>{weeklyPct}%</span>
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 20 }}>Progress over perfection. Missing a day doesn't reset anything.</div>
 
       <div data-tour="habits-add">
         <AddRow>
@@ -42,7 +63,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
       {available.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
-          <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Suggested:</span>
+          <span style={{ fontSize: 11.5, color: MUTED, alignSelf: "center", marginRight: 2 }}>Suggested:</span>
           {available.map((s) => (
             <button key={s} onClick={() => addHabit(s)} style={suggestionChip}>+ {s}</button>
           ))}
@@ -61,41 +82,87 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
       {habits.length === 0 ? (
         <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {habits.map((h) => {
-            const doneToday = h.doneDates.includes(todayISO);
-            return (
-              <div key={h.id} className="hoverable" style={{ ...cardStyle, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12 }}>
-                <Swatch color={doneToday ? HABIT_COLOR : { bg: "#F1F3F5", border: "#DCE1E6" }} />
-                <button
-                  onClick={() => setHistoryHabitId(h.id)}
-                  title="View history"
-                  style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0 }}
-                >
-                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{h.title}</div>
-                  <div style={{ fontSize: 11.5, color: "#8B95A1", marginTop: 1, display: "flex", alignItems: "center", gap: 4 }}>
-                    <History size={11} strokeWidth={2.3} /> {h.doneDates.length} day{h.doneDates.length === 1 ? "" : "s"} total, view history
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <button onClick={() => setWeekStart((w) => addDays(w, -7))} title="Previous week" style={navBtnStyle}><ChevronLeft size={14} /></button>
+            <div style={{ flex: "1 1 200px" }} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, flex: "3 1 320px" }}>
+              {weekDays.map((d) => {
+                const iso = toISO(d);
+                const isToday = iso === todayISO;
+                return (
+                  <div
+                    key={iso}
+                    style={{
+                      textAlign: "center", padding: "6px 2px", borderRadius: 10,
+                      background: isToday ? "rgba(42,42,53,0.08)" : "transparent",
+                      border: `1px solid ${isToday ? "rgba(42,42,53,0.25)" : "transparent"}`,
+                    }}
+                  >
+                    <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
+                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{d.getDate()}</div>
                   </div>
-                </button>
-                <button
-                  data-tour="habits-markdone"
-                  onClick={() => onSetDoneToday(h.id, !doneToday)}
-                  style={{
-                    padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700,
-                    border: `1.5px solid ${doneToday ? HABIT_COLOR.border : "#E2E8F0"}`,
-                    background: doneToday ? HABIT_COLOR.bg : "#fff",
-                    color: doneToday ? HABIT_COLOR.text : "#8A93A0",
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                  }}
+                );
+              })}
+            </div>
+            <button onClick={() => setWeekStart((w) => addDays(w, 7))} title="Next week" style={navBtnStyle}><ChevronRight size={14} /></button>
+          </div>
+          <div style={{ borderTop: `1px solid ${BORDER}`, marginBottom: 14 }} />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {habits.map((h) => {
+              const streak = currentStreak(h.doneDates);
+              return (
+                <div
+                  key={h.id}
+                  className="hoverable"
+                  style={{ ...cardStyle, border: `1px solid ${SECONDARY}`, borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}
                 >
-                  {doneToday && <Check size={13} strokeWidth={2.5} />}
-                  {doneToday ? "Done today" : "Mark done"}
-                </button>
-                <button onClick={() => onRemoveHabit(h.id)} className="btn-delete" style={deleteBtn}>×</button>
-              </div>
-            );
-          })}
-        </div>
+                  <button
+                    onClick={() => setHistoryHabitId(h.id)}
+                    title="View history"
+                    style={{ flex: "1 1 200px", textAlign: "left", background: "none", border: "none", padding: 0, display: "flex", flexDirection: "column", gap: 5, cursor: "pointer" }}
+                  >
+                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{h.title}</div>
+                    {streak > 0 && (
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: STREAK_BG, borderRadius: 20, padding: "2px 8px", width: "fit-content" }}>
+                        <Flame size={10} color={INK} fill={INK} strokeWidth={0} />
+                        <span style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 800, color: INK }}>{streak} day streak</span>
+                      </div>
+                    )}
+                  </button>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, flex: "3 1 320px" }}>
+                    {weekDays.map((d) => {
+                      const iso = toISO(d);
+                      const done = h.doneDates.includes(iso);
+                      return (
+                        <button
+                          key={iso}
+                          onClick={() => onSetDone(h.id, iso, !done)}
+                          title={iso}
+                          style={{
+                            height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                            background: done ? DONE_BG : "transparent",
+                            border: done ? `2px solid ${PRIMARY}` : `1.5px solid ${SECONDARY}`,
+                          }}
+                        >
+                          {done ? <Check size={14} color={PRIMARY_DARK} strokeWidth={3} /> : <div style={{ width: 6, height: 6, borderRadius: 3, background: SECONDARY }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button onClick={() => onRemoveHabit(h.id)} className="btn-delete" style={deleteBtn}>×</button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
+            <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 18, color: PRIMARY, opacity: 0.7 }}>
+              every check counts. no streaks lost here, just fresh starts.
+            </div>
+          </div>
+        </>
       )}
 
       {historyHabit && (

@@ -16,6 +16,19 @@ export const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
 export const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
 export const dayLabel = (d) => d.toLocaleDateString(undefined, { weekday: "short" });
 export const dateLabel = (d) => d.getDate();
+// How many consecutive days (ending today) a habit has been checked off. If today
+// isn't checked yet, counts back from yesterday instead — so an ongoing streak
+// doesn't read as broken just because you haven't gotten to today yet.
+export const currentStreak = (doneDates) => {
+  const doneSet = new Set(doneDates);
+  let cursor = doneSet.has(toISO(new Date())) ? new Date() : addDays(new Date(), -1);
+  let streak = 0;
+  while (doneSet.has(toISO(cursor))) {
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
+};
 export const monthLabel = (d) => d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 export const hourLabel = (h) => {
   const hr = h % 24;
