@@ -134,10 +134,10 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
             <div style={{ position: "relative", width: 148, height: 148, margin: "0 auto 20px" }}>
               <svg width={148} height={148} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={74} cy={74} r={63} fill="none" stroke="#DDE1EE" strokeWidth={13} />
+                <circle cx={74} cy={74} r={68} fill="none" stroke="#DDE1EE" strokeWidth={6} />
                 <circle
-                  cx={74} cy={74} r={63} fill="none" stroke={PRIMARY_DARK} strokeWidth={13} strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 63} strokeDashoffset={2 * Math.PI * 63 * 0.04}
+                  cx={74} cy={74} r={68} fill="none" stroke={PRIMARY_DARK} strokeWidth={6} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 68} strokeDashoffset={2 * Math.PI * 68 * 0.04}
                 />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
