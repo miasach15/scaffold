@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Clock, Flame, RotateCw } from "lucide-react";
+import { Brain, Clock, Flame, RotateCw } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
-import { primaryBtn } from "../../lib/styles";
+import { ghostBtn, primaryBtn } from "../../lib/styles";
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
+import BrainDumpModal from "./BrainDumpModal";
 
 function greeting() {
   const h = new Date().getHours();
@@ -14,11 +15,12 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus }) {
+export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
+  const [showBrainDump, setShowBrainDump] = useState(false);
   const todayISO = toISO(new Date());
   const weekStart = startOfWeek(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -49,11 +51,20 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0 }}>
+      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
           {greeting()}{firstName ? `, ${firstName}` : ""}
         </div>
+        <button
+          onClick={() => setShowBrainDump(true)}
+          className="hoverable"
+          style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+        >
+          <Brain size={14} strokeWidth={2.2} /> Brain dump
+        </button>
       </div>
+
+      {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr !important; } }`}</style>

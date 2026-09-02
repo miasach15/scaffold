@@ -450,6 +450,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             setView={setView}
             onSelectDay={setDayView}
             onStartFocus={openGenericFocus}
+            onAddTask={addTask}
           />
         )}
         {view === "calendar" && monthView && (
