@@ -3,10 +3,35 @@ import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
+import { INK, MUTED, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import GoalPath from "./GoalPath";
 import MilestoneBlock from "./MilestoneBlock";
+
+// A goal's overall completion, at a glance — separate from GoalPath below it (which
+// shows *where* you are along the milestones) and separate from each category's own
+// color (the tag chip/card wash) — this ring is always the same brand accent so it
+// reads as one consistent "how done is this" marker across every goal on the page.
+function CompletionRing({ pct, size = 40 }) {
+  const stroke = 3.5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEAE3" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={PRIMARY_DARK} strokeWidth={stroke}
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} strokeLinecap="round"
+        />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: INK }}>
+        {pct}%
+      </div>
+    </div>
+  );
+}
 
 export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -24,6 +49,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   const doneCount = allActions.filter((a) => a.done).length;
   const total = allActions.length;
   const allDone = total > 0 && doneCount === total;
+  const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
   const addMilestone = () => {
     if (!milestoneTitle.trim()) return;
@@ -71,10 +97,13 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 12, overflow: "hidden", transition: "box-shadow .15s ease, transform .15s ease" }}>
-      <div style={{ background: col.bg, padding: "10px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 20, overflow: "hidden", background: col.bg, transition: "box-shadow .15s ease, transform .15s ease" }}>
+      <div style={{ padding: "20px 22px 14px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: "#fff", border: `1px solid ${col.border}`, marginBottom: 8 }}>
+              <div style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{goal.category}</div>
+            </div>
             {editingTitle ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <input
@@ -85,19 +114,18 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                     if (e.key === "Enter") saveTitle();
                     if (e.key === "Escape") cancelTitle();
                   }}
-                  style={{ ...inputStyle, fontSize: 15, fontWeight: 700, padding: "4px 8px", flex: 1, minWidth: 0 }}
+                  style={{ ...inputStyle, fontFamily: serifFont, fontSize: 26, fontWeight: 500, padding: "4px 8px", flex: 1, minWidth: 0 }}
                 />
-                <button onClick={saveTitle} title="Save" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, padding: 4, display: "flex" }}><Check size={16} strokeWidth={2.5} /></button>
-                <button onClick={cancelTitle} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.7, padding: 4, display: "flex" }}><X size={16} strokeWidth={2.5} /></button>
+                <button onClick={saveTitle} title="Save" style={{ background: "none", border: "none", cursor: "pointer", color: INK, padding: 4, display: "flex" }}><Check size={16} strokeWidth={2.5} /></button>
+                <button onClick={cancelTitle} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, display: "flex" }}><X size={16} strokeWidth={2.5} /></button>
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: col.text }}>{goal.title}</div>
-                <button onClick={startEditTitle} title="Rename goal" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.55, padding: 2, display: "flex" }}><Pencil size={12.5} strokeWidth={2.3} /></button>
+                <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.2 }}>{goal.title}</div>
+                <button onClick={startEditTitle} title="Rename goal" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex" }}><Pencil size={12.5} strokeWidth={2.3} /></button>
               </div>
             )}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 11, color: col.text, opacity: 0.75, fontWeight: 600 }}>{goal.category}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
               {onSetGoalDeadline && editingDeadline ? (
                 <input
                   type="date"
@@ -119,18 +147,25 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                 <button
                   onClick={() => setEditingDeadline(true)}
                   title="Set an end date: spreads dates across every milestone and action underneath automatically"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "transparent", border: "1.5px dashed currentColor", color: col.text, opacity: 0.6, borderRadius: 999, padding: "2px 8px 2px 5px", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "transparent", border: `1.5px dashed ${MUTED}`, color: MUTED, borderRadius: 999, padding: "2px 8px 2px 5px", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}
                 >
                   <Plus size={11} strokeWidth={2.5} /> end date
                 </button>
               ) : null}
-              {!expanded && total > 0 && <div style={{ fontSize: 11, color: col.text, opacity: 0.75 }}>· {doneCount}/{total} done</div>}
             </div>
           </div>
-          <button onClick={() => setExpanded((x) => !x)} title={expanded ? "Collapse" : "Expand"} style={{ background: "none", border: "none", cursor: "pointer", color: col.text, padding: 4, display: "flex" }}>
-            {expanded ? <ChevronDown size={16} strokeWidth={2.3} /> : <ChevronRight size={16} strokeWidth={2.3} />}
-          </button>
-          <button onClick={() => onRemoveGoal(goal.id)} style={{ ...deleteBtn, color: col.text }}>×</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {total > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 12, color: MUTED, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
+                <CompletionRing pct={pct} />
+              </div>
+            )}
+            <button onClick={() => setExpanded((x) => !x)} title={expanded ? "Collapse" : "Expand"} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, display: "flex" }}>
+              {expanded ? <ChevronDown size={16} strokeWidth={2.3} /> : <ChevronRight size={16} strokeWidth={2.3} />}
+            </button>
+            <button onClick={() => onRemoveGoal(goal.id)} style={{ ...deleteBtn, color: MUTED }}>×</button>
+          </div>
         </div>
         {goal.milestones.length > 0 && (
           <div style={{ marginTop: 10 }}>
@@ -139,10 +174,10 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
         )}
       </div>
       {expanded && (
-        <div style={{ padding: "10px 14px" }}>
+        <div style={{ padding: "0 22px 20px" }}>
           {goal.milestones.length === 0 ? (
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 12.5, color: "#B4BCC5", marginBottom: 8 }}>No milestones yet. Add the first big step below, or let AI fill it in for you.</div>
+              <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>No milestones yet. Add the first big step below, or let AI fill it in for you.</div>
               <button
                 onClick={fillInForMe}
                 disabled={filling}
@@ -176,7 +211,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
             <input placeholder="Add a milestone..." value={milestoneTitle} onChange={(e) => setMilestoneTitle(e.target.value)} style={{ ...inputStyle, flex: 1, fontSize: 13 }} onKeyDown={(e) => e.key === "Enter" && addMilestone()} />
             <button onClick={addMilestone} style={{ ...ghostBtn, fontSize: 13 }}>Add milestone</button>
           </div>
-          <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 6 }}>Next actions with a due date show up on the Calendar automatically.</div>
+          <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>Next actions with a due date show up on the Calendar automatically.</div>
         </div>
       )}
     </div>

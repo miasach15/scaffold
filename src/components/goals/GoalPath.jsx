@@ -54,7 +54,7 @@ export default function GoalPath({ milestones, col }) {
   return (
     <div style={{ marginBottom: 4 }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block", overflow: "visible" }}>
-        {remainD && <path d={remainD} fill="none" stroke="#DCE1E6" strokeWidth={3} strokeDasharray="1 10" strokeLinecap="round" />}
+        {remainD && <path d={remainD} fill="none" stroke="#E4DCD0" strokeWidth={3} strokeDasharray="1 10" strokeLinecap="round" />}
         {walkedD !== `M ${points[0].x} ${points[0].y}` && (
           <path d={walkedD} fill="none" stroke={col.text} strokeWidth={5} strokeLinecap="round" />
         )}
@@ -69,7 +69,7 @@ export default function GoalPath({ milestones, col }) {
               <circle
                 cx={p.x} cy={p.y} r={current ? 13 : 11}
                 fill={done ? col.text : "#fff"}
-                stroke={done ? "none" : current ? col.text : "#DCE1E6"}
+                stroke={done ? "none" : current ? col.text : "#E4DCD0"}
                 strokeWidth={current ? 2.5 : 2}
               />
               {done && (

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Target, Shuffle } from "lucide-react";
-import { SUGGESTED_GOALS, cardStyle } from "../../lib/constants";
+import { MUTED, SUGGESTED_GOALS, cardStyle } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
@@ -136,7 +136,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
       {suggestions.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 20 }}>
-          <span style={{ fontSize: 11.5, color: "#B4BCC5", alignSelf: "center", marginRight: 2 }}>Big things to build:</span>
+          <span style={{ fontSize: 11.5, color: MUTED, alignSelf: "center", marginRight: 2 }}>Big things to build:</span>
           {suggestions.map((s) => (
             <button key={s} onClick={() => addGoal(s, category, false)} style={suggestionChip}>+ {s}</button>
           ))}
