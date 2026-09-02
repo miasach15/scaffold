@@ -52,21 +52,25 @@ export const PRIMARY = "var(--primary, #3C5FD0)";
 export const PRIMARY_DARK = "var(--primary-dark, #3C5FD0)";
 export const PRIMARY_TINT = "var(--primary-tint, #DDE1EE)";
 
-// Matched 1:1 to the Figma kit's 10-swatch accent picker (settings-accent-color-picker),
-// hex-sampled directly from its color-dot assets. primaryDark deliberately equals
-// primary — the sampled color used as-is, not darkened. primaryTint (a pale wash, not
-// in the kit) is derived from each swatch's own hue, same as the original 7 presets.
+// Matched 1:1 to the Figma kit's updated 12-swatch accent picker
+// (settings-accent-color-picker), hex-sampled directly from its color-dot assets.
+// primaryDark deliberately equals primary — the sampled color used as-is, not
+// darkened. primaryTint (a pale wash, not in the kit) is derived from each swatch's
+// own hue, same relationship as the prior preset set. "Ocean" (the default) kept the
+// same hex it already had, so the app's overall look is unchanged by this swap.
 export const THEME_PRESETS = {
   ocean: { label: "Ocean", primary: "#3C5FD0", primaryDark: "#3C5FD0", primaryTint: "#DDE1EE" },
-  blue: { label: "Blue", primary: "#3B9FE3", primaryDark: "#3B9FE3", primaryTint: "#DBE8F0" },
-  green: { label: "Green", primary: "#22A06B", primaryDark: "#22A06B", primaryTint: "#DCEFE7" },
-  rose: { label: "Rose", primary: "#FF8EAE", primaryDark: "#FF8EAE", primaryTint: "#F2D9E0" },
-  orange: { label: "Orange", primary: "#FF9C44", primaryDark: "#FF9C44", primaryTint: "#F2E5D9" },
-  teal: { label: "Teal", primary: "#00B8A9", primaryDark: "#00B8A9", primaryTint: "#D9F2F0" },
+  sky: { label: "Sky", primary: "#68B4E7", primaryDark: "#68B4E7", primaryTint: "#DBE8F0" },
+  emerald: { label: "Emerald", primary: "#29B97C", primaryDark: "#29B97C", primaryTint: "#DDEEE7" },
+  pink: { label: "Pink", primary: "#F68A9E", primaryDark: "#F68A9E", primaryTint: "#F2D9DE" },
+  amber: { label: "Amber", primary: "#FF9C44", primaryDark: "#FF9C44", primaryTint: "#F2E5D9" },
+  teal: { label: "Teal", primary: "#21C2B5", primaryDark: "#21C2B5", primaryTint: "#DCEFEE" },
   slate: { label: "Slate", primary: "#6B7280", primaryDark: "#6B7280", primaryTint: "#E4E5E7" },
   coral: { label: "Coral", primary: "#FF6F61", primaryDark: "#FF6F61", primaryTint: "#F2DBD9" },
-  lavender: { label: "Lavender", primary: "#8B5CF6", primaryDark: "#8B5CF6", primaryTint: "#E1D9F2" },
-  sky: { label: "Sky", primary: "#D08FF1", primaryDark: "#D08FF1", primaryTint: "#E9DBF0" },
+  violet: { label: "Violet", primary: "#8F68E8", primaryDark: "#8F68E8", primaryTint: "#E1DBF0" },
+  lilac: { label: "Lilac", primary: "#CB96E6", primaryDark: "#CB96E6", primaryTint: "#E8DDEE" },
+  beige: { label: "Beige", primary: "#DFCFBC", primaryDark: "#DFCFBC", primaryTint: "#EAE6E1" },
+  peach: { label: "Peach", primary: "#FCAEAE", primaryDark: "#FCAEAE", primaryTint: "#F2D9D9" },
 };
 export const DEFAULT_THEME = "ocean";
 
