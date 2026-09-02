@@ -3,7 +3,8 @@ import {
   Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat, BookOpen,
   Search, ListChecks, Settings, LogOut, Menu, X,
 } from "lucide-react";
-import { BORDER, INK, MUTED, PAPER_BG, PRIMARY, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { Monogram } from "../shared/Misc";
 
 const NAV_ITEMS = [
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
@@ -15,14 +16,15 @@ const NAV_ITEMS = [
   { key: "journal", label: "Journal", icon: BookOpen },
 ];
 
-// A little accent tag next to the wordmark, echoing the brand kit's "Cherub" pink —
+// A little accent tag next to the wordmark, echoing the brand kit's "Rose Pink" —
 // used nowhere else, so it's kept local rather than promoted to a shared constant.
-const ACCENT_TAG_BG = "#F5CEEA";
+const ACCENT_TAG_BG = "#FBCFE8";
 
 function initialFrom(name, email) {
   const source = (name || "").trim() || (email || "").trim();
   return source ? source[0].toUpperCase() : "?";
 }
+
 
 export default function Sidebar({ view, setView, profile, email, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
   const [open, setOpen] = useState(false);
@@ -53,7 +55,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
             border-bottom: 1px solid ${BORDER}; background: ${PAPER_BG};
           }
           .sb-backdrop.sb-open {
-            display: block; position: fixed; inset: 0; background: rgba(54,48,43,0.35); z-index: 190;
+            display: block; position: fixed; inset: 0; background: rgba(26,26,46,0.35); z-index: 190;
           }
           .sb-close-mobile-only { display: inline-flex !important; }
         }
@@ -70,6 +72,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
         >
           <Menu size={22} strokeWidth={2} />
         </button>
+        <Monogram size={24} />
         <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Scaffold</div>
       </div>
 
@@ -85,9 +88,10 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Monogram size={30} />
               <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
               <div style={{ background: ACCENT_TAG_BG, padding: "3px 8px", borderRadius: 6 }}>
-                <div style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: INK }}>v1.0</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: INK }}>v1.0</div>
               </div>
             </div>
             <button
@@ -109,9 +113,9 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
                   onClick={() => go(item.key)}
                   style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 10,
-                    border: active ? `1px solid rgba(89,87,177,0.2)` : "1px solid transparent",
-                    background: active ? "rgba(89,87,177,0.08)" : "transparent",
-                    color: active ? PRIMARY : MUTED, opacity: active ? 1 : 0.85,
+                    border: active ? `1px solid rgba(37,99,235,0.2)` : "1px solid transparent",
+                    background: active ? "rgba(37,99,235,0.08)" : "transparent",
+                    color: active ? PRIMARY_DARK : MUTED, opacity: active ? 1 : 0.85,
                     fontSize: 14, fontWeight: active ? 700 : 500, textAlign: "left", width: "100%",
                   }}
                 >

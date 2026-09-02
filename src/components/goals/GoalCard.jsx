@@ -3,12 +3,12 @@ import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, monoFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
-const RING_TRACK = "#CDE2F5";
+const RING_TRACK = "#DBEAFE";
 
 // A goal's overall completion, at a glance — separate from each category's own color
 // (the tag chip), this ring is always the same brand accent so it reads as one
@@ -26,7 +26,7 @@ function CompletionRing({ pct, size = 48 }) {
           strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} strokeLinecap="round"
         />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: INK }}>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: INK }}>
         {pct}%
       </div>
     </div>
@@ -97,12 +97,12 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${SECONDARY}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <div style={{ padding: "20px 22px 14px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: col.bg, border: `1px solid ${PRIMARY_DARK}`, marginBottom: 8 }}>
-              <div style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 700, color: INK, textTransform: "uppercase" }}>{goal.category}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: INK, textTransform: "uppercase" }}>{goal.category}</div>
             </div>
             {editingTitle ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -157,7 +157,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontFamily: monoFont, fontSize: 11, fontWeight: 600, color: PRIMARY_DARK, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: PRIMARY_DARK, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
                 <CompletionRing pct={pct} />
               </div>
             )}

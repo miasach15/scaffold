@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Calendar as CalendarIcon, Target, Repeat, BookOpen } from "lucide-react";
 import { useAuth } from "../../hooks/AuthProvider";
-import { PAPER_BG, PRIMARY, PRIMARY_TINT, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PAPER_BG, PRIMARY, PRIMARY_TINT, cardStyle, serifFont } from "../../lib/constants";
+import { Monogram } from "../shared/Misc";
 import { inputStyle, primaryBtn, ghostBtn } from "../../lib/styles";
 
 const MODULE_PREVIEWS = [
@@ -67,7 +68,7 @@ export default function AuthScreen() {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@400;600&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
@@ -79,7 +80,7 @@ export default function AuthScreen() {
         .auth-shell { display: flex; gap: 36px; width: 100%; max-width: 940px; align-items: center; }
         .auth-showcase { flex: 1 1 380px; background: ${PRIMARY_TINT}; border-radius: 24px; padding: 44px 40px; display: flex; flex-direction: column; gap: 24px; }
         .auth-modules { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
-        .auth-module-card { background: #fff; border: 1px solid #ECECEC; border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; width: fit-content; box-shadow: 0 6px 24px rgba(15,23,42,0.05); }
+        .auth-module-card { background: #fff; border: 1px solid ${BORDER}; border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; width: fit-content; box-shadow: 0 6px 24px rgba(26,26,46,0.05); }
         .auth-formwrap { flex: 1 1 380px; max-width: 400px; }
 
         @keyframes authFadeUp {
@@ -103,10 +104,11 @@ export default function AuthScreen() {
       `}</style>
       <div className="auth-shell">
         <div className="auth-showcase">
-          <div className="auth-fade" style={{ fontFamily: serifFont, fontStyle: "italic", fontWeight: 600, fontSize: 38, color: "#000000", letterSpacing: -0.3 }}>
-            Scaffold
+          <div className="auth-fade" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Monogram size={40} />
+            <div style={{ fontFamily: serifFont, fontSize: 38, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
           </div>
-          <div className="auth-fade" style={{ animationDelay: "70ms", fontSize: 14.5, color: "#5A6472", lineHeight: 1.5, maxWidth: 260 }}>
+          <div className="auth-fade" style={{ animationDelay: "70ms", fontSize: 14.5, color: MUTED, lineHeight: 1.5, maxWidth: 260 }}>
             A calm place to plan your day, your goals, and everything in between.
           </div>
           <div className="auth-modules">
@@ -118,8 +120,8 @@ export default function AuthScreen() {
               >
                 <m.icon size={16} strokeWidth={2} color={PRIMARY} />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#000000" }}>{m.label}</div>
-                  <div className="auth-module-sub" style={{ fontSize: 11.5, color: "#93A0AD" }}>{m.sub}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{m.label}</div>
+                  <div className="auth-module-sub" style={{ fontSize: 11.5, color: MUTED }}>{m.sub}</div>
                 </div>
               </div>
             ))}
@@ -127,12 +129,15 @@ export default function AuthScreen() {
         </div>
         <div className="auth-formwrap">
       <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, animationDelay: "90ms", width: "100%", padding: 28 }}>
-        <div className="auth-form-title" style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 24, fontWeight: 600, color: "#000000", marginBottom: 4, letterSpacing: -0.3 }}>Scaffold</div>
-        <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>
+        <div className="auth-form-title" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <Monogram size={26} />
+          <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
+        </div>
+        <div style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>
           {mode === "sign-in" ? "Welcome back." : mode === "sign-up" ? "Create an account to save your data." : "We'll email you a link to reset your password."}
         </div>
 
-        <label style={{ fontSize: 11.5, fontWeight: 600, color: "#93A0AD", display: "block", marginBottom: 4 }}>Email</label>
+        <label style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, display: "block", marginBottom: 4 }}>Email</label>
         <input
           type="email"
           autoFocus
@@ -143,7 +148,7 @@ export default function AuthScreen() {
         />
         {mode !== "forgot" && (
           <>
-            <label style={{ fontSize: 11.5, fontWeight: 600, color: "#93A0AD", display: "block", marginBottom: 4 }}>Password</label>
+            <label style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, display: "block", marginBottom: 4 }}>Password</label>
             <input
               type="password"
               value={password}
@@ -155,7 +160,7 @@ export default function AuthScreen() {
         )}
 
         {mode === "sign-in" && (
-          <button type="button" onClick={() => switchMode("forgot")} style={{ ...ghostBtn, border: "none", background: "none", padding: 0, marginTop: 8, fontSize: 12, color: "#93A0AD" }}>
+          <button type="button" onClick={() => switchMode("forgot")} style={{ ...ghostBtn, border: "none", background: "none", padding: 0, marginTop: 8, fontSize: 12, color: MUTED }}>
             Forgot password?
           </button>
         )}

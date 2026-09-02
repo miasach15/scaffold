@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle } from "../../lib/styles";
-import { INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, monoFont } from "../../lib/constants";
+import { INK, MUTED, PRIMARY_DARK } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -10,7 +10,7 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 // A settled/done milestone gets the calm blue border (same brand accent as the outer
 // goal card); the still-active one gets a neutral border with a thicker ink-tinted
 // left edge instead — a "you are here" marker, matched to the Figma reference.
-const CURRENT_BORDER = "rgba(42,42,53,0.2)";
+const CURRENT_BORDER = "rgba(26,26,46,0.2)";
 // The milestone checkbox is a fixed ink color when checked (a "settled" marker,
 // distinct from category color) — action checkboxes below stay category-colored,
 // matching how Checkbox is used everywhere else in the app.
@@ -21,10 +21,10 @@ const INK_CHECK_COLOR = { border: INK };
 function MiniProgressBar({ pct }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-      <div style={{ width: 56, height: 5, borderRadius: 3, background: "#CDE2F5", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: "100%", background: PRIMARY, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
+      <div style={{ width: 56, height: 5, borderRadius: 3, background: "#DBEAFE", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: "100%", background: PRIMARY_DARK, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
       </div>
-      <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, width: 28, textAlign: "right" }}>{pct}%</div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, width: 28, textAlign: "right" }}>{pct}%</div>
     </div>
   );
 }
@@ -80,7 +80,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
     <div
       style={{
         borderRadius: 14, padding: "12px 14px", background: "#fff",
-        border: `1px solid ${milestoneDone ? SECONDARY : CURRENT_BORDER}`,
+        border: `1px solid ${milestoneDone ? PRIMARY_DARK + "40" : CURRENT_BORDER}`,
         borderLeftWidth: milestoneDone ? 1 : 3,
       }}
     >
@@ -145,7 +145,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                   onClick={() => onMoveAction(a.id, "up")}
                   disabled={i === 0}
                   title="Move up"
-                  style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: 0, color: i === 0 ? "#DDD6CB" : MUTED, display: "flex", lineHeight: 0 }}
+                  style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: 0, color: i === 0 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
                 >
                   <ChevronUp size={11} strokeWidth={2.5} />
                 </button>
@@ -153,7 +153,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                   onClick={() => onMoveAction(a.id, "down")}
                   disabled={i === milestone.actions.length - 1}
                   title="Move down"
-                  style={{ background: "none", border: "none", cursor: i === milestone.actions.length - 1 ? "default" : "pointer", padding: 0, color: i === milestone.actions.length - 1 ? "#DDD6CB" : MUTED, display: "flex", lineHeight: 0 }}
+                  style={{ background: "none", border: "none", cursor: i === milestone.actions.length - 1 ? "default" : "pointer", padding: 0, color: i === milestone.actions.length - 1 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
                 >
                   <ChevronDown size={11} strokeWidth={2.5} />
                 </button>

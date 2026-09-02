@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Flame, Shuffle } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SECONDARY, SUGGESTED_HABITS, cardStyle, monoFont, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, cardStyle, handwrittenFont, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
 const SUGGESTIONS_SHOWN = 6;
-const STREAK_BG = "#CDE2F5";
-const DONE_BG = "rgba(89,87,177,0.1)";
+const STREAK_BG = "#DBEAFE";
+const DONE_BG = "rgba(37,99,235,0.1)";
 
 const navBtnStyle = {
   width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
@@ -47,8 +47,8 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
         <div style={{ fontFamily: serifFont, fontSize: 40, color: INK }}>Habits</div>
         {habits.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontFamily: monoFont, fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
-            <span style={{ fontFamily: monoFont, fontSize: 14, fontWeight: 800, color: INK }}>{weeklyPct}%</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: INK }}>{weeklyPct}%</span>
           </div>
         )}
       </div>
@@ -95,11 +95,11 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                     key={iso}
                     style={{
                       textAlign: "center", padding: "6px 2px", borderRadius: 10,
-                      background: isToday ? "rgba(42,42,53,0.08)" : "transparent",
-                      border: `1px solid ${isToday ? "rgba(42,42,53,0.25)" : "transparent"}`,
+                      background: isToday ? "rgba(26,26,46,0.08)" : "transparent",
+                      border: `1px solid ${isToday ? "rgba(26,26,46,0.25)" : "transparent"}`,
                     }}
                   >
-                    <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
                     <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{d.getDate()}</div>
                   </div>
                 );
@@ -116,7 +116,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 <div
                   key={h.id}
                   className="hoverable"
-                  style={{ ...cardStyle, border: `1px solid ${SECONDARY}`, borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}
+                  style={{ ...cardStyle, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}
                 >
                   <button
                     onClick={() => setHistoryHabitId(h.id)}
@@ -127,7 +127,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                     {streak > 0 && (
                       <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: STREAK_BG, borderRadius: 20, padding: "2px 8px", width: "fit-content" }}>
                         <Flame size={10} color={INK} fill={INK} strokeWidth={0} />
-                        <span style={{ fontFamily: monoFont, fontSize: 10, fontWeight: 800, color: INK }}>{streak} day streak</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: INK }}>{streak} day streak</span>
                       </div>
                     )}
                   </button>
@@ -143,10 +143,10 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                           style={{
                             height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
                             background: done ? DONE_BG : "transparent",
-                            border: done ? `2px solid ${PRIMARY}` : `1.5px solid ${SECONDARY}`,
+                            border: done ? `2px solid ${PRIMARY_DARK}` : `1.5px solid ${BORDER}`,
                           }}
                         >
-                          {done ? <Check size={14} color={PRIMARY_DARK} strokeWidth={3} /> : <div style={{ width: 6, height: 6, borderRadius: 3, background: SECONDARY }} />}
+                          {done ? <Check size={14} color={PRIMARY_DARK} strokeWidth={3} /> : <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />}
                         </button>
                       );
                     })}
@@ -158,7 +158,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           </div>
 
           <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
-            <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 18, color: PRIMARY, opacity: 0.7 }}>
+            <div style={{ fontFamily: handwrittenFont, fontSize: 24, color: PRIMARY_DARK, opacity: 0.85 }}>
               every check counts. no streaks lost here, just fresh starts.
             </div>
           </div>
