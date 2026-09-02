@@ -34,10 +34,14 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const firstName = (profile?.name || "").trim().split(" ")[0];
 
-  const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null);
-  const todaysTimedTasks = tasks.filter((t) => t.date === todayISO && t.start != null && !t.done);
+  // Tasks always come first and are ordered by how urgent they are — a timed task is
+  // more pressing the sooner today it's due, so those sort by start time ascending;
+  // untimed ones (no fixed slot, so nothing to rank them against each other by) follow
+  // after. Events are fixed appointments, not something to act on, so they're kept as
+  // their own list below the tasks rather than interleaved by time with them.
+  const todaysTimedTasks = tasks.filter((t) => t.date === todayISO && t.start != null && !t.done).sort((a, b) => a.start - b.start);
   const todaysUntimed = tasks.filter((t) => t.date === todayISO && t.start == null && !t.done);
-  const timeline = [...todaysEvents, ...todaysTimedTasks].sort((a, b) => a.start - b.start);
+  const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
   const activeGoal = useMemo(() => {
     const withProgress = goals
@@ -52,8 +56,15 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
     return withProgress.sort((a, b) => b.pct - a.pct)[0];
   }, [goals]);
 
+  // Just task due dates and tests here — goal deadlines/milestones/actions have their own
+  // "Goal Progress" card above, so mixing them in here would just repeat that.
   const upcoming = useMemo(
-    () => dueChips.filter((c) => !c.done && c.date >= todayISO).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4),
+    () =>
+      dueChips
+        .filter((c) => !c.done && c.date >= todayISO)
+        .filter((c) => c.kind === "task" || c.kind === "task-group-due" || (c.kind === "edu" && c.type === "Test"))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 4),
     [dueChips, todayISO]
   );
 
@@ -106,11 +117,11 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
           <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
-            {timeline.length === 0 && todaysUntimed.length === 0 ? (
+            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
-                {timeline.map((item) => {
+                {todaysTimedTasks.map((item) => {
                   const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
                   return (
                     <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -124,7 +135,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                   );
                 })}
                 {todaysUntimed.length > 0 && (
-                  <div style={{ marginTop: timeline.length > 0 ? 4 : 0 }}>
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 4 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Anytime today</div>
                     {todaysUntimed.map((t) => {
                       const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
@@ -135,6 +146,26 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                         </div>
                       );
                     })}
+                  </div>
+                )}
+                {todaysEvents.length > 0 && (
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Today's events</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {todaysEvents.map((item) => {
+                        const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
+                        return (
+                          <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0 }}>{decimalToTimeLabel(item.start)}</div>
+                            <div style={{ flex: 1, background: "#fff", borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
+                              <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                            </div>
+                            {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{Math.round(item.duration * 60)}m</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

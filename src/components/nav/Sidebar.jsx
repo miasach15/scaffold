@@ -17,10 +17,6 @@ const NAV_ITEMS = [
   { key: "journal", label: "Journal", icon: BookOpen },
 ];
 
-// A little accent tag next to the wordmark, echoing the brand kit's "Rose Pink" —
-// used nowhere else, so it's kept local rather than promoted to a shared constant.
-const ACCENT_TAG_BG = "#FBCFE8";
-
 function initialFrom(name, email) {
   const source = (name || "").trim() || (email || "").trim();
   return source ? source[0].toUpperCase() : "?";
@@ -91,9 +87,6 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Monogram size={30} />
               <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
-              <div style={{ background: ACCENT_TAG_BG, padding: "3px 8px", borderRadius: 6 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: INK }}>v1.0</div>
-              </div>
             </div>
             <button
               onClick={() => setOpen(false)}
