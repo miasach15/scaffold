@@ -1,17 +1,21 @@
-// Shared swatch palette a user can assign to any of the 4 goal/event categories
-// (see CategoryColorsContext + SettingsModal). Keys are stable identifiers stored
-// per-user; the actual {bg,border,text} triples live here in one place.
+// Shared swatch palette a user can assign to any category (see CategoryColorsContext +
+// SettingsModal) — the same 11 named colors as the accent-color picker's THEME_PRESETS,
+// so a category color and an app accent color always mean the same "Ocean"/"Coral"/etc.
+// Keys are stable identifiers stored per-user; the actual {bg,border,text} triples live
+// here in one place, each derived from that swatch's own THEME_PRESETS primary hue (a
+// pale bg, a mid-tone border, a dark readable text — same hue carried through all three).
 export const CATEGORY_COLOR_SWATCHES = {
-  blue: { bg: "#DCEAFB", border: "#7FB2E8", text: "#2A5C8A" },
-  pink: { bg: "#FBE3EC", border: "#E7A9C4", text: "#95375E" },
-  green: { bg: "#DFEEE5", border: "#87BFA1", text: "#2C6B4C" },
-  purple: { bg: "#E0DBFA", border: "#A99BEA", text: "#4A3B94" },
-  orange: { bg: "#FCE9E4", border: "#EFAE93", text: "#9B4A2A" },
-  teal: { bg: "#DFF3EF", border: "#8ED9C4", text: "#1F7A5C" },
-  red: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
-  yellow: { bg: "#FFF7D6", border: "#F0DA85", text: "#8A6F1F" },
-  indigo: { bg: "#E4E7FB", border: "#A6ACE8", text: "#3B4394" },
-  gray: { bg: "#F1F3F5", border: "#C9D0D8", text: "#4A5568" },
+  ocean: { bg: "#DFE4F6", border: "#95A5DB", text: "#364578" },
+  sky: { bg: "#DDEDF9", border: "#8EC0E1", text: "#305E7E" },
+  emerald: { bg: "#DEF7EC", border: "#93DCBD", text: "#34795C" },
+  pink: { bg: "#FBDAE0", border: "#E98799", text: "#85293A" },
+  amber: { bg: "#FCEAD9", border: "#EBB584", text: "#8C5421" },
+  teal: { bg: "#DDF8F6", border: "#8FE0DA", text: "#317D77" },
+  slate: { bg: "#E9EAEC", border: "#B2B6BD", text: "#52555C" },
+  coral: { bg: "#FBDEDA", border: "#E99386", text: "#853428" },
+  lilac: { bg: "#EEDFF7", border: "#C394DB", text: "#613678" },
+  beige: { bg: "#F1EBE4", border: "#CCB9A3", text: "#6A5844" },
+  peach: { bg: "#FCD9D9", border: "#EB8484", text: "#892525" },
 };
 
 // The starting set before a user renames/adds/removes any — after that, the live list
@@ -22,11 +26,11 @@ export const CATEGORY_COLOR_SWATCHES = {
 // never removed.
 export const DEFAULT_CATEGORY_KEYS = ["School", "Personal", "Health", "People"];
 export const CATEGORY_KEYS = DEFAULT_CATEGORY_KEYS;
-export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "blue", Personal: "pink", Health: "green", People: "purple" };
+export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", Health: "emerald", People: "lilac" };
 // Colors assigned to a custom category that isn't one of the 4 defaults and hasn't been
 // explicitly recolored yet — cycles through so several new categories don't all end up
-// the same color.
-export const FALLBACK_CATEGORY_COLOR_ROTATION = ["teal", "orange", "indigo", "yellow", "red", "gray"];
+// the same color. Skips whichever swatches the 4 defaults above already use.
+export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "coral", "slate", "peach", "beige"];
 
 // Default-theme category colors, used as the CategoryColorsContext fallback and
 // anywhere rendered before a user's customization has loaded.
@@ -55,12 +59,13 @@ export const PRIMARY = "var(--primary, #3C5FD0)";
 export const PRIMARY_DARK = "var(--primary-dark, #3C5FD0)";
 export const PRIMARY_TINT = "var(--primary-tint, #DDE1EE)";
 
-// Matched 1:1 to the Figma kit's updated 12-swatch accent picker
-// (settings-accent-color-picker), hex-sampled directly from its color-dot assets.
-// primaryDark deliberately equals primary — the sampled color used as-is, not
-// darkened. primaryTint (a pale wash, not in the kit) is derived from each swatch's
-// own hue, same relationship as the prior preset set. "Ocean" (the default) kept the
-// same hex it already had, so the app's overall look is unchanged by this swap.
+// Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
+// color-grid), hex-sampled directly from its color-dot assets. "Violet" was removed
+// from the design (re-checked directly in Figma) and "Coral" shifted slightly
+// (#FF6F61 -> #F47C6B) — both picked up here. primaryDark deliberately equals primary
+// — the sampled color used as-is, not darkened. primaryTint (a pale wash, not in the
+// kit) is derived from each swatch's own hue, same relationship as the prior preset
+// set. "Ocean" (the default) kept the same hex it already had.
 export const THEME_PRESETS = {
   ocean: { label: "Ocean", primary: "#3C5FD0", primaryDark: "#3C5FD0", primaryTint: "#DDE1EE" },
   sky: { label: "Sky", primary: "#68B4E7", primaryDark: "#68B4E7", primaryTint: "#DBE8F0" },
@@ -69,8 +74,7 @@ export const THEME_PRESETS = {
   amber: { label: "Amber", primary: "#FF9C44", primaryDark: "#FF9C44", primaryTint: "#F2E5D9" },
   teal: { label: "Teal", primary: "#21C2B5", primaryDark: "#21C2B5", primaryTint: "#DCEFEE" },
   slate: { label: "Slate", primary: "#6B7280", primaryDark: "#6B7280", primaryTint: "#E4E5E7" },
-  coral: { label: "Coral", primary: "#FF6F61", primaryDark: "#FF6F61", primaryTint: "#F2DBD9" },
-  violet: { label: "Violet", primary: "#8F68E8", primaryDark: "#8F68E8", primaryTint: "#E1DBF0" },
+  coral: { label: "Coral", primary: "#F47C6B", primaryDark: "#F47C6B", primaryTint: "#F2DCD9" },
   lilac: { label: "Lilac", primary: "#CB96E6", primaryDark: "#CB96E6", primaryTint: "#E8DDEE" },
   beige: { label: "Beige", primary: "#DFCFBC", primaryDark: "#DFCFBC", primaryTint: "#EAE6E1" },
   peach: { label: "Peach", primary: "#FCAEAE", primaryDark: "#FCAEAE", primaryTint: "#F2D9D9" },

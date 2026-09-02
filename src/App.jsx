@@ -323,7 +323,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     // custom category that's never been recolored, so several new ones don't all end up
     // looking identical.
     const key = profile.categoryColors[cat] || DEFAULT_CATEGORY_COLOR_KEYS[cat] || FALLBACK_CATEGORY_COLOR_ROTATION[i % FALLBACK_CATEGORY_COLOR_ROTATION.length];
-    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.gray;
+    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.slate;
   });
   // A handful of places across the app fall back to CATEGORY_COLORS.Personal when a
   // task/event's own category isn't recognized — safe when "Personal" is one of the
