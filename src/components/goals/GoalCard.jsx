@@ -6,13 +6,11 @@ import { supabase } from "../../lib/supabase";
 import { INK, MUTED, PRIMARY_DARK, monoFont, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
-import GoalPath from "./GoalPath";
 import MilestoneBlock from "./MilestoneBlock";
 
-// A goal's overall completion, at a glance — separate from GoalPath below it (which
-// shows *where* you are along the milestones) and separate from each category's own
-// color (the tag chip/card wash) — this ring is always the same brand accent so it
-// reads as one consistent "how done is this" marker across every goal on the page.
+// A goal's overall completion, at a glance — separate from each category's own color
+// (the tag chip/card wash), this ring is always the same brand accent so it reads as
+// one consistent "how done is this" marker across every goal on the page.
 function CompletionRing({ pct, size = 40 }) {
   const stroke = 3.5;
   const r = (size - stroke) / 2;
@@ -167,11 +165,6 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
             <button onClick={() => onRemoveGoal(goal.id)} style={{ ...deleteBtn, color: MUTED }}>×</button>
           </div>
         </div>
-        {goal.milestones.length > 0 && (
-          <div style={{ marginTop: 10 }}>
-            <GoalPath milestones={goal.milestones} col={col} />
-          </div>
-        )}
       </div>
       {expanded && (
         <div style={{ padding: "0 22px 20px" }}>
