@@ -13,7 +13,7 @@ function MiniProgressBar({ pct }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
       <div style={{ width: 56, height: 5, borderRadius: 3, background: "#EFEAE3", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: PRIMARY_DARK, borderRadius: 3, transition: "width .2s" }} />
+        <div style={{ height: "100%", width: "100%", background: PRIMARY_DARK, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
       </div>
       <div style={{ fontFamily: monoFont, fontSize: 10.5, fontWeight: 700, color: MUTED, width: 28, textAlign: "right" }}>{pct}%</div>
     </div>
