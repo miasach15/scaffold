@@ -83,14 +83,20 @@ export default function AuthScreen() {
         .auth-module-card { background: #fff; border: 1px solid ${BORDER}; border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; width: fit-content; box-shadow: 0 6px 24px rgba(26,26,46,0.05); }
         .auth-formwrap { flex: 1 1 380px; max-width: 400px; }
 
+        @keyframes authPanelIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .auth-showcase { opacity: 0; animation: authPanelIn 0.6s cubic-bezier(.16,1,.3,1) both; }
+
         @keyframes authFadeUp {
-          from { opacity: 0; transform: translateY(14px) rotate(var(--rot, 0deg)); }
+          from { opacity: 0; transform: translateY(16px) rotate(var(--rot, 0deg)); }
           to { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
         }
-        .auth-fade { opacity: 0; animation: authFadeUp 0.55s cubic-bezier(.16,1,.3,1) both; }
+        .auth-fade { opacity: 0; animation: authFadeUp 0.6s cubic-bezier(.16,1,.3,1) both; }
 
         @media (prefers-reduced-motion: reduce) {
-          .auth-fade { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+          .auth-fade, .auth-showcase { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
         }
 
         @media (max-width: 860px) {
@@ -104,11 +110,11 @@ export default function AuthScreen() {
       `}</style>
       <div className="auth-shell">
         <div className="auth-showcase">
-          <div className="auth-fade" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="auth-fade" style={{ animationDelay: "120ms", display: "flex", alignItems: "center", gap: 12 }}>
             <Monogram size={40} />
             <div style={{ fontFamily: serifFont, fontSize: 38, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
           </div>
-          <div className="auth-fade" style={{ animationDelay: "70ms", fontSize: 14.5, color: MUTED, lineHeight: 1.5, maxWidth: 260 }}>
+          <div className="auth-fade" style={{ animationDelay: "190ms", fontSize: 14.5, color: MUTED, lineHeight: 1.5, maxWidth: 260 }}>
             A calm place to plan your day, your goals, and everything in between.
           </div>
           <div className="auth-modules">
@@ -116,7 +122,7 @@ export default function AuthScreen() {
               <div
                 key={m.label}
                 className="auth-fade auth-module-card"
-                style={{ "--rot": m.rot, animationDelay: `${160 + i * 90}ms` }}
+                style={{ "--rot": m.rot, animationDelay: `${280 + i * 90}ms` }}
               >
                 <m.icon size={16} strokeWidth={2} color={PRIMARY} />
                 <div>
@@ -128,7 +134,7 @@ export default function AuthScreen() {
           </div>
         </div>
         <div className="auth-formwrap">
-      <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, animationDelay: "90ms", width: "100%", padding: 28 }}>
+      <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, animationDelay: "150ms", width: "100%", padding: 28 }}>
         <div className="auth-form-title" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
           <Monogram size={26} />
           <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Scaffold</div>

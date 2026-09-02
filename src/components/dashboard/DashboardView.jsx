@@ -1,9 +1,9 @@
-import { useMemo } from "react";
-import { Flame, Timer } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Clock, Flame, RotateCw } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, cardStyle, serifFont } from "../../lib/constants";
 import { primaryBtn } from "../../lib/styles";
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
@@ -16,6 +16,9 @@ function greeting() {
 
 export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const [focusMinutes, setFocusMinutes] = useState(
+    profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
+  );
   const todayISO = toISO(new Date());
   const weekStart = startOfWeek(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -45,22 +48,22 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   );
 
   return (
-    <div>
-      <div style={{ ...cardStyle, padding: "28px 32px", marginBottom: 20 }}>
-        <div style={{ display: "inline-flex", background: "#EFF6FF", color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", marginBottom: 10 }}>
-          Ready to build?
-        </div>
-        <div style={{ fontFamily: serifFont, fontSize: 40, color: INK, letterSpacing: -0.3 }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
           {greeting()}{firstName ? `, ${firstName}` : ""}
+        </div>
+        <div style={{ display: "inline-flex", background: "#EFF6FF", color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase" }}>
+          Ready to build?
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }} className="dashboard-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr !important; } }`}</style>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, minHeight: 0 }}>
+          <div style={{ ...cardStyle, padding: "14px 20px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
@@ -85,12 +88,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 14 }}>Today's Scaffolded Steps</div>
+          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
             {timeline.length === 0 && todaysUntimed.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {timeline.map((item) => {
                   const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
                   return (
@@ -123,29 +126,45 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <Timer size={15} color={PRIMARY_DARK} strokeWidth={2} />
-              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Focus Timer</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, minHeight: 0 }}>
+          <div style={{ ...cardStyle, padding: "16px 20px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
+                <Clock size={13} />
+              </div>
             </div>
-            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 12 }}>Pick a length and just start. No task required.</div>
+
+            <div style={{ position: "relative", width: 108, height: 108, margin: "0 auto 12px" }}>
+              <svg width={108} height={108} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={54} cy={54} r={46} fill="none" stroke="#EFEAE3" strokeWidth={10} />
+                <circle
+                  cx={54} cy={54} r={46} fill="none" stroke={PRIMARY_DARK} strokeWidth={10} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 46} strokeDashoffset={2 * Math.PI * 46 * 0.04}
+                />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 24, color: INK }}>{pad(focusMinutes)}:00</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5 }}>{focusMinutes} min focus</div>
+              </div>
+            </div>
+
             <div style={{ display: "flex", gap: 8 }}>
-              {[15, 25, 50].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => onStartFocus(m)}
-                  className="btn-primary"
-                  style={{ ...primaryBtn, flex: 1, padding: "9px 0", fontSize: 13 }}
-                >
-                  {m}m
-                </button>
-              ))}
+              <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, flex: 1, padding: "9px 0", fontSize: 13 }}>
+                Start
+              </button>
+              <button
+                onClick={() => setFocusMinutes((m) => (m === 15 ? 25 : m === 25 ? 50 : 15))}
+                title="Change length"
+                style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
+              >
+                <RotateCw size={14} />
+              </button>
             </div>
           </div>
 
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ ...cardStyle, padding: "14px 20px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Goal Progress</div>
               <button onClick={() => setView("goals")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: PRIMARY_DARK, padding: 0 }}>View All</button>
             </div>
@@ -164,12 +183,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12 }}>Habits Checklist</div>
+          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>No habits yet.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
@@ -189,12 +208,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...cardStyle, padding: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12 }}>Coming Up</div>
+          <div style={{ ...cardStyle, padding: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing due soon.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, overflowY: "auto", minHeight: 0 }}>
                 {upcoming.map((c) => {
                   const label = c.subject || c.category;
                   const col = label ? CATEGORY_COLORS[label] || CATEGORY_COLORS.Personal : null;

@@ -402,6 +402,12 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         @media (min-width: 861px) {
           .app-shell { flex-direction: row; }
         }
+        /* Dashboard fits one screen (no page scroll, cards scroll internally) once
+           there's room for its 2-column grid — below that the grid stacks to one
+           column and needs normal page scroll instead, like every other mobile view. */
+        @media (min-width: 901px) {
+          .dashboard-wrap { overflow-y: hidden !important; }
+        }
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
@@ -423,8 +429,10 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       />
 
       <div
+        className={view === "dashboard" ? "dashboard-wrap" : undefined}
         style={{
-          maxWidth: view === "calendar" ? "none" : 1100, margin: "0 auto", width: "100%", padding: view === "calendar" ? "16px 24px 12px" : "20px 16px 60px",
+          maxWidth: view === "calendar" ? "none" : 1100, margin: "0 auto", width: "100%",
+          padding: view === "calendar" ? "16px 24px 12px" : view === "dashboard" ? "16px 24px" : "20px 16px 60px",
           flex: 1, minHeight: 0, display: "flex", flexDirection: "column",
           overflowY: view === "calendar" ? "hidden" : "auto",
         }}
