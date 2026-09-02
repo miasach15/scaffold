@@ -49,12 +49,9 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ ...cardStyle, padding: "14px 24px", marginBottom: 14, flexShrink: 0 }}>
         <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
           {greeting()}{firstName ? `, ${firstName}` : ""}
-        </div>
-        <div style={{ display: "inline-flex", background: "#EFF6FF", color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase" }}>
-          Ready to build?
         </div>
       </div>
 
@@ -127,38 +124,38 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, minHeight: 0 }}>
-          <div style={{ ...cardStyle, padding: "16px 20px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
-              <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
-                <Clock size={13} />
+          <div style={{ ...cardStyle, padding: "22px 24px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
+                <Clock size={14} />
               </div>
             </div>
 
-            <div style={{ position: "relative", width: 108, height: 108, margin: "0 auto 12px" }}>
-              <svg width={108} height={108} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={54} cy={54} r={46} fill="none" stroke="#EFEAE3" strokeWidth={10} />
+            <div style={{ position: "relative", width: 148, height: 148, margin: "0 auto 20px" }}>
+              <svg width={148} height={148} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={74} cy={74} r={63} fill="none" stroke="#EFEAE3" strokeWidth={13} />
                 <circle
-                  cx={54} cy={54} r={46} fill="none" stroke={PRIMARY_DARK} strokeWidth={10} strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 46} strokeDashoffset={2 * Math.PI * 46 * 0.04}
+                  cx={74} cy={74} r={63} fill="none" stroke={PRIMARY_DARK} strokeWidth={13} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 63} strokeDashoffset={2 * Math.PI * 63 * 0.04}
                 />
               </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 24, color: INK }}>{pad(focusMinutes)}:00</div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5 }}>{focusMinutes} min focus</div>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 33, color: INK }}>{pad(focusMinutes)}:00</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6 }}>{focusMinutes} min focus</div>
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, flex: 1, padding: "9px 0", fontSize: 13 }}>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, flex: 1, padding: "12px 0", fontSize: 14.5 }}>
                 Start
               </button>
               <button
                 onClick={() => setFocusMinutes((m) => (m === 15 ? 25 : m === 25 ? 50 : 15))}
                 title="Change length"
-                style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
+                style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
               >
-                <RotateCw size={14} />
+                <RotateCw size={16} />
               </button>
             </div>
           </div>
