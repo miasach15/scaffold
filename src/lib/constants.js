@@ -81,7 +81,7 @@ export const DEFAULT_THEME = "ocean";
 // MUTED is secondary text, BORDER is the standard hairline. PAPER_BG is the one
 // background color for the whole app — every page, the sidebar, auth/onboarding, all of
 // it — a warm off-white rather than the previous cool blue-gray.
-export const PAPER_BG = "#F7F5F1";
+export const PAPER_BG = "#F7F6F4";
 export const INK = "#1A1A2E";
 export const MUTED = "#6B7280";
 export const BORDER = "#E5E7EB";
