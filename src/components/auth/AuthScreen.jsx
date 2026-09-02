@@ -64,7 +64,7 @@ export default function AuthScreen() {
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(33,64,163,0.14); }
+        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(60,95,208,0.14); }
         @media (max-width: 640px) {
           input { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }

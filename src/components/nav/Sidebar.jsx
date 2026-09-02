@@ -114,8 +114,8 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
                   onClick={() => go(item.key)}
                   style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 10,
-                    border: active ? `1px solid rgba(33,64,163,0.2)` : "1px solid transparent",
-                    background: active ? "rgba(33,64,163,0.08)" : "transparent",
+                    border: active ? `1px solid rgba(60,95,208,0.2)` : "1px solid transparent",
+                    background: active ? "rgba(60,95,208,0.08)" : "transparent",
                     color: active ? PRIMARY_DARK : MUTED, opacity: active ? 1 : 0.85,
                     fontSize: 14, fontWeight: active ? 700 : 500, textAlign: "left", width: "100%",
                   }}

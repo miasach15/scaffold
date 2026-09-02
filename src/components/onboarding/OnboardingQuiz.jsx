@@ -52,7 +52,7 @@ export default function OnboardingQuiz({ onComplete }) {
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(33,64,163,0.14); }
+        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(60,95,208,0.14); }
 
         @keyframes onboardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .onboard-card { animation: onboardIn 0.5s cubic-bezier(.16,1,.3,1) both; }
