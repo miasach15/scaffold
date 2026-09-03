@@ -94,7 +94,7 @@ export default function OnboardingQuiz({ onComplete }) {
         {step === 1 && (
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
-            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These are yours to change: rename, add, or remove to fit your life. "School" is the one permanent category — Education and Grades tasks always need it — but you can rename it to whatever fits, and yours might need one this doesn't have.</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Rename, add, or remove — these are yours. School can be renamed, just not removed.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} protectedKey={eduKey} />
 
             <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
