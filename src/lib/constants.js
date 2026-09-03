@@ -5,17 +5,17 @@
 // here in one place, each derived from that swatch's own THEME_PRESETS primary hue (a
 // pale bg, a mid-tone border, a dark readable text — same hue carried through all three).
 export const CATEGORY_COLOR_SWATCHES = {
-  ocean: { bg: "#DFE4F6", border: "#95A5DB", text: "#364578" },
-  sky: { bg: "#DDEDF9", border: "#8EC0E1", text: "#305E7E" },
-  emerald: { bg: "#DEF7EC", border: "#93DCBD", text: "#34795C" },
-  pink: { bg: "#FBDAE0", border: "#E98799", text: "#85293A" },
-  amber: { bg: "#FCEAD9", border: "#EBB584", text: "#8C5421" },
-  teal: { bg: "#DDF8F6", border: "#8FE0DA", text: "#317D77" },
+  ocean: { bg: "#E3E6F2", border: "#A1A9CE", text: "#42496C" },
+  sky: { bg: "#E0E4F5", border: "#9AA3D6", text: "#3B4473" },
+  emerald: { bg: "#D9FCF1", border: "#84EBCB", text: "#24896A" },
+  pink: { bg: "#FCD9E4", border: "#EB84A5", text: "#8C2144" },
+  amber: { bg: "#FCEAD9", border: "#EBB684", text: "#885525" },
+  teal: { bg: "#DBFAF7", border: "#8AE6DB", text: "#2B8278" },
   slate: { bg: "#E9EAEC", border: "#B2B6BD", text: "#52555C" },
-  coral: { bg: "#FBDEDA", border: "#E99386", text: "#853428" },
-  lilac: { bg: "#EEDFF7", border: "#C394DB", text: "#613678" },
-  beige: { bg: "#F1EBE4", border: "#CCB9A3", text: "#6A5844" },
-  peach: { bg: "#FCD9D9", border: "#EB8484", text: "#892525" },
+  coral: { bg: "#FADEDB", border: "#E69389", text: "#82342B" },
+  lilac: { bg: "#EBE1F4", border: "#B99CD3", text: "#583D70" },
+  beige: { bg: "#F3ECE3", border: "#CFBBA0", text: "#6D5A41" },
+  peach: { bg: "#FCDDD9", border: "#EB8E84", text: "#8C2C21" },
 };
 
 // The starting set before a user renames/adds/removes any — after that, the live list
@@ -52,32 +52,31 @@ export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" }
 // applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
 // properties on the root element). The fallback values are the default "Ocean" theme,
 // matched to the connected Figma identity kit's settings-accent-color-picker — its
-// main brand color moved from a pale sky blue to this indigo/purple-leaning blue.
+// main brand color is this indigo/blue-purple leaning blue.
 // PRIMARY_DARK intentionally equals PRIMARY here — the exact hex sampled from Figma,
 // left alone rather than synthetically darkened.
-export const PRIMARY = "var(--primary, #3C5FD0)";
-export const PRIMARY_DARK = "var(--primary-dark, #3C5FD0)";
-export const PRIMARY_TINT = "var(--primary-tint, #DDE1EE)";
+export const PRIMARY = "var(--primary, #4A5BA8)";
+export const PRIMARY_DARK = "var(--primary-dark, #4A5BA8)";
+export const PRIMARY_TINT = "var(--primary-tint, #E0E2EB)";
 
 // Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
-// color-grid), hex-sampled directly from its color-dot assets. "Violet" was removed
-// from the design (re-checked directly in Figma) and "Coral" shifted slightly
-// (#FF6F61 -> #F47C6B) — both picked up here. primaryDark deliberately equals primary
-// — the sampled color used as-is, not darkened. primaryTint (a pale wash, not in the
-// kit) is derived from each swatch's own hue, same relationship as the prior preset
-// set. "Ocean" (the default) kept the same hex it already had.
+// color-grid), hex-sampled directly from its color-dot assets — re-checked directly in
+// Figma, the whole set shifted (Ocean/Sky/Emerald/Amber/Coral/Teal/Lilac/Beige/Peach all
+// moved; Slate stayed the same). primaryDark deliberately equals primary — the sampled
+// color used as-is, not darkened. primaryTint (a pale wash, not in the kit) is derived
+// from each swatch's own hue, same relationship as the prior preset set.
 export const THEME_PRESETS = {
-  ocean: { label: "Ocean", primary: "#3C5FD0", primaryDark: "#3C5FD0", primaryTint: "#DDE1EE" },
-  sky: { label: "Sky", primary: "#68B4E7", primaryDark: "#68B4E7", primaryTint: "#DBE8F0" },
-  emerald: { label: "Emerald", primary: "#29B97C", primaryDark: "#29B97C", primaryTint: "#DDEEE7" },
-  pink: { label: "Pink", primary: "#F68A9E", primaryDark: "#F68A9E", primaryTint: "#F2D9DE" },
-  amber: { label: "Amber", primary: "#FF9C44", primaryDark: "#FF9C44", primaryTint: "#F2E5D9" },
-  teal: { label: "Teal", primary: "#21C2B5", primaryDark: "#21C2B5", primaryTint: "#DCEFEE" },
+  ocean: { label: "Ocean", primary: "#4A5BA8", primaryDark: "#4A5BA8", primaryTint: "#E0E2EB" },
+  sky: { label: "Sky", primary: "#8290D8", primaryDark: "#8290D8", primaryTint: "#DEE1ED" },
+  emerald: { label: "Emerald", primary: "#059669", primaryDark: "#059669", primaryTint: "#D9F2EA" },
+  pink: { label: "Pink", primary: "#FF8CB1", primaryDark: "#FF8CB1", primaryTint: "#F2D9E1" },
+  amber: { label: "Amber", primary: "#F57C0B", primaryDark: "#F57C0B", primaryTint: "#F2E5D9" },
+  teal: { label: "Teal", primary: "#14B8A6", primaryDark: "#14B8A6", primaryTint: "#DAF1EE" },
   slate: { label: "Slate", primary: "#6B7280", primaryDark: "#6B7280", primaryTint: "#E4E5E7" },
-  coral: { label: "Coral", primary: "#F47C6B", primaryDark: "#F47C6B", primaryTint: "#F2DCD9" },
-  lilac: { label: "Lilac", primary: "#CB96E6", primaryDark: "#CB96E6", primaryTint: "#E8DDEE" },
-  beige: { label: "Beige", primary: "#DFCFBC", primaryDark: "#DFCFBC", primaryTint: "#EAE6E1" },
-  peach: { label: "Peach", primary: "#FCAEAE", primaryDark: "#FCAEAE", primaryTint: "#F2D9D9" },
+  coral: { label: "Coral", primary: "#F07C6F", primaryDark: "#F07C6F", primaryTint: "#F1DCDA" },
+  lilac: { label: "Lilac", primary: "#B894D9", primaryDark: "#B894D9", primaryTint: "#E6DFEC" },
+  beige: { label: "Beige", primary: "#E5D6C1", primaryDark: "#E5D6C1", primaryTint: "#EBE6E0" },
+  peach: { label: "Peach", primary: "#FFC9C3", primaryDark: "#FFC9C3", primaryTint: "#F2DCD9" },
 };
 export const DEFAULT_THEME = "ocean";
 
@@ -98,7 +97,7 @@ export const TONE = {
   // slipped is still visibly held onto (it rolls onto Today automatically either way),
   // but it's framed as the app carrying it forward for you, not as a red mark against
   // you — hence the brand color instead of an alarm color.
-  carried: { bg: "#DDE1EE", border: "#B1BBDD", text: "#3C5FD0" },
+  carried: { bg: "#E0E2EB", border: "#A1A9CE", text: "#4A5BA8" },
 };
 // Display/headline accent — Instrument Serif (from the Figma identity kit). Every
 // screen that already reads this constant (Journal, TodaySection, MonthView,

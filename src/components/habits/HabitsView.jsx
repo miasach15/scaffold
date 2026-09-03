@@ -7,7 +7,7 @@ import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/
 import HabitHistoryModal from "./HabitHistoryModal";
 
 const STREAK_BG = "#DDE1EE";
-const DONE_BG = "rgba(60,95,208,0.1)";
+const DONE_BG = "rgba(74,91,168,0.1)";
 
 const navBtnStyle = {
   width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",

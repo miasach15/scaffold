@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthProvider";
-import { INK, MUTED, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
+import { INK, MUTED, PAPER_BG, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 import { inputStyle, primaryBtn, ghostBtn } from "../../lib/styles";
 
-// The opening screens (this one + OnboardingQuiz) get their own accent — Lilac — rather
-// than the user's own chosen app theme, which doesn't exist yet at this point anyway.
-const LILAC = THEME_PRESETS.lilac.primary;
-const LILAC_TINT = THEME_PRESETS.lilac.primaryTint;
+// The opening screens (this one + OnboardingQuiz) get their own accent — Sky — matching
+// the dedicated "scaffold-opening" launch screen in Figma (monogram + tagline both use
+// this same blue-purple), rather than the user's own chosen app theme, which doesn't
+// exist yet at this point anyway. Background stays the app's normal PAPER_BG, same as
+// that Figma screen's own near-white background.
+const SKY = THEME_PRESETS.sky.primary;
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
@@ -63,13 +65,13 @@ export default function AuthScreen() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: LILAC_TINT, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${LILAC} !important; box-shadow: 0 0 0 3px rgba(203,150,230,0.14); }
+        input:focus { outline: none; border-color: ${SKY} !important; box-shadow: 0 0 0 3px rgba(130,144,216,0.14); }
         @media (max-width: 640px) {
           input { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
@@ -86,7 +88,7 @@ export default function AuthScreen() {
       `}</style>
       <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <Monogram size={26} color={LILAC} />
+          <Monogram size={26} color={SKY} />
           <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
         </div>
         <div style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>
@@ -124,7 +126,7 @@ export default function AuthScreen() {
         {error && <div style={{ fontSize: 12.5, color: "#B03A3A", marginTop: 10 }}>{error}</div>}
         {info && <div style={{ fontSize: 12.5, color: "#2C6B4C", marginTop: 10 }}>{info}</div>}
 
-        <button type="submit" disabled={busy} className="btn-primary" style={{ ...primaryBtn, background: LILAC, width: "100%", marginTop: 18, opacity: busy ? 0.6 : 1 }}>
+        <button type="submit" disabled={busy} className="btn-primary" style={{ ...primaryBtn, background: SKY, width: "100%", marginTop: 18, opacity: busy ? 0.6 : 1 }}>
           {busy ? "Please wait..." : mode === "sign-in" ? "Sign in" : mode === "sign-up" ? "Sign up" : "Send reset link"}
         </button>
 
