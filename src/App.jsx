@@ -77,6 +77,10 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
 
   const [view, setView] = useState("dashboard");
   useUsageTracking(userId, view);
+  // Set right after onboarding finishes (see completeOnboarding) — Dashboard reads this
+  // once to auto-open Brain Dump the first time it's reached, then clears it, so it
+  // never pops open again on later visits.
+  const [autoOpenBrainDump, setAutoOpenBrainDump] = useState(false);
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   // ISO date string, or null for week view. A cramped 7-column week grid is hard to use
   // on a phone-width screen, so start narrow screens on today's single-day view instead
@@ -236,6 +240,11 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const completeOnboarding = async (answers) => {
     await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, workStyle: answers.workStyle, educationCategory: answers.educationCategory, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
+    // Straight into the two things the "Up next" screen just showed: land on Calendar
+    // to add scheduled events first, then Brain Dump auto-opens the first time Dashboard
+    // is reached (see autoOpenBrainDump).
+    setView("calendar");
+    setAutoOpenBrainDump(true);
   };
 
   // mode: "one" (default) or "following" — for repeating edu items (no stored series id),
@@ -465,6 +474,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onSelectDay={setDayView}
             onStartFocus={openGenericFocus}
             onAddTask={addTask}
+            autoOpenBrainDump={autoOpenBrainDump}
+            onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
           />
         )}
         {view === "calendar" && monthView && (

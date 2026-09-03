@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame, RotateCw } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
@@ -23,12 +23,20 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask }) {
+export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
   const [showBrainDump, setShowBrainDump] = useState(false);
+  // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
+  // the second of the two "Up next" steps the onboarding Done screen just promised.
+  useEffect(() => {
+    if (autoOpenBrainDump) {
+      setShowBrainDump(true);
+      onAutoOpenBrainDumpHandled?.();
+    }
+  }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
   const todayISO = toISO(new Date());
   const weekStart = startOfWeek(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);

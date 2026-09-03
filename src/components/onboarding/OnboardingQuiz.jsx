@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, CheckSquare } from "lucide-react";
+import { Brain, CalendarDays } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, EVENT_COLOR, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, PAPER_BG, SUGGESTED_HABITS, TASK_COLOR, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { Monogram } from "../shared/Misc";
@@ -127,25 +127,19 @@ export default function OnboardingQuiz({ onComplete }) {
               </div>
             )}
 
-            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Two things to try first</div>
+            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Up next</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: EVENT_COLOR.bg, border: `1px solid ${EVENT_COLOR.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <CalendarDays size={14} color={EVENT_COLOR.text} strokeWidth={2.2} />
                 </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Add your scheduled events</div>
-                  <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>Classes, practices, shifts — whatever's already fixed for the next two weeks.</div>
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Add your events for the next two weeks</div>
               </div>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: TASK_COLOR.bg, border: `1px solid ${TASK_COLOR.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <CheckSquare size={14} color={TASK_COLOR.text} strokeWidth={2.2} />
+                  <Brain size={14} color={TASK_COLOR.text} strokeWidth={2.2} />
                 </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Then head to Tasks</div>
-                  <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>Add anything you've been putting off — it'll show up in Today when it matters.</div>
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Brain dump your tasks</div>
               </div>
             </div>
           </div>
