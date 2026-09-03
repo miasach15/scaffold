@@ -234,7 +234,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   };
 
   const completeOnboarding = async (answers) => {
-    await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, focusAreas: answers.focusAreas, workStyle: answers.workStyle, educationCategory: answers.educationCategory, onboarded: true });
+    await updateProfile({ name: answers.name, categoryKeys: answers.categoryKeys, workStyle: answers.workStyle, educationCategory: answers.educationCategory, onboarded: true });
     if (answers.habitPicks.length > 0) await addHabitsBulk(answers.habitPicks);
   };
 

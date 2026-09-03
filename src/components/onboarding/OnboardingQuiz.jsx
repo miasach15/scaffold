@@ -19,7 +19,6 @@ export default function OnboardingQuiz({ onComplete }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [categoryKeys, setCategoryKeys] = useState(DEFAULT_CATEGORY_KEYS);
-  const [focusAreas, setFocusAreas] = useState([]);
   const [habitPicks, setHabitPicks] = useState([]);
   // Whichever category plays the Education/Grades role — starts as "School" (the
   // permanent one, see CategoryEditor's protectedKey) but tracks a rename here too, same
@@ -33,7 +32,6 @@ export default function OnboardingQuiz({ onComplete }) {
     const trimmed = newKey.trim();
     if (!trimmed || trimmed === oldKey || categoryKeys.includes(trimmed)) return;
     setCategoryKeys((ks) => ks.map((k) => (k === oldKey ? trimmed : k)));
-    setFocusAreas((f) => f.map((k) => (k === oldKey ? trimmed : k)));
     if (oldKey === eduKey) setEduKey(trimmed);
   };
   const addCategory = (name2) => {
@@ -45,16 +43,14 @@ export default function OnboardingQuiz({ onComplete }) {
     if (categoryKeys.length <= 1) return;
     if (key === eduKey) return; // permanent — Education/Grades tasks always need somewhere to land
     setCategoryKeys((ks) => ks.filter((k) => k !== key));
-    setFocusAreas((f) => f.filter((k) => k !== key));
   };
 
-  const toggleFocus = (c) => setFocusAreas((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
   const toggleHabit = (h) => setHabitPicks((hs) => (hs.includes(h) ? hs.filter((x) => x !== h) : [...hs, h]));
 
-  const steps = ["Name", "Focus", "Habits", "Done"];
+  const steps = ["Name", "Categories", "Habits", "Done"];
   const lastStep = steps.length - 1;
-  const finish = () => onComplete({ name: name.trim(), categoryKeys, focusAreas, habitPicks, workStyle: "Mix of both", educationCategory: eduKey });
-  const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both", educationCategory: DEFAULT_CATEGORY_KEYS[0] });
+  const finish = () => onComplete({ name: name.trim(), categoryKeys, habitPicks, workStyle: "Mix of both", educationCategory: eduKey });
+  const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, habitPicks: [], workStyle: "Mix of both", educationCategory: DEFAULT_CATEGORY_KEYS[0] });
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -96,25 +92,6 @@ export default function OnboardingQuiz({ onComplete }) {
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Rename, add, or remove — these are yours. School can be renamed, just not removed.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} protectedKey={eduKey} />
-
-            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, margin: "18px 0 8px" }}>Focus on right now</div>
-            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 10 }}>Pick as many as you like. This shapes your Goals suggestions.</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {categoryKeys.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => toggleFocus(c)}
-                  style={{
-                    padding: "9px 16px", borderRadius: 999, fontSize: 13.5, fontWeight: 700,
-                    border: `1.5px solid ${focusAreas.includes(c) ? categoryColorMap[c].border : BORDER}`,
-                    background: focusAreas.includes(c) ? categoryColorMap[c].bg : "#fff",
-                    color: focusAreas.includes(c) ? categoryColorMap[c].text : MUTED,
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
           </div>
         )}
 
@@ -144,10 +121,11 @@ export default function OnboardingQuiz({ onComplete }) {
         {step === 3 && (
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
-            <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, marginBottom: 16 }}>
-              {focusAreas.length > 0 && <>Focusing on {focusAreas.join(", ")}. </>}
-              {habitPicks.length > 0 && <>Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}. </>}
-            </div>
+            {habitPicks.length > 0 && (
+              <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, marginBottom: 16 }}>
+                Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}.
+              </div>
+            )}
 
             <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Two things to try first</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
