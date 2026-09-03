@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { BORDER } from "../../lib/constants";
+import { ChevronUp, Plus } from "lucide-react";
+import { BORDER, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
+
+const toggleBtn = {
+  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+  border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "5px 11px 5px 8px",
+  fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+};
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -20,6 +27,10 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   const [outcomeDeadline, setOutcomeDeadline] = useState("");
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState(null);
+  // Category + deadline stay tucked behind a toggle by default on both add paths — one
+  // textarea/input and one button up front, not four decisions before you can start.
+  const [showAiOptions, setShowAiOptions] = useState(false);
+  const [showManualOptions, setShowManualOptions] = useState(false);
 
   const addGoal = (t, cat, useDeadline = true) => {
     const tt = (t !== undefined ? t : title).trim();
@@ -69,30 +80,24 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
   return (
     <div>
-      <SectionHeader title="Goals" subtitle="The big things you're building: a business, an app, a nonprofit, a real project. Broken into a clear, day-by-day path." />
+      <SectionHeader title="Goals" subtitle="Big projects, broken into a clear, day-by-day path." />
 
-      <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 16, marginBottom: 16 }}>
+      <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, marginBottom: 6 }}>
-          Describe what you're building, we'll break it down
+          What are you building?
         </div>
         <textarea
           value={outcome}
           onChange={(e) => setOutcome(e.target.value)}
           placeholder="e.g. Launch a small tutoring business by the end of the school year"
           rows={2}
-          style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+          style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff" }}
         />
         <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-            {categoryKeys.map((c) => <option key={c}>{c}</option>)}
-          </select>
-          <input
-            type="date"
-            value={outcomeDeadline}
-            onChange={(e) => setOutcomeDeadline(e.target.value)}
-            title="Give it an end date and every milestone/action gets a date spread automatically around your existing events and tasks, instead of landing undated"
-            style={{ ...inputStyle, width: 150 }}
-          />
+          <button onClick={() => setShowAiOptions((x) => !x)} className="hoverable" style={toggleBtn}>
+            {showAiOptions ? <ChevronUp size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
+            {showAiOptions ? "Hide options" : "Category or end date"}
+          </button>
           <div style={{ flex: 1 }} />
           <button
             onClick={breakItDown}
@@ -103,28 +108,52 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             {planning ? "Breaking it down..." : "Break it down for me"}
           </button>
         </div>
+        {showAiOptions && (
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130, background: "#fff" }}>
+              {categoryKeys.map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <input
+              type="date"
+              value={outcomeDeadline}
+              onChange={(e) => setOutcomeDeadline(e.target.value)}
+              title="Give it an end date and every milestone/action gets a date spread automatically around your existing events and tasks, instead of landing undated"
+              style={{ ...inputStyle, width: 150, background: "#fff" }}
+            />
+          </div>
+        )}
         {planError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 8 }}>{planError}</div>}
       </div>
 
-      <div data-tour="goals-filter" style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {["All", ...categoryKeys].map((c) => (
-          <FilterPill key={c} label={c} active={filter === c} color={CATEGORY_COLORS[c]} onClick={() => setFilter(c)} />
-        ))}
-      </div>
-
-      <div data-tour="goals-add">
+      <div data-tour="goals-add" style={{ marginBottom: 14 }}>
         <AddRow>
-          <input placeholder="Or add a goal manually (a real project, not a quick errand)..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
-          <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-            {categoryKeys.map((c) => <option key={c}>{c}</option>)}
-          </select>
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
+          <input placeholder="Or add a goal manually..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addGoal()} />
           <button onClick={() => addGoal()} className="btn-primary" style={primaryBtn}>Add</button>
         </AddRow>
+        <button onClick={() => setShowManualOptions((x) => !x)} className="hoverable" style={toggleBtn}>
+          {showManualOptions ? <ChevronUp size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
+          {showManualOptions ? "Hide options" : "Category or deadline"}
+        </button>
+        {showManualOptions && (
+          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
+              {categoryKeys.map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
+          </div>
+        )}
       </div>
 
+      {goals.length > 0 && (
+        <div data-tour="goals-filter" style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+          {["All", ...categoryKeys].map((c) => (
+            <FilterPill key={c} label={c} active={filter === c} color={CATEGORY_COLORS[c]} onClick={() => setFilter(c)} />
+          ))}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
-        <EmptyState text="No goals here yet. This is the place for the big stuff: a business, an app, a nonprofit, a real project. Small errands belong on Tasks." />
+        <EmptyState text="No goals yet. Big projects live here — quick errands go on Tasks." />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((g) => (
