@@ -3,11 +3,11 @@ import { PRIMARY_DARK, serifFont } from "../../lib/constants";
 // The brand kit's "S" monogram — a solid badge with the wordmark's first letter in
 // Instrument Serif, per its "Logo & Monogram" section. Shared so every wordmark
 // (Sidebar, AuthScreen, Dashboard) uses the exact same mark.
-export function Monogram({ size = 28 }) {
+export function Monogram({ size = 28, color = PRIMARY_DARK }) {
   return (
     <div
       style={{
-        width: size, height: size, borderRadius: size * 0.2, background: PRIMARY_DARK,
+        width: size, height: size, borderRadius: size * 0.2, background: color,
         display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
       }}
     >

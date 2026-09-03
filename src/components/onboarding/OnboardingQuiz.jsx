@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { CalendarDays, CheckSquare } from "lucide-react";
-import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, EVENT_COLOR, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, PAPER_BG, PRIMARY_DARK, SUGGESTED_HABITS, TASK_COLOR, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, EVENT_COLOR, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, SUGGESTED_HABITS, TASK_COLOR, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { Monogram } from "../shared/Misc";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
 import CategoryEditor from "../shared/CategoryEditor";
+
+// Same opening-flow accent as AuthScreen — Lilac, not the user's own app theme (which
+// doesn't exist yet at this point anyway).
+const LILAC = THEME_PRESETS.lilac.primary;
+const LILAC_TINT = THEME_PRESETS.lilac.primaryTint;
 
 export default function OnboardingQuiz({ onComplete }) {
   // No CategoryColorsProvider exists yet at this point (onboarding happens before one is
@@ -52,14 +57,14 @@ export default function OnboardingQuiz({ onComplete }) {
   const skip = () => onComplete({ name: "", categoryKeys: DEFAULT_CATEGORY_KEYS, focusAreas: [], habitPicks: [], workStyle: "Mix of both", educationCategory: DEFAULT_CATEGORY_KEYS[0] });
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: LILAC_TINT, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${PRIMARY_DARK} !important; box-shadow: 0 0 0 3px rgba(60,95,208,0.14); }
+        input:focus { outline: none; border-color: ${LILAC} !important; box-shadow: 0 0 0 3px rgba(203,150,230,0.14); }
 
         @keyframes onboardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .onboard-card { animation: onboardIn 0.5s cubic-bezier(.16,1,.3,1) both; }
@@ -69,12 +74,12 @@ export default function OnboardingQuiz({ onComplete }) {
       `}</style>
       <div className="onboard-card" style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <Monogram size={26} />
+          <Monogram size={26} color={LILAC} />
           <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
         </div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>
           {steps.map((s, i) => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? PRIMARY_DARK : BORDER, transition: "background-color .2s ease" }} />
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? LILAC : BORDER, transition: "background-color .2s ease" }} />
           ))}
         </div>
 
@@ -172,9 +177,9 @@ export default function OnboardingQuiz({ onComplete }) {
           {step > 0 && <button onClick={() => setStep((s) => s - 1)} style={ghostBtn}>Back</button>}
           <div style={{ flex: 1 }} />
           {step < lastStep ? (
-            <button onClick={() => setStep((s) => s + 1)} className="btn-primary" style={primaryBtn}>Next</button>
+            <button onClick={() => setStep((s) => s + 1)} className="btn-primary" style={{ ...primaryBtn, background: LILAC }}>Next</button>
           ) : (
-            <button onClick={finish} className="btn-primary" style={primaryBtn}>Get started</button>
+            <button onClick={finish} className="btn-primary" style={{ ...primaryBtn, background: LILAC }}>Get started</button>
           )}
         </div>
         {step < lastStep && (
