@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { CheckSquare, ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
-import { TASK_COLOR } from "../../lib/constants";
+import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
@@ -203,7 +202,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
 
   return (
     <div>
-      <SectionHeader title="Tasks" subtitle="Everything you need to get done." Icon={CheckSquare} tint={TASK_COLOR} />
+      <SectionHeader title="Tasks" subtitle="Everything you need to get done." />
 
       <TodaySection
         tasks={tasks}

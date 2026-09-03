@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { GraduationCap, NotebookPen } from "lucide-react";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { NotebookPen } from "lucide-react";
 import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -13,7 +12,6 @@ export default function EducationView({
   eduItems,
   tasks,
   events,
-  educationCategory,
   onAddEduItem,
   onSetEduDone,
   onRemoveEduItem,
@@ -24,7 +22,6 @@ export default function EducationView({
   inboxItems,
   onDiscardInbox,
 }) {
-  const CATEGORY_COLORS = useCategoryColors();
   const [title, setTitle] = useState("");
 
   // A Quick Capture reminder — pulls the text into the add form above and clears the
@@ -188,7 +185,7 @@ export default function EducationView({
 
   return (
     <div>
-      <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." Icon={GraduationCap} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
+      <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." />
 
       {inboxItems && inboxItems.length > 0 && (
         <div style={{ marginBottom: 16 }}>

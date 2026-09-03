@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Percent, Plus } from "lucide-react";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { Plus } from "lucide-react";
 import { ghostBtn, inputStyle } from "../../lib/styles";
 import { EmptyState, SectionHeader } from "../shared/Misc";
 import ClassCard from "./ClassCard";
@@ -23,7 +22,6 @@ export default function GradesView({
   onRemoveItem,
   onEnsureClass,
 }) {
-  const CATEGORY_COLORS = useCategoryColors();
   const [newClassName, setNewClassName] = useState("");
 
   const itemsBySubject = (key) => eduItems.filter((e) => (e.subject || NO_SUBJECT_KEY) === key);
@@ -49,7 +47,7 @@ export default function GradesView({
 
   return (
     <div>
-      <SectionHeader title="Grades" subtitle="One setup per class: total points, or your own weighted categories." Icon={Percent} tint={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} />
+      <SectionHeader title="Grades" subtitle="One setup per class: total points, or your own weighted categories." />
 
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         <input

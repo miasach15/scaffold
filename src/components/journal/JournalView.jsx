@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { BookOpen } from "lucide-react";
 import { BORDER, JOURNAL_PROMPTS, serifFont } from "../../lib/constants";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 
 export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
-  const CATEGORY_COLORS = useCategoryColors();
   const [category, setCategory] = useState("Gratitude");
   const [prompt, setPrompt] = useState(() => JOURNAL_PROMPTS.Gratitude[0]);
   const [mode, setMode] = useState("prompt"); // 'prompt' | 'freewrite'
@@ -30,7 +27,7 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
 
   return (
     <div>
-      <SectionHeader title="Journal" Icon={BookOpen} tint={CATEGORY_COLORS.Personal} />
+      <SectionHeader title="Journal" />
 
       <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 16, marginBottom: 20 }}>
         <div data-tour="journal-prompt" style={{ display: "flex", gap: 6, marginBottom: 12 }}>

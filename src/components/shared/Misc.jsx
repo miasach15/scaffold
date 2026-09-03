@@ -1,7 +1,7 @@
 import { PRIMARY_DARK, serifFont } from "../../lib/constants";
 
-// The brand kit's "S" monogram — a solid badge with the wordmark's first letter in
-// Instrument Serif, per its "Logo & Monogram" section. Shared so every wordmark
+// The brand kit's monogram — three stacked bars (widening top to bottom) on a solid
+// rounded badge, per its "Logo & Monogram" section. Shared so every wordmark
 // (Sidebar, AuthScreen, Dashboard) uses the exact same mark.
 export function Monogram({ size = 28, color = PRIMARY_DARK }) {
   return (
@@ -11,24 +11,20 @@ export function Monogram({ size = 28, color = PRIMARY_DARK }) {
         display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
       }}
     >
-      <div style={{ fontFamily: serifFont, fontSize: size * 0.6, color: "#fff", lineHeight: 1 }}>S</div>
+      <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ display: "block" }}>
+        <rect x="13.5" y="10" width="13" height="4" rx="2" fill="#fff" />
+        <rect x="9" y="18" width="22" height="4" rx="2" fill="#fff" />
+        <rect x="5" y="27" width="30" height="4" rx="2" fill="#fff" />
+      </svg>
     </div>
   );
 }
 
-export function SectionHeader({ title, subtitle, Icon, tint }) {
-  const t = tint || { bg: "#F1F3F5", border: "#E2E8F0", text: "#3A3A3A" };
+export function SectionHeader({ title, subtitle }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-      {Icon && (
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: t.bg, border: `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon size={20} strokeWidth={2} color={t.text} />
-        </div>
-      )}
-      <div>
-        <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 500, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
-        <div style={{ fontSize: 13.5, color: "#8B95A1", marginTop: 4 }}>{subtitle}</div>
-      </div>
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 500, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
+      <div style={{ fontSize: 13.5, color: "#8B95A1", marginTop: 4 }}>{subtitle}</div>
     </div>
   );
 }

@@ -564,7 +564,6 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             eduItems={eduItems}
             tasks={tasks}
             events={events}
-            educationCategory={profile.educationCategory}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
             onRemoveEduItem={removeEduItem}
