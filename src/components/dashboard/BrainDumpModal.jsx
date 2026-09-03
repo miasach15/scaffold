@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
+import { SURFACE } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { uid } from "../../lib/id";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
@@ -143,7 +144,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, overflowY: "auto", minHeight: 0 }}>
                 {drafts.map((d) => (
-                  <div key={d.id} style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: "#fff" }}>
+                  <div key={d.id} style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: SURFACE }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                       <input
                         value={d.title}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame, RotateCw } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -15,6 +15,26 @@ import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pa
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import BrainDumpModal from "./BrainDumpModal";
+
+// A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
+// for the first/soonest item, a paler ring for the rest) connected by a line down to the
+// next row, per category color. Figma's dashboard mockup carries this same treatment.
+function TimelineRow({ item, col, isFirst, isLast }) {
+  return (
+    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14 }}>
+      <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isFirst ? col.text : col.bg, border: isFirst ? "none" : `1.5px solid ${col.border}` }} />
+        {!isLast && <div style={{ flex: 1, width: 1.5, background: col.border, marginTop: 2 }} />}
+      </div>
+      <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+      </div>
+      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration * 60)}m</div>}
+    </div>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -129,19 +149,13 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
               <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
-                {todaysTimedTasks.map((item) => {
-                  const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
-                  return (
-                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0 }}>{decimalToTimeLabel(item.start)}</div>
-                      <div style={{ flex: 1, background: "#fff", borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                      </div>
-                      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{Math.round(item.duration * 60)}m</div>}
-                    </div>
-                  );
-                })}
+                {todaysTimedTasks.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {todaysTimedTasks.map((item, i) => (
+                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} />
+                    ))}
+                  </div>
+                )}
                 {todaysUntimed.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 4 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Anytime today</div>
@@ -159,20 +173,10 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                 {todaysEvents.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Today's events</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {todaysEvents.map((item) => {
-                        const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
-                        return (
-                          <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0 }}>{decimalToTimeLabel(item.start)}</div>
-                            <div style={{ flex: 1, background: "#fff", borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
-                              <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                            </div>
-                            {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{Math.round(item.duration * 60)}m</div>}
-                          </div>
-                        );
-                      })}
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      {todaysEvents.map((item, i) => (
+                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} />
+                      ))}
                     </div>
                   </div>
                 )}
@@ -211,7 +215,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
               <button
                 onClick={() => setFocusMinutes((m) => (m === 15 ? 25 : m === 25 ? 50 : 15))}
                 title="Change length"
-                style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
+                style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${BORDER}`, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
               >
                 <RotateCw size={16} />
               </button>

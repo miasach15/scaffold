@@ -83,8 +83,11 @@ export const DEFAULT_THEME = "ocean";
 // Surface + ink/muted/border tones. INK replaces pure black for headline/body text,
 // MUTED is secondary text, BORDER is the standard hairline. PAPER_BG is the one
 // background color for the whole app — every page, the sidebar, auth/onboarding, all of
-// it — a warm off-white rather than the previous cool blue-gray.
-export const PAPER_BG = "#F7F6F4";
+// it. SURFACE is the layer that sits just above it — cards, modals, chips — a hair
+// warmer/grayer than pure white so it reads as a distinct plane, not a cutout. Both
+// hex-sampled from the Figma kit's "Base & Typography" swatches (Background/Surface).
+export const PAPER_BG = "#FDFCFB";
+export const SURFACE = "#FAFAF9";
 export const INK = "#1A1A2E";
 export const MUTED = "#6B7280";
 export const BORDER = "#E5E7EB";
@@ -105,7 +108,7 @@ export const TONE = {
 // HabitHistoryModal, SettingsModal, Goals, Habits) picks up the font automatically.
 export const serifFont = "'Instrument Serif', Georgia, serif";
 export const cardStyle = {
-  background: "#fff",
+  background: SURFACE,
   border: `1px solid ${BORDER}`,
   borderRadius: 18,
   boxShadow: "0 4px 24px rgba(26,26,46,0.05)",
