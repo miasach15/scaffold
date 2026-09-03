@@ -12,10 +12,10 @@ export const CATEGORY_COLOR_SWATCHES = {
   amber: { bg: "#FCEAD9", border: "#EBB684", text: "#885525" },
   teal: { bg: "#DBFAF7", border: "#8AE6DB", text: "#2B8278" },
   slate: { bg: "#E9EAEC", border: "#B2B6BD", text: "#52555C" },
-  coral: { bg: "#FADEDB", border: "#E69389", text: "#82342B" },
+  coral: { bg: "#FCDDD9", border: "#EB8E84", text: "#8C2C21" },
   lilac: { bg: "#EBE1F4", border: "#B99CD3", text: "#583D70" },
-  beige: { bg: "#F3ECE3", border: "#CFBBA0", text: "#6D5A41" },
-  peach: { bg: "#FCDDD9", border: "#EB8E84", text: "#8C2C21" },
+  beige: { bg: "#F0EBE6", border: "#C7BAA9", text: "#655949" },
+  peach: { bg: "#FCDCD9", border: "#EB8D84", text: "#8B2B22" },
 };
 
 // The starting set before a user renames/adds/removes any — after that, the live list
@@ -61,10 +61,10 @@ export const PRIMARY_TINT = "var(--primary-tint, #E0E2EB)";
 
 // Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
 // color-grid), hex-sampled directly from its color-dot assets — re-checked directly in
-// Figma, the whole set shifted (Ocean/Sky/Emerald/Amber/Coral/Teal/Lilac/Beige/Peach all
-// moved; Slate stayed the same). primaryDark deliberately equals primary — the sampled
-// color used as-is, not darkened. primaryTint (a pale wash, not in the kit) is derived
-// from each swatch's own hue, same relationship as the prior preset set.
+// Figma; this pass only Coral/Beige/Peach had moved (the other 8 held steady).
+// primaryDark deliberately equals primary — the sampled color used as-is, not darkened.
+// primaryTint (a pale wash, not in the kit) is derived from each swatch's own hue, same
+// relationship as the prior preset set.
 export const THEME_PRESETS = {
   ocean: { label: "Ocean", primary: "#4A5BA8", primaryDark: "#4A5BA8", primaryTint: "#E0E2EB" },
   sky: { label: "Sky", primary: "#8290D8", primaryDark: "#8290D8", primaryTint: "#DEE1ED" },
@@ -73,10 +73,10 @@ export const THEME_PRESETS = {
   amber: { label: "Amber", primary: "#F57C0B", primaryDark: "#F57C0B", primaryTint: "#F2E5D9" },
   teal: { label: "Teal", primary: "#14B8A6", primaryDark: "#14B8A6", primaryTint: "#DAF1EE" },
   slate: { label: "Slate", primary: "#6B7280", primaryDark: "#6B7280", primaryTint: "#E4E5E7" },
-  coral: { label: "Coral", primary: "#F07C6F", primaryDark: "#F07C6F", primaryTint: "#F1DCDA" },
+  coral: { label: "Coral", primary: "#FF9286", primaryDark: "#FF9286", primaryTint: "#F2DBD9" },
   lilac: { label: "Lilac", primary: "#B894D9", primaryDark: "#B894D9", primaryTint: "#E6DFEC" },
-  beige: { label: "Beige", primary: "#E5D6C1", primaryDark: "#E5D6C1", primaryTint: "#EBE6E0" },
-  peach: { label: "Peach", primary: "#FFC9C3", primaryDark: "#FFC9C3", primaryTint: "#F2DCD9" },
+  beige: { label: "Beige", primary: "#CEBFAB", primaryDark: "#CEBFAB", primaryTint: "#E9E6E2" },
+  peach: { label: "Peach", primary: "#FEABA3", primaryDark: "#FEABA3", primaryTint: "#F2DBD9" },
 };
 export const DEFAULT_THEME = "ocean";
 
