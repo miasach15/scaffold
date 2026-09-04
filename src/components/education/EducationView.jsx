@@ -35,7 +35,11 @@ export default function EducationView({
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
-  const [workDays, setWorkDays] = useState(3);
+  // A single work session by default — not broken down into multiple unless you say so
+  // (bump this, switch to "Every day," or use AI). One session, on whichever day between
+  // now and the due date is least busy, carrying forward day to day if it slips by
+  // undone — not three same-titled "Work on X" sessions competing for attention.
+  const [workDays, setWorkDays] = useState(1);
   const [useAI, setUseAI] = useState(false); // break it down with AI, applied on top of whichever schedule above is picked
   const [assignmentDetails, setAssignmentDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);

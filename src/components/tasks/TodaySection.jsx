@@ -23,6 +23,10 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //      unlike a single plain task. Checking it off completes the next remaining step.
 //   4. An Education deadline or goal action — only shows up once actually due/overdue
 //      (today or earlier); these already have their own per-day/per-deadline scheduling.
+//   5. An Education work session ("Work on X"/"Study X") — same as #4, only shows once
+//      its scheduled day arrives. If more than one for the same assignment/test have
+//      slipped by undone, only the most recent shows — never a pile of identically-
+//      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
 export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -58,9 +62,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // Only a task/step you own gets a "Not today" button — pushing its date forward is
   // safe since it's self-imposed. Education deadlines and goal actions are external
   // commitments; snoozing those would just be lying to yourself about when they're due,
-  // so they don't get one.
+  // so they don't get one. Education work sessions (eduId set) are handled separately
+  // below — they need collapsing, not a flat row per session.
   const taskItems = tasks
-    .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
+    .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done,
       category: t.category || "Personal",
@@ -68,6 +73,30 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenDetail(t.id),
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
+
+  // Education work sessions ("Work on X"/"Study X") collapse per assignment/test the
+  // same way a "break it down" task collapses per group — a due/overdue, still-undone
+  // session is this eduId's "next thing to do," but if several scheduled days have gone
+  // by undone, only the most recent one shows. The earlier missed ones just drop out of
+  // view rather than piling up as separate rows with the same title; the deadline itself
+  // (below) already covers what's actually due regardless of how many sessions slipped.
+  const bySessionEdu = {};
+  tasks.forEach((t) => {
+    if (!t.eduId || t.groupId || (t.done && !justDone.has(t.id))) return;
+    (bySessionEdu[t.eduId] ||= []).push(t);
+  });
+  const eduSessionItems = Object.values(bySessionEdu).flatMap((sessions) => {
+    const due = sessions.filter((t) => t.date && t.date <= todayISO).sort((a, b) => a.date.localeCompare(b.date));
+    const next = due[due.length - 1];
+    if (!next) return [];
+    return [{
+      id: next.id, title: next.title, date: next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done,
+      category: next.category || "Personal",
+      col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
+      onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenDetail(next.id),
+      onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
+    }];
+  });
 
   // A "break it down" task always has 2+ steps (a single-step breakdown never gets
   // grouped in the first place — see confirmPlan), so every group here genuinely has
@@ -122,7 +151,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     if (it.category === "Personal") return 2;
     return 1;
   };
-  const sortedAll = [...taskItems, ...groupItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
+  const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
     if (!a.date && !b.date) return categoryRank(a) - categoryRank(b);
     if (!a.date) return 1;
     if (!b.date) return -1;
