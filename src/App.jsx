@@ -669,9 +669,11 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         <FocusTimerModal
           task={focusTask}
           tasks={tasks}
+          profile={profile}
+          setView={setView}
           onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
-          onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); setFocusTask(null); }}
+          onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); }}
           defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
         />
       )}
