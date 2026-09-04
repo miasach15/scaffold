@@ -11,7 +11,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // background rather than a boxed-off panel. Applied to every section after the first one
 // in each column.
 const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import BrainDumpModal from "./BrainDumpModal";
@@ -68,7 +68,20 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   // after. Events are fixed appointments, not something to act on, so they're kept as
   // their own list below the tasks rather than interleaved by time with them.
   const todaysTimedTasks = tasks.filter((t) => t.date === todayISO && t.start != null && !t.done).sort((a, b) => a.start - b.start);
-  const todaysUntimed = tasks.filter((t) => t.date === todayISO && t.start == null && !t.done);
+  // A plain due-dated task (no breakdown, not from Education, not recurring) shouldn't
+  // just sit invisible until the exact day it's due — same "shows up early, dimmed,
+  // until it's close" rule TodaySection already gives it on the Tasks page. And once its
+  // due date has passed without being done, it carries forward onto today instead of
+  // vanishing on a date that's scrolled by, matching the same treatment Calendar gives
+  // an overdue item. Either way it lands in "Anytime today," since a specific time slot
+  // from its original day doesn't apply once it's showing early or carried over.
+  const todaysUntimed = [
+    ...tasks.filter((t) => t.date === todayISO && t.start == null && !t.done),
+    ...tasks.filter((t) => {
+      if (t.done || t.groupId || t.eduId || t.isRecurring || !t.date || t.date === todayISO) return false;
+      return t.date < todayISO || inLeadWindow(t.date, defaultLeadDays(t), t.done);
+    }),
+  ].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
   const activeGoal = useMemo(() => {
@@ -164,7 +177,10 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                       return (
                         <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
                           <div style={{ width: 6, height: 6, borderRadius: 3, background: col.border, flexShrink: 0 }} />
-                          <div style={{ fontSize: 13, color: INK }}>{t.title}</div>
+                          <div style={{ flex: 1, fontSize: 13, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                          {t.date && t.date !== todayISO && (
+                            <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
+                          )}
                         </div>
                       );
                     })}
