@@ -24,11 +24,11 @@ function TimelineRow({ item, col, isFirst, isLast }) {
     <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isFirst ? col.text : col.bg, border: isFirst ? "none" : `1.5px solid ${col.border}` }} />
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isFirst ? col.accent : col.bg, border: isFirst ? "none" : `1.5px solid ${col.border}` }} />
         {!isLast && <div style={{ flex: 1, width: 1.5, background: col.border, marginTop: 2 }} />}
       </div>
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase" }}>{item.category}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration * 60)}m</div>}
@@ -97,13 +97,19 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
     return withProgress.sort((a, b) => b.pct - a.pct)[0];
   }, [goals]);
 
-  // Just task due dates and tests here — goal deadlines/milestones/actions have their own
-  // "Goal Progress" card above, so mixing them in here would just repeat that.
+  // Just real due dates here — goal deadlines/milestones/actions have their own "Goal
+  // Progress" card above, so mixing them in here would just repeat that. And within
+  // tasks: only a standalone one-time task or a "break it down" project's own overall
+  // due date, never one of its individual steps — those are work days, not deadlines,
+  // and would otherwise flood this list with entries for the same project. Education
+  // items (tests, homework, assignments alike) are real deadlines and belong here too;
+  // an Education-generated "work on X" session task is excluded the same way a
+  // breakdown step is, for the same reason.
   const upcoming = useMemo(
     () =>
       dueChips
         .filter((c) => !c.done && c.date >= todayISO)
-        .filter((c) => c.kind === "task" || c.kind === "task-group-due" || (c.kind === "edu" && c.type === "Test"))
+        .filter((c) => (c.kind === "task" && !c.groupId && !c.eduId) || c.kind === "task-group-due" || c.kind === "edu")
         .sort((a, b) => a.date.localeCompare(b.date))
         .slice(0, 4),
     [dueChips, todayISO]
@@ -295,7 +301,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                   return (
                     <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 10 }}>
                       <div style={{ minWidth: 0 }}>
-                        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.text || PRIMARY_DARK, textTransform: "uppercase" }}>{label}</div>}
+                        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase" }}>{label}</div>}
                         <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                       </div>
                       <div style={{ flexShrink: 0 }}><UrgencyBadge iso={c.date} done={c.done} leadDays={2} /></div>

@@ -32,14 +32,6 @@ export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", 
 // the same color. Skips whichever swatches the 4 defaults above already use.
 export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "coral", "slate", "peach", "beige"];
 
-// Default-theme category colors, used as the CategoryColorsContext fallback and
-// anywhere rendered before a user's customization has loaded.
-export const CATEGORY_COLORS = {
-  School: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.School],
-  Personal: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Personal],
-  Health: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Health],
-  People: CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.People],
-};
 export const EDU_TYPE_COLORS = {
   Test: { bg: "#FBEDED", border: "#EFC0C0", text: "#9B4646" },
   Assignment: { bg: "#EAF2FB", border: "#C6DEF2", text: "#33607F" },
@@ -79,6 +71,19 @@ export const THEME_PRESETS = {
   peach: { label: "Peach", primary: "#FEABA3", primaryDark: "#FEABA3", primaryTint: "#F2DBD9" },
 };
 export const DEFAULT_THEME = "ocean";
+
+// Default-theme category colors, used as the CategoryColorsContext fallback and
+// anywhere rendered before a user's customization has loaded.
+// `accent` (the swatch's own raw, undarkened hex — same as the accent-color picker) is
+// added on top of each {bg,border,text} triple here so a short bold label always has a
+// recognizable color to reach for, even before a real profile/provider has loaded.
+const withAccent = (key) => ({ ...CATEGORY_COLOR_SWATCHES[key], accent: THEME_PRESETS[key].primary });
+export const CATEGORY_COLORS = {
+  School: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.School),
+  Personal: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Personal),
+  Health: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Health),
+  People: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.People),
+};
 
 // Surface + ink/muted/border tones. INK replaces pure black for headline/body text,
 // MUTED is secondary text, BORDER is the standard hairline. PAPER_BG is the one

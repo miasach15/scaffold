@@ -332,14 +332,21 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     // custom category that's never been recolored, so several new ones don't all end up
     // looking identical.
     const key = profile.categoryColors[cat] || DEFAULT_CATEGORY_COLOR_KEYS[cat] || FALLBACK_CATEGORY_COLOR_ROTATION[i % FALLBACK_CATEGORY_COLOR_ROTATION.length];
-    resolvedCategoryColors[cat] = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.slate;
+    // `accent` is the swatch's own raw, undarkened hex — the same one shown in the
+    // accent-color picker. `text` is deliberately darkened for legible body copy on a
+    // pale bg, but that same darkening makes a warm color like Pink read as maroon when
+    // used as a short bold label instead — `accent` is what a caller should reach for there.
+    resolvedCategoryColors[cat] = { ...(CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.slate), accent: (THEME_PRESETS[key] || THEME_PRESETS[DEFAULT_THEME]).primary };
   });
   // A handful of places across the app fall back to CATEGORY_COLORS.Personal when a
   // task/event's own category isn't recognized — safe when "Personal" is one of the
   // defaults, but a user can rename or remove it entirely now. Keep it defined as a
   // quiet safety net regardless, so nothing crashes; it just won't be offered as an
   // actual pickable category unless it's genuinely still in categoryKeys.
-  if (!resolvedCategoryColors.Personal) resolvedCategoryColors.Personal = CATEGORY_COLOR_SWATCHES[DEFAULT_CATEGORY_COLOR_KEYS.Personal];
+  if (!resolvedCategoryColors.Personal) {
+    const personalKey = DEFAULT_CATEGORY_COLOR_KEYS.Personal;
+    resolvedCategoryColors.Personal = { ...CATEGORY_COLOR_SWATCHES[personalKey], accent: THEME_PRESETS[personalKey].primary };
+  }
 
   const setCategoryColor = (category, swatchKey) => {
     updateProfile({ categoryColors: { ...profile.categoryColors, [category]: swatchKey } });
