@@ -3,12 +3,13 @@ import { Plus } from "lucide-react";
 import { dateRangeISO, formatShortDate, toISO } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
+import Checkbox from "../shared/Checkbox";
 
-// Opened by clicking a deadline row on Education — rename or remove any of its
-// scheduled sessions, add another, or hand the whole thing to AI to re-plan. Nothing
+// Opened by clicking a deadline row on Education — see which sessions are done, rename
+// or remove any of them, add another, or hand the whole thing to AI to re-plan. Nothing
 // about the deadline itself (title/type/subject/due date) is editable here, just the
 // work leading up to it. `col` is your actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onRenameSession, onRemoveSession, onAddSession, onBreakDown, breakingDown, breakdownError }) {
+export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onRenameSession, onRemoveSession, onAddSession, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
@@ -44,13 +45,14 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onRenam
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
             {sorted.map((s) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: "#FDFCFA" }}>
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
+                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} />
                 <input
                   value={drafts[s.id] ?? s.title}
                   onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
                   onBlur={() => commitRename(s.id)}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                  style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5 }}
+                  style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1 }}
                 />
                 <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
                 <button onClick={() => onRemoveSession(s.id)} className="btn-delete" style={deleteBtn}>×</button>

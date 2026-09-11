@@ -64,6 +64,11 @@ export default function EducationView({
   const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
   const [subjectFilter, setSubjectFilter] = useState("All");
   const [showAllUpcoming, setShowAllUpcoming] = useState(false); // capped by default — a long flat list is its own kind of overwhelm
+  // Checking something off in Today shouldn't yank it out of the list mid-glance — it
+  // stays put, just visibly crossed off, same as Tasks' Today does. Session-local: once
+  // you leave and come back, done items fall out of Today as usual.
+  const [justDone, setJustDone] = useState(() => new Set());
+  const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
 
@@ -195,8 +200,12 @@ export default function EducationView({
   // Everything only shows in Today once it's actually due today — a homework due
   // tomorrow belongs in Upcoming Homework, not here, same as a test or assignment due
   // tomorrow already only shows in Upcoming.
-  const today_ = eduItems.filter((e) => e.dueDate === todayISOlocal && !e.done && bySubject(e));
+  const today_ = eduItems.filter((e) => e.dueDate === todayISOlocal && (!e.done || justDone.has(e.id)) && bySubject(e));
   const todayIds = new Set(today_.map((e) => e.id));
+  const handleTodayToggle = (id, done) => {
+    if (done) markJustDone(id);
+    onSetEduDone(id, done);
+  };
 
   // One flowing list instead of three separately-headed ones — each row still carries
   // its own Test/Assignment/Homework badge, so the type is still obvious at a glance.
@@ -212,27 +221,28 @@ export default function EducationView({
     // it actually adds something the title doesn't (a custom AI-written step name).
     const subtitle = parent && !t.title.includes(parent.title) ? parent.title : null;
     return {
-      key: `s-${t.id}`, title: t.title, subtitle,
+      id: t.id, key: `s-${t.id}`, title: t.title, subtitle,
       done: t.done, date: t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
       col: eduCol,
-      onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
+      onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
   }).filter(Boolean);
   // Homework due today already gets its own row above (via today_/EduItemRow) — skip it
   // here so it doesn't show up a second time.
   const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e) && !todayIds.has(e.id)).map((e) => ({
-    key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
+    id: e.id, key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, timeLabel: null,
     col: eduCol,
-    onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null,
+    onToggleDone: () => { if (!e.done) markJustDone(e.id); onSetEduDone(e.id, !e.done); }, onFocus: null,
     hasFollowing: eduHasFollowing(e),
     onRemove: (mode) => onRemoveEduItem(e.id, mode),
   }));
   // Only today's work sessions/homework show here — the full day-by-day breakdown of
   // every assignment would otherwise turn this into a long, noisy list. The actual
-  // deadlines (Upcoming below) still show everything coming up.
-  const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
+  // deadlines (Upcoming below) still show everything coming up. Just-checked items stay
+  // visible (crossed off), same as the deadline rows above.
+  const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done || justDone.has(i.id));
   const leftTodayItems = leftNotDone.filter((i) => i.date === todayISOlocal);
 
   return (
@@ -341,7 +351,7 @@ export default function EducationView({
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+            <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleTodayToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
           ))}
           {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
@@ -391,6 +401,7 @@ export default function EducationView({
             col={eduCol}
             sessions={tasks.filter((t) => t.eduId === editingEduId)}
             onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
+            onToggleSession={onSetSessionDone}
             onRenameSession={onRenameSession}
             onRemoveSession={onRemoveSession}
             onAddSession={quickAddSession}
