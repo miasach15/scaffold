@@ -32,12 +32,14 @@ export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", 
 // the same color. Skips whichever swatches the 4 defaults above already use.
 export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "coral", "slate", "peach", "beige"];
 
-// One color for all of Education — a Test, an Assignment, and Homework used to each get
-// their own tint (plus a work session getting its task category's color on top of that),
-// which read as visually unrelated pieces of the same page. Same amber throughout now,
-// keyed by type only so every existing `EDU_TYPE_COLORS[item.type]` lookup still works.
+// One color for all of Education — an Assessment, an Assignment, and Homework used to
+// each get their own tint (plus a work session getting its task category's color on top
+// of that), which read as visually unrelated pieces of the same page. Same amber
+// throughout now, keyed by type only so every existing `EDU_TYPE_COLORS[item.type]`
+// lookup still works. "Test" stays as a key too — any item saved before the Test ->
+// Assessment rename still carries that old type value and needs to keep resolving.
 export const EDU_COLOR = { bg: "#FCEAD9", border: "#EBB684", text: "#885525" };
-export const EDU_TYPE_COLORS = { Test: EDU_COLOR, Assignment: EDU_COLOR, Homework: EDU_COLOR };
+export const EDU_TYPE_COLORS = { Assessment: EDU_COLOR, Test: EDU_COLOR, Assignment: EDU_COLOR, Homework: EDU_COLOR };
 export const EVENT_COLOR = { bg: "#FCFEFF", border: "#E6F2F8", text: "#3A7796" };
 export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };

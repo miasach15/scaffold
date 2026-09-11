@@ -28,7 +28,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
   };
 
   const sorted = sessions.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-  const actionLabel = item.type === "Test" ? "session" : "sub-task";
+  const actionLabel = item.type === "Assessment" ? "session" : "sub-task";
 
   return (
     <div style={overlayStyle} onClick={onClose}>
@@ -38,7 +38,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
         <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 16 }}>Due {formatShortDate(item.dueDate)}{item.subject ? ` · ${item.subject}` : ""}</div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
-          {item.type === "Test" ? "Study sessions" : "Sub-tasks"}
+          {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
         </div>
         {sorted.length === 0 ? (
           <EmptyState text={`No ${actionLabel}s scheduled yet.`} />

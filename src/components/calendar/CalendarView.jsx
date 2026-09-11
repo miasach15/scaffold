@@ -43,17 +43,18 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // that's a deadline (goal deadlines/milestones, Education). The "Tasks" row is reserved
   // for the actual day-to-day doing: a step from a "break it down" task (its date is the
   // day you work on that step, not the project's overall due date) and goal actions
-  // (already a concrete "do this on this day" step, not an aggregate deadline). Tests sit
-  // in "All day" instead — a test is the whole day it happens, not a step you work through.
-  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Test") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId));
+  // (already a concrete "do this on this day" step, not an aggregate deadline). Assessments
+  // sit in "All day" instead — an assessment is the whole day it happens, not a step you
+  // work through.
+  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId));
   // An Education-generated "Work on:"/"Study" session is a plain (ungrouped) task, but
   // it's still a work day, not a deadline — the deadline is the edu_item's own due date
   // (the separate "edu" chip above). So it belongs here, same as a breakdown step.
   const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && (c.groupId || c.eduId)));
-  const testChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Test");
+  const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment");
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
-    ...testChips,
+    ...assessmentChips,
   ];
 
   const isDay = !!dayView;

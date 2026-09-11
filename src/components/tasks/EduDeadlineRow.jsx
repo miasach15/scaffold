@@ -2,7 +2,7 @@ import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
-// A homework/assignment/test deadline, shown alongside plain tasks in the Tasks list so
+// A homework/assignment/assessment deadline, shown alongside plain tasks in the Tasks list so
 // "what's due" is all in one place — not the day-by-day "Work on"/"Study" sessions
 // (those stay Calendar/Today-only), just the actual deadline itself. `col` is your
 // actual School category color (see TasksView), same as everywhere else on Education.

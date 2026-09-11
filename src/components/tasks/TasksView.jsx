@@ -139,7 +139,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   // Done tasks drop off the list entirely rather than sticking around struck through.
   const singleTasks = plainTasks.filter((t) => !t.groupId && !t.done);
 
-  // Homework/assignment/test deadlines (not the day-by-day work sessions) show up here
+  // Homework/assignment/assessment deadlines (not the day-by-day work sessions) show up here
   // too, so "what's due" is all in one place — homework, essays, everything.
   const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
 

@@ -88,8 +88,8 @@ export default function EducationView({
     setTitle(""); setDueDate(""); setAssignmentDetails("");
   };
 
-  const schedulable = type === "Assignment" || type === "Test";
-  const workVerb = type === "Test" ? "Study" : "Work on";
+  const schedulable = type === "Assignment" || type === "Assessment";
+  const workVerb = type === "Assessment" ? "Study" : "Work on";
 
   // Computes the same schedule App.jsx's addEduItem would, just for preview — the
   // actual insert happens only once the plan is confirmed in the modal.
@@ -102,9 +102,9 @@ export default function EducationView({
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
       return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
     }
-    // A test crams into the days right before it, not spread thin across however far
-    // off it is; an assignment still spreads across your least-busy days either way.
-    const dates = type === "Test"
+    // An assessment crams into the days right before it, not spread thin across however
+    // far off it is; an assignment still spreads across your least-busy days either way.
+    const dates = type === "Assessment"
       ? daysBeforeDue(dueDate, schedule)
       : schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
     return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
@@ -135,8 +135,8 @@ export default function EducationView({
     if (!title.trim() || !dueDate) return;
     if (schedulable && useAI) { breakDownAssignment(); return; }
     if (schedulable) {
-      // A test never gets "every day" — it's always a day count, crammed right before it.
-      const schedule = type !== "Test" && workMode === "everyday" ? "everyday" : workDays;
+      // An assessment never gets "every day" — it's always a day count, crammed right before it.
+      const schedule = type !== "Assessment" && workMode === "everyday" ? "everyday" : workDays;
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
@@ -154,11 +154,11 @@ export default function EducationView({
     resetAddForm();
   };
 
-  // one-click quick add from the day picker: Tests get a timed study session, Assignments get an all-day sub-task
+  // one-click quick add from the day picker: Assessments get a timed study session, Assignments get an all-day sub-task
   const quickAddSession = (eduId, date) => {
     const item = eduItems.find((e) => e.id === eduId);
     if (!item || !date) return;
-    const sessionTitle = item.type === "Test" ? `Study: ${item.title}` : `Work on: ${item.title}`;
+    const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : `Work on: ${item.title}`;
     onAddSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
   };
 
@@ -208,7 +208,7 @@ export default function EducationView({
   };
 
   // One flowing list instead of three separately-headed ones — each row still carries
-  // its own Test/Assignment/Homework badge, so the type is still obvious at a glance.
+  // its own Assessment/Assignment/Homework badge, so the type is still obvious at a glance.
   const upcoming = eduItems.filter((e) => !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const UPCOMING_CAP = 5;
   const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_CAP);
@@ -282,7 +282,7 @@ export default function EducationView({
         <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-              <option>Assignment</option><option>Test</option><option>Homework</option>
+              <option>Assignment</option><option>Assessment</option><option>Homework</option>
             </select>
             <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 140 }} />
             <datalist id="subjects-datalist">
@@ -294,8 +294,8 @@ export default function EducationView({
             <div>
               <div style={{ fontSize: 12.5, color: "#4A5568", marginBottom: 6 }}>{workVerb} it:</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                {/* A test always crams into the N days right before it — no "every day" option, that's an assignment-only spread. */}
-                {type !== "Test" && ["days", "everyday"].map((m) => (
+                {/* An assessment always crams into the N days right before it — no "every day" option, that's an assignment-only spread. */}
+                {type !== "Assessment" && ["days", "everyday"].map((m) => (
                   <button
                     key={m}
                     onClick={() => setWorkMode(m)}
@@ -309,15 +309,15 @@ export default function EducationView({
                     {m === "everyday" ? "Every day" : "Pick days"}
                   </button>
                 ))}
-                {(type === "Test" || workMode === "days") && (
+                {(type === "Assessment" || workMode === "days") && (
                   <input
                     type="number" min={1} max={30} value={workDays}
                     onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
-                    title={type === "Test" ? `We'll schedule that many '${workVerb}' sessions across the days right before the test` : `We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
+                    title={type === "Assessment" ? `We'll schedule that many '${workVerb}' sessions across the days right before the assessment` : `We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
                     style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
                   />
                 )}
-                {type === "Test" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the test</span>}
+                {type === "Assessment" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the assessment</span>}
               </div>
             </div>
           )}
@@ -384,7 +384,7 @@ export default function EducationView({
 
       {pendingPlan && (
         <BreakdownPreviewModal
-          heading={title || (type === "Test" ? "Your exam" : "Your assignment")}
+          heading={title || (type === "Assessment" ? "Your assessment" : "Your assignment")}
           items={pendingPlan.items}
           onChangeItems={(items) => setPendingPlan((p) => ({ ...p, items }))}
           onConfirm={confirmPlan}

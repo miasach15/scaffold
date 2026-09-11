@@ -24,7 +24,7 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //   4. An Education deadline or goal action — only shows up once actually due/overdue
 //      (today or earlier); these already have their own per-day/per-deadline scheduling.
 //   5. An Education work session ("Work on X"/"Study X") — same as #4, only shows once
-//      its scheduled day arrives. If more than one for the same assignment/test have
+//      its scheduled day arrives. If more than one for the same assignment/assessment have
 //      slipped by undone, only the most recent shows — never a pile of identically-
 //      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
@@ -74,7 +74,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
 
-  // Education work sessions ("Work on X"/"Study X") collapse per assignment/test the
+  // Education work sessions ("Work on X"/"Study X") collapse per assignment/assessment the
   // same way a "break it down" task collapses per group — a due/overdue, still-undone
   // session is this eduId's "next thing to do," but if several scheduled days have gone
   // by undone, only the most recent one shows. The earlier missed ones just drop out of

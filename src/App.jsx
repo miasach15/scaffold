@@ -279,10 +279,10 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
         addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
       }
-    } else if ((type === "Assignment" || type === "Test") && workDays) {
-      const workVerb = type === "Test" ? "Study" : "Work on";
+    } else if ((type === "Assignment" || type === "Assessment") && workDays) {
+      const workVerb = type === "Assessment" ? "Study" : "Work on";
       const todayISO = toISO(new Date());
-      // The Education page previews an Assignment/Test's schedule in a modal before
+      // The Education page previews an Assignment/Assessment's schedule in a modal before
       // adding anything — previewItems carries whatever the user edited/removed there,
       // used exactly as-is for the first occurrence.
       const hasPreview = typeof workDays === "object" && "previewItems" in workDays;
@@ -307,9 +307,9 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: profile.educationCategory });
           });
         } else {
-          // A test crams into the days right before it, not spread thin across however
-          // far off it is; an assignment still spreads across your least-busy days either way.
-          const dates = type === "Test"
+          // An assessment crams into the days right before it, not spread thin across
+          // however far off it is; an assignment still spreads across your least-busy days either way.
+          const dates = type === "Assessment"
             ? daysBeforeDue(row.dueDate, effectiveSchedule)
             : effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
           for (const d of dates) {
