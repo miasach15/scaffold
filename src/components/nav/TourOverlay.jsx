@@ -17,7 +17,7 @@ const CORE_STEPS = [
   { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },
   { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt, or free write", "Type your thoughts", "Save when you're done"] },
   { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },
-  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories: Tests 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime. It comes right back in Total points mode if you still have items in it"] },
+  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories: Assessments 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime. It comes right back in Total points mode if you still have items in it"] },
 ];
 
 const MODAL_STEPS = [

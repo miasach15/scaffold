@@ -1,6 +1,6 @@
 -- Turns Grades into its own customizable-per-class system. Each class (matched to
 -- edu_items.subject by name) can either grade by raw point totals, or be divided into
--- weighted categories (Tests 40%, Homework 20%, etc.) with each graded item assigned to
+-- weighted categories (Assessments 40%, Homework 20%, etc.) with each graded item assigned to
 -- one category.
 
 create table if not exists grade_classes (

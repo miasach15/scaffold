@@ -4,7 +4,7 @@ import { daysUntil, toISO } from "../../lib/dateHelpers";
 // rollOverdueToToday: an item that's overdue and still not done stops showing on its
 // original (past) date and shows on today instead, every day, until it's done — so it
 // doesn't just sit invisible on a date you've scrolled away from. Excludes "event" chips
-// even on a row that has this on (the All-day row now mixes events with Tests) — a past
+// even on a row that has this on (the All-day row now mixes events with Assessments) — a past
 // event isn't "overdue," it just already happened, and events don't carry a real done
 // state to check against.
 export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropItem, onAddClick, emphasis, rollOverdueToToday }) {

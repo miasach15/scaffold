@@ -17,7 +17,7 @@ function pointsPercent(items) {
 
 // Standard "current grade" math: only categories that actually have scored work in them
 // count, and their weights are renormalized against each other — so a half-graded
-// semester (e.g. only Tests entered so far) still shows a sensible number instead of
+// semester (e.g. only Assessments entered so far) still shows a sensible number instead of
 // being dragged down by empty categories.
 function weightedPercent(items, categories) {
   const scored = items.filter((i) => i.scoreEarned != null && i.scorePossible > 0);
@@ -115,7 +115,7 @@ export default function ClassCard({
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Tests, Homework, Participation) and give it a weight.</div>
+                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Assessments, Homework, Participation) and give it a weight.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
                   {categories.map((cat) => {

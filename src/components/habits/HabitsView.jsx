@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Flame } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
-import { deleteBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Flame } from "lucide-react";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, serifFont } from "../../lib/constants";
+import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
 const STREAK_BG = "#DDE1EE";
 const DONE_BG = "rgba(74,91,168,0.1)";
+const SUGGESTIONS_CAP = 8; // the full list is 30+ — a wall of chips isn't a suggestion, it's a chore
 
 const navBtnStyle = {
   width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
@@ -18,6 +19,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
   const [title, setTitle] = useState("");
   const [historyHabitId, setHistoryHabitId] = useState(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const todayISO = toISO(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
@@ -25,6 +27,13 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
     onAddHabit(t !== undefined ? t : title);
     if (t === undefined) setTitle("");
   };
+
+  // Whatever's already in the list doesn't need suggesting again.
+  const availableSuggestions = useMemo(
+    () => SUGGESTED_HABITS.filter((h) => !habits.some((x) => x.title === h)),
+    [habits]
+  );
+  const visibleSuggestions = showAllSuggestions ? availableSuggestions : availableSuggestions.slice(0, SUGGESTIONS_CAP);
 
   const historyHabit = habits.find((h) => h.id === historyHabitId) || null;
 
@@ -51,6 +60,19 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           <button onClick={() => addHabit()} className="btn-primary" style={primaryBtn}>Add</button>
         </AddRow>
       </div>
+
+      {availableSuggestions.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+          {visibleSuggestions.map((h) => (
+            <button key={h} onClick={() => addHabit(h)} className="hoverable" style={suggestionChip}>+ {h}</button>
+          ))}
+          {!showAllSuggestions && availableSuggestions.length > SUGGESTIONS_CAP && (
+            <button onClick={() => setShowAllSuggestions(true)} className="hoverable" style={{ ...ghostBtn, padding: "5px 11px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <ChevronDown size={12} strokeWidth={2.5} /> {availableSuggestions.length - SUGGESTIONS_CAP} more
+            </button>
+          )}
+        </div>
+      )}
 
       {habits.length === 0 ? (
         <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." />
