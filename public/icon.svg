@@ -1,19 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Scaffold">
-  <defs>
-    <linearGradient id="g" x1="0.1" y1="0.95" x2="0.85" y2="0.05">
-      <stop offset="0%" stop-color="#1F9E8C"/>
-      <stop offset="100%" stop-color="#7FE0C9"/>
-    </linearGradient>
-  </defs>
-  <path d="M338,112
-           C 215,145 162,198 158,270
-           C 154,342 218,378 300,378
-           C 385,378 436,415 434,472
-           C 432,518 395,560 330,568
-           C 285,573 250,558 232,528
-           C 218,505 222,478 248,462
-           C 268,450 292,458 296,478"
-        fill="none" stroke="url(#g)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="338" cy="112" r="27" fill="url(#g)"/>
-  <circle cx="296" cy="478" r="15" fill="#ffffff" stroke="url(#g)" stroke-width="13"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Scaffold">
+  <rect width="40" height="40" rx="8" fill="#8290D8"/>
+  <rect x="13.5" y="10" width="13" height="4" rx="2" fill="#fff"/>
+  <rect x="9" y="18" width="22" height="4" rx="2" fill="#fff"/>
+  <rect x="5" y="27" width="30" height="4" rx="2" fill="#fff"/>
 </svg>
