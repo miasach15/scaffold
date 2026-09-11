@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { Bell, Download, MessageSquare, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
@@ -10,11 +10,13 @@ import CategoryEditor from "../shared/CategoryEditor";
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, phoneNumber, smsRemindersEnabled, onUpdateProfile, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const push = usePushNotifications(userId);
+  // Local draft so typing doesn't fire a save on every keystroke — committed on blur.
+  const [phoneDraft, setPhoneDraft] = useState(phoneNumber || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -48,6 +50,15 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
     }
     const ok = await push.subscribe();
     if (ok) onUpdateProfile({ whatnowNotifications: true });
+  };
+
+  const commitPhone = () => {
+    const next = phoneDraft.trim();
+    if (next !== (phoneNumber || "")) onUpdateProfile({ phoneNumber: next });
+  };
+  const toggleSms = () => {
+    if (!smsRemindersEnabled && !phoneDraft.trim()) return; // need a number before turning it on
+    onUpdateProfile({ smsRemindersEnabled: !smsRemindersEnabled });
   };
 
   const handleExport = async () => {
@@ -190,6 +201,35 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 </select>
               </div>
             )}
+          </div>
+        )}
+
+        {onUpdateProfile && (
+          <div style={{ marginTop: 22 }}>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
+              Text reminders: a daily text with what's due, and reply anytime to add a task — no need to open the app.
+            </div>
+            <input
+              type="tel"
+              placeholder="Your phone number, e.g. +15551234567"
+              value={phoneDraft}
+              onChange={(e) => setPhoneDraft(e.target.value)}
+              onBlur={commitPhone}
+              style={{ ...inputStyle, width: "100%", marginBottom: 8 }}
+            />
+            <button
+              onClick={toggleSms}
+              disabled={!smsRemindersEnabled && !phoneDraft.trim()}
+              style={{
+                ...ghostBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                opacity: !smsRemindersEnabled && !phoneDraft.trim() ? 0.5 : 1,
+                border: `1px solid ${smsRemindersEnabled ? PRIMARY : "#E2E8F0"}`,
+                color: smsRemindersEnabled ? PRIMARY : "#4A5568",
+              }}
+            >
+              <MessageSquare size={14} strokeWidth={2.3} />
+              {smsRemindersEnabled ? "Turn off text reminders" : "Turn on text reminders"}
+            </button>
           </div>
         )}
 

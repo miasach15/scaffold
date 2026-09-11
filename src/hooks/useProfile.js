@@ -24,6 +24,8 @@ const fromRow = (row) => ({
   // it's actually called. This is the one category CategoryEditor won't let get removed
   // (see protectedKey) — Education/Grades tasks always need somewhere to land.
   educationCategory: row.education_category || "School",
+  phoneNumber: row.phone_number || "",
+  smsRemindersEnabled: !!row.sms_reminders_enabled,
 });
 
 export function useProfile(userId) {
@@ -65,6 +67,8 @@ export function useProfile(userId) {
       if ("whatnowWindowStart" in patch) dbPatch.whatnow_window_start = patch.whatnowWindowStart;
       if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
       if ("educationCategory" in patch) dbPatch.education_category = patch.educationCategory;
+      if ("phoneNumber" in patch) dbPatch.phone_number = patch.phoneNumber || null;
+      if ("smsRemindersEnabled" in patch) dbPatch.sms_reminders_enabled = patch.smsRemindersEnabled;
       const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
       if (error) console.error("updateProfile failed:", error.message);
     },
