@@ -1,4 +1,4 @@
-import { EDU_TYPE_COLORS, cardStyle, serifFont } from "../../lib/constants";
+import { cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addMonths, monthLabel, monthMatrix, toISO } from "../../lib/dateHelpers";
 import { ghostBtn } from "../../lib/styles";
@@ -9,7 +9,7 @@ const DOTS_SHOWN = 4;
 // are actually due (goal deadlines/milestones, education items) show up as small dots;
 // tasks and small actions are left off since at this zoom level they'd just be noise.
 // Click a day to jump into Day view for it.
-export default function MonthView({ monthDate, setMonthDate, events, dueChips, onSelectDay, onExitMonth }) {
+export default function MonthView({ monthDate, setMonthDate, events, dueChips, onSelectDay, onExitMonth, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const todayISO = toISO(new Date());
   const cells = monthMatrix(monthDate);
@@ -17,7 +17,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
   const dotColor = (item) => {
     if (item.kind === "event") return CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
     if (item.kind === "goal-deadline" || item.kind === "goal-milestone") return CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
-    if (item.kind === "edu") return EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
+    if (item.kind === "edu") return CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
     return CATEGORY_COLORS.Personal;
   };
   const dotLabel = (item) => {

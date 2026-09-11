@@ -497,6 +497,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             dueChips={dueChips}
             onSelectDay={setDayView}
             onExitMonth={exitMonth}
+            educationCategory={profile.educationCategory}
           />
         )}
         {view === "calendar" && !monthView && (
@@ -517,6 +518,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onRescheduleTask={rescheduleTask}
             onRescheduleEvent={(id, date) => updateEvent(id, { date })}
             onEditEvent={setEditingEvent}
+            educationCategory={profile.educationCategory}
           />
         )}
         {view === "tasks" && (

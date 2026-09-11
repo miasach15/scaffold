@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
-import { EDU_TYPE_COLORS, PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
+import { PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dayLabel, dateLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onRescheduleEvent, onEditEvent }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenTaskDetail, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const onDropItem = (kind, id, iso) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, null));
   const scrollRef = useRef(null);
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const chipStyle = (chip) => {
     if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     if (isDueKind(chip)) {
-      const c = chip.kind === "edu" ? (EDU_TYPE_COLORS[chip.type] || EDU_TYPE_COLORS.Homework) : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
+      const c = chip.kind === "edu" ? eduCol : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
       return { bg: c.border, border: c.border, text: "#fff" };
     }
     // "goal" (small actions) and grouped "task" (breakdown steps): colored outline only —
