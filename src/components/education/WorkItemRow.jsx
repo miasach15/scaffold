@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
-import UrgencyBadge from "../shared/UrgencyBadge";
 
 // Every row here — a work session or homework — is an Education item, so it's always
 // your School category color (item.col, set by EducationView), not whatever category
-// the underlying task happens to carry.
+// the underlying task happens to carry. Only ever shown inside "Today," so there's no
+// date or "Due today" badge to repeat — just what it is, and a time if it has one.
 export default function WorkItemRow({ item }) {
   const col = item.col;
   const tinted = !item.done;
@@ -21,8 +21,7 @@ export default function WorkItemRow({ item }) {
         )}
         {item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>}
       </div>
-      <UrgencyBadge iso={item.date} done={item.done} />
-      <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.dateLabel}</div>
+      {item.timeLabel && <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.timeLabel}</div>}
       {confirmDelete ? (
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <button onClick={() => item.onRemove("one")} style={{ ...ghostBtn, fontSize: 10.5, padding: "4px 8px" }}>This one</button>

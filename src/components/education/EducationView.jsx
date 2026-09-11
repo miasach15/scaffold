@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronUp, NotebookPen, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -63,6 +63,7 @@ export default function EducationView({
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
   const [subjectFilter, setSubjectFilter] = useState("All");
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false); // capped by default — a long flat list is its own kind of overwhelm
 
   const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
 
@@ -197,24 +198,32 @@ export default function EducationView({
   const today_ = eduItems.filter((e) => e.dueDate === todayISOlocal && !e.done && bySubject(e));
   const todayIds = new Set(today_.map((e) => e.id));
 
-  const upcomingTests = eduItems.filter((e) => e.type === "Test" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const upcomingAssignments = eduItems.filter((e) => e.type === "Assignment" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const upcomingHomework = eduItems.filter((e) => e.type === "Homework" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  // One flowing list instead of three separately-headed ones — each row still carries
+  // its own Test/Assignment/Homework badge, so the type is still obvious at a glance.
+  const upcoming = eduItems.filter((e) => !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const UPCOMING_CAP = 5;
+  const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_CAP);
+  const hiddenUpcomingCount = upcoming.length - visibleUpcoming.length;
 
   const sessionRows = tasks.filter((t) => t.eduId).map((t) => {
     const parent = eduItems.find((e) => e.id === t.eduId);
     if (subjectFilter !== "All" && parent?.subject !== subjectFilter) return null;
+    // The title already says what it's for ("Work on: X") — only show the subtitle when
+    // it actually adds something the title doesn't (a custom AI-written step name).
+    const subtitle = parent && !t.title.includes(parent.title) ? parent.title : null;
     return {
-      key: `s-${t.id}`, title: t.title, subtitle: parent ? parent.title : null,
-      done: t.done, date: t.date, dateLabel: t.start != null ? `${t.date} · ${decimalToTimeLabel(t.start)}` : `${t.date} · all-day`,
+      key: `s-${t.id}`, title: t.title, subtitle,
+      done: t.done, date: t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
       col: eduCol,
       onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
   }).filter(Boolean);
-  const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e)).map((e) => ({
+  // Homework due today already gets its own row above (via today_/EduItemRow) — skip it
+  // here so it doesn't show up a second time.
+  const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e) && !todayIds.has(e.id)).map((e) => ({
     key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
-    done: e.done, date: e.dueDate, dateLabel: e.dueDate,
+    done: e.done, date: e.dueDate, timeLabel: null,
     col: eduCol,
     onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null,
     hasFollowing: eduHasFollowing(e),
@@ -222,7 +231,7 @@ export default function EducationView({
   }));
   // Only today's work sessions/homework show here — the full day-by-day breakdown of
   // every assignment would otherwise turn this into a long, noisy list. The actual
-  // deadlines (Upcoming Tests/Assignments below) still show everything coming up.
+  // deadlines (Upcoming below) still show everything coming up.
   const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done);
   const leftTodayItems = leftNotDone.filter((i) => i.date === todayISOlocal);
 
@@ -348,28 +357,19 @@ export default function EducationView({
       )}
 
       <div style={{ marginTop: 16 }}>
-        <SubHeader>Upcoming Tests</SubHeader>
-        {upcomingTests.length === 0 ? (
-          <EmptyState text="No upcoming tests." />
+        <SubHeader>Upcoming</SubHeader>
+        {upcoming.length === 0 ? (
+          <EmptyState text="Nothing upcoming." />
         ) : (
-          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+          <>
+            <div>{visibleUpcoming.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+            {hiddenUpcomingCount > 0 && (
+              <button onClick={() => setShowAllUpcoming(true)} className="hoverable" style={{ ...toggleBtn, marginTop: 2 }}>
+                <ChevronDown size={13} strokeWidth={2.5} /> {hiddenUpcomingCount} more
+              </button>
+            )}
+          </>
         )}
-        <div style={{ marginTop: 18 }}>
-          <SubHeader>Upcoming Assignments</SubHeader>
-          {upcomingAssignments.length === 0 ? (
-            <EmptyState text="No upcoming assignments." />
-          ) : (
-            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
-          )}
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <SubHeader>Upcoming Homework</SubHeader>
-          {upcomingHomework.length === 0 ? (
-            <EmptyState text="No upcoming homework." />
-          ) : (
-            <div>{upcomingHomework.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
-          )}
-        </div>
       </div>
 
       {pendingPlan && (
