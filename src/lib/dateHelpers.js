@@ -123,6 +123,17 @@ export const dateRangeISO = (startISO, endISO) => {
   return arr.length ? arr : [startISO];
 };
 export const dayBefore = (iso) => toISO(addDays(new Date(iso + "T00:00:00"), -1));
+// The `count` consecutive days leading right up to (not including) the due date — study
+// sessions crammed just before a test, rather than spread thin across however long the
+// window happens to be. Clamped so it never reaches back before today.
+export const daysBeforeDue = (dueISO, count) => {
+  const todayISOStr = toISO(new Date());
+  const lastWorkDay = dayBefore(dueISO);
+  if (lastWorkDay < todayISOStr) return [todayISOStr];
+  const startCandidate = toISO(addDays(new Date(lastWorkDay + "T00:00:00"), -(Math.max(1, count) - 1)));
+  const startISO = startCandidate < todayISOStr ? todayISOStr : startCandidate;
+  return dateRangeISO(startISO, lastWorkDay);
+};
 export const formatShortDate = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 // customDays: array of day-of-week ints (0=Sun..6=Sat), only used when repeat === "Custom"

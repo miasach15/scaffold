@@ -42,7 +42,7 @@ const JournalView = lazy(() => import("./components/journal/JournalView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
-import { addDays, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
@@ -307,7 +307,11 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: profile.educationCategory });
           });
         } else {
-          const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
+          // A test crams into the days right before it, not spread thin across however
+          // far off it is; an assignment still spreads across your least-busy days either way.
+          const dates = type === "Test"
+            ? daysBeforeDue(row.dueDate, effectiveSchedule)
+            : effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
           for (const d of dates) {
             addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
           }
@@ -576,6 +580,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onRemoveEduItem={removeEduItem}
             onAddSession={addEduSession}
             onRemoveSession={removeTask}
+            onRenameSession={renameTask}
             onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
             inboxItems={eduInboxItems}

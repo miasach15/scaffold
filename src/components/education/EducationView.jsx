@@ -1,12 +1,19 @@
 import { useMemo, useState } from "react";
-import { NotebookPen } from "lucide-react";
-import { addDays, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
+import { ChevronUp, NotebookPen, Plus } from "lucide-react";
+import { dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
+import EduSessionsModal from "./EduSessionsModal";
 import WorkItemRow from "./WorkItemRow";
+
+const toggleBtn = {
+  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+  border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "5px 11px 5px 8px",
+  fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+};
 
 export default function EducationView({
   eduItems,
@@ -17,12 +24,19 @@ export default function EducationView({
   onRemoveEduItem,
   onAddSession,
   onRemoveSession,
+  onRenameSession,
   onSetSessionDone,
   onOpenFocus,
   inboxItems,
   onDiscardInbox,
 }) {
   const [title, setTitle] = useState("");
+  // Type/subject/scheduling stay tucked behind a toggle by default — title and a due
+  // date are the only two things you actually need to file something.
+  const [showOptions, setShowOptions] = useState(false);
+  const [editingEduId, setEditingEduId] = useState(null);
+  const [sessionBreakingDown, setSessionBreakingDown] = useState(false);
+  const [sessionBreakdownError, setSessionBreakdownError] = useState(null);
 
   // A Quick Capture reminder — pulls the text into the add form above and clears the
   // reminder. The item isn't actually filed until you fill in the rest and hit Add.
@@ -75,7 +89,11 @@ export default function EducationView({
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
       return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
     }
-    const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
+    // A test crams into the days right before it, not spread thin across however far
+    // off it is; an assignment still spreads across your least-busy days either way.
+    const dates = type === "Test"
+      ? daysBeforeDue(dueDate, schedule)
+      : schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
     return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
   };
 
@@ -104,7 +122,8 @@ export default function EducationView({
     if (!title.trim() || !dueDate) return;
     if (schedulable && useAI) { breakDownAssignment(); return; }
     if (schedulable) {
-      const schedule = workMode === "everyday" ? "everyday" : workDays;
+      // A test never gets "every day" — it's always a day count, crammed right before it.
+      const schedule = type !== "Test" && workMode === "everyday" ? "everyday" : workDays;
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
@@ -130,6 +149,34 @@ export default function EducationView({
     onAddSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
   };
 
+  // Replaces every existing session/sub-task for this item with a fresh AI-generated
+  // plan — same planner the "Break it down with AI" flow at creation uses.
+  const breakDownExisting = async (item, details) => {
+    if (!details.trim() || sessionBreakingDown) return;
+    setSessionBreakingDown(true);
+    setSessionBreakdownError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
+        body: { title: item.title, details: details.trim(), dueDate: item.dueDate, stepHint: null },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
+      if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
+      const todayISOForPlan = toISO(new Date());
+      const startISO = item.dueDate > todayISOForPlan ? todayISOForPlan : item.dueDate;
+      const lastWorkDay = dayBefore(item.dueDate);
+      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
+      tasks.filter((t) => t.eduId === item.id).forEach((t) => onRemoveSession(t.id));
+      steps.forEach((stepTitle, i) => onAddSession(item.id, stepTitle, dates[i], "17:00", 60, item.type === "Assignment"));
+    } catch (e) {
+      setSessionBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
+    } finally {
+      setSessionBreakingDown(false);
+    }
+  };
+
   // No stored series id for repeating edu items — treat same title/type/subject with a
   // due date on or after this one's as "the rest of the series" for delete-all-following.
   const eduHasFollowing = (item) =>
@@ -137,26 +184,15 @@ export default function EducationView({
 
   const bySubject = (e) => subjectFilter === "All" || e.subject === subjectFilter;
   const todayISOlocal = toISO(new Date());
-  const tomorrowISO = toISO(addDays(new Date(), 1));
-  // Assignments/Tests always stay in Upcoming unless actually due that day. Only Homework gets
-  // pulled in automatically the day before it's due, since it has no breakdown of its own.
-  const dueTodayItems = eduItems.filter((e) => e.dueDate === todayISOlocal && !e.done && bySubject(e));
-  const homeworkDueTomorrow = eduItems.filter((e) => e.type === "Homework" && e.dueDate === tomorrowISO && !e.done && bySubject(e));
-  const seenTodayIds = new Set();
-  const todayTag = {};
-  const today_ = [];
-  [[dueTodayItems, "Due today"], [homeworkDueTomorrow, "Due tomorrow"]].forEach(([list, tag]) => {
-    list.forEach((e) => {
-      if (seenTodayIds.has(e.id)) return;
-      seenTodayIds.add(e.id);
-      todayTag[e.id] = tag;
-      today_.push(e);
-    });
-  });
-  const todayIds = seenTodayIds;
+  // Everything only shows in Today once it's actually due today — a homework due
+  // tomorrow belongs in Upcoming Homework, not here, same as a test or assignment due
+  // tomorrow already only shows in Upcoming.
+  const today_ = eduItems.filter((e) => e.dueDate === todayISOlocal && !e.done && bySubject(e));
+  const todayIds = new Set(today_.map((e) => e.id));
 
   const upcomingTests = eduItems.filter((e) => e.type === "Test" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const upcomingAssignments = eduItems.filter((e) => e.type === "Assignment" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const upcomingHomework = eduItems.filter((e) => e.type === "Homework" && !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
   const sessionRows = tasks.filter((t) => t.eduId).map((t) => {
     const parent = eduItems.find((e) => e.id === t.eduId);
@@ -206,70 +242,78 @@ export default function EducationView({
 
       <div data-tour="education-add" style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
         <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
-        <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-          <option>Assignment</option><option>Test</option><option>Homework</option>
-        </select>
-        <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 120 }} />
-        <datalist id="subjects-datalist">
-          {knownSubjects.map((s) => <option key={s} value={s} />)}
-        </datalist>
         <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, width: 150 }} />
-        {schedulable && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568" }}>
-            <span>{workVerb} it:</span>
-            {["days", "everyday"].map((m) => (
-              <button
-                key={m}
-                onClick={() => setWorkMode(m)}
-                style={{
-                  padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                  border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                  background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
-                  color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                }}
-              >
-                {m === "everyday" ? "Every day" : "Pick days"}
-              </button>
-            ))}
-            {workMode === "days" && (
-              <input
-                type="number" min={1} max={30} value={workDays}
-                onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
-                title={`We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
-                style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
-              />
-            )}
-          </div>
-        )}
         <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
           {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
         </button>
       </div>
+      <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
+        {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
+        {showOptions ? "Hide options" : "Type, subject, or how to work it"}
+      </button>
 
-      {type === "Assignment" && (
-        <div style={{ marginBottom: 12 }}>
-          <button
-            onClick={() => setUseAI((x) => !x)}
-            style={{
-              padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-              border: `1px solid ${useAI ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-              background: useAI ? "var(--primary-tint, #E7E3FC)" : "#fff",
-              color: useAI ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}
-          >
-            Break it down with AI
-          </button>
-          {useAI && (
-            <div style={{ marginTop: 8 }}>
-              <textarea
-                value={assignmentDetails}
-                onChange={(e) => setAssignmentDetails(e.target.value)}
-                placeholder="Paste or describe the assignment instructions. We'll turn them into ordered work steps leading up to the due date."
-                rows={3}
-                style={{ ...inputStyle, width: "100%", resize: "vertical" }}
-              />
-              {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+      {showOptions && (
+        <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
+              <option>Assignment</option><option>Test</option><option>Homework</option>
+            </select>
+            <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 140 }} />
+            <datalist id="subjects-datalist">
+              {knownSubjects.map((s) => <option key={s} value={s} />)}
+            </datalist>
+          </div>
+
+          {schedulable && (
+            <div>
+              <div style={{ fontSize: 12.5, color: "#4A5568", marginBottom: 6 }}>{workVerb} it:</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                {/* A test always crams into the N days right before it — no "every day" option, that's an assignment-only spread. */}
+                {type !== "Test" && ["days", "everyday"].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setWorkMode(m)}
+                    style={{
+                      padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                      border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                      background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                      color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                    }}
+                  >
+                    {m === "everyday" ? "Every day" : "Pick days"}
+                  </button>
+                ))}
+                {(type === "Test" || workMode === "days") && (
+                  <input
+                    type="number" min={1} max={30} value={workDays}
+                    onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
+                    title={type === "Test" ? `We'll schedule that many '${workVerb}' sessions across the days right before the test` : `We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
+                    style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
+                  />
+                )}
+                {type === "Test" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the test</span>}
+              </div>
+            </div>
+          )}
+
+          {type === "Assignment" && (
+            <div>
+              <button onClick={() => setUseAI((x) => !x)} className="hoverable" style={toggleBtn}>
+                {useAI ? <ChevronUp size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
+                Break it down with AI
+              </button>
+              {useAI && (
+                <div style={{ marginTop: 8 }}>
+                  <textarea
+                    value={assignmentDetails}
+                    onChange={(e) => setAssignmentDetails(e.target.value)}
+                    placeholder="Paste or describe the assignment instructions. We'll turn them into ordered work steps leading up to the due date."
+                    rows={3}
+                    style={{ ...inputStyle, width: "100%", resize: "vertical" }}
+                  />
+                  {breakdownError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6 }}>{breakdownError}</div>}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -277,11 +321,11 @@ export default function EducationView({
 
       <SubHeader>Today</SubHeader>
       {today_.length === 0 && leftTodayItems.length === 0 ? (
-        <EmptyState text="Nothing due today, no homework due tomorrow, and nothing scheduled for today." />
+        <EmptyState text="Nothing due today, and nothing scheduled for today." />
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} tag={todayTag[e.id]} hasFollowing={eduHasFollowing(e)} />
+            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
           ))}
           {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
@@ -301,14 +345,22 @@ export default function EducationView({
         {upcomingTests.length === 0 ? (
           <EmptyState text="No upcoming tests." />
         ) : (
-          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
+          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
         )}
         <div style={{ marginTop: 18 }}>
           <SubHeader>Upcoming Assignments</SubHeader>
           {upcomingAssignments.length === 0 ? (
             <EmptyState text="No upcoming assignments." />
           ) : (
-            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onAddSession={quickAddSession} hasFollowing={eduHasFollowing(e)} />)}</div>
+            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+          )}
+        </div>
+        <div style={{ marginTop: 18 }}>
+          <SubHeader>Upcoming Homework</SubHeader>
+          {upcomingHomework.length === 0 ? (
+            <EmptyState text="No upcoming homework." />
+          ) : (
+            <div>{upcomingHomework.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
         </div>
       </div>
@@ -322,6 +374,24 @@ export default function EducationView({
           onCancel={() => setPendingPlan(null)}
         />
       )}
+
+      {editingEduId && (() => {
+        const editingItem = eduItems.find((e) => e.id === editingEduId);
+        if (!editingItem) return null;
+        return (
+          <EduSessionsModal
+            item={editingItem}
+            sessions={tasks.filter((t) => t.eduId === editingEduId)}
+            onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
+            onRenameSession={onRenameSession}
+            onRemoveSession={onRemoveSession}
+            onAddSession={quickAddSession}
+            onBreakDown={(details) => breakDownExisting(editingItem, details)}
+            breakingDown={sessionBreakingDown}
+            breakdownError={sessionBreakdownError}
+          />
+        );
+      })()}
     </div>
   );
 }
