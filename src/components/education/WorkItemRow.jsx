@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { EDU_TYPE_COLORS } from "../../lib/constants";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { EDU_COLOR } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
+// Every row here — a work session or homework — is an Education item, so it's always
+// the one Education color, not whatever category the underlying task happens to carry.
 export default function WorkItemRow({ item }) {
-  const CATEGORY_COLORS = useCategoryColors();
-  // Session/task rows here are Education-linked work sessions, outlined in whichever
-  // category they're actually tagged with (item.category) rather than a fixed task pink.
-  const col = item.colorKind === "edu" ? (EDU_TYPE_COLORS[item.eduType] || EDU_TYPE_COLORS.Homework) : (CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal);
+  const col = EDU_COLOR;
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: item.colorKind === "task" ? "#fff" : (tinted ? col.bg : "#fff"), border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
       <Swatch color={col} size={22} />
       <div style={{ flex: 1, minWidth: 0 }}>
