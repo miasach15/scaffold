@@ -585,6 +585,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onOpenFocus={openFocus}
             inboxItems={eduInboxItems}
             onDiscardInbox={removeInboxItem}
+            educationCategory={profile.educationCategory}
           />
         )}
         {view === "grades" && (

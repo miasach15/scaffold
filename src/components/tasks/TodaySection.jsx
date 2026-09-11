@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BatteryLow, Clock, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, EDU_TYPE_COLORS, TONE, serifFont } from "../../lib/constants";
+import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
@@ -130,7 +130,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
     .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO)
     .map((e) => ({
       id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, done: e.done,
-      category: educationCategory, col: EDU_TYPE_COLORS[e.type] || EDU_TYPE_COLORS.Homework,
+      category: educationCategory, col: CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!e.done) markJustDone(`edu-${e.id}`); onSetEduDone(e.id, !e.done); }, onOpen: onGoToEducation,
     }));
 

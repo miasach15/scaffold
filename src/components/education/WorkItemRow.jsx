@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { EDU_COLOR } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
-import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
 // Every row here — a work session or homework — is an Education item, so it's always
-// the one Education color, not whatever category the underlying task happens to carry.
+// your School category color (item.col, set by EducationView), not whatever category
+// the underlying task happens to carry.
 export default function WorkItemRow({ item }) {
-  const col = EDU_COLOR;
+  const col = item.col;
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
-      <Swatch color={col} size={22} />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (
           <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: "#000000" }}>{item.title}</button>

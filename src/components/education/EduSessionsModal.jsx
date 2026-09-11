@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { EDU_TYPE_COLORS } from "../../lib/constants";
 import { dateRangeISO, formatShortDate, toISO } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
@@ -8,9 +7,8 @@ import { EmptyState } from "../shared/Misc";
 // Opened by clicking a deadline row on Education — rename or remove any of its
 // scheduled sessions, add another, or hand the whole thing to AI to re-plan. Nothing
 // about the deadline itself (title/type/subject/due date) is editable here, just the
-// work leading up to it.
-export default function EduSessionsModal({ item, sessions, onClose, onRenameSession, onRemoveSession, onAddSession, onBreakDown, breakingDown, breakdownError }) {
-  const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
+// work leading up to it. `col` is your actual School category color (see EducationView).
+export default function EduSessionsModal({ item, col, sessions, onClose, onRenameSession, onRemoveSession, onAddSession, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);

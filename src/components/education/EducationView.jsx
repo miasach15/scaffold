@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronUp, NotebookPen, Plus } from "lucide-react";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -29,7 +30,13 @@ export default function EducationView({
   onOpenFocus,
   inboxItems,
   onDiscardInbox,
+  educationCategory,
 }) {
+  // One color for everything on this page — whatever you've actually set your School
+  // category color to in Settings, not a fixed built-in tint.
+  const CATEGORY_COLORS = useCategoryColors();
+  const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.School || CATEGORY_COLORS.Personal;
+
   const [title, setTitle] = useState("");
   // Type/subject/scheduling stay tucked behind a toggle by default — title and a due
   // date are the only two things you actually need to file something.
@@ -200,7 +207,7 @@ export default function EducationView({
     return {
       key: `s-${t.id}`, title: t.title, subtitle: parent ? parent.title : null,
       done: t.done, date: t.date, dateLabel: t.start != null ? `${t.date} · ${decimalToTimeLabel(t.start)}` : `${t.date} · all-day`,
-      colorKind: "task", category: t.category,
+      col: eduCol,
       onToggleDone: () => onSetSessionDone(t.id, !t.done), onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
@@ -208,7 +215,7 @@ export default function EducationView({
   const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e)).map((e) => ({
     key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, dateLabel: e.dueDate,
-    colorKind: "edu", eduType: "Homework",
+    col: eduCol,
     onToggleDone: () => onSetEduDone(e.id, !e.done), onFocus: null,
     hasFollowing: eduHasFollowing(e),
     onRemove: (mode) => onRemoveEduItem(e.id, mode),
@@ -325,7 +332,7 @@ export default function EducationView({
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+            <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
           ))}
           {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
@@ -345,14 +352,14 @@ export default function EducationView({
         {upcomingTests.length === 0 ? (
           <EmptyState text="No upcoming tests." />
         ) : (
-          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+          <div>{upcomingTests.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
         )}
         <div style={{ marginTop: 18 }}>
           <SubHeader>Upcoming Assignments</SubHeader>
           {upcomingAssignments.length === 0 ? (
             <EmptyState text="No upcoming assignments." />
           ) : (
-            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+            <div>{upcomingAssignments.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
         </div>
         <div style={{ marginTop: 18 }}>
@@ -360,7 +367,7 @@ export default function EducationView({
           {upcomingHomework.length === 0 ? (
             <EmptyState text="No upcoming homework." />
           ) : (
-            <div>{upcomingHomework.map((e) => <EduItemRow key={e.id} item={e} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+            <div>{upcomingHomework.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
           )}
         </div>
       </div>
@@ -381,6 +388,7 @@ export default function EducationView({
         return (
           <EduSessionsModal
             item={editingItem}
+            col={eduCol}
             sessions={tasks.filter((t) => t.eduId === editingEduId)}
             onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
             onRenameSession={onRenameSession}

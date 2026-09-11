@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { EDU_TYPE_COLORS } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 import { deleteBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
-import Swatch from "../shared/Swatch";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
 // Click the row to manage its sessions/sub-tasks (rename, add, remove, or break it down
 // with AI) — see EduSessionsModal. No quick-add row here anymore; one clear way in.
-export default function EduItemRow({ item, onToggleDone, onRemove, onOpen, tag, hasFollowing }) {
-  const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
+// `col` is your actual School category color (see EducationView) — no separate swatch
+// dot needed since the checkbox and the card itself already carry that color.
+export default function EduItemRow({ item, col, onToggleDone, onRemove, onOpen, tag, hasFollowing }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 9, border: `1px solid ${col.border}`, borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: item.done ? "#fff" : col.bg, transition: "box-shadow .15s ease, transform .15s ease" }}>
       <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
-      <Swatch color={col} />
       <button onClick={onOpen} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
         <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>
         <div style={{ display: "flex", gap: 5, marginTop: 2 }}>

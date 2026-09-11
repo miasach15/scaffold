@@ -1,13 +1,12 @@
-import { EDU_TYPE_COLORS } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 
 // A homework/assignment/test deadline, shown alongside plain tasks in the Tasks list so
 // "what's due" is all in one place — not the day-by-day "Work on"/"Study" sessions
-// (those stay Calendar/Today-only), just the actual deadline itself.
-export default function EduDeadlineRow({ item, onToggleDone, onOpen }) {
-  const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
+// (those stay Calendar/Today-only), just the actual deadline itself. `col` is your
+// actual School category color (see TasksView), same as everywhere else on Education.
+export default function EduDeadlineRow({ item, col, onToggleDone, onOpen }) {
   const tinted = !item.done;
 
   return (
