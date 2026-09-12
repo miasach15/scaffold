@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Clock, Flame, RotateCw } from "lucide-react";
+import { Brain, Clock, Flame } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
+const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
@@ -67,7 +68,31 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   // untimed ones (no fixed slot, so nothing to rank them against each other by) follow
   // after. Events are fixed appointments, not something to act on, so they're kept as
   // their own list below the tasks rather than interleaved by time with them.
-  const todaysTimedTasks = tasks.filter((t) => t.date === todayISO && t.start != null && !t.done).sort((a, b) => a.start - b.start);
+  const todaysTimedTasks = tasks.filter((t) => t.date === todayISO && t.start != null && !t.done && !t.groupId && !t.eduId).sort((a, b) => a.start - b.start);
+  // A "break it down" project always collapses to ONE row here — the earliest step
+  // that's still undone, whether that step's own work day is today or has already
+  // slipped by — never two rows for the same project because a later step also
+  // happens to be scheduled for today. Same collapsing Tasks' Today section gives it.
+  const activeGroupSteps = {};
+  tasks.forEach((t) => {
+    if (!t.groupId || t.done) return;
+    (activeGroupSteps[t.groupId] ||= []).push(t);
+  });
+  const groupItems = Object.values(activeGroupSteps)
+    .map((steps) => steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0])
+    .filter((next) => next && next.date && next.date <= todayISO);
+  // Same idea for Education work sessions ("Work on X"/"Study X") — only the most
+  // recent due-or-overdue, still-undone session per assignment shows, never a pile of
+  // rows with the same title for every day that slipped by.
+  const activeEduSessions = {};
+  tasks.forEach((t) => {
+    if (!t.eduId || t.groupId || t.done) return;
+    (activeEduSessions[t.eduId] ||= []).push(t);
+  });
+  const eduSessionItems = Object.values(activeEduSessions)
+    .map((sessions) => sessions.filter((t) => t.date && t.date <= todayISO).sort((a, b) => a.date.localeCompare(b.date)))
+    .map((due) => due[due.length - 1])
+    .filter(Boolean);
   // A plain due-dated task (no breakdown, not from Education, not recurring) shouldn't
   // just sit invisible until the exact day it's due — same "shows up early, dimmed,
   // until it's close" rule TodaySection already gives it on the Tasks page. And once its
@@ -76,11 +101,13 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   // an overdue item. Either way it lands in "Anytime today," since a specific time slot
   // from its original day doesn't apply once it's showing early or carried over.
   const todaysUntimed = [
-    ...tasks.filter((t) => t.date === todayISO && t.start == null && !t.done),
+    ...tasks.filter((t) => t.date === todayISO && t.start == null && !t.done && !t.groupId && !t.eduId),
     ...tasks.filter((t) => {
       if (t.done || t.groupId || t.eduId || t.isRecurring || !t.date || t.date === todayISO) return false;
       return t.date < todayISO || inLeadWindow(t.date, defaultLeadDays(t), t.done);
     }),
+    ...groupItems,
+    ...eduSessionItems,
   ].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
@@ -230,18 +257,26 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, flex: 1, padding: "12px 0", fontSize: 14.5 }}>
-                Start
-              </button>
-              <button
-                onClick={() => setFocusMinutes((m) => (m === 15 ? 25 : m === 25 ? 50 : 15))}
-                title="Change length"
-                style={{ width: 44, height: 44, borderRadius: 10, border: `1px solid ${BORDER}`, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}
-              >
-                <RotateCw size={16} />
-              </button>
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+              {FOCUS_PRESETS.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setFocusMinutes(m)}
+                  style={{
+                    ...ghostBtn, padding: "6px 14px", background: "#fff",
+                    borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
+                    color: focusMinutes === m ? PRIMARY_DARK : MUTED,
+                    fontWeight: focusMinutes === m ? 700 : 600,
+                  }}
+                >
+                  {m}m
+                </button>
+              ))}
             </div>
+
+            <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, width: "100%", padding: "12px 0", fontSize: 14.5 }}>
+              Start
+            </button>
           </div>
 
           <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
