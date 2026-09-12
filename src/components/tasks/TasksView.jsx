@@ -32,6 +32,19 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { items } — shown for review before anything is added
   const [showLater, setShowLater] = useState(false); // "Later" bucket in the main list stays collapsed by default — don't turn a long task list into its own wall of overwhelm
+  // Checking something off here shouldn't yank it out of the list mid-glance — same
+  // session-local carry-over TodaySection gives its own rows: it stays put, visibly
+  // struck through, until this view is freshly loaded again.
+  const [justDone, setJustDone] = useState(() => new Set());
+  const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
+  const handleToggleDone = (id, done) => {
+    if (done) markJustDone(id);
+    onToggleDone(id, done);
+  };
+  const handleSetEduDone = (id, done) => {
+    if (done) markJustDone(`edu-${id}`);
+    onSetEduDone(id, done);
+  };
 
   const resetForm = () => {
     setTitle(""); setDate(""); setTime(""); setRepeat("None"); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setShowMore(false);
@@ -124,7 +137,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   });
   const groupRows = Object.entries(byGroup)
     .map(([groupId, items]) => {
-      const remainingItems = items.filter((t) => !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      // A step that's done stays in view (struck through) for the rest of the session
+      // once it was checked off here — see justDone above — instead of disappearing
+      // out of the expanded list the instant it's complete.
+      const remainingItems = items.filter((t) => !t.done || justDone.has(t.id)).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
       const withDueInfo = items.find((t) => t.groupDueDate);
       return {
         groupId,
@@ -134,14 +150,19 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         items, remainingItems, doneCount: items.filter((t) => t.done).length, total: items.length,
       };
     })
-    .filter((g) => g.remainingItems.length > 0); // whole group drops off once every step is done
+    // remainingItems above already keeps a just-finished step around, so a group whose
+    // very last step was just checked off here still has a length here — the whole
+    // group only actually drops off once it was already fully done before this view
+    // loaded.
+    .filter((g) => g.remainingItems.length > 0);
 
-  // Done tasks drop off the list entirely rather than sticking around struck through.
-  const singleTasks = plainTasks.filter((t) => !t.groupId && !t.done);
+  // A finished task lingers here, struck through, for the rest of the session (see
+  // justDone) instead of dropping off the list the instant it's checked.
+  const singleTasks = plainTasks.filter((t) => !t.groupId && (!t.done || justDone.has(t.id)));
 
   // Homework/assignment/assessment deadlines (not the day-by-day work sessions) show up here
   // too, so "what's due" is all in one place — homework, essays, everything.
-  const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && !e.done);
+  const eduDeadlines = (eduItems || []).filter((e) => e.dueDate && (!e.done || justDone.has(`edu-${e.id}`)));
 
   // Milestone due dates only — those are real deadlines. Individual goal actions are the
   // day-to-day small steps, so they show in Today instead, not here.
@@ -170,10 +191,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
 
   const renderComboItem = (item) => {
     if (item.type === "single") {
-      return <TaskRow key={item.task.id} t={item.task} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
+      return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
     }
     if (item.type === "edu") {
-      return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} onToggleDone={onSetEduDone} onOpen={onGoToEducation} />;
+      return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} onToggleDone={handleSetEduDone} onOpen={onGoToEducation} />;
     }
     if (item.type === "goal") {
       // A milestone's "done" is derived from whether all its actions are done — there's
@@ -190,7 +211,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         remainingItems={item.group.remainingItems}
         doneCount={item.group.doneCount}
         total={item.group.total}
-        onToggleDone={onToggleDone}
+        onToggleDone={handleToggleDone}
         onSetCategory={onSetCategory}
         onRemove={onRemove}
         onOpenDetail={onOpenTaskDetail}
@@ -206,12 +227,12 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
 
       <TodaySection
         tasks={tasks}
-        onToggleDone={onToggleDone}
+        onToggleDone={handleToggleDone}
         onOpenDetail={onOpenTaskDetail}
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
         eduItems={eduItems}
-        onSetEduDone={onSetEduDone}
+        onSetEduDone={handleSetEduDone}
         onGoToEducation={onGoToEducation}
         goalChips={goalActionChips}
         onToggleGoalChip={onToggleGoalChip}

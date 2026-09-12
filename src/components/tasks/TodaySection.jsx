@@ -103,26 +103,37 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
   // "multiple subtasks" and stays bold the whole time it's active, not just near its due
   // date. Shown as one row for the whole project; checking it off completes the earliest
   // remaining step, and the sublabel names what that step is. Snoozing pushes just that
-  // next step's work day forward, not the project's own due date.
+  // next step's work day forward, not the project's own due date. Finishing the LAST
+  // step doesn't yank the whole project off the list either — same justDone carry-over
+  // every other row gets, so it lingers here, checked and struck through, for the rest
+  // of the session instead of vanishing the instant it's complete.
   const byGroup = {};
   tasks.forEach((t) => {
-    if (!t.groupId || t.done) return;
+    if (!t.groupId) return;
     (byGroup[t.groupId] ||= []).push(t);
   });
-  const groupItems = Object.entries(byGroup).map(([groupId, steps]) => {
-    const remaining = steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-    const next = remaining[0];
-    const groupTitle = steps.find((s) => s.groupTitle)?.groupTitle || next.title;
-    const groupDueDate = steps.find((s) => s.groupDueDate)?.groupDueDate || null;
-    return {
-      id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: false,
-      subLabel: `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
-      category: next.category || "Personal",
-      col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
-      onToggle: () => onToggleDone(next.id, true), onOpen: () => onOpenDetail(next.id),
-      onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
-    };
-  });
+  const groupItems = Object.entries(byGroup)
+    .map(([groupId, allSteps]) => {
+      const remaining = allSteps.filter((s) => !s.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const allDone = remaining.length === 0;
+      if (allDone && !justDone.has(`group-${groupId}`)) return null; // finished in an earlier session — stays gone
+      const sorted = allSteps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const next = remaining[0] || sorted[sorted.length - 1];
+      const groupTitle = allSteps.find((s) => s.groupTitle)?.groupTitle || next.title;
+      const groupDueDate = allSteps.find((s) => s.groupDueDate)?.groupDueDate || null;
+      return {
+        id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone,
+        subLabel: allDone ? "All steps done" : `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
+        category: next.category || "Personal",
+        col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
+        onToggle: allDone
+          ? () => onToggleDone(next.id, false)
+          : () => { markJustDone(`group-${groupId}`); onToggleDone(next.id, true); },
+        onOpen: () => onOpenDetail(next.id),
+        onSnooze: !allDone && next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
+      };
+    })
+    .filter(Boolean);
 
   // Education deadlines and goal actions aren't real Tasks rows, so there's no Focus
   // Timer target for them (focusId stays null — no Start button shows for these).

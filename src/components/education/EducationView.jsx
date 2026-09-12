@@ -209,7 +209,13 @@ export default function EducationView({
 
   // One flowing list instead of three separately-headed ones — each row still carries
   // its own Assessment/Assignment/Homework badge, so the type is still obvious at a glance.
-  const upcoming = eduItems.filter((e) => !e.done && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  // A just-checked item stays visible (crossed off) for the rest of the session, same as
+  // the Today rows above, instead of disappearing the instant it's checked.
+  const handleUpcomingToggle = (id, done) => {
+    if (done) markJustDone(id);
+    onSetEduDone(id, done);
+  };
+  const upcoming = eduItems.filter((e) => (!e.done || justDone.has(e.id)) && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const UPCOMING_CAP = 5;
   const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_CAP);
   const hiddenUpcomingCount = upcoming.length - visibleUpcoming.length;
@@ -372,7 +378,7 @@ export default function EducationView({
           <EmptyState text="Nothing upcoming." />
         ) : (
           <>
-            <div>{visibleUpcoming.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={onSetEduDone} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
+            <div>{visibleUpcoming.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
             {hiddenUpcomingCount > 0 && (
               <button onClick={() => setShowAllUpcoming(true)} className="hoverable" style={{ ...toggleBtn, marginTop: 2 }}>
                 <ChevronDown size={13} strokeWidth={2.5} /> {hiddenUpcomingCount} more

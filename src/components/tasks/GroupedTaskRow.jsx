@@ -13,6 +13,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
   const [expanded, setExpanded] = useState(false);
   const category = remainingItems[0]?.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
+  const allDone = doneCount >= total;
 
   return (
     <div style={{ marginBottom: 6 }}>
@@ -25,8 +26,8 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
         }}
       >
         {expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />}
-        <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupTitle}</div>
-        {groupDueDate && (
+        <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "#000000", textDecoration: allDone ? "line-through" : "none", opacity: allDone ? 0.5 : 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupTitle}</div>
+        {groupDueDate && !allDone && (
           <div title={`${formatShortDate(groupDueDate)}${groupDueStart != null ? ` · ${decimalToTimeLabel(groupDueStart)}` : ""}`}>
             <UrgencyBadge iso={groupDueDate} done={false} leadDays={2} />
           </div>
