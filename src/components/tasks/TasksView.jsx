@@ -323,7 +323,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                     borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                   }}
                 >
-                  <Plus size={12} strokeWidth={2.5} /> Break it into steps
+                  <Plus size={12} strokeWidth={2.5} /> Break it down with AI
                 </button>
               ) : (
                 <>
@@ -335,11 +335,11 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                       }}
                       title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
                     >
-                      Break it into steps
+                      Break it down with AI
                     </div>
                     <button
-                      onClick={() => { setUseAI(false); setScheduleMode("every"); setPickedDays([1, 2, 3, 4, 5]); }}
-                      title="Never mind"
+                      onClick={() => { setUseAI(false); setScheduleMode("every"); }}
+                      title="Cancel"
                       style={{ background: "none", border: "none", color: "#C2C9D1", fontSize: 15, cursor: "pointer", padding: "0 4px" }}
                     >
                       ×

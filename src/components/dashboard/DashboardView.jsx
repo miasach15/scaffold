@@ -15,6 +15,7 @@ const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddi
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
+import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
@@ -192,7 +193,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
-              <div style={{ fontSize: 12.5, color: MUTED }}>Nothing scheduled for today yet.</div>
+              <EmptyState text="Nothing scheduled for today yet." />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {todaysTimedTasks.length > 0 && (
@@ -295,14 +296,14 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 12.5, color: MUTED }}>No goals in progress yet.</div>
+              <EmptyState text="No goals in progress yet." />
             )}
           </div>
 
           <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
-              <div style={{ fontSize: 12.5, color: MUTED }}>No habits yet.</div>
+              <EmptyState text="No habits yet." />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {habits.map((h) => {
@@ -327,7 +328,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
-              <div style={{ fontSize: 12.5, color: MUTED }}>Nothing due soon.</div>
+              <EmptyState text="Nothing due soon." />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12, overflowY: "auto", minHeight: 0 }}>
                 {upcoming.map((c) => {

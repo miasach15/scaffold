@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
-import { AddRow, EmptyState } from "../shared/Misc";
+import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
@@ -43,16 +43,16 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 2 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 40, color: INK }}>Habits</div>
-        {habits.length > 0 && (
+      <SectionHeader
+        title="Habits"
+        subtitle="Progress over perfection — missing a day doesn't reset anything."
+        right={habits.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
             <span style={{ fontSize: 14, fontWeight: 800, color: INK }}>{weeklyPct}%</span>
           </div>
         )}
-      </div>
-      <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 20 }}>Progress over perfection. Missing a day doesn't reset anything.</div>
+      />
 
       <div data-tour="habits-add">
         <AddRow>

@@ -1,5 +1,5 @@
 import { ListChecks } from "lucide-react";
-import { EDU_TYPE_COLORS, HABIT_COLOR, PRIMARY, TASK_COLOR, serifFont } from "../../lib/constants";
+import { HABIT_COLOR, PRIMARY, TASK_COLOR, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
@@ -54,8 +54,9 @@ function ReviewSection({ title, items, color }) {
   );
 }
 
-export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, journalEntries, onClose }) {
+export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, journalEntries, educationCategory, onClose }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const weekStart = toISO(startOfWeek(new Date()));
   const weekEnd = toISO(addDays(startOfWeek(new Date()), 6));
   const inWeek = (iso) => iso && iso >= weekStart && iso <= weekEnd;
@@ -90,7 +91,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
               <ReviewSection title={`Goal actions completed (${actionsDone.length})`} items={actionsDone.map((a) => `${a.title} · ${a.goal}`)} color={CATEGORY_COLORS.Personal} />
             )}
             {eduDone.length > 0 && (
-              <ReviewSection title={`Education items completed (${eduDone.length})`} items={eduDone.map((e) => `${e.type}: ${e.title}`)} color={EDU_TYPE_COLORS.Assignment} />
+              <ReviewSection title={`Education items completed (${eduDone.length})`} items={eduDone.map((e) => `${e.type}: ${e.title}`)} color={eduCol} />
             )}
             {habitStats.length > 0 && (
               <ReviewSection title="Habits kept up" items={habitStats.map((h) => `${h.title} · ${h.count}x this week`)} color={HABIT_COLOR} />

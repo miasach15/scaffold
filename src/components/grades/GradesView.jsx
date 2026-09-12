@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { ghostBtn, inputStyle } from "../../lib/styles";
-import { EmptyState, SectionHeader } from "../shared/Misc";
+import { inputStyle, primaryBtn } from "../../lib/styles";
+import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import ClassCard from "./ClassCard";
 
 const NO_SUBJECT_KEY = "";
@@ -49,17 +48,15 @@ export default function GradesView({
     <div>
       <SectionHeader title="Grades" subtitle="One setup per class: total points, or your own weighted categories." />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+      <AddRow>
         <input
           placeholder="Add a class (e.g. AP Bio)..." value={newClassName}
           onChange={(e) => setNewClassName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addClass()}
           style={{ ...inputStyle, flex: 1, maxWidth: 280 }}
         />
-        <button onClick={addClass} style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 5 }}>
-          <Plus size={13} strokeWidth={2.5} /> Add class
-        </button>
-      </div>
+        <button onClick={addClass} className="btn-primary" style={primaryBtn}>Add</button>
+      </AddRow>
 
       {orderedKeys.length === 0 ? (
         <EmptyState text="No classes yet. Add one above, or it'll show up automatically once you enter a subject on an Education item." />

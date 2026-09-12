@@ -4,7 +4,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
-import { EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
+import { AddRow, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
 import EduSessionsModal from "./EduSessionsModal";
@@ -272,12 +272,14 @@ export default function EducationView({
         </div>
       )}
 
-      <div data-tour="education-add" style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-        <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
-        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, width: 150 }} />
-        <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
-          {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
-        </button>
+      <div data-tour="education-add">
+        <AddRow>
+          <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
+          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, width: 150 }} />
+          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
+            {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
+          </button>
+        </AddRow>
       </div>
       <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
         {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}

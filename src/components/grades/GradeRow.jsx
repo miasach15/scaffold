@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { EDU_TYPE_COLORS } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Swatch from "../shared/Swatch";
@@ -7,8 +6,9 @@ import Swatch from "../shared/Swatch";
 // A completed Education item with an optional score — click "Add score" (or the
 // existing score) to edit earned/possible inline, e.g. 18/20 or 92/100. When the class
 // has categories set up, a dropdown lets you pick which one this item counts toward.
-export default function GradeRow({ item, categories, onSetScore, onSetCategory, onRemove }) {
-  const col = EDU_TYPE_COLORS[item.type] || EDU_TYPE_COLORS.Homework;
+// `col` comes from the class card above (the user's actual School category color), same
+// live color Education's own rows already use — not a fixed color that ignores it.
+export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onRemove }) {
   const [editing, setEditing] = useState(false);
   const [earned, setEarned] = useState(item.scoreEarned ?? "");
   const [possible, setPossible] = useState(item.scorePossible ?? "");

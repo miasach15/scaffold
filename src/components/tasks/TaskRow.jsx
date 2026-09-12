@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { FileText, Plus } from "lucide-react";
-import { EDU_TYPE_COLORS } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle } from "../../lib/styles";
@@ -22,7 +21,10 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
       <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
       <button onClick={() => onOpenDetail(t.id)} title="Click to see full name and edit" style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</button>
       {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
-      {t.eduId && <div style={{ fontSize: 10, color: EDU_TYPE_COLORS.Assignment.text, background: EDU_TYPE_COLORS.Assignment.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
+      {/* An Education-generated task's own category is already set to the user's actual
+          School category (see App.jsx), so `col` above is already that live color —
+          no separate hardcoded Education color needed here. */}
+      {t.eduId && <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
       {showDate && editingDate ? (
         <div
           // Blur-when-focus-leaves-the-group, not blur-on-either-field — so tabbing from

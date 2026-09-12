@@ -174,6 +174,7 @@ export default function ClassCard({
                 <GradeRow
                   key={item.id}
                   item={item}
+                  col={col}
                   categories={weighted ? categories : null}
                   onSetScore={onSetScore}
                   onSetCategory={onSetItemCategory}

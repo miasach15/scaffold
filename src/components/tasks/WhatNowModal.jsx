@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Play, SkipForward, X } from "lucide-react";
 import { serifFont } from "../../lib/constants";
-import { ghostBtn, overlayStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 
 // Picks the single most pressing thing from an already-sorted queue and shows just
@@ -17,7 +17,7 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div
-        style={{ background: "#fff", borderRadius: 20, padding: "24px 26px 26px", width: 380, maxWidth: "100%", boxShadow: "0 24px 60px rgba(0,0,0,0.2)" }}
+        style={{ ...modalStyle, padding: "24px 26px 26px", width: 380 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
