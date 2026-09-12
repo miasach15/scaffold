@@ -281,7 +281,12 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
 // separate rows on the same date. Identical titles on the same day collapse to one.
 // The task keeps a short, clean title — just the first step — and any additional steps
 // that landed on the same day go into `notes` instead of getting crammed into the title.
-export const groupItemsByDate = (items) => {
+// Only kicks in when there are fewer free days than steps, so more than one step lands
+// on the same day. A day with just one step keeps that step's own name — no ambiguity
+// there. A day with several gets the overall project's name instead of arbitrarily
+// picking one step to feature as the title over the others; every step that landed on
+// that day goes into notes together, not just whichever ones didn't "win" the title.
+export const groupItemsByDate = (items, fallbackTitle) => {
   const map = new Map();
   for (const it of items) {
     if (!map.has(it.date)) map.set(it.date, []);
@@ -292,8 +297,8 @@ export const groupItemsByDate = (items) => {
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([date, titles]) => ({
       date,
-      title: titles[0],
-      notes: titles.length > 1 ? titles.slice(1).join(", ") : null,
+      title: titles.length > 1 && fallbackTitle ? fallbackTitle : titles[0],
+      notes: titles.length > 1 ? titles.join(", ") : null,
     }));
 };
 export const monthMatrix = (monthDate) => {

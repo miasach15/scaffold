@@ -100,7 +100,7 @@ export default function EducationView({
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
-      return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })));
+      return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })), title.trim());
     }
     // An assessment crams into the days right before it, not spread thin across however
     // far off it is; an assignment still spreads across your least-busy days either way.

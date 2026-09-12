@@ -75,7 +75,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     const maxDays = d.scheduleMode === "pick" && Number(d.pickDaysCount) >= 1 ? Number(d.pickDaysCount) : null;
     const dates = distributeDatesByLoad(startISO, endISO, stepTitles.length, tasks, events, maxDays);
-    const grouped = groupItemsByDate(stepTitles.map((title, i) => ({ title, date: dates[i] })));
+    const grouped = groupItemsByDate(stepTitles.map((title, i) => ({ title, date: dates[i] })), d.title);
     const groupId = grouped.length > 1 ? uid() : null;
     grouped.forEach((it) =>
       onAddTask({

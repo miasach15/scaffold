@@ -69,7 +69,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const maxDays = scheduleMode === "pick" && Number(pickDaysCount) >= 1 ? Number(pickDaysCount) : null;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events, maxDays);
-      setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] }))) });
+      setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim()) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {

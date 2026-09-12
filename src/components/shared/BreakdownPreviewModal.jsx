@@ -35,7 +35,7 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
                   <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(it.date)}</div>
                   <button onClick={() => removeItem(i)} className="btn-delete" style={deleteBtn}>×</button>
                 </div>
-                {it.notes && <div style={{ fontSize: 11, color: "#B4BCC5", padding: "0 2px 6px" }}>Also that day: {it.notes}</div>}
+                {it.notes && <div style={{ fontSize: 11, color: "#B4BCC5", padding: "0 2px 6px" }}>Steps that day: {it.notes}</div>}
               </div>
             ))}
           </div>
