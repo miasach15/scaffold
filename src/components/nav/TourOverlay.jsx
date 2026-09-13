@@ -3,26 +3,26 @@ import { GripHorizontal } from "lucide-react";
 import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
+// Short on purpose — one idea per step, at most two lines, nothing to hold in your
+// head at once. A long tour is exactly the kind of thing that gets abandoned halfway.
 const CORE_STEPS = [
   { type: "view", view: "dashboard", title: "Welcome to Scaffold", bullets: [
-    "This is meant to be on your side, not another thing keeping score on you.",
-    "Nothing you don't finish gets buried. It just carries forward to today, no red marks for being late.",
-    "One day at a time: today's list, a clear next step, and everything else can wait its turn.",
+    "Nothing here keeps score. What you don't finish just carries forward to today — no red marks.",
   ] },
-  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["Today's plan, your top goal's progress, today's habits, and what's due soon, all in one place", "Tap any day in the week strip to jump to it on the Calendar", "This is where the app opens every time"] },
-  { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add stuff", "Drag tasks to move them", "Today is highlighted for you"] },
-  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner: type directly onto it, no date needed", "Hit Enter and it's saved to your Tasks Inbox to sort out later", "Studying for something specific? Add it from the Education page instead"] },
-  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Everything else can wait", "Not sure where to start? Tap \"What should I do right now?\"", "Didn't finish something? It just carries over to today automatically"] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["This is for the big stuff: a business, an app, a nonprofit, a real project (small errands go on Tasks)", "Give it an end date and it schedules milestones + steps around your actual calendar for you", "Watch your path toward it fill in as you go"] },
-  { type: "view", view: "habits", title: "Habits", bullets: ["Add a habit to track", "Tap \"Mark done\" each day", "Click it to see history"] },
-  { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt, or free write", "Type your thoughts", "Save when you're done"] },
-  { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test", "Give it a due date", "Break it into study sessions"] },
-  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, however that class is actually graded", "Total points, or your own weighted categories: Assessments 40%, Homework 20%, whatever your teacher uses", "Delete a class's setup anytime. It comes right back in Total points mode if you still have items in it"] },
+  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["This is home base: today's plan, top goal, habits, what's due soon — all in one glance."] },
+  { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add something. Drag a task to move it. Today's always highlighted."] },
+  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner: jot anything, hit Enter, sort it out later from your Tasks Inbox."] },
+  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Stuck? Tap \"What should I do right now?\" and let it pick for you."] },
+  { type: "view", view: "goals", title: "Goals", bullets: ["For the big stuff — a real project, not a quick errand. Give it an end date; it builds the steps."] },
+  { type: "view", view: "habits", title: "Habits", bullets: ["Add one, tap it done each day. Missing a day doesn't reset anything."] },
+  { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt or free write. Whatever's easiest that day."] },
+  { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test with a due date — it can break the work into smaller sessions for you."] },
+  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, your way — total points or your own weighted categories."] },
 ];
 
 const MODAL_STEPS = [
-  { type: "modal", modal: "settings", title: "Settings", bullets: ["Pick your accent color", "Recolor each category", "Turn on \"What now?\" reminders: a nudge toward whatever's most worth doing right now", "Replay this tour anytime"] },
-  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["See what you finished this week", "Wins only, no guilt trip about what's still pending", "Open it anytime up top"] },
+  { type: "modal", modal: "settings", title: "Settings", bullets: ["Colors, reminders, and this tour again — all live here whenever you need them."] },
+  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["A look back at what you finished this week. Wins only — no guilt trip."] },
 ];
 
 export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
@@ -82,7 +82,7 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
       <div
         onMouseDown={startDrag}
         title="Drag to move this out of the way"
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, cursor: "grab" }}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, cursor: "grab" }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.4 }}>
           <GripHorizontal size={13} strokeWidth={2.3} color="#B4BCC5" />
@@ -90,11 +90,16 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
         </div>
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip tour</button>
       </div>
+      {/* A bar reads as "almost there" at a glance, without having to do the math on
+          "8 of 12" — a small thing, but one less thing to process. */}
+      <div style={{ height: 4, borderRadius: 2, background: "#EEF0F4", marginBottom: 14, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${((i + 1) / steps.length) * 100}%`, background: PRIMARY, borderRadius: 2, transition: "width .2s ease" }} />
+      </div>
       <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>{step.title}</div>
       <ul style={{ margin: 0, marginBottom: 18, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
         {step.bullets.map((b, idx) => (
-          <li key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 14.5, color: "#2A2A2A", lineHeight: 1.35 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIMARY, marginTop: 6, flexShrink: 0 }} />
+          <li key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 15, color: "#2A2A2A", lineHeight: 1.4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIMARY, marginTop: 7, flexShrink: 0 }} />
             {b}
           </li>
         ))}
