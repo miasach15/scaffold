@@ -168,7 +168,6 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
-          <div style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>A steady, one-step-at-a-time look at what's on your plate today.</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
           <div style={{ textAlign: "right", maxWidth: 260 }}>
