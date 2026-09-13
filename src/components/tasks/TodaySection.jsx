@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BatteryLow, Clock, Play } from "lucide-react";
+import { BatteryLow, Clock } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
@@ -28,7 +28,7 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //      slipped by undone, only the most recent shows — never a pile of identically-
 //      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done,
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
-      onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenDetail(t.id),
+      onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
 
@@ -93,7 +93,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
       id: next.id, title: next.title, date: next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
-      onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenDetail(next.id),
+      onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
       onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
     }];
   });
@@ -129,7 +129,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
         onToggle: allDone
           ? () => onToggleDone(next.id, false)
           : () => { markJustDone(`group-${groupId}`); onToggleDone(next.id, true); },
-        onOpen: () => onOpenDetail(next.id),
+        onOpen: () => onOpenFocus(next.id, next.title),
         onSnooze: !allDone && next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
       };
     })
@@ -276,16 +276,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenDetail, onOpen
                     style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "#fff", border: "1.5px solid #E5E9ED", color: "#7B8794", flexShrink: 0, cursor: "pointer" }}
                   >
                     <Clock size={12} strokeWidth={2.3} />
-                  </button>
-                )}
-                {!it.done && it.focusId && onOpenFocus && (
-                  <button
-                    onClick={() => onOpenFocus(it.focusId, it.title)}
-                    title="Start a focus timer on this now"
-                    className="hoverable"
-                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "#fff", border: "1.5px solid #E5E9ED", color: "#7B8794", flexShrink: 0, cursor: "pointer" }}
-                  >
-                    <Play size={11} strokeWidth={2.5} fill="currentColor" />
                   </button>
                 )}
               </div>

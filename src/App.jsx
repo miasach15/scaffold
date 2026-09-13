@@ -152,7 +152,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   // every call site still just passes (id, title), the lookup happens here.
   const openFocus = (id, title) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null });
   };
   // A plain focus session started from the Dashboard, with no specific task attached —
   // FocusTimerModal already handles a taskless session (id: null hides "Mark complete").
@@ -231,7 +231,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const onChipClick = (chip) => {
     if (chip.kind === "goal") setActionDone(chip.goalId, chip.milestoneId, chip.id, !chip.done);
     else if (chip.kind === "edu") setEduDone(chip.id, !chip.done);
-    else if (chip.kind === "task") openTaskDetail(chip.id);
+    else if (chip.kind === "task") openFocus(chip.id, chip.title);
     // A group's due chip represents several rows at once — no single task to open, so
     // just jump to the Tasks page where the collapsed group row lives (expand it there).
     else if (chip.kind === "task-group-due") setView("tasks");
@@ -514,7 +514,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onCellClick={(date, hour) => setModal({ date, hour })}
             onToggleTask={setTaskDone}
             onChipClick={onChipClick}
-            onOpenTaskDetail={openTaskDetail}
+            onOpenFocus={openFocus}
             onRescheduleTask={rescheduleTask}
             onRescheduleEvent={(id, date) => updateEvent(id, { date })}
             onEditEvent={setEditingEvent}
@@ -692,6 +692,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           onClose={() => setFocusTask(null)}
           onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); }}
           defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
+          onOpenDetail={openTaskDetail}
         />
       )}
 
@@ -735,7 +736,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           events={events}
           onClose={() => setShowSearch(false)}
           onGoTo={setView}
-          onOpenTask={openTaskDetail}
+          onOpenTask={openFocus}
         />
       )}
 

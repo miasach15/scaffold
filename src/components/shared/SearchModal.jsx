@@ -22,7 +22,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
     if (query.length < 2) return [];
     const out = [];
     (tasks || []).forEach((t) => {
-      if (t.title.toLowerCase().includes(query)) out.push({ type: "task", id: t.id, title: t.title, sub: t.date || "No date", onClick: () => { onOpenTask(t.id); onClose(); } });
+      if (t.title.toLowerCase().includes(query)) out.push({ type: "task", id: t.id, title: t.title, sub: t.date || "No date", onClick: () => { onOpenTask(t.id, t.title); onClose(); } });
     });
     (eduItems || []).forEach((e) => {
       if (e.title.toLowerCase().includes(query)) out.push({ type: "edu", id: e.id, title: e.title, sub: [e.subject, e.type].filter(Boolean).join(" · "), onClick: () => { onGoTo("education"); onClose(); } });

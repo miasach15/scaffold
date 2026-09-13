@@ -191,7 +191,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
 
   const renderComboItem = (item) => {
     if (item.type === "single") {
-      return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
+      return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onOpenFocus={onOpenFocus} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
     }
     if (item.type === "edu") {
       return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} onToggleDone={handleSetEduDone} onOpen={onGoToEducation} />;
@@ -215,6 +215,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         onSetCategory={onSetCategory}
         onRemove={onRemove}
         onOpenDetail={onOpenTaskDetail}
+        onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
         onSetStart={onSetStart}
       />
@@ -228,7 +229,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       <TodaySection
         tasks={tasks}
         onToggleDone={handleToggleDone}
-        onOpenDetail={onOpenTaskDetail}
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
         eduItems={eduItems}

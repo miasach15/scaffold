@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TASK_COLOR, TONE, serifFont } from "../../lib/constants";
 import { pad } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
@@ -25,7 +25,7 @@ async function notifySessionDone(title) {
   }
 }
 
-export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes }) {
+export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail }) {
   const initial = (defaultMinutes || 25) * 60;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
@@ -237,8 +237,25 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 11.5, color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>Focus session</div>
-            <div style={{ fontSize: 16, fontWeight: 700, margin: "4px 0 18px", color: INK }}>{task.title}</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 11.5, color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>Focus session</div>
+              {task.id && onOpenDetail && (
+                <button
+                  onClick={() => { onOpenDetail(task.id); onClose(); }}
+                  title="Edit this task"
+                  style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}
+                >
+                  <Pencil size={13} strokeWidth={2.2} />
+                </button>
+              )}
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, margin: task.notes ? "4px 0 10px" : "4px 0 18px", color: INK }}>{task.title}</div>
+            {task.notes && (
+              <div style={{ textAlign: "left", background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 11px", marginBottom: 14, fontSize: 12.5, color: INK, lineHeight: 1.4 }}>
+                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 3 }}>Notes</div>
+                {task.notes}
+              </div>
+            )}
 
             <div style={{ position: "relative", width: 160, height: 160, margin: "0 auto 18px" }}>
               <svg width="160" height="160" viewBox="0 0 160 160" style={{ transform: "rotate(-90deg)" }}>
