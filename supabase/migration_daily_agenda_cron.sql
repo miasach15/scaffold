@@ -4,17 +4,17 @@
 -- miasachdev15@gmail.com, on purpose, while this is still being tried out. Deploy the
 -- function FIRST:
 --   supabase functions deploy send-daily-agenda
--- and make sure RESEND_API_KEY is already set (same secret send-welcome-email and
--- send-daily-digest use).
+-- and make sure SENDGRID_API_KEY and SENDGRID_FROM_EMAIL are already set (same secrets
+-- send-welcome-email uses).
 --
 -- If `create extension pg_cron` errors with a permissions message, enable it from the
 -- Supabase Dashboard instead: Database → Extensions → search "pg_cron" → Enable.
 --
 -- Runs at 12:00 UTC by default — change the '0 12 * * *' schedule below to whatever
--- hour lands in the morning for your timezone (cron time is UTC, not local). This
--- deliberately runs alongside send-daily-digest rather than replacing it — they're two
--- different emails (a "what's due" digest vs. a full day's schedule), so both cron jobs
--- can exist at once without conflicting.
+-- hour lands in the morning for your timezone (cron time is UTC, not local). This used
+-- to run alongside send-daily-digest as two separate emails, but that's since been
+-- retired (see migration_retire_daily_digest_cron.sql) — this one covers everything it
+-- did plus more, so there's no reason to keep both.
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;

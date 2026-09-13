@@ -1,3 +1,9 @@
+-- RETIRED: superseded by send-daily-agenda (see migration_daily_agenda_cron.sql), which
+-- covers everything this one did (what's overdue/due) plus a real chronological
+-- schedule and a tomorrow preview. This file is kept only as a record of what was run
+-- at the time — see migration_retire_daily_digest_cron.sql for the actual unschedule +
+-- function teardown. Do not re-run this file.
+--
 -- Schedules the send-daily-digest Edge Function to run once a day, emailing every user
 -- whatever's overdue or due today (tasks, Education deadlines, goal actions) — skipped
 -- entirely for a user if nothing's due. Deploy the function FIRST:

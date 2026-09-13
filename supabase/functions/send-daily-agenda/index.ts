@@ -12,18 +12,33 @@
 // everyone; nothing else about the function needs to change to do that.
 //
 // Deploy with:  supabase functions deploy send-daily-agenda
-// Uses the same RESEND_API_KEY secret already set for send-welcome-email/
-// send-daily-digest. SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are injected
-// automatically — no need to set those yourself.
-// Scheduled by migration_daily_agenda_cron.sql (pg_cron, once deployed).
+// Uses the same SENDGRID_API_KEY / SENDGRID_FROM_EMAIL secrets as send-welcome-email —
+// SENDGRID_FROM_EMAIL must be a sender address verified in SendGrid (Settings → Sender
+// Authentication) or every send fails with a 403. SUPABASE_URL /
+// SUPABASE_SERVICE_ROLE_KEY are injected automatically — no need to set those yourself.
+// Scheduled by migration_daily_agenda_cron.sql (pg_cron, once deployed). This replaces
+// send-daily-digest (retired — see migration_retire_daily_digest_cron.sql), which did a
+// simpler version of the same "what's due" idea without the real schedule/priorities/
+// tomorrow-preview layout.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = Deno.env.get("DIGEST_FROM_EMAIL") || Deno.env.get("WELCOME_FROM_EMAIL") || "Scaffold <onboarding@resend.dev>";
+const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+const FROM_EMAIL_RAW = Deno.env.get("SENDGRID_FROM_EMAIL") || Deno.env.get("DIGEST_FROM_EMAIL") || Deno.env.get("WELCOME_FROM_EMAIL") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+// SendGrid wants `from` as a {email, name} object, not the combined "Name <email>"
+// string Resend accepted directly — this pulls the two apart.
+function parseFromAddress(raw: string): { email: string; name?: string } {
+  const m = raw.match(/^(.*)<(.+)>\s*$/);
+  if (m) {
+    const name = m[1].trim();
+    return { email: m[2].trim(), name: name || undefined };
+  }
+  return { email: raw.trim() };
+}
 
 // TEMPORARY allowlist — see the file comment above.
 const ALLOWED_EMAILS = ["miasachdev15@gmail.com"];
@@ -99,7 +114,8 @@ function simpleRow(title: string, category: string, sub: string, accent: string)
 
 serve(async (_req) => {
   try {
-    if (!RESEND_API_KEY) return json({ error: "RESEND_API_KEY not set" }, 500);
+    if (!SENDGRID_API_KEY) return json({ error: "SENDGRID_API_KEY not set" }, 500);
+    if (!FROM_EMAIL_RAW) return json({ error: "SENDGRID_FROM_EMAIL not set" }, 500);
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return json({ error: "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not available" }, 500);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -211,10 +227,15 @@ serve(async (_req) => {
           <div style="border-top:1px solid #ECECEC; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
         </div>`;
 
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
         method: "POST",
-        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: FROM_EMAIL, to: user.email, subject: totalItems > 0 ? `Your day: ${totalItems} thing${totalItems === 1 ? "" : "s"} on the calendar` : "Your day: nothing on the calendar", html }),
+        headers: { Authorization: `Bearer ${SENDGRID_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: user.email }] }],
+          from: parseFromAddress(FROM_EMAIL_RAW),
+          subject: totalItems > 0 ? `Your day: ${totalItems} thing${totalItems === 1 ? "" : "s"} on the calendar` : "Your day: nothing on the calendar",
+          content: [{ type: "text/html", value: html }],
+        }),
       });
 
       if (res.ok) sent++;
