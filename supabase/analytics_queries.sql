@@ -3,6 +3,8 @@
 -- owner there, you see every user's rows regardless of the table's own row-level
 -- security policy (that policy only limits what a signed-in user of the APP itself can
 -- query through the client, so a normal user can only ever see their own activity).
+-- The SQL Editor also has read access to auth.users (a normal app user wouldn't), so
+-- every query below joins against it to show email instead of a bare user_id.
 --
 -- Auth's "Users" list only shows the most recent sign-in per person, which is why it
 -- can't answer "how many times a day do they actually use it" — usage_events logs an
@@ -14,11 +16,12 @@
 -- shows up as 5 here, not 1 — good for a rough "how active are they today" number, not
 -- for "how many separate times did they open the app."
 select
-  user_id,
-  date_trunc('day', created_at) as day,
+  u.email,
+  date_trunc('day', e.created_at) as day,
   count(*) as page_opens
-from usage_events
-group by user_id, day
+from usage_events e
+join auth.users u on u.id = e.user_id
+group by u.email, day
 order by day desc, page_opens desc;
 
 -- 2) Closer to "how many times a day do they use it": groups events into sessions,
@@ -41,15 +44,17 @@ sessions as (
   from gaps
 )
 select
-  user_id,
-  date_trunc('day', created_at) as day,
-  count(distinct session_id) as sessions_that_day
-from sessions
-group by user_id, day
+  u.email,
+  date_trunc('day', s.created_at) as day,
+  count(distinct s.session_id) as sessions_that_day
+from sessions s
+join auth.users u on u.id = s.user_id
+group by u.email, day
 order by day desc, sessions_that_day desc;
 
 -- 3) Same session logic as #2, but rolled up across everyone — a daily "how many times
--- was the app opened, in total, across all users" trend line.
+-- was the app opened, in total, across all users" trend line. No per-user email needed
+-- here since it's already aggregated across everyone.
 with gaps as (
   select
     user_id,
@@ -73,15 +78,15 @@ group by day
 order by day desc;
 
 -- 4) One person's usage for the last 14 days, both metrics side by side — useful for
--- checking in on a specific user (e.g. yourself, while testing).
--- Replace the uuid below with the user_id from Authentication > Users.
+-- checking in on a specific user. Replace the email below with theirs.
 with gaps as (
   select
-    user_id,
-    created_at,
-    created_at - lag(created_at) over (partition by user_id order by created_at) as gap_since_prev
-  from usage_events
-  where user_id = '00000000-0000-0000-0000-000000000000' -- <- replace with the real user_id
+    e.user_id,
+    e.created_at,
+    e.created_at - lag(e.created_at) over (order by e.created_at) as gap_since_prev
+  from usage_events e
+  join auth.users u on u.id = e.user_id
+  where u.email = 'someone@example.com' -- <- replace with the real email
 ),
 sessions as (
   select
