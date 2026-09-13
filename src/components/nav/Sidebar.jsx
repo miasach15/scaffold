@@ -19,6 +19,20 @@ const NAV_ITEMS = [
   { key: "journal", label: "Journal", icon: BookOpen },
 ];
 
+// On a phone, these four get a persistent one-tap bottom tab (matched to the Figma
+// iPhone mockups' bottom nav pattern) instead of living inside the hamburger drawer —
+// they're the pages people jump into constantly. Everything else (Goals/Habits/Grades/
+// Journal) plus search/settings/weekly review/log out stays in the "More" drawer, which
+// is the exact same slide-in panel the old hamburger button opened — tapping the bottom
+// bar's own Menu icon just reuses it instead of introducing a separate mobile UI.
+const TAB_BAR_ITEMS = [
+  { key: "dashboard", label: "Home", icon: Home },
+  { key: "calendar", label: "Calendar", icon: CalendarIcon },
+  { key: "tasks", label: "Tasks", icon: CheckSquare },
+  { key: "education", label: "Education", icon: GraduationCap },
+];
+const MORE_DRAWER_VIEWS = ["goals", "habits", "grades", "journal"];
+
 function initialFrom(name, email) {
   const source = (name || "").trim() || (email || "").trim();
   return source ? source[0].toUpperCase() : "?";
@@ -28,6 +42,10 @@ function initialFrom(name, email) {
 export default function Sidebar({ view, setView, profile, email, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
   const [open, setOpen] = useState(false);
   const displayName = profile?.name || (email ? email.split("@")[0] : "");
+  // The bottom bar's own Menu/"More" tab stands in for whichever page it's covering —
+  // active either while the drawer is actually open, or while sitting on one of the
+  // pages that only lives inside it.
+  const moreActive = open || MORE_DRAWER_VIEWS.includes(view);
 
   const go = (key) => {
     setView(key);
@@ -37,7 +55,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
   return (
     <>
       <style>{`
-        .sb-topbar { display: none; }
+        .sb-bottom-tabbar { display: none; }
         .sb-backdrop { display: none; }
         @media (max-width: 860px) {
           .sb-rail {
@@ -48,10 +66,20 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
             padding-left: calc(24px + env(safe-area-inset-left));
           }
           .sb-rail.sb-open { transform: translateX(0); }
-          .sb-topbar {
-            display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-            padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
-            border-bottom: 1px solid ${BORDER}; background: ${PAPER_BG};
+          .sb-bottom-tabbar {
+            display: flex; align-items: stretch; justify-content: space-around; flex-shrink: 0;
+            border-top: 1px solid ${BORDER}; background: ${PAPER_BG};
+            padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            /* Sidebar renders before the page content in the DOM (so the rail sits on
+               the left on desktop), and this bar is a fixed:none, real-flow sibling of
+               that content within .app-shell's mobile column — without this it would
+               render above the page instead of below it. order pushes it after content
+               (order 0) purely visually, with no DOM/JSX restructuring needed. */
+            order: 1;
+          }
+          .sb-tab-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+            background: none; border: none; padding: 6px 4px; flex: 1; min-width: 0;
           }
           .sb-backdrop.sb-open {
             display: block; position: fixed; inset: 0; background: rgba(26,26,46,0.35); z-index: 190;
@@ -62,18 +90,6 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
           .sb-rail { transition-duration: 0.001ms !important; }
         }
       `}</style>
-
-      <div className="sb-topbar">
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          style={{ border: "none", background: "none", padding: 4, display: "inline-flex", color: INK }}
-        >
-          <Menu size={22} strokeWidth={2} />
-        </button>
-        <Monogram size={24} />
-        <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Scaffold</div>
-      </div>
 
       <div className={`sb-backdrop${open ? " sb-open" : ""}`} onClick={() => setOpen(false)} />
 
@@ -157,6 +173,27 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="sb-bottom-tabbar">
+        {TAB_BAR_ITEMS.map((item) => {
+          const active = view === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => go(item.key)}
+              className="sb-tab-btn"
+              style={{ color: active ? PRIMARY_DARK : MUTED }}
+            >
+              <item.icon size={21} strokeWidth={active ? 2.4 : 2} />
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500 }}>{item.label}</span>
+            </button>
+          );
+        })}
+        <button onClick={() => setOpen(true)} className="sb-tab-btn" style={{ color: moreActive ? PRIMARY_DARK : MUTED }}>
+          <Menu size={21} strokeWidth={moreActive ? 2.4 : 2} />
+          <span style={{ fontSize: 10, fontWeight: moreActive ? 700 : 500 }}>More</span>
+        </button>
       </div>
     </>
   );

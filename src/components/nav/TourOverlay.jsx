@@ -71,8 +71,17 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
   };
 
   return (
-    <div
+    <>
+      {/* Below 861px, Sidebar's fixed-height bottom tab bar (see Sidebar.jsx) sits right
+          where this tooltip's default bottom-anchored position would otherwise crowd it. */}
+      <style>{`
+        @media (max-width: 860px) {
+          .tour-box-mobile-lift { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+        }
+      `}</style>
+      <div
       ref={boxRef}
+      className={dragPos ? undefined : "tour-box-mobile-lift"}
       style={
         dragPos
           ? { position: "fixed", top: dragPos.top, left: dragPos.left, zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
@@ -114,6 +123,7 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
         {i > 0 && <button onClick={() => setI((n) => n - 1)} style={ghostBtn}>Back</button>}
         <button onClick={() => (isLast ? finish() : setI((n) => n + 1))} style={primaryBtn}>{isLast ? "Done" : "Next"}</button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

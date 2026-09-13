@@ -15,31 +15,49 @@ export default function StickyNoteCorner({ onCapture }) {
     setText("");
   };
 
+  // Below 861px, Sidebar swaps in a fixed-height bottom tab bar (see Sidebar.jsx) that
+  // this fixed-position corner button would otherwise sit on top of — the "sc-mobile-lift"
+  // class pushes it up clear of the bar on narrow screens only.
+  const mobileLift = (
+    <style>{`
+      @media (max-width: 860px) {
+        .sc-mobile-lift { bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
+      }
+    `}</style>
+  );
+
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        title="Sticky note: jot something down"
-        style={{
-          position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: "calc(20px + env(safe-area-inset-right))", zIndex: 80, width: 44, height: 44, borderRadius: "10px 10px 3px 10px",
-          background: "#FFF7D6", border: "1px solid #EFD98A", boxShadow: "0 6px 16px rgba(0,0,0,0.14)",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#8A6F1F",
-        }}
-      >
-        <StickyNote size={18} strokeWidth={2} />
-      </button>
+      <>
+        {mobileLift}
+        <button
+          onClick={() => setOpen(true)}
+          title="Sticky note: jot something down"
+          className="sc-mobile-lift"
+          style={{
+            position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: "calc(20px + env(safe-area-inset-right))", zIndex: 80, width: 44, height: 44, borderRadius: "10px 10px 3px 10px",
+            background: "#FFF7D6", border: "1px solid #EFD98A", boxShadow: "0 6px 16px rgba(0,0,0,0.14)",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#8A6F1F",
+          }}
+        >
+          <StickyNote size={18} strokeWidth={2} />
+        </button>
+      </>
     );
   }
 
   return (
-    <div
-      style={{
-        position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: "calc(20px + env(safe-area-inset-right))", zIndex: 80, width: 190, height: 190,
-        background: "#FFF7D6", border: "1px solid #EFD98A", borderRadius: 3,
-        boxShadow: "0 10px 24px rgba(0,0,0,0.16)", transform: "rotate(-2deg)",
-        display: "flex", flexDirection: "column", padding: "12px 12px 10px",
-      }}
-    >
+    <>
+      {mobileLift}
+      <div
+        className="sc-mobile-lift"
+        style={{
+          position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: "calc(20px + env(safe-area-inset-right))", zIndex: 80, width: 190, height: 190,
+          background: "#FFF7D6", border: "1px solid #EFD98A", borderRadius: 3,
+          boxShadow: "0 10px 24px rgba(0,0,0,0.16)", transform: "rotate(-2deg)",
+          display: "flex", flexDirection: "column", padding: "12px 12px 10px",
+        }}
+      >
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 2 }}>
         <button
           onClick={() => setOpen(false)}
@@ -66,6 +84,7 @@ export default function StickyNoteCorner({ onCapture }) {
           fontFamily: "'Inter', sans-serif", fontSize: 13.5, lineHeight: 1.5, color: "#6B5A1F",
         }}
       />
-    </div>
+      </div>
+    </>
   );
 }
