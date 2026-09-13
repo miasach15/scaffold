@@ -356,15 +356,16 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             {upcoming.length === 0 ? (
               <EmptyState text="Nothing due soon." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, overflowY: "auto", minHeight: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {upcoming.map((c) => {
                   const label = c.subject || c.category;
                   const col = label ? CATEGORY_COLORS[label] || CATEGORY_COLORS.Personal : null;
                   return (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 10 }}>
-                      <div style={{ minWidth: 0 }}>
-                        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase" }}>{label}</div>}
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: col?.accent || PRIMARY_DARK, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                       </div>
                       <div style={{ flexShrink: 0 }}><UrgencyBadge iso={c.date} done={c.done} leadDays={2} /></div>
                     </div>

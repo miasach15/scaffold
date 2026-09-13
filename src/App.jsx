@@ -629,8 +629,6 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           whatnowIntervalMinutes={profile.whatnowIntervalMinutes}
           whatnowWindowStart={profile.whatnowWindowStart}
           whatnowWindowEnd={profile.whatnowWindowEnd}
-          phoneNumber={profile.phoneNumber}
-          smsRemindersEnabled={profile.smsRemindersEnabled}
           onUpdateProfile={updateProfile}
           onDeleteAccount={deleteAccount}
           onClose={() => setShowSettings(false)}
