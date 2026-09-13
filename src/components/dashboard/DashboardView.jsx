@@ -67,13 +67,13 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
-  // A focus session always has to be about something real — no more starting a bare
-  // "Focus Session" timer with nothing attached to it. Whatever's not done yet, soonest
-  // due date first (no date sinks to the bottom), so the default selection is usually
-  // already the right one.
+  const todayISO = toISO(new Date());
+  // A focus session always has to be about something real, and specifically something
+  // due today — not the whole task list. Timed tasks sort first by their time slot,
+  // untimed ones after, matching how "Today's Scaffolded Steps" orders things below.
   const focusableTasks = useMemo(
-    () => tasks.filter((t) => !t.done).sort((a, b) => (a.date || "9999-99-99").localeCompare(b.date || "9999-99-99")),
-    [tasks]
+    () => tasks.filter((t) => !t.done && t.date === todayISO).sort((a, b) => (a.start ?? 99) - (b.start ?? 99)),
+    [tasks, todayISO]
   );
   const [focusTaskId, setFocusTaskId] = useState(null);
   useEffect(() => {
@@ -88,7 +88,6 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
       onAutoOpenBrainDumpHandled?.();
     }
   }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
-  const todayISO = toISO(new Date());
   const weekStart = startOfWeek(new Date());
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const firstName = (profile?.name || "").trim().split(" ")[0];
@@ -325,7 +324,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                 {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
               </select>
             ) : (
-              <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Add a task below to focus on it.</div>
+              <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Nothing due today to focus on yet.</div>
             )}
 
             <button
