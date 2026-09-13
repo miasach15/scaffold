@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
-import { ghostBtn, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -67,6 +67,18 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
+  // A focus session always has to be about something real — no more starting a bare
+  // "Focus Session" timer with nothing attached to it. Whatever's not done yet, soonest
+  // due date first (no date sinks to the bottom), so the default selection is usually
+  // already the right one.
+  const focusableTasks = useMemo(
+    () => tasks.filter((t) => !t.done).sort((a, b) => (a.date || "9999-99-99").localeCompare(b.date || "9999-99-99")),
+    [tasks]
+  );
+  const [focusTaskId, setFocusTaskId] = useState(null);
+  useEffect(() => {
+    if (!focusableTasks.some((t) => t.id === focusTaskId)) setFocusTaskId(focusableTasks[0]?.id || null);
+  }, [focusableTasks, focusTaskId]);
   const [showBrainDump, setShowBrainDump] = useState(false);
   // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
   // the second of the two "Up next" steps the onboarding Done screen just promised.
@@ -303,7 +315,28 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
               ))}
             </div>
 
-            <button onClick={() => onStartFocus(focusMinutes)} className="btn-primary" style={{ ...primaryBtn, width: "100%", padding: "12px 0", fontSize: 14.5 }}>
+            {focusableTasks.length > 0 ? (
+              <select
+                value={focusTaskId || ""}
+                onChange={(e) => setFocusTaskId(e.target.value)}
+                title="What this session is for"
+                style={{ ...inputStyle, width: "100%", marginBottom: 10 }}
+              >
+                {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select>
+            ) : (
+              <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Add a task below to focus on it.</div>
+            )}
+
+            <button
+              onClick={() => {
+                const t = focusableTasks.find((x) => x.id === focusTaskId);
+                if (t) onStartFocus(t.id, t.title, focusMinutes);
+              }}
+              disabled={!focusTaskId}
+              className="btn-primary"
+              style={{ ...primaryBtn, width: "100%", padding: "12px 0", fontSize: 14.5, opacity: focusTaskId ? 1 : 0.5 }}
+            >
               Start
             </button>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Download, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
@@ -10,7 +10,7 @@ import CategoryEditor from "../shared/CategoryEditor";
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -212,6 +212,16 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
           {exporting ? "Gathering everything..." : "Download a backup of everything"}
         </button>
         {exportError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6, textAlign: "center" }}>{exportError}</div>}
+
+        {onSignOut && (
+          <button
+            onClick={onSignOut}
+            style={{ ...ghostBtn, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+          >
+            <LogOut size={14} strokeWidth={2.3} />
+            Log out
+          </button>
+        )}
 
         {onDeleteAccount && (
           <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${TONE.danger.border}` }}>

@@ -149,14 +149,13 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
   // down" breakdown) so the Focus Timer can show the whole checklist alongside it —
-  // every call site still just passes (id, title), the lookup happens here.
-  const openFocus = (id, title) => {
+  // most call sites just pass (id, title); Dashboard's own picker also passes a chosen
+  // duration as the third arg. Every focus session is tied to a real task now — there's
+  // no more taskless "Focus Session" option.
+  const openFocus = (id, title, minutes) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, minutes });
   };
-  // A plain focus session started from the Dashboard, with no specific task attached —
-  // FocusTimerModal already handles a taskless session (id: null hides "Mark complete").
-  const openGenericFocus = (minutes) => setFocusTask({ id: null, title: "Focus Session", groupId: null, minutes });
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
@@ -483,7 +482,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onSetHabitDone={setHabitDone}
             setView={setView}
             onSelectDay={setDayView}
-            onStartFocus={openGenericFocus}
+            onStartFocus={openFocus}
             onAddTask={addTask}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
@@ -630,6 +629,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           whatnowWindowStart={profile.whatnowWindowStart}
           whatnowWindowEnd={profile.whatnowWindowEnd}
           onUpdateProfile={updateProfile}
+          onSignOut={onSignOut}
           onDeleteAccount={deleteAccount}
           onClose={() => setShowSettings(false)}
         />
