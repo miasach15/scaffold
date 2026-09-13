@@ -45,6 +45,23 @@ function greeting() {
   return "Good evening";
 }
 
+// A small rotating coaching note, same warm-but-brief voice as the "you did it — one
+// step closer"/"nice focus session" lines the Focus Timer already uses. Picked by day
+// of year so it holds steady all day instead of changing on every reload.
+const COACHING_NOTES = [
+  "you've got this, take a breath",
+  "small steps still count as progress",
+  "one thing at a time is plenty",
+  "done is better than perfect",
+  "you don't have to feel ready to start",
+  "future you will thank you for this",
+];
+function coachingNote() {
+  const start = new Date(new Date().getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((new Date() - start) / 86400000);
+  return COACHING_NOTES[dayOfYear % COACHING_NOTES.length];
+}
+
 export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
@@ -145,17 +162,27 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
-          {greeting()}{firstName ? `, ${firstName}` : ""}
+      <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today's plan</div>
+          <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
+            {greeting()}{firstName ? `, ${firstName}` : ""}
+          </div>
+          <div style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>A steady, one-step-at-a-time look at what's on your plate today.</div>
         </div>
-        <button
-          onClick={() => setShowBrainDump(true)}
-          className="hoverable"
-          style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
-        >
-          <Brain size={14} strokeWidth={2.2} /> Brain dump
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
+          <div style={{ textAlign: "right", maxWidth: 260 }}>
+            <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 15, color: PRIMARY_DARK, lineHeight: 1.3 }}>"{coachingNote()}"</div>
+            <div style={{ fontSize: 10.5, color: MUTED, marginTop: 3 }}>— Scaffold coaching note</div>
+          </div>
+          <button
+            onClick={() => setShowBrainDump(true)}
+            className="hoverable"
+            style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+          >
+            <Brain size={14} strokeWidth={2.2} /> Brain dump
+          </button>
+        </div>
       </div>
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}

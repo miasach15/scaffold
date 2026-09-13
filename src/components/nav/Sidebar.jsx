@@ -6,15 +6,17 @@ import {
 import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 
+// Order matches the Figma nav spec: Dashboard, Calendar, Tasks, Goals, Habits,
+// Journal, Education, Grades.
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
-  { key: "education", label: "Education", icon: GraduationCap },
-  { key: "grades", label: "Grades", icon: Percent },
   { key: "goals", label: "Goals", icon: Target },
   { key: "habits", label: "Habits", icon: Repeat },
   { key: "journal", label: "Journal", icon: BookOpen },
+  { key: "education", label: "Education", icon: GraduationCap },
+  { key: "grades", label: "Grades", icon: Percent },
 ];
 
 function initialFrom(name, email) {
