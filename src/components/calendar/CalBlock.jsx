@@ -12,8 +12,7 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
       onDragStart={isTask ? (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: item.id })) : undefined}
       style={{
         position: "absolute", top, left: 3, right: 3, height,
-        background: "#fff", borderLeft: `3px solid ${accent}`, borderRadius: 8,
-        boxShadow: "0 1px 2px rgba(26,26,46,0.06)",
+        background: "#fff", border: `1.5px solid ${accent}`, borderRadius: 10,
         padding: "6px 10px", overflow: "hidden", cursor: isTask ? "grab" : "pointer", opacity: done ? 0.5 : 1,
       }}
     >
