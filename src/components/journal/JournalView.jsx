@@ -50,11 +50,24 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
           style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 14, lineHeight: 1.5, fontFamily: "inherit" }}
         />
 
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        {/* Below 480px, "Shuffle prompt" + "Skip, free write" + the spacer + "Save entry"
+            no longer fit on one line — and since .app-shell clips overflow rather than
+            scrolling it, Save entry (the actual primary action) was getting cut off
+            entirely rather than just wrapping into view. flexWrap lets it drop to its own
+            line instead; the spacer (only there to push Save entry right on a roomy
+            desktop row) is hidden at that width since a wrapped, full-width Save entry
+            doesn't need it. */}
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           <button onClick={() => shuffle()} className="btn-ghost" style={ghostBtn}>Shuffle prompt</button>
           <button onClick={() => { setMode("freewrite"); setText(text); }} className="btn-ghost" style={ghostBtn}>Skip, free write</button>
-          <div style={{ flex: 1 }} />
-          <button onClick={save} disabled={!text.trim()} style={{ ...primaryBtn, opacity: text.trim() ? 1 : 0.5 }}>Save entry</button>
+          <div className="jv-actions-spacer" style={{ flex: 1 }} />
+          <button onClick={save} disabled={!text.trim()} className="jv-save-btn" style={{ ...primaryBtn, opacity: text.trim() ? 1 : 0.5 }}>Save entry</button>
+          <style>{`
+            @media (max-width: 480px) {
+              .jv-actions-spacer { display: none; }
+              .jv-save-btn { flex: 1 1 100%; }
+            }
+          `}</style>
         </div>
       </div>
 

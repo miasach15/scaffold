@@ -102,7 +102,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
               if (e.key === "Enter") saveMilestone();
               if (e.key === "Escape") setEditingMilestone(false);
             }}
-            style={{ ...inputStyle, flex: "1 1 140px", fontSize: 14, fontWeight: 600, padding: "3px 6px" }}
+            style={{ ...inputStyle, flex: "1 1 140px", minWidth: 0, fontSize: 14, fontWeight: 600, padding: "3px 6px" }}
           />
         ) : (
           <div
@@ -139,7 +139,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
       {milestone.actions.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8, paddingLeft: 28 }}>
           {milestone.actions.map((a, i) => (
-            <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", rowGap: 4 }}>
               <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
                 <button
                   onClick={() => onMoveAction(a.id, "up")}
@@ -169,7 +169,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                     if (e.key === "Enter") saveAction(a);
                     if (e.key === "Escape") setEditingActionId(null);
                   }}
-                  style={{ ...inputStyle, flex: 1, fontSize: 13, padding: "3px 6px" }}
+                  style={{ ...inputStyle, flex: 1, minWidth: 0, fontSize: 13, padding: "3px 6px" }}
                 />
               ) : (
                 <div
@@ -201,8 +201,8 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
           ))}
         </div>
       )}
-      <div style={{ display: "flex", gap: 6, paddingLeft: 28 }}>
-        <input placeholder="Next action..." value={actionTitle} onChange={(e) => setActionTitle(e.target.value)} style={{ ...inputStyle, flex: 1, fontSize: 12.5, padding: "6px 8px" }} onKeyDown={(e) => e.key === "Enter" && addAction()} />
+      <div style={{ display: "flex", gap: 6, paddingLeft: 28, flexWrap: "wrap", rowGap: 6 }}>
+        <input placeholder="Next action..." value={actionTitle} onChange={(e) => setActionTitle(e.target.value)} style={{ ...inputStyle, flex: "1 1 140px", minWidth: 0, fontSize: 12.5, padding: "6px 8px" }} onKeyDown={(e) => e.key === "Enter" && addAction()} />
         <input type="date" value={actionDate} onChange={(e) => setActionDate(e.target.value)} style={{ ...inputStyle, width: 124, fontSize: 12.5, padding: "6px 8px" }} />
         <button onClick={addAction} style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px" }}>Add</button>
       </div>

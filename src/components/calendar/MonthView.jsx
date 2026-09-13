@@ -45,6 +45,19 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
         </div>
       </div>
 
+      {/* Below ~520px a 7-column grid leaves each day only ~45px wide — nowhere near
+          enough to read a labeled pill, so the text-per-item rows below (.mv-pills)
+          truncate to 1-2 illegible characters. Under that width, cells switch to plain
+          small colored dots instead (.mv-dots) — no label, just enough to see something's
+          there and what category, matching how a phone calendar app summarizes a busy
+          day; tapping the day still opens the real, readable agenda. */}
+      <style>{`
+        .mv-dots { display: none; }
+        @media (max-width: 520px) {
+          .mv-pills { display: none !important; }
+          .mv-dots { display: flex !important; }
+        }
+      `}</style>
       <div style={{ ...cardStyle, overflow: "hidden", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
           {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((d) => (
@@ -72,7 +85,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
                   fontSize: 12, fontWeight: 700, width: 22, height: 22, lineHeight: "22px", textAlign: "center", borderRadius: "50%",
                   background: isToday ? "var(--primary, #7B6EF0)" : "transparent", color: isToday ? "#fff" : "#000000", flexShrink: 0,
                 }}>{date.getDate()}</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                <div className="mv-pills" style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                   {shown.map((it, i) => {
                     const col = dotColor(it);
                     return (
@@ -86,12 +99,28 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
                   })}
                   {extra > 0 && <div style={{ fontSize: 9.5, color: "#B4BCC5", fontWeight: 600 }}>+{extra} more</div>}
                 </div>
+                <div className="mv-dots" style={{ display: "none", flexWrap: "wrap", gap: 3, minWidth: 0 }}>
+                  {shown.map((it, i) => (
+                    <div key={i} title={dotLabel(it)} style={{ width: 6, height: 6, borderRadius: "50%", background: dotColor(it).accent || dotColor(it).border, flexShrink: 0 }} />
+                  ))}
+                  {extra > 0 && <div style={{ fontSize: 8.5, color: "#B4BCC5", fontWeight: 700, lineHeight: "6px" }}>+{extra}</div>}
+                </div>
               </button>
             );
           })}
         </div>
       </div>
-      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>Click any day to zoom in. Tasks aren't shown at this zoom level: switch to Day or Week to see them.</div>
+      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, marginRight: 56, flexShrink: 0 }}>
+        <span className="cal-hint-desktop">Click any day to zoom in. Tasks aren't shown at this zoom level: switch to Day or Week to see them.</span>
+        <span className="cal-hint-mobile">Tap any day to zoom in. Tasks aren't shown at this zoom level.</span>
+        <style>{`
+          .cal-hint-mobile { display: none; }
+          @media (max-width: 640px) {
+            .cal-hint-desktop { display: none; }
+            .cal-hint-mobile { display: inline; }
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

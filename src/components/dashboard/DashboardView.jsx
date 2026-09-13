@@ -172,7 +172,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   );
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+    <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today's plan</div>
@@ -198,9 +198,21 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
-        <style>{`@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr !important; } }`}</style>
+        <style>{`
+          @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr !important; flex: none !important; min-height: 0 !important; }
+            /* Below the breakpoint where the dashboard stops being a single fixed-height
+               screen (see App.jsx's ".dashboard-wrap" comment), the whole page scrolls
+               normally instead — so every level below that was sized via flex:1/minHeight:0
+               to fit a fixed viewport (and would otherwise clip its content into its own
+               tiny internal scrollbar) needs to fall back to natural content height here,
+               leaving .dashboard-wrap as the one real scroll container. */
+            .dv-root, .dv-col, .dv-card { flex: none !important; min-height: 0 !important; }
+            .dv-card-list { overflow: visible !important; min-height: 0 !important; }
+          }
+        `}</style>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
           <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
@@ -227,12 +239,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             </div>
           </div>
 
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               <EmptyState text="Nothing scheduled for today yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {todaysTimedTasks.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {todaysTimedTasks.map((item, i) => (
@@ -274,7 +286,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
           <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
               <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
@@ -360,12 +372,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
@@ -385,12 +397,12 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             )}
           </div>
 
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <EmptyState text="Nothing due soon." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
                 {upcoming.map((c) => {
                   const label = c.subject || c.category;
                   const col = label ? CATEGORY_COLORS[label] || CATEGORY_COLORS.Personal : null;

@@ -98,8 +98,20 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+      <style>{`
+        /* At the 32px serif size below, a narrow phone-width column (title's flex sibling,
+           the completed-count/ring/expand/delete cluster, is flexShrink:0 and claims its
+           full width first) squeezes the title down to ~135px — one word per line. Below
+           480px the header stacks instead (full-width title on top, controls on their own
+           row) and the title steps down to a size that still fits several words per line. */
+        @media (max-width: 480px) {
+          .goal-card-head { flex-direction: column !important; align-items: stretch !important; }
+          .goal-card-meta { align-self: flex-end; }
+          .goal-card-title { font-size: 24px !important; }
+        }
+      `}</style>
       <div style={{ padding: "20px 22px 14px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div className="goal-card-head" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, background: col.bg, border: `1px solid ${PRIMARY_DARK}`, marginBottom: 8 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: INK, textTransform: "uppercase" }}>{goal.category}</div>
@@ -114,6 +126,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                     if (e.key === "Enter") saveTitle();
                     if (e.key === "Escape") cancelTitle();
                   }}
+                  className="goal-card-title"
                   style={{ ...inputStyle, fontFamily: serifFont, fontSize: 32, fontWeight: 500, padding: "4px 8px", flex: 1, minWidth: 0 }}
                 />
                 <button onClick={saveTitle} title="Save" style={{ background: "none", border: "none", cursor: "pointer", color: INK, padding: 4, display: "flex" }}><Check size={16} strokeWidth={2.5} /></button>
@@ -121,7 +134,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 32, color: INK, letterSpacing: -0.2 }}>{goal.title}</div>
+                <div className="goal-card-title" style={{ fontFamily: serifFont, fontSize: 32, color: INK, letterSpacing: -0.2 }}>{goal.title}</div>
                 <button onClick={startEditTitle} title="Rename goal" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex" }}><Pencil size={12.5} strokeWidth={2.3} /></button>
               </div>
             )}
@@ -154,7 +167,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
               ) : null}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <div className="goal-card-meta" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {total > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: PRIMARY_DARK, textAlign: "right", whiteSpace: "nowrap" }}>{doneCount} of {total}<br />completed</div>
