@@ -24,13 +24,13 @@ export const CATEGORY_COLOR_SWATCHES = {
 // one permanent category — see profile.educationCategory / CategoryEditor's protectedKey
 // — since Education/Grades tasks always need somewhere to land; it can be renamed but
 // never removed.
-export const DEFAULT_CATEGORY_KEYS = ["School", "Personal", "Health", "People"];
+export const DEFAULT_CATEGORY_KEYS = ["School", "Personal", "Health", "Social", "Extracurriculars"];
 export const CATEGORY_KEYS = DEFAULT_CATEGORY_KEYS;
-export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", Health: "emerald", People: "lilac" };
-// Colors assigned to a custom category that isn't one of the 4 defaults and hasn't been
+export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", Health: "emerald", Social: "lilac", Extracurriculars: "coral" };
+// Colors assigned to a custom category that isn't one of the 5 defaults and hasn't been
 // explicitly recolored yet — cycles through so several new categories don't all end up
-// the same color. Skips whichever swatches the 4 defaults above already use.
-export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "coral", "slate", "peach", "beige"];
+// the same color. Skips whichever swatches the 5 defaults above already use.
+export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "slate", "peach", "beige"];
 
 // Education used to get its own fixed color (EDU_TYPE_COLORS) regardless of type —
 // every consumer now instead reads the user's actual School category color live via
@@ -82,7 +82,8 @@ export const CATEGORY_COLORS = {
   School: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.School),
   Personal: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Personal),
   Health: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Health),
-  People: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.People),
+  Social: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Social),
+  Extracurriculars: withAccent(DEFAULT_CATEGORY_COLOR_KEYS.Extracurriculars),
 };
 
 // Surface + ink/muted/border tones. INK replaces pure black for headline/body text,

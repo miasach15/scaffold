@@ -15,7 +15,7 @@ const toggleBtn = {
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
-  // Goals used to hardcode Personal/Health/People (deliberately leaving out Education,
+  // Goals used to hardcode Personal/Health/Social (deliberately leaving out Education,
   // since Education had its own separate system) — now that categories are user-defined,
   // that exclusion doesn't make sense anymore; a goal can be any category the user has.
   const categoryKeys = useCategoryKeys();

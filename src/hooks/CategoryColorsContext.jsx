@@ -13,9 +13,9 @@ export function CategoryColorsProvider({ value, keys, children }) {
 }
 
 // Returns the current user's resolved category color map, keyed by category name (a
-// custom set now, not just the original Education/Personal/Health/People). Falls back
-// to the default palette when no provider is present (e.g. auth screen, or before a
-// profile has loaded).
+// custom set now, not just the original School/Personal/Health/Social/Extracurriculars).
+// Falls back to the default palette when no provider is present (e.g. auth screen, or
+// before a profile has loaded).
 export function useCategoryColors() {
   return useContext(CategoryColorsContext);
 }
