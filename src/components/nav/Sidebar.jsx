@@ -3,20 +3,20 @@ import {
   Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat, BookOpen,
   Search, ListChecks, Settings, LogOut, Menu, X,
 } from "lucide-react";
-import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 
-// Order matches the Figma nav spec: Dashboard, Calendar, Tasks, Goals, Habits,
-// Journal, Education, Grades.
+// Education sits right under Tasks (the "what am I working on" cluster), Grades right
+// under Habits, Journal last.
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
+  { key: "education", label: "Education", icon: GraduationCap },
   { key: "goals", label: "Goals", icon: Target },
   { key: "habits", label: "Habits", icon: Repeat },
-  { key: "journal", label: "Journal", icon: BookOpen },
-  { key: "education", label: "Education", icon: GraduationCap },
   { key: "grades", label: "Grades", icon: Percent },
+  { key: "journal", label: "Journal", icon: BookOpen },
 ];
 
 function initialFrom(name, email) {
@@ -51,7 +51,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
           .sb-topbar {
             display: flex; align-items: center; gap: 12px; flex-shrink: 0;
             padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
-            border-bottom: 1px solid ${BORDER}; background: ${PAPER_BG};
+            border-bottom: 1px solid ${BORDER}; background: ${SURFACE};
           }
           .sb-backdrop.sb-open {
             display: block; position: fixed; inset: 0; background: rgba(26,26,46,0.35); z-index: 190;
@@ -71,7 +71,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
         >
           <Menu size={22} strokeWidth={2} />
         </button>
-        <Monogram size={24} />
+        <Monogram size={24} color={INK} />
         <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Scaffold</div>
       </div>
 
@@ -80,15 +80,17 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
       <div
         className={`sb-rail${open ? " sb-open" : ""}`}
         style={{
-          width: 240, flexShrink: 0, background: PAPER_BG, borderRight: `1px solid ${BORDER}`,
-          padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%",
+          width: 240, flexShrink: 0, background: SURFACE, borderRight: `1px solid ${BORDER}`,
+          padding: "32px 24px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Monogram size={30} />
-              <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* The brand mark stays a fixed ink navy regardless of the user's chosen
+                  accent color — a logo shouldn't shift with theme. */}
+              <Monogram size={30} color={INK} />
+              <div style={{ fontFamily: serifFont, fontSize: 32, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -108,14 +110,14 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
                   key={item.key}
                   onClick={() => go(item.key)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 10,
-                    border: active ? `1px solid rgba(74,91,168,0.2)` : "1px solid transparent",
-                    background: active ? "rgba(74,91,168,0.08)" : "transparent",
-                    color: active ? PRIMARY_DARK : MUTED, opacity: active ? 1 : 0.85,
-                    fontSize: 14, fontWeight: active ? 700 : 500, textAlign: "left", width: "100%",
+                    display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid transparent",
+                    background: active ? "rgba(74,91,168,0.06)" : "transparent",
+                    color: active ? PRIMARY_DARK : INK, opacity: active ? 1 : 0.85,
+                    fontSize: 14, fontWeight: active ? 600 : 500, textAlign: "left", width: "100%",
                   }}
                 >
-                  <item.icon size={18} strokeWidth={2} />
+                  <item.icon size={20} strokeWidth={2} />
                   {item.label}
                 </button>
               );
