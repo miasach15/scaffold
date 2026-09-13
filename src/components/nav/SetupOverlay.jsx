@@ -58,7 +58,13 @@ export default function SetupOverlay({ setView, onOpenSettings, onCloseSettings,
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip setup</button>
       </div>
       <div style={{ height: 4, borderRadius: 2, background: "#EEF0F4", marginBottom: 14, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${((i + 1) / STEPS.length) * 100}%`, background: PRIMARY, borderRadius: 2, transition: "width .2s ease" }} />
+        <div
+          style={{
+            height: "100%", width: "100%", background: PRIMARY, borderRadius: 2,
+            transform: `scaleX(${(i + 1) / STEPS.length})`, transformOrigin: "left",
+            transition: "transform .2s ease",
+          }}
+        />
       </div>
       <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 8 }}>{step.title}</div>
       <div style={{ fontSize: 15, color: "#2A2A2A", lineHeight: 1.4, marginBottom: 18 }}>{step.body}</div>

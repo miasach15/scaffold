@@ -93,7 +93,13 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
       {/* A bar reads as "almost there" at a glance, without having to do the math on
           "8 of 12" — a small thing, but one less thing to process. */}
       <div style={{ height: 4, borderRadius: 2, background: "#EEF0F4", marginBottom: 14, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${((i + 1) / steps.length) * 100}%`, background: PRIMARY, borderRadius: 2, transition: "width .2s ease" }} />
+        <div
+          style={{
+            height: "100%", width: "100%", background: PRIMARY, borderRadius: 2,
+            transform: `scaleX(${(i + 1) / steps.length})`, transformOrigin: "left",
+            transition: "transform .2s ease",
+          }}
+        />
       </div>
       <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>{step.title}</div>
       <ul style={{ margin: 0, marginBottom: 18, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
