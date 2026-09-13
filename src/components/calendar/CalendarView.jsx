@@ -36,7 +36,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     return { ...c, bg: "#fff" };
   };
   const chipLabel = (chip) => {
-    if (isDueKind(chip)) return `Due: ${chip.title}${chip.subject ? ` (${chip.subject})` : ""}`;
+    if (isDueKind(chip)) return `Due: ${chip.title}`;
     return chip.title;
   };
   // A plain task's date IS its due date now, so it belongs in "Due" with everything else

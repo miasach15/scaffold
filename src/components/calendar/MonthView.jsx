@@ -23,7 +23,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
   const dotLabel = (item) => {
     if (item.kind === "goal-deadline") return `Goal due: ${item.title}`;
     if (item.kind === "goal-milestone") return `Milestone: ${item.title}`;
-    if (item.kind === "edu") return `${item.title}${item.subject ? ` (${item.subject})` : ""}`;
+    if (item.kind === "edu") return item.title;
     return item.title;
   };
 
