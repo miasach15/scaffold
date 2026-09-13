@@ -40,7 +40,7 @@ export function AddRow({ children }) {
   return <div style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>{children}</div>;
 }
 export function List({ children }) {
-  return <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{children}</div>;
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>;
 }
 export function EmptyState({ text }) {
   return <div style={{ fontSize: 13, color: "#B4BCC5", padding: "14px 0" }}>{text}</div>;

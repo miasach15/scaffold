@@ -102,17 +102,15 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
             </div>
             <button onClick={() => setWeekStart((w) => addDays(w, 7))} title="Next week" style={navBtnStyle}><ChevronRight size={14} /></button>
           </div>
-          <div style={{ borderTop: `1px solid ${BORDER}`, marginBottom: 14 }} />
-
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {habits.map((h, i) => {
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {habits.map((h) => {
               const streak = currentStreak(h.doneDates);
               return (
                 <div
                   key={h.id}
                   className="hoverable"
                   style={{
-                    borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, padding: "16px 0",
+                    border: `1px solid ${BORDER}`, borderRadius: 14, background: "#fff", padding: "14px 16px",
                     display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
                   }}
                 >

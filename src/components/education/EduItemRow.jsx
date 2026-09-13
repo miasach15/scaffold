@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BORDER } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 import { deleteBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -7,12 +8,12 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 // Click the row to manage its sessions/sub-tasks (rename, add, remove, or break it down
 // with AI) — see EduSessionsModal. No quick-add row here anymore; one clear way in.
 // `col` is your actual School category color (see EducationView) — no separate swatch
-// dot needed since the checkbox and the card itself already carry that color.
+// dot needed since the checkbox, the type badge, and the border already carry that color.
 export default function EduItemRow({ item, col, onToggleDone, onRemove, onOpen, tag, hasFollowing }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 9, border: `1px solid ${col.border}`, borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
       <button onClick={onOpen} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>

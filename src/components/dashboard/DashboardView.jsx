@@ -230,20 +230,22 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
                   </div>
                 )}
                 {todaysUntimed.length > 0 && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 4 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Anytime today</div>
-                    {todaysUntimed.map((t) => {
-                      const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
-                      return (
-                        <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
-                          <div style={{ width: 6, height: 6, borderRadius: 3, background: col.border, flexShrink: 0 }} />
-                          <div style={{ flex: 1, fontSize: 13, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                          {t.date && t.date !== todayISO && (
-                            <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {todaysUntimed.map((t) => {
+                        const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
+                        return (
+                          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0 }} />
+                            <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                            {t.date && t.date !== todayISO && (
+                              <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 {todaysEvents.length > 0 && (

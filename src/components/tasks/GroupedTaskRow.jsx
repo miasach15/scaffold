@@ -16,13 +16,13 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
   const allDone = doneCount >= total;
 
   return (
-    <div style={{ marginBottom: 6 }}>
+    <div>
       <button
         onClick={() => setExpanded((x) => !x)}
         className="hoverable"
         style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, width: "100%",
-          background: "#fff", border: `1.5px solid ${col.border}`, textAlign: "left", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, width: "100%",
+          background: "#fff", border: `1px solid ${col.border}`, textAlign: "left", cursor: "pointer",
         }}
       >
         {expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />}

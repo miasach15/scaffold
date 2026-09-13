@@ -62,9 +62,9 @@ export default function JournalView({ entries, onAddEntry, onRemoveEntry }) {
       {sorted.length === 0 ? (
         <EmptyState text="No entries yet. Your first one is right above." />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {sorted.map((e, i) => (
-            <div key={e.id} className="hoverable" style={{ borderTop: i === 0 ? "none" : `1px solid ${BORDER}`, padding: "12px 0" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {sorted.map((e) => (
+            <div key={e.id} className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 14, background: "#fff", padding: "14px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                 <div style={{ fontSize: 11.5, color: "#8B95A1", fontWeight: 600 }}>{e.date}</div>
                 <button onClick={() => onRemoveEntry(e.id)} className="btn-delete" style={deleteBtn}>×</button>

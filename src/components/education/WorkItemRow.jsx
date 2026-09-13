@@ -11,7 +11,7 @@ export default function WorkItemRow({ item }) {
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 12, marginBottom: 6, background: tinted ? col.bg : "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, marginBottom: 10, background: "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (

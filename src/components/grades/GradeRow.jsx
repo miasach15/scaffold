@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BORDER } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Swatch from "../shared/Swatch";
@@ -37,8 +38,8 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 14, padding: "10px 12px", marginBottom: 8, background: "#fff" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
+    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, background: "#fff" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <Swatch color={col} />
         <div style={{ flex: 1, minWidth: 140 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>

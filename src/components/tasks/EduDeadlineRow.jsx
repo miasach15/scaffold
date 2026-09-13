@@ -1,3 +1,4 @@
+import { BORDER } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -7,10 +8,8 @@ import Checkbox from "../shared/Checkbox";
 // (those stay Calendar/Today-only), just the actual deadline itself. `col` is your
 // actual School category color (see TasksView), same as everywhere else on Education.
 export default function EduDeadlineRow({ item, col, onToggleDone, onOpen }) {
-  const tinted = !item.done;
-
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
       <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
       <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>{item.type}</div>
       <button

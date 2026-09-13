@@ -1,4 +1,5 @@
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { BORDER } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -9,10 +10,9 @@ import Checkbox from "../shared/Checkbox";
 export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
   const CATEGORY_COLORS = useCategoryColors();
   const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
-  const tinted = !item.done;
 
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
       <Checkbox checked={item.done} onClick={onToggle} color={col} />
       <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>Milestone</div>
       <button

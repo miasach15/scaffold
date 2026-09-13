@@ -97,7 +97,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 20, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <div style={{ padding: "20px 22px 14px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>

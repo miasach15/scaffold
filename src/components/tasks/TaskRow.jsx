@@ -20,7 +20,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
   const [editingDate, setEditingDate] = useState(false);
 
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, marginBottom: 6, background: "#fff", border: `1.5px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
       <button
         onClick={() => (onOpenFocus ? onOpenFocus(t.id, t.title) : onOpenDetail(t.id))}
