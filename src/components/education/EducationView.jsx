@@ -281,10 +281,12 @@ export default function EducationView({
           </button>
         </AddRow>
       </div>
-      <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
-        {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
-        {showOptions ? "Hide options" : "Type, subject, or how to work it"}
-      </button>
+      <div>
+        <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
+          {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
+          {showOptions ? "Hide options" : "Type, subject, or how to work it"}
+        </button>
+      </div>
 
       {showOptions && (
         <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
