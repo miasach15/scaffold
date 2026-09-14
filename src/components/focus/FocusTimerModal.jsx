@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Pencil } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TASK_COLOR, TONE, serifFont } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { pad } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
+
+// Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
+// celebration screen's quote below already uses) — the ring, selected duration, and
+// "Mark complete" used to reach for the shared TASK_COLOR constant instead, an ad-hoc
+// pink (#F0B9CE/#8A3A5C) that never actually traced back to a real brand-kit swatch.
+// Kept local to this modal rather than changing TASK_COLOR itself, so Weekly Review's
+// and Onboarding's own "this is a Task" legend color is untouched.
+const ACCENT = { ...CATEGORY_COLOR_SWATCHES.coral, accent: THEME_PRESETS.coral.primary };
 
 // Fires a real system notification when a session ends — not just the in-app chime,
 // which only helps if you happen to be looking at this tab. Reuses whatever Notification
@@ -249,7 +257,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                 </button>
               )}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, margin: task.notes ? "4px 0 10px" : "4px 0 18px", color: INK }}>{task.title}</div>
+            <div style={{ fontFamily: serifFont, fontSize: 19, margin: task.notes ? "4px 0 10px" : "4px 0 18px", color: INK }}>{task.title}</div>
             {task.notes && (
               <div style={{ textAlign: "left", background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 11px", marginBottom: 14, fontSize: 12.5, color: INK, lineHeight: 1.4 }}>
                 <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 3 }}>Notes</div>
@@ -261,14 +269,14 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               <svg width="160" height="160" viewBox="0 0 160 160" style={{ transform: "rotate(-90deg)" }}>
                 <circle cx="80" cy="80" r="70" fill="none" stroke="#EDEDED" strokeWidth="10" />
                 <circle
-                  cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : TASK_COLOR.text} strokeWidth="10"
+                  cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : ACCENT.accent} strokeWidth="10"
                   strokeDasharray={2 * Math.PI * 70}
                   strokeDashoffset={2 * Math.PI * 70 * (1 - pct / 100)}
                   strokeLinecap="round"
                   style={{ transition: "stroke-dashoffset .3s linear" }}
                 />
               </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 700, color: INK }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serifFont, fontSize: 34, color: INK }}>
                 {pad(mm)}:{pad(ss)}
               </div>
             </div>
@@ -278,7 +286,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             ) : (
               <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
                 {[15, 25, 50].map((m) => (
-                  <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? TASK_COLOR.border : "#E2E8F0", color: totalSeconds === m * 60 ? TASK_COLOR.text : MUTED }}>{m}m</button>
+                  <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? ACCENT.border : BORDER, color: totalSeconds === m * 60 ? ACCENT.text : MUTED }}>{m}m</button>
                 ))}
               </div>
             )}
@@ -290,7 +298,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             <div style={{ display: "flex", gap: 8, marginBottom: steps.length > 0 ? 16 : 0 }}>
               <button onClick={onClose} style={{ ...ghostBtn, flex: 1 }}>Close</button>
               {task.id && (
-                <button onClick={markComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: TASK_COLOR.border, color: TASK_COLOR.text, fontWeight: 700 }}>Mark complete</button>
+                <button onClick={markComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: ACCENT.border, color: ACCENT.text, fontWeight: 700 }}>Mark complete</button>
               )}
             </div>
 
@@ -302,7 +310,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                 <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                   {steps.map((s) => (
                     <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={TASK_COLOR} />
+                      <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={ACCENT} />
                       <div style={{ flex: 1, fontSize: 13, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1, fontWeight: s.id === task.id ? 700 : 400 }}>
                         {s.title}
                       </div>
