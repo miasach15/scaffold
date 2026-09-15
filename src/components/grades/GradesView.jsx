@@ -10,6 +10,7 @@ export default function GradesView({
   eduItems,
   classes,
   educationCategory,
+  onAddManualGrade,
   onSetGradingMode,
   onAddCategory,
   onRenameCategory,
@@ -69,6 +70,7 @@ export default function GradesView({
             cls={classes.find((c) => c.subject === key)}
             items={itemsBySubject(key)}
             educationCategory={educationCategory}
+            onAddManualGrade={onAddManualGrade}
             onSetGradingMode={onSetGradingMode}
             onAddCategory={onAddCategory}
             onRenameCategory={onRenameCategory}

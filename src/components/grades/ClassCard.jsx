@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import GradeRow from "./GradeRow";
 
@@ -41,6 +41,7 @@ export default function ClassCard({
   cls, // { id, gradingMode, categories } — undefined/default when never configured
   items, // all edu items for this subject
   educationCategory,
+  onAddManualGrade,
   onSetGradingMode,
   onAddCategory,
   onRenameCategory,
@@ -56,6 +57,10 @@ export default function ClassCard({
   const [expanded, setExpanded] = useState(true);
   const [newCatName, setNewCatName] = useState("");
   const [newCatWeight, setNewCatWeight] = useState("");
+  const [addingGrade, setAddingGrade] = useState(false);
+  const [gradeTitle, setGradeTitle] = useState("");
+  const [gradeEarned, setGradeEarned] = useState("");
+  const [gradePossible, setGradePossible] = useState("");
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
@@ -68,6 +73,14 @@ export default function ClassCard({
     if (!newCatName.trim()) return;
     onAddCategory(subject, newCatName, newCatWeight);
     setNewCatName(""); setNewCatWeight("");
+  };
+
+  // A grade you already have — handed back in class, posted to a portal — shouldn't
+  // require pretending it was ever scheduled on the calendar just to log it here.
+  const addManualGrade = () => {
+    if (!gradeTitle.trim() || !gradePossible) return;
+    onAddManualGrade(subject, gradeTitle.trim(), gradeEarned === "" ? null : Number(gradeEarned), Number(gradePossible));
+    setGradeTitle(""); setGradeEarned(""); setGradePossible(""); setAddingGrade(false);
   };
 
   return (
@@ -167,7 +180,7 @@ export default function ClassCard({
           )}
 
           {gradedItems.length === 0 ? (
-            <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score." />
+            <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score — or add one below if it was never on the calendar to begin with." />
           ) : (
             <div>
               {gradedItems.map((item) => (
@@ -182,6 +195,43 @@ export default function ClassCard({
                 />
               ))}
             </div>
+          )}
+
+          {/* For a grade that was never scheduled on the calendar — handed back in class,
+              posted to a portal — rather than requiring it to have gone through Education's
+              "add an assignment" flow first. */}
+          {addingGrade ? (
+            <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+              <input
+                placeholder="What was it? (e.g. Ch. 4 quiz)" value={gradeTitle}
+                onChange={(e) => setGradeTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
+                style={{ ...inputStyle, flex: "1 1 160px", fontSize: 12.5 }}
+                autoFocus
+              />
+              <input
+                type="number" placeholder="Score" value={gradeEarned}
+                onChange={(e) => setGradeEarned(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
+                style={{ ...inputStyle, width: 70, fontSize: 12.5 }}
+              />
+              <span style={{ alignSelf: "center", fontSize: 12.5, color: "#93A0AD" }}>out of</span>
+              <input
+                type="number" placeholder="Total" value={gradePossible}
+                onChange={(e) => setGradePossible(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
+                style={{ ...inputStyle, width: 70, fontSize: 12.5 }}
+              />
+              <button onClick={addManualGrade} className="btn-primary" style={{ ...primaryBtn, fontSize: 12.5, padding: "8px 14px" }}>Add</button>
+              <button onClick={() => { setAddingGrade(false); setGradeTitle(""); setGradeEarned(""); setGradePossible(""); }} style={{ ...ghostBtn, fontSize: 12.5 }}>Cancel</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingGrade(true)}
+              style={{ ...ghostBtn, fontSize: 12.5, marginTop: gradedItems.length > 0 ? 10 : 0, display: "inline-flex", alignItems: "center", gap: 4 }}
+            >
+              <Plus size={12} strokeWidth={2.5} /> Add a grade
+            </button>
           )}
         </div>
       )}

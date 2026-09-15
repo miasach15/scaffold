@@ -223,13 +223,16 @@ export default function EducationView({
   const sessionRows = tasks.filter((t) => t.eduId).map((t) => {
     const parent = eduItems.find((e) => e.id === t.eduId);
     if (subjectFilter !== "All" && parent?.subject !== subjectFilter) return null;
-    // The title already says what it's for ("Work on: X") — only show the subtitle when
-    // it actually adds something the title doesn't (a custom AI-written step name).
-    const subtitle = parent && !t.title.includes(parent.title) ? parent.title : null;
+    // Every session of the same assignment now shares one title ("Work on: X"/"Study: X"
+    // — see App.jsx's addEduItem), on purpose, so a missed day and today's session read
+    // as the same thing rather than as unrelated one-off tasks. Whatever used to make one
+    // step's title distinct (an AI-generated step description, or a preview edit) lives
+    // in notes now, so that's what the subtitle line shows instead of the old fallback
+    // (the parent's own title, which the now-uniform title already says anyway).
     return {
-      id: t.id, key: `s-${t.id}`, title: t.title, subtitle,
+      id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null,
       done: t.done, date: t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
-      col: eduCol,
+      col: eduCol, eduId: t.eduId,
       onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
     };
@@ -248,8 +251,23 @@ export default function EducationView({
   // every assignment would otherwise turn this into a long, noisy list. The actual
   // deadlines (Upcoming below) still show everything coming up. Just-checked items stay
   // visible (crossed off), same as the deadline rows above.
-  const leftNotDone = [...sessionRows, ...homeworkRows].filter((i) => !i.done || justDone.has(i.id));
-  const leftTodayItems = leftNotDone.filter((i) => i.date === todayISOlocal);
+  //
+  // A session's date is a work day, not a deadline — filtering to exactly today used to
+  // mean a missed day's session just vanished from here without a trace (it never showed
+  // as overdue, it just silently disappeared). Instead, sessions collapse per assignment
+  // the same way Dashboard/TodaySection already do: only the latest still-undone
+  // due-or-overdue one shows, so a skipped day rolls into the next one as a single row
+  // instead of either disappearing or piling up as several separately-dated rows for the
+  // same assignment.
+  const notDoneSessionRows = sessionRows.filter((i) => !i.done || justDone.has(i.id));
+  const sessionsByEdu = {};
+  notDoneSessionRows.forEach((row) => { (sessionsByEdu[row.eduId] ||= []).push(row); });
+  const leftTodaySessionItems = Object.values(sessionsByEdu).flatMap((sessions) => {
+    const due = sessions.filter((s) => s.date && s.date <= todayISOlocal).sort((a, b) => a.date.localeCompare(b.date));
+    return due.length > 0 ? [due[due.length - 1]] : [];
+  });
+  const leftTodayHomeworkItems = homeworkRows.filter((i) => (!i.done || justDone.has(i.id)) && i.date === todayISOlocal);
+  const leftTodayItems = [...leftTodaySessionItems, ...leftTodayHomeworkItems];
 
   return (
     <div>

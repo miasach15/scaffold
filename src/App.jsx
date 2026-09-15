@@ -278,7 +278,13 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   // workDays: for Assignments, either a number of days (spreads that many "Work on: <title>"
   // tasks evenly up to the due date), "everyday" (one every day until due), or
   // {steps: [...]} — AI-generated step titles (from "Break it down for me"), spread the
-  // same way but each task keeps its own step title instead of the generic "Work on:" one.
+  // same way. Every session task shares the same "Work on: <title>"/"Study: <title>"
+  // title regardless of source, though — a specific AI-generated step description (or a
+  // preview edit) goes in `notes` instead, not the title. Two reasons: (1) so an overdue
+  // session and today's session for the same assignment visibly read as "the same thing,
+  // one of them just slipped" rather than as two unrelated-looking tasks, and (2) so the
+  // Dashboard/Tasks "collapse to the latest still-undone session" logic (which already
+  // keyed off eduId) can now also collapse in views that group/dedupe by title.
   const addEduItem = async (title, type, subject, dueDate, repeat, workDays) => {
     const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat) });
     if (!rows || rows.length === 0) return;
@@ -302,7 +308,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
           previewItems.forEach((it) => {
-            addTask({ title: it.title, date: it.date, start: null, duration: null, eduId: row.id, category: profile.educationCategory, notes: it.notes || null });
+            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: null, eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
           });
           return;
         }
@@ -314,7 +320,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         if (isAiSteps) {
           const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks, events);
           effectiveSchedule.steps.forEach((stepTitle, i) => {
-            addTask({ title: stepTitle, date: dates[i], start: null, duration: null, eduId: row.id, category: profile.educationCategory });
+            addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: null, eduId: row.id, category: profile.educationCategory, notes: stepTitle });
           });
         } else {
           // An assessment crams into the days right before it, not spread thin across
@@ -328,6 +334,20 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         }
       });
     }
+  };
+
+  // A grade you already have in hand — a paper handed back in class, a test score from a
+  // portal — shouldn't require pretending it was ever scheduled on the calendar just to
+  // get it into Grades. This skips addEduItem entirely (no work-session tasks, no due
+  // date that means anything) and goes straight to a done, already-scored edu_item.
+  // dueDate is set to today purely as a technical placeholder the schema expects; being
+  // `done` from the moment it's created keeps it out of every "due"/upcoming view.
+  const addManualGradeItem = async (subject, title, scoreEarned, scorePossible) => {
+    const rows = await addEduItems({ title, type: "Assignment", subject, occurrences: [toISO(new Date())] });
+    if (!rows || rows.length === 0) return;
+    const { id } = rows[0];
+    await setEduDone(id, true);
+    await setEduScore(id, scoreEarned, scorePossible);
   };
 
   const addEduSession = (eduId, sessionTitle, date, time, duration, isAllDay) => {
@@ -605,6 +625,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             eduItems={eduItems}
             classes={gradeClasses}
             educationCategory={profile.educationCategory}
+            onAddManualGrade={addManualGradeItem}
             onSetGradingMode={setGradeMode}
             onAddCategory={addGradeCategory}
             onRenameCategory={renameGradeCategory}
