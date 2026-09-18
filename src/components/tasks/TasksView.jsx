@@ -26,6 +26,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [useAI, setUseAI] = useState(false); // "Break it into steps" — for a task that's really a multi-day project
   const [scheduleMode, setScheduleMode] = useState("every"); // "every" = use the whole window, "pick" = cap it to N free days
   const [pickDaysCount, setPickDaysCount] = useState(""); // how many days, not which — see distributeDatesByLoad's maxDays
+  const [startFrom, setStartFrom] = useState("today"); // "today" or "tomorrow" — only matters in "every day" mode
   const [details, setDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
@@ -46,7 +47,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   };
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setStartFrom("today"); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -63,7 +64,14 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       if (steps.length === 0) throw new Error("No steps came back. Try adding a bit more detail.");
 
       const todayISO = toISO(new Date());
-      const startISO = date > todayISO ? todayISO : date;
+      // "Every day" mode normally starts today (if there's still time before it's due) —
+      // "starting tomorrow" instead skips today entirely, for whenever today's already
+      // spoken for and the first step shouldn't land on it. Only relevant in "every day"
+      // mode; "pick days" already lets the day-count itself account for that.
+      const defaultStartISO = date > todayISO ? todayISO : date;
+      const startISO = scheduleMode === "every" && startFrom === "tomorrow"
+        ? (toISO(addDays(new Date(), 1)) > date ? date : toISO(addDays(new Date(), 1)))
+        : defaultStartISO;
       const lastWorkDay = dayBefore(date);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const maxDays = scheduleMode === "pick" && Number(pickDaysCount) >= 1 ? Number(pickDaysCount) : null;
@@ -367,6 +375,25 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                           style={{ ...inputStyle, width: 70 }}
                         />
                         <span style={{ fontSize: 12, color: "#93A0AD" }}>days you're free</span>
+                      </div>
+                    )}
+                    {scheduleMode === "every" && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                        <span style={{ fontSize: 12, color: "#93A0AD" }}>Starting</span>
+                        {["today", "tomorrow"].map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setStartFrom(f)}
+                            style={{
+                              padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
+                              border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                              background: startFrom === f ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                            }}
+                          >
+                            {f}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>

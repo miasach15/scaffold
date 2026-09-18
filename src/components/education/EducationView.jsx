@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -57,6 +57,7 @@ export default function EducationView({
   const [dueDate, setDueDate] = useState("");
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
+  const [startFrom, setStartFrom] = useState("today"); // "today" or "tomorrow" — only matters in "every day" mode
   const [useAI, setUseAI] = useState(false); // break it down with AI, applied on top of whichever schedule above is picked
   const [assignmentDetails, setAssignmentDetails] = useState("");
   const [breakingDown, setBreakingDown] = useState(false);
@@ -95,7 +96,15 @@ export default function EducationView({
   // actual insert happens only once the plan is confirmed in the modal.
   const previewSchedule = (schedule) => {
     const todayISO = toISO(new Date());
-    const startISO = dueDate > todayISO ? todayISO : dueDate;
+    const defaultStartISO = dueDate > todayISO ? todayISO : dueDate;
+    // "Every day" mode normally starts today — "starting tomorrow" instead skips today
+    // entirely, for whenever today's already spoken for and the first session shouldn't
+    // land on it. Only applies to the literal "every day" schedule (schedule === "everyday");
+    // "Pick days" already lets the day-count account for that, and an AI-generated
+    // schedule spreads across whichever days are least busy regardless.
+    const startISO = schedule === "everyday" && startFrom === "tomorrow"
+      ? (toISO(addDays(new Date(), 1)) > dueDate ? dueDate : toISO(addDays(new Date(), 1)))
+      : defaultStartISO;
     const lastWorkDay = dayBefore(dueDate);
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
@@ -347,6 +356,25 @@ export default function EducationView({
                 )}
                 {type === "Assessment" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the assessment</span>}
               </div>
+              {workMode === "everyday" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                  <span style={{ fontSize: 12, color: "#93A0AD" }}>Starting</span>
+                  {["today", "tomorrow"].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setStartFrom(f)}
+                      style={{
+                        padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
+                        border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                        background: startFrom === f ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                        color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                      }}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
