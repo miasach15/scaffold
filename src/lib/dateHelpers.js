@@ -305,11 +305,18 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
 // separate rows on the same date. Identical titles on the same day collapse to one.
 // The task keeps a short, clean title — just the first step — and any additional steps
 // that landed on the same day go into `notes` instead of getting crammed into the title.
-// Only kicks in when there are fewer free days than steps, so more than one step lands
-// on the same day. A day with just one step keeps that step's own name — no ambiguity
-// there. A day with several gets the overall project's name instead of arbitrarily
-// picking one step to feature as the title over the others; every step that landed on
-// that day goes into notes together, not just whichever ones didn't "win" the title.
+// Every day of a multi-day breakdown gets the SAME title — the overarching thing
+// (fallbackTitle: the assignment name, "Study: <test>", whatever the plain task itself
+// is called) — never each day's own AI-generated step name. That's on purpose: a pile of
+// differently-worded rows for the same assignment reads as a pile of unrelated tasks,
+// not as one thing you're chipping away at. Whatever WAS distinguishing about a given
+// day (the actual AI-generated step description) goes into notes instead, so it isn't
+// lost — just no longer competing for the title. If a day's own title already IS the
+// fallback (a plain day-by-day schedule with no AI-generated step names to begin with —
+// see the non-AI callers of this function), there's nothing distinct to note, so notes
+// stays empty rather than pointlessly repeating the title back at itself. Multiple
+// distinct step names landing on the same single day (more steps than free days) still
+// join together into that one day's notes, same as before.
 export const groupItemsByDate = (items, fallbackTitle) => {
   const map = new Map();
   for (const it of items) {
@@ -319,11 +326,14 @@ export const groupItemsByDate = (items, fallbackTitle) => {
   }
   return Array.from(map.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([date, titles]) => ({
-      date,
-      title: titles.length > 1 && fallbackTitle ? fallbackTitle : titles[0],
-      notes: titles.length > 1 ? titles.join(", ") : null,
-    }));
+    .map(([date, titles]) => {
+      const distinct = fallbackTitle ? titles.filter((t) => t !== fallbackTitle) : [];
+      return {
+        date,
+        title: fallbackTitle || titles[0],
+        notes: distinct.length > 0 ? distinct.join(", ") : null,
+      };
+    });
 };
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);

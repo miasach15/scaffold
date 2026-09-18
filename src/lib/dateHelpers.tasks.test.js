@@ -7,7 +7,7 @@
 // and call the exact same functions the app calls, with no risk of a component's own
 // rendering quirks masking a real date-logic bug.
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst, chipBelongsOnDay } from "./dateHelpers";
+import { getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst, chipBelongsOnDay, groupItemsByDate } from "./dateHelpers";
 
 describe("isOverdueTask", () => {
   it("a task due yesterday is overdue", () => {
@@ -168,5 +168,46 @@ describe("chipBelongsOnDay — overdue tasks appear on their original Calendar d
     const chip = { kind: "task", date: "2026-09-20", done: false };
     expect(chipBelongsOnDay(chip, "2026-09-20", today, true)).toBe(true);
     expect(chipBelongsOnDay(chip, today, today, true)).toBe(false);
+  });
+});
+
+describe("groupItemsByDate — a breakdown's steps all share one title, the difference lives in notes", () => {
+  it("every day gets the fallback title, not its own AI-generated step name", () => {
+    const items = [
+      { title: "Draft outline", date: "2026-09-10" },
+      { title: "Write body paragraphs", date: "2026-09-12" },
+      { title: "Revise conclusion", date: "2026-09-14" },
+    ];
+    const result = groupItemsByDate(items, "Chemistry Homework");
+    expect(result.map((r) => r.title)).toEqual(["Chemistry Homework", "Chemistry Homework", "Chemistry Homework"]);
+  });
+
+  it("puts each day's actual step description in notes instead", () => {
+    const items = [{ title: "Draft outline", date: "2026-09-10" }];
+    const result = groupItemsByDate(items, "Chemistry Homework");
+    expect(result[0].notes).toBe("Draft outline");
+  });
+
+  it("joins multiple steps that land on the same day into that day's notes together", () => {
+    const items = [
+      { title: "Draft outline", date: "2026-09-10" },
+      { title: "Gather sources", date: "2026-09-10" },
+    ];
+    const result = groupItemsByDate(items, "Chemistry Homework");
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe("Chemistry Homework");
+    expect(result[0].notes).toBe("Draft outline, Gather sources");
+  });
+
+  it("a plain day-by-day schedule with no distinguishing step names gets no notes — nothing to note", () => {
+    // The non-AI "Work on: X every day" callers already bake the same title into every
+    // item and pass no fallbackTitle — every title already equals the group's own title.
+    const items = [
+      { title: "Work on: Essay", date: "2026-09-10" },
+      { title: "Work on: Essay", date: "2026-09-11" },
+    ];
+    const result = groupItemsByDate(items);
+    expect(result.map((r) => r.title)).toEqual(["Work on: Essay", "Work on: Essay"]);
+    expect(result.every((r) => r.notes === null)).toBe(true);
   });
 });
