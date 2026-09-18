@@ -49,6 +49,10 @@ create table if not exists edu_items (
   type text not null default 'Assignment',
   subject text,
   due_date date not null,
+  -- optional time-of-day the item is due, decimal hour like tasks.start (e.g. 14.5 =
+  -- 2:30pm) — null means "just a day", same convention as tasks/groups. See
+  -- migration_edu_due_start.sql.
+  due_start numeric,
   done boolean not null default false,
   -- optional score tracking — points earned / points possible (percentage grades just
   -- use possible = 100). Both null until entered.

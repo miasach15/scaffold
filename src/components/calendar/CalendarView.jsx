@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dayLabel, dateLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, dayLabel, dateLabel, decimalToTimeLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
@@ -46,16 +46,20 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // (already a concrete "do this on this day" step, not an aggregate deadline). Assessments
   // sit in "All day" instead — an assessment is the whole day it happens, not a step you
   // work through.
-  const dueChipsOnly = dueChips.filter((c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId));
+  // A due chip with a specific time (an edu deadline or a breakdown's overall due date)
+  // gets the same treatment a timed plain task already gets — it moves into the hourly
+  // grid at that time instead of sitting in a flat, dateless-looking strip row.
+  const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId)));
   // An Education-generated "Work on:"/"Study" session is a plain (ungrouped) task, but
   // it's still a work day, not a deadline — the deadline is the edu_item's own due date
   // (the separate "edu" chip above). So it belongs here, same as a breakdown step.
   const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && (c.groupId || c.eduId)));
-  const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment");
+  const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment" && c.start == null);
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
     ...assessmentChips,
   ];
+  const timedDueChips = dueChips.filter((c) => c.start != null && (c.kind === "edu" || c.kind === "task-group-due"));
 
   const isDay = !!dayView;
   const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));
@@ -169,6 +173,9 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                       ))}
                       {tasks.filter((t) => t.date === iso && t.start != null).map((t) => (
                         <CalBlock key={t.id} item={t} color={{ ...(CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal), bg: "#fff" }} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
+                      ))}
+                      {timedDueChips.filter((c) => c.date === iso).map((c) => (
+                        <CalBlock key={c.kind + c.id} item={{ ...c, title: `${chipLabel(c)} · ${decimalToTimeLabel(c.start)}`, duration: 30 }} color={chipStyle(c)} onEditEvent={() => onChipClick(c)} />
                       ))}
                       {iso === todayISO && (
                         <div style={{ position: "absolute", top: nowDecimal * ROW_H, left: 0, right: 0, height: 0, zIndex: 5, pointerEvents: "none" }}>

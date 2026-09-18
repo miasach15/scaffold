@@ -92,6 +92,14 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ start, duration }).eq("id", id);
   }, []);
 
+  // Updates the shared due date/time across every row in a "break it down" group — the
+  // group's own deadline, not any individual step's work day. See TasksView.jsx's
+  // reflowGroupDueDate, which calls this and then re-dates the not-done steps to match.
+  const setGroupDueDate = useCallback(async (groupId, date, start) => {
+    setTasks((ts) => ts.map((t) => (t.groupId === groupId ? { ...t, groupDueDate: date, groupDueStart: start } : t)));
+    await supabase.from("tasks").update({ group_due_date: date, group_due_start: start }).eq("group_id", groupId);
+  }, []);
+
   const setTaskNotes = useCallback(async (id, notes) => {
     const trimmed = notes && notes.trim() ? notes.trim() : null;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, notes: trimmed } : t)));
@@ -123,5 +131,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
   }, [userId]);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere, setGroupDueDate };
 }

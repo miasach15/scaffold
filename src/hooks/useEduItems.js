@@ -8,6 +8,7 @@ const fromRow = (row) => ({
   type: row.type,
   subject: row.subject,
   dueDate: row.due_date,
+  dueStart: row.due_start == null ? null : Number(row.due_start),
   done: row.done,
   scoreEarned: row.score_earned == null ? null : Number(row.score_earned),
   scorePossible: row.score_possible == null ? null : Number(row.score_possible),
@@ -33,7 +34,7 @@ export function useEduItems(userId) {
   // occurrences: array of due-date ISO strings. Returns the inserted rows (id + due_date)
   // so callers can schedule linked work sessions off the real generated ids.
   const addEduItems = useCallback(
-    async ({ title, type, subject, occurrences }) => {
+    async ({ title, type, subject, occurrences, dueStart = null }) => {
       if (!userId || !title.trim() || occurrences.length === 0) return [];
       const rows = occurrences.map((d) => ({
         id: uid(),
@@ -42,6 +43,7 @@ export function useEduItems(userId) {
         type,
         subject: subject.trim() || null,
         due_date: d,
+        due_start: dueStart,
         done: false,
       }));
       setEduItems((e) => [...e, ...rows.map(fromRow)]);
@@ -50,6 +52,13 @@ export function useEduItems(userId) {
     },
     [userId]
   );
+
+  // Changing the due date/time here doesn't touch any linked work-session tasks by
+  // itself — see App.jsx's updateEduDeadline, which calls this and then reflows them.
+  const setDeadline = useCallback(async (id, dueDate, dueStart) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, dueDate, dueStart } : x)));
+    await supabase.from("edu_items").update({ due_date: dueDate, due_start: dueStart }).eq("id", id);
+  }, []);
 
   const setDone = useCallback(async (id, done) => {
     setEduItems((e) => e.map((x) => (x.id === id ? { ...x, done } : x)));
@@ -74,5 +83,5 @@ export function useEduItems(userId) {
     await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory };
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setDeadline };
 }

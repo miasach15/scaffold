@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -27,6 +27,7 @@ export default function EducationView({
   onRemoveSession,
   onRenameSession,
   onSetSessionDone,
+  onUpdateDeadline,
   onOpenFocus,
   inboxItems,
   onDiscardInbox,
@@ -55,6 +56,7 @@ export default function EducationView({
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
   const [startFrom, setStartFrom] = useState("today"); // "today" or "tomorrow" — only matters in "every day" mode
@@ -86,7 +88,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setAssignmentDetails("");
+    setTitle(""); setDueDate(""); setDueTime(""); setAssignmentDetails("");
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -156,7 +158,7 @@ export default function EducationView({
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
-    onAddEduItem(title.trim(), type, subject, dueDate, "None", null);
+    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, "None", null);
     resetAddForm();
   };
 
@@ -165,7 +167,7 @@ export default function EducationView({
     // previewItems carries whatever the user edited/removed in the modal — used exactly
     // as-is for the first occurrence; if this assignment repeats, later occurrences fall
     // back to auto-computing their own schedule from `schedule` since we only preview one.
-    onAddEduItem(title.trim(), type, subject, dueDate, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
+    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
     setPendingPlan(null);
     resetAddForm();
   };
@@ -332,6 +334,7 @@ export default function EducationView({
             <datalist id="subjects-datalist">
               {knownSubjects.map((s) => <option key={s} value={s} />)}
             </datalist>
+            <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 110 }} />
           </div>
 
           {schedulable && (
@@ -468,6 +471,7 @@ export default function EducationView({
             onRenameSession={onRenameSession}
             onRemoveSession={onRemoveSession}
             onAddSession={quickAddSession}
+            onUpdateDeadline={onUpdateDeadline}
             onBreakDown={(details) => breakDownExisting(editingItem, details)}
             breakingDown={sessionBreakingDown}
             breakdownError={sessionBreakdownError}

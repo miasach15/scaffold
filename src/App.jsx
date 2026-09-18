@@ -68,11 +68,11 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks } = useTasks(userId);
+  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
-  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory } = useEduItems(userId);
+  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
@@ -209,7 +209,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       });
     });
     eduItems.forEach((e) => {
-      if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, done: e.done, type: e.type, subject: e.subject });
+      if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, start: e.dueStart, done: e.done, type: e.type, subject: e.subject });
     });
     visibleTasks.forEach((t) => {
       if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category, groupId: t.groupId, eduId: t.eduId });
@@ -223,7 +223,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       seenGroups.add(t.groupId);
       const groupTasks = visibleTasks.filter((x) => x.groupId === t.groupId);
       const groupDone = groupTasks.length > 0 && groupTasks.every((x) => x.done);
-      chips.push({ id: t.groupId, kind: "task-group-due", title: t.groupTitle || t.title, date: t.groupDueDate, done: groupDone, category: t.category });
+      chips.push({ id: t.groupId, kind: "task-group-due", title: t.groupTitle || t.title, date: t.groupDueDate, start: t.groupDueStart, done: groupDone, category: t.category });
     });
     return chips;
   }, [goals, eduItems, visibleTasks]);
@@ -285,8 +285,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   // one of them just slipped" rather than as two unrelated-looking tasks, and (2) so the
   // Dashboard/Tasks "collapse to the latest still-undone session" logic (which already
   // keyed off eduId) can now also collapse in views that group/dedupe by title.
-  const addEduItem = async (title, type, subject, dueDate, repeat, workDays) => {
-    const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat) });
+  const addEduItem = async (title, type, subject, dueDate, dueStart, repeat, workDays) => {
+    const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat), dueStart });
     if (!rows || rows.length === 0) return;
 
     if (type === "Homework") {
@@ -334,6 +334,27 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         }
       });
     }
+  };
+
+  // Changing an Education deadline after it's already been created — the date/time
+  // itself always saves right away, and if the date actually moved, every not-yet-done
+  // work session tied to it (via eduId) gets re-dated to spread across the new window,
+  // same load-balancing this item's sessions were originally scheduled with. A done
+  // session stays put — it already happened on the day it happened.
+  const updateEduDeadline = async (id, dueDate, dueStart) => {
+    const item = eduItems.find((e) => e.id === id);
+    if (!item || !dueDate) return;
+    const dateChanged = dueDate !== item.dueDate;
+    await setEduDeadlineRaw(id, dueDate, dueStart);
+    if (!dateChanged) return;
+    const linked = tasks.filter((t) => t.eduId === id && !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    if (linked.length === 0) return;
+    const todayISO = toISO(new Date());
+    const startISO = dueDate > todayISO ? todayISO : dueDate;
+    const lastWorkDay = dayBefore(dueDate);
+    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+    const dates = distributeDatesByLoad(startISO, endISO, linked.length, tasks, events);
+    linked.forEach((t, i) => setTaskDate(t.id, dates[i]));
   };
 
   // A grade you already have in hand — a paper handed back in class, a test score from a
@@ -562,6 +583,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
             onSetStart={setTaskStart}
+            onSetGroupDueDate={setGroupDueDate}
             onOpenFocus={openFocus}
             inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}
@@ -610,6 +632,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
             onRemoveEduItem={removeEduItem}
+            onUpdateDeadline={updateEduDeadline}
             onAddSession={addEduSession}
             onRemoveSession={removeTask}
             onRenameSession={renameTask}

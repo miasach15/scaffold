@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { dateRangeISO, formatShortDate, toISO } from "../../lib/dateHelpers";
+import { dateRangeISO, decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import Checkbox from "../shared/Checkbox";
 
 // Opened by clicking a deadline row on Education — see which sessions are done, rename
-// or remove any of them, add another, or hand the whole thing to AI to re-plan. Nothing
-// about the deadline itself (title/type/subject/due date) is editable here, just the
-// work leading up to it. `col` is your actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onRenameSession, onRemoveSession, onAddSession, onBreakDown, breakingDown, breakdownError }) {
+// or remove any of them, add another, or hand the whole thing to AI to re-plan. The
+// deadline's own due date/time is editable too (click it) — moving the date reflows
+// every not-done session onto the new window (see App.jsx's updateEduDeadline). `col` is
+// your actual School category color (see EducationView).
+export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onRenameSession, onRemoveSession, onAddSession, onUpdateDeadline, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
   const [showAI, setShowAI] = useState(false);
   const [details, setDetails] = useState("");
+  const [editingDeadline, setEditingDeadline] = useState(false);
   // Local text per session so typing doesn't fire a save on every keystroke — committed
   // on blur/Enter instead.
   const [drafts, setDrafts] = useState({});
@@ -35,7 +37,35 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
       <div style={{ ...modalStyle, width: 420, maxHeight: "82vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 10.5, color: col.text, background: col.bg, display: "inline-block", padding: "2px 7px", borderRadius: 5, fontWeight: 700, marginBottom: 6 }}>{item.type}</div>
         <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
-        <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 16 }}>Due {formatShortDate(item.dueDate)}{item.subject ? ` · ${item.subject}` : ""}</div>
+        {onUpdateDeadline && editingDeadline ? (
+          <div
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDeadline(false); }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 16 }}
+          >
+            <input
+              type="date"
+              autoFocus
+              value={item.dueDate}
+              onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
+              style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
+            />
+            <input
+              type="time"
+              value={decimalToTimeInput(item.dueStart)}
+              onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
+              title="Optional: a specific time it's due"
+              style={{ ...inputStyle, width: 96, fontSize: 12, padding: "3px 6px" }}
+            />
+          </div>
+        ) : (
+          <button
+            onClick={() => onUpdateDeadline && setEditingDeadline(true)}
+            title={onUpdateDeadline ? "Click to change" : undefined}
+            style={{ background: "none", border: "none", padding: 0, marginBottom: 16, cursor: onUpdateDeadline ? "pointer" : "default", textAlign: "left", fontSize: 12, color: "#93A0AD" }}
+          >
+            Due {formatShortDate(item.dueDate)}{item.dueStart != null ? ` · ${decimalToTimeLabel(item.dueStart)}` : ""}{item.subject ? ` · ${item.subject}` : ""}
+          </button>
+        )}
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
           {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
