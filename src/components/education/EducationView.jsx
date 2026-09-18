@@ -99,16 +99,23 @@ export default function EducationView({
     const defaultStartISO = dueDate > todayISO ? todayISO : dueDate;
     // "Every day" mode normally starts today — "starting tomorrow" instead skips today
     // entirely, for whenever today's already spoken for and the first session shouldn't
-    // land on it. Only applies to the literal "every day" schedule (schedule === "everyday");
-    // "Pick days" already lets the day-count account for that, and an AI-generated
-    // schedule spreads across whichever days are least busy regardless.
-    const startISO = schedule === "everyday" && startFrom === "tomorrow"
+    // land on it. Keyed off workMode (the user's actual choice), not the `schedule` value
+    // itself — "Break it down with AI" still passes an AI-steps object even when workMode
+    // is "everyday" (see the `add` comment: AI is "applied on top of" whichever mode is
+    // picked), so checking schedule === "everyday" here would silently ignore the
+    // tomorrow choice the moment AI is turned on. "Pick days" already lets the day-count
+    // account for this on its own.
+    const startISO = workMode === "everyday" && startFrom === "tomorrow"
       ? (toISO(addDays(new Date(), 1)) > dueDate ? dueDate : toISO(addDays(new Date(), 1)))
       : defaultStartISO;
     const lastWorkDay = dayBefore(dueDate);
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
+      // distributeDatesByLoad spreads steps evenly across the whole window rather than
+      // packing from the front, so shifting the window's start to tomorrow isn't enough
+      // by itself — force the actual first step onto it (same fix as Tasks' AI breakdown).
+      if (workMode === "everyday" && startFrom === "tomorrow" && dates.length > 0) dates[0] = startISO;
       return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })), `${workVerb}: ${title.trim()}`);
     }
     // An assessment crams into the days right before it, not spread thin across however

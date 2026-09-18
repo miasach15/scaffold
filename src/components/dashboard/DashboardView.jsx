@@ -45,7 +45,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
+export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -123,24 +123,11 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
   ].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
-  const activeGoal = useMemo(() => {
-    const withProgress = goals
-      .map((g) => {
-        const actions = g.milestones.flatMap((m) => m.actions);
-        const done = actions.filter((a) => a.done).length;
-        const total = actions.length;
-        return { goal: g, done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
-      })
-      .filter((g) => g.total > 0 && g.pct < 100);
-    if (withProgress.length === 0) return null;
-    return withProgress.sort((a, b) => b.pct - a.pct)[0];
-  }, [goals]);
-
-  // Just real due dates here — goal deadlines/milestones/actions have their own "Goal
-  // Progress" card above, so mixing them in here would just repeat that. And within
-  // tasks: only a standalone one-time task or a "break it down" project's own overall
-  // due date, never one of its individual steps — those are work days, not deadlines,
-  // and would otherwise flood this list with entries for the same project. Education
+  // Just real due dates here — goal deadlines/milestones/actions aren't included; those
+  // live on the Goals page. Within tasks: only a standalone one-time task or a "break it
+  // down" project's own overall due date, never one of its individual steps — those are
+  // work days, not deadlines, and would otherwise flood this list with entries for the
+  // same project. Education
   // items (tests, homework, assignments alike) are real deadlines and belong here too;
   // an Education-generated "work on X" session task is excluded the same way a
   // breakdown step is, for the same reason.
@@ -329,26 +316,6 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             >
               Start
             </button>
-          </div>
-
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Goal Progress</div>
-              <button onClick={() => setView("goals")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: PRIMARY_DARK, padding: 0 }}>View All</button>
-            </div>
-            {activeGoal ? (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeGoal.goal.title}</div>
-                  <div style={{ fontWeight: 700, color: PRIMARY_DARK, flexShrink: 0, marginLeft: 8 }}>{activeGoal.pct}%</div>
-                </div>
-                <div style={{ height: 6, borderRadius: 3, background: "#DDE1EE", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${activeGoal.pct}%`, background: PRIMARY_DARK, borderRadius: 3 }} />
-                </div>
-              </div>
-            ) : (
-              <EmptyState text="No goals in progress yet." />
-            )}
           </div>
 
           <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
