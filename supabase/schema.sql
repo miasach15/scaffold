@@ -143,12 +143,9 @@ create table if not exists tasks (
   -- notes: overflow for a breakdown step whose day absorbed more than one generated step —
   -- title stays short, the rest lives here instead of getting jammed into the title.
   notes text,
-  -- one occurrence of a "Repeats" recurring task — excluded from the automatic
-  -- "urgent 2 days before due" default (see defaultLeadDays).
-  is_recurring boolean not null default false,
-  -- ties every occurrence of one recurring task together, so changing one occurrence's
-  -- category cascades to the whole series (see setTaskCategory).
-  recurring_id uuid,
+  -- Tasks are one-off — no recurrence. A routine that repeats on its own schedule
+  -- belongs in Habits instead. (Was is_recurring/recurring_id — removed, see
+  -- migration_remove_task_recurrence.sql.)
   created_at timestamptz not null default now()
 );
 

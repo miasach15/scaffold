@@ -1,14 +1,17 @@
 import { TONE } from "../../lib/constants";
-import { daysUntil, toISO } from "../../lib/dateHelpers";
+import { chipBelongsOnDay, getLocalToday, toISO } from "../../lib/dateHelpers";
 
-// rollOverdueToToday: an item that's overdue and still not done stops showing on its
-// original (past) date and shows on today instead, every day, until it's done — so it
-// doesn't just sit invisible on a date you've scrolled away from. Excludes "event" chips
-// even on a row that has this on (the All-day row now mixes events with Assessments) — a past
+// rollOverdueToToday: an overdue, still-not-done goal/Education item stops showing on
+// its original (past) date and shows on today instead, every day, until it's done — so
+// it doesn't just sit invisible on a date you've scrolled away from. Plain tasks are
+// excluded from this (alongside "event" chips, which were already excluded — a past
 // event isn't "overdue," it just already happened, and events don't carry a real done
-// state to check against.
+// state to check against): a task's own due date is real information ("this is what I
+// meant to do that day"), so it stays there and shows again in Tasks' "From earlier"
+// group instead of moving on the calendar — no special highlight either, same border a
+// normal task chip gets, on the day it actually belongs to.
 export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropItem, onAddClick, emphasis, rollOverdueToToday }) {
-  const todayISO = toISO(new Date());
+  const todayISO = getLocalToday();
   return (
     <div style={{
       display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`,
@@ -18,10 +21,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
       <div style={{ fontSize: emphasis ? 12 : 10, color: emphasis ? "#4A5568" : "#9CA3AF", padding: "8px 6px", textAlign: "right", fontWeight: 700 }}>{label}</div>
       {days.map((d) => {
         const iso = toISO(d);
-        const dayChips = chips.filter((c) => {
-          if (rollOverdueToToday && c.kind !== "event" && !c.done && daysUntil(c.date) < 0) return iso === todayISO;
-          return c.date === iso;
-        });
+        const dayChips = chips.filter((c) => chipBelongsOnDay(c, iso, todayISO, rollOverdueToToday));
         return (
           <div
             key={iso}
@@ -38,7 +38,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);
-              const overdue = c.kind !== "event" && !c.done && daysUntil(c.date) < 0;
+              const overdue = c.kind !== "event" && c.kind !== "task" && !c.done && c.date < todayISO;
               const content = <>{chipLabel(c)}</>;
               const style = {
                 fontSize: emphasis ? 11.5 : 10.5, textAlign: "left", padding: emphasis ? "4px 8px" : "2px 6px", borderRadius: 6,

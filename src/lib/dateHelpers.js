@@ -5,6 +5,35 @@ export const addDays = (d, n) => {
   nd.setDate(nd.getDate() + n);
   return nd;
 };
+// Canonical "what day is it, locally" helpers for Tasks' overdue/move-a-task logic — a
+// thin, explicitly-named wrapper over toISO(new Date()) (already the safe local-getter
+// pattern, not a UTC-based one) so nothing in that logic can drift back to
+// new Date().toISOString(), which is UTC and would shift the boundary by hours depending
+// on the user's timezone.
+export const getLocalToday = () => toISO(new Date());
+export const getLocalTomorrow = () => toISO(addDays(new Date(), 1));
+
+// A task is overdue exactly when it has a real due date earlier than today and isn't
+// done — no lead-window math, no "days late" count, just that. `today` defaults to
+// getLocalToday() but takes an explicit override so this is testable across mocked
+// dates/timezones without faking the system clock.
+export const isOverdueTask = (t, today = getLocalToday()) => !!t.date && !t.done && t.date < today;
+
+// Overdue tasks, oldest due date first — the thing avoided longest floats to the top.
+export const sortOverdueOldestFirst = (tasks, today = getLocalToday()) =>
+  tasks.filter((t) => isOverdueTask(t, today)).sort((a, b) => a.date.localeCompare(b.date));
+
+// Whether a Calendar chip belongs on this particular day's cell. A plain task always
+// stays on its own real due date, even once it's overdue — that's genuinely the day it
+// was due, and it shows again in Tasks' "From earlier" group instead of moving here.
+// Other rollOverdueToToday-eligible kinds (goal/Education chips) still roll onto today
+// once overdue, unchanged from before.
+export const chipBelongsOnDay = (chip, dayISO, todayISO, rollOverdueToToday) => {
+  if (rollOverdueToToday && chip.kind !== "event" && chip.kind !== "task" && !chip.done && chip.date < todayISO) {
+    return dayISO === todayISO;
+  }
+  return chip.date === dayISO;
+};
 export const startOfWeek = (d) => {
   const nd = new Date(d);
   const day = (nd.getDay() + 6) % 7; // Monday = 0
@@ -98,14 +127,9 @@ export const inLeadWindow = (iso, leadDays, done) => {
 // urgent the day before it's due) same as if you'd typed "2" into Days needed. Grouped
 // steps and Education-generated sessions already have their own per-day scheduling, so
 // they're left out of this default and keep showing only on their assigned day.
-// A recurring task's individual occurrences are excluded too: if you repeat something
-// daily, every occurrence sits one day after the last, so the "urgent 2 days out"
-// default would fire on almost every occurrence at once, permanently — a recurring task
-// is an expected routine, not a surprise creeping up, so it only needs to show up as
-// "Due today"/"Overdue" (which don't depend on this), not pre-emptively "Urgent."
 export const defaultLeadDays = (t) => {
   if (t.leadDays) return t.leadDays;
-  if (t.groupId || t.eduId || t.isRecurring || !t.date) return null;
+  if (t.groupId || t.eduId || !t.date) return null;
   return 2;
 };
 export const dateRangeISO = (startISO, endISO) => {

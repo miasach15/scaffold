@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import { BatteryLow, Clock } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
-import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, toISO } from "../../lib/dateHelpers";
+import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
+import { ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
+
+// How many overdue plain tasks show before collapsing behind "+N more" — a glance at
+// what's oldest, not the whole backlog at once. Collapses again every fresh load; this
+// is plain component state; it never persists.
+const OVERDUE_VISIBLE_CAP = 3;
 
 const VISIBLE_CAP = 5; // more than this and it stops being a glance — collapse the rest behind "Show more"
 const LOW_ENERGY_KEY = "scaffold-low-energy";
@@ -38,6 +44,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // completed" log — once you leave and come back, done items fall out of Today as usual.
   const [justDone, setJustDone] = useState(() => new Set());
   const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
+  // "From earlier" collapses behind "+N more" past 3 — a glance at the oldest first, not
+  // the whole backlog dumped on you. Plain component state: it's collapsed again the
+  // next time this page loads, on purpose (no punishment for how big the pile looks).
+  const [showAllOverdue, setShowAllOverdue] = useState(false);
   // Persisted, not just session state — a low-energy day doesn't end when you close a
   // tab, so this should still be on next time you open the app rather than silently
   // reverting and putting the big stuff back in front of you.
@@ -55,17 +65,19 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       /* private-browsing or storage disabled — just won't persist across reloads */
     }
   }, [lowEnergy]);
-  const todayISO = toISO(new Date());
-  const tomorrowISO = toISO(addDays(new Date(), 1));
+  const todayISO = getLocalToday();
+  const tomorrowISO = getLocalTomorrow();
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   // Only a task/step you own gets a "Not today" button — pushing its date forward is
   // safe since it's self-imposed. Education deadlines and goal actions are external
   // commitments; snoozing those would just be lying to yourself about when they're due,
   // so they don't get one. Education work sessions (eduId set) are handled separately
-  // below — they need collapsing, not a flat row per session.
+  // below — they need collapsing, not a flat row per session. Overdue plain tasks are
+  // excluded here too — they're pulled into their own "From earlier" group below
+  // instead of mixing into this list.
   const taskItems = tasks
-    .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
+    .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && !isOverdueTask(t, todayISO) && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done,
       category: t.category || "Personal",
@@ -73,6 +85,23 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
       onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
+
+  // Plain, undone, overdue tasks — sorted oldest first, so whatever's been avoided
+  // longest is right at the top, easiest to grab. No badge, no count, no "late" word:
+  // the group label below is the only signal this carries. Grouped/Education tasks are
+  // excluded — those already have their own collapse-to-one-row treatment below
+  // (groupItems/eduSessionItems), so including them here too would double them up.
+  const overdueTaskItems = sortOverdueOldestFirst(tasks.filter((t) => !t.groupId && !t.eduId), todayISO)
+    .map((t) => ({
+      id: t.id, title: t.title, done: t.done,
+      col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
+      onToggle: () => { markJustDone(t.id); onToggleDone(t.id, true); },
+      onOpen: () => onOpenFocus(t.id, t.title),
+      onToday: onSetDate ? () => onSetDate(t.id, todayISO) : null,
+      onTomorrow: onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
+    }));
+  const visibleOverdue = showAllOverdue ? overdueTaskItems : overdueTaskItems.slice(0, OVERDUE_VISIBLE_CAP);
+  const hiddenOverdueCount = overdueTaskItems.length - visibleOverdue.length;
 
   // Education work sessions ("Work on X"/"Study X") collapse per assignment/assessment the
   // same way a "break it down" task collapses per group — a due/overdue, still-undone
@@ -219,6 +248,41 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
           )}
         </div>
       </div>
+
+      {overdueTaskItems.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          {/* The muted label is the only signal these are overdue — same row styling as
+              anything else, no badge, no count, no "late"/"overdue" word on the row itself. */}
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>From earlier</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {visibleOverdue.map((it) => (
+              <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 8 }}>
+                <div style={{ width: 44, height: 44, margin: "-13px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Checkbox checked={false} onClick={it.onToggle} color={it.col} />
+                </div>
+                <button
+                  onClick={it.onOpen}
+                  style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 15, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                >
+                  {it.title}
+                </button>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  {it.onToday && <button onClick={it.onToday} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Today</button>}
+                  {it.onTomorrow && <button onClick={it.onTomorrow} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Tomorrow</button>}
+                </div>
+              </div>
+            ))}
+            {hiddenOverdueCount > 0 && (
+              <button
+                onClick={() => setShowAllOverdue(true)}
+                style={{ alignSelf: "flex-start", background: "none", border: "none", padding: 0, fontSize: 12.5, color: "#93A0AD", fontWeight: 600, cursor: "pointer" }}
+              >
+                +{hiddenOverdueCount} more
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {lowEnergy && hiddenForEnergy > 0 && (
         <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -14, marginBottom: 14 }}>

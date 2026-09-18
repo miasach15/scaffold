@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
-import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, repeatDates, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -21,7 +21,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [repeat, setRepeat] = useState("None"); // ongoing recurring tasks (chores, gym days) — independent instances, not a group
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it into steps" — for a task that's really a multi-day project
@@ -47,7 +46,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   };
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setRepeat("None"); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setShowMore(false);
   };
 
   const breakDownTask = async () => {
@@ -96,18 +95,8 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     if (!title.trim()) return;
     if (useAI) { breakDownTask(); return; }
     const hasTime = date && time;
-    // A recurring task (chores, gym days) creates independent instances on each
-    // occurrence — not grouped like a breakdown, since each day stands on its own. They
-    // do share one recurringId though, so recategorizing any single occurrence later
-    // cascades to the whole series instead of leaving siblings mismatched.
-    if (date && repeat !== "None") {
-      const recurringId = uid();
-      repeatDates(date, repeat).forEach((d) => {
-        onAddTask({ title: title.trim(), date: d, start: hasTime ? timeToDecimal(time) : null, duration: hasTime ? 60 : null, category, isRecurring: true, recurringId });
-      });
-      resetForm();
-      return;
-    }
+    // Tasks are one-off now — no repeat option. A chore or routine that comes back on
+    // its own schedule belongs in Habits instead.
     // The date is just the due date now, stored as-is — no picking a "work day" for you.
     // A task with a future (or no) due date just sits in Today until you get to it, and
     // goes urgent a couple days out on its own (see TodaySection / defaultLeadDays).
@@ -278,14 +267,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
               {date && (
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Optional: a specific time it's due, works fine alongside breaking it down" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
               )}
-              {date && (
-                <select value={repeat} onChange={(e) => setRepeat(e.target.value)} title="For an ongoing chore or routine: creates a separate task on each occurrence" style={{ ...inputStyle, width: 140 }}>
-                  <option value="None">Doesn't repeat</option>
-                  <option value="Daily">Every day</option>
-                  <option value="Weekdays">Every weekday</option>
-                  <option value="Weekly">Every week</option>
-                </select>
-              )}
             </div>
           </div>
 
@@ -309,7 +290,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
             </div>
           </div>
 
-          {date && repeat === "None" && (
+          {date && (
             <div>
               <div style={fieldLabelStyle}>Bigger than one sitting?</div>
               {!useAI ? (
