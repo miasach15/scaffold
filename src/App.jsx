@@ -357,6 +357,26 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     linked.forEach((t, i) => setTaskDate(t.id, dates[i]));
   };
 
+  // Same idea as updateEduDeadline above, for a "break it down" group's own overall due
+  // date — shared by TasksView (expand the group, click its due badge) and Dashboard's
+  // Coming Up (click the badge there directly), so both save and reflow identically.
+  const updateGroupDueDate = async (groupId, date, start) => {
+    const groupTasks = tasks.filter((t) => t.groupId === groupId);
+    const current = groupTasks[0];
+    if (!current || !date) return;
+    const dateChanged = date !== current.groupDueDate;
+    await setGroupDueDate(groupId, date, start);
+    if (!dateChanged) return;
+    const undone = groupTasks.filter((t) => !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    if (undone.length === 0) return;
+    const todayISO = toISO(new Date());
+    const startISO = date > todayISO ? todayISO : date;
+    const lastWorkDay = dayBefore(date);
+    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+    const dates = distributeDatesByLoad(startISO, endISO, undone.length, tasks, events);
+    undone.forEach((t, i) => setTaskDate(t.id, dates[i]));
+  };
+
   // A grade you already have in hand — a paper handed back in class, a test score from a
   // portal — shouldn't require pretending it was ever scheduled on the calendar just to
   // get it into Grades. This skips addEduItem entirely (no work-session tasks, no due
@@ -554,6 +574,10 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onSelectDay={setDayView}
             onStartFocus={openFocus}
             onAddTask={addTask}
+            onSetDate={setTaskDate}
+            onSetStart={setTaskStart}
+            onUpdateGroupDueDate={updateGroupDueDate}
+            onUpdateEduDeadline={updateEduDeadline}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
           />
@@ -601,7 +625,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
             onSetStart={setTaskStart}
-            onSetGroupDueDate={setGroupDueDate}
+            onUpdateGroupDueDate={updateGroupDueDate}
             onOpenFocus={openFocus}
             inboxItems={otherInboxItems}
             onTurnIntoTask={turnInboxIntoTask}

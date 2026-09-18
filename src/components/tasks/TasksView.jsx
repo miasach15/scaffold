@@ -15,7 +15,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onSetGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onUpdateGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -103,24 +103,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle, groupDueDate, groupDueStart, notes: it.notes || null }));
     setPendingPlan(null);
     resetForm();
-  };
-
-  // Moving a "break it down" group's overall due date always saves right away. If the
-  // date actually moved, every not-done step gets redistributed across the new window
-  // (today..the new due date), same load-balancing they were first scheduled with — a
-  // step that's already done stays put, it already happened. Same idea as
-  // App.jsx's updateEduDeadline for Education.
-  const reflowGroupDueDate = (group, newDate, newStart) => {
-    onSetGroupDueDate(group.groupId, newDate, newStart);
-    if (newDate === group.groupDueDate) return;
-    const undone = group.remainingItems.filter((t) => !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-    if (undone.length === 0) return;
-    const todayISO = toISO(new Date());
-    const startISO = newDate > todayISO ? todayISO : newDate;
-    const lastWorkDay = dayBefore(newDate);
-    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-    const dates = distributeDatesByLoad(startISO, endISO, undone.length, tasks, events);
-    undone.forEach((t, i) => onSetDate(t.id, dates[i]));
   };
 
   // A manual way to add another step to an already-created breakdown — e.g. right after
@@ -274,7 +256,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
         onSetStart={onSetStart}
-        onSetGroupDeadline={(newDate, newStart) => reflowGroupDueDate(item.group, newDate, newStart)}
+        onSetGroupDeadline={(newDate, newStart) => onUpdateGroupDueDate(item.group.groupId, newDate, newStart)}
         onAddStep={() => addGroupStep(item.group)}
       />
     );

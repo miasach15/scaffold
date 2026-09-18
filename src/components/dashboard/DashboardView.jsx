@@ -12,7 +12,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // background rather than a boxed-off panel. Applied to every section after the first one
 // in each column.
 const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -45,7 +45,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
+export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -319,6 +319,19 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           </div>
 
           <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
+            {upcoming.length === 0 ? (
+              <EmptyState text="Nothing due soon." />
+            ) : (
+              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+                {upcoming.map((c) => (
+                  <ComingUpRow key={c.id} chip={c} col={c.subject || c.category ? CATEGORY_COLORS[c.subject || c.category] || CATEGORY_COLORS.Personal : null} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
@@ -342,32 +355,51 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               </div>
             )}
           </div>
-
-          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
-            {upcoming.length === 0 ? (
-              <EmptyState text="Nothing due soon." />
-            ) : (
-              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
-                {upcoming.map((c) => {
-                  const label = c.subject || c.category;
-                  const col = label ? CATEGORY_COLORS[label] || CATEGORY_COLORS.Personal : null;
-                  return (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 4, background: col?.accent || PRIMARY_DARK, flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                      </div>
-                      <div style={{ flexShrink: 0 }}><UrgencyBadge iso={c.date} done={c.done} leadDays={2} /></div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// A Coming Up row's due date/time is its own click target, same inline native
+// date/time editor every other due-date editor in the app uses — dispatched by chip
+// kind since a plain task, a "break it down" group's overall due date, and an
+// Education deadline each save through a different function (the last two also
+// reflow their not-done steps/sessions to the new window).
+function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline }) {
+  const [editing, setEditing] = useState(false);
+  const label = chip.subject || chip.category;
+  const onSave = chip.kind === "task-group-due" ? onUpdateGroupDueDate : chip.kind === "edu" ? onUpdateEduDeadline : null;
+  const handleDateChange = (date) => {
+    if (!date) return;
+    if (onSave) onSave(chip.id, date, chip.start);
+    else onSetDate(chip.id, date);
+  };
+  const handleTimeChange = (time) => {
+    const start = time ? timeToDecimal(time) : null;
+    if (onSave) onSave(chip.id, chip.date, start);
+    else onSetStart(chip.id, start);
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+      <div style={{ width: 8, height: 8, borderRadius: 4, background: col?.accent || PRIMARY_DARK, flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chip.title}</div>
+      </div>
+      {editing ? (
+        <div
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditing(false); }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
+        >
+          <input type="date" autoFocus value={chip.date} onChange={(e) => handleDateChange(e.target.value)} style={{ ...inputStyle, width: 128, fontSize: 11.5, padding: "3px 6px" }} />
+          <input type="time" value={decimalToTimeInput(chip.start)} onChange={(e) => handleTimeChange(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 92, fontSize: 11.5, padding: "3px 6px" }} />
+        </div>
+      ) : (
+        <button onClick={() => setEditing(true)} title="Click to change" style={{ background: "none", border: "none", padding: 0, flexShrink: 0, cursor: "pointer", display: "inline-flex" }}>
+          <UrgencyBadge iso={chip.date} done={chip.done} leadDays={2} />
+        </button>
+      )}
     </div>
   );
 }
