@@ -96,8 +96,17 @@ export function useTasks(userId) {
   // group's own deadline, not any individual step's work day. See TasksView.jsx's
   // reflowGroupDueDate, which calls this and then re-dates the not-done steps to match.
   const setGroupDueDate = useCallback(async (groupId, date, start) => {
-    setTasks((ts) => ts.map((t) => (t.groupId === groupId ? { ...t, groupDueDate: date, groupDueStart: start } : t)));
-    await supabase.from("tasks").update({ group_due_date: date, group_due_start: start }).eq("group_id", groupId);
+    let previous;
+    setTasks((ts) => ts.map((t) => {
+      if (t.groupId !== groupId) return t;
+      previous ||= { groupDueDate: t.groupDueDate, groupDueStart: t.groupDueStart };
+      return { ...t, groupDueDate: date, groupDueStart: start };
+    }));
+    const { error } = await supabase.from("tasks").update({ group_due_date: date, group_due_start: start }).eq("group_id", groupId);
+    if (error && previous) {
+      console.error("Failed to save group due date — reverting:", error);
+      setTasks((ts) => ts.map((t) => (t.groupId === groupId ? { ...t, ...previous } : t)));
+    }
   }, []);
 
   const setTaskNotes = useCallback(async (id, notes) => {

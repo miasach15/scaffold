@@ -70,6 +70,9 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
         <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
           {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
         </div>
+        {item.type === "Homework" && (
+          <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: -4, marginBottom: 8 }}>Homework only ever gets one reminder, the day before it's due — add more below if you need extra time on this one.</div>
+        )}
         {sorted.length === 0 ? (
           <EmptyState text={`No ${actionLabel}s scheduled yet.`} />
         ) : (

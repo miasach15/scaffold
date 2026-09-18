@@ -775,7 +775,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         />
       )}
 
-      {!tourOpen && <StickyNoteCorner onCapture={handleQuickCapture} />}
+      <StickyNoteCorner onCapture={handleQuickCapture} />
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
 

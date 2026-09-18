@@ -337,6 +337,10 @@ export default function EducationView({
             <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 110 }} />
           </div>
 
+          {type === "Homework" && (
+            <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets one reminder to work on it, the day before it's due — for something bigger that needs its own spread of sessions, use Assignment instead.</div>
+          )}
+
           {schedulable && (
             <div>
               <div style={{ fontSize: 12.5, color: "#4A5568", marginBottom: 6 }}>{workVerb} it:</div>

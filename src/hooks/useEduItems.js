@@ -32,7 +32,11 @@ export function useEduItems(userId) {
   }, [load]);
 
   // occurrences: array of due-date ISO strings. Returns the inserted rows (id + due_date)
-  // so callers can schedule linked work sessions off the real generated ids.
+  // so callers can schedule linked work sessions off the real generated ids — an empty
+  // array means the insert actually failed (e.g. a schema mismatch), which matters here
+  // specifically: a caller that went on to add work-session tasks referencing one of
+  // these ids would hit a foreign-key error and silently lose those too, on top of the
+  // item itself vanishing the moment the page next reloads from the database.
   const addEduItems = useCallback(
     async ({ title, type, subject, occurrences, dueStart = null }) => {
       if (!userId || !title.trim() || occurrences.length === 0) return [];
@@ -47,7 +51,12 @@ export function useEduItems(userId) {
         done: false,
       }));
       setEduItems((e) => [...e, ...rows.map(fromRow)]);
-      await supabase.from("edu_items").insert(rows);
+      const { error } = await supabase.from("edu_items").insert(rows);
+      if (error) {
+        console.error("Failed to save edu item(s) — reverting:", error);
+        setEduItems((e) => e.filter((x) => !rows.some((r) => r.id === x.id)));
+        return [];
+      }
       return rows.map((r) => ({ id: r.id, dueDate: r.due_date }));
     },
     [userId]
@@ -56,8 +65,17 @@ export function useEduItems(userId) {
   // Changing the due date/time here doesn't touch any linked work-session tasks by
   // itself — see App.jsx's updateEduDeadline, which calls this and then reflows them.
   const setDeadline = useCallback(async (id, dueDate, dueStart) => {
-    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, dueDate, dueStart } : x)));
-    await supabase.from("edu_items").update({ due_date: dueDate, due_start: dueStart }).eq("id", id);
+    let prevItem;
+    setEduItems((e) => e.map((x) => {
+      if (x.id !== id) return x;
+      prevItem = x;
+      return { ...x, dueDate, dueStart };
+    }));
+    const { error } = await supabase.from("edu_items").update({ due_date: dueDate, due_start: dueStart }).eq("id", id);
+    if (error && prevItem) {
+      console.error("Failed to save deadline change — reverting:", error);
+      setEduItems((e) => e.map((x) => (x.id === id ? prevItem : x)));
+    }
   }, []);
 
   const setDone = useCallback(async (id, done) => {
