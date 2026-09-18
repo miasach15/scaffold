@@ -65,6 +65,7 @@ export default function EducationView({
   const [breakingDown, setBreakingDown] = useState(false);
   const [breakdownError, setBreakdownError] = useState(null);
   const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
+  const [addError, setAddError] = useState(null); // shown right under the add row when title/due date is missing — Add otherwise silently does nothing
   const [subjectFilter, setSubjectFilter] = useState("All");
   const [showAllUpcoming, setShowAllUpcoming] = useState(false); // capped by default — a long flat list is its own kind of overwhelm
   // Checking something off in Today shouldn't yank it out of the list mid-glance — it
@@ -88,7 +89,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setDueTime(""); setAssignmentDetails("");
+    setTitle(""); setDueDate(""); setDueTime(""); setAssignmentDetails(""); setAddError(null);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -150,7 +151,11 @@ export default function EducationView({
   };
 
   const add = () => {
-    if (!title.trim() || !dueDate) return;
+    if (!title.trim() || !dueDate) {
+      setAddError(!title.trim() ? "Give it a title first." : "Add a due date first.");
+      return;
+    }
+    setAddError(null);
     if (schedulable && useAI) { breakDownAssignment(); return; }
     if (schedulable) {
       // An assessment never gets "every day" — it's always a day count, crammed right before it.
@@ -310,12 +315,13 @@ export default function EducationView({
 
       <div data-tour="education-add">
         <AddRow>
-          <input placeholder="Title..." value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
-          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...inputStyle, width: 150 }} />
+          <input placeholder="Title..." value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
+          <input type="date" value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} style={{ ...inputStyle, width: 150, border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
           </button>
         </AddRow>
+        {addError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: -2, marginBottom: 8 }}>{addError}</div>}
       </div>
       <div>
         <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>

@@ -15,7 +15,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onSetGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onSetGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -231,7 +231,26 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onOpenFocus={onOpenFocus} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
     }
     if (item.type === "edu") {
-      return <EduDeadlineRow key={`edu-${item.edu.id}`} item={item.edu} col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal} onToggleDone={handleSetEduDone} onOpen={onGoToEducation} />;
+      const sessions = tasks.filter((t) => t.eduId === item.edu.id && (!t.done || justDone.has(t.id))).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      return (
+        <EduDeadlineRow
+          key={`edu-${item.edu.id}`}
+          item={item.edu}
+          col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal}
+          sessions={sessions}
+          onToggleItemDone={handleSetEduDone}
+          onToggleDone={handleToggleDone}
+          onSetCategory={onSetCategory}
+          onRemove={onRemove}
+          onOpenDetail={onOpenTaskDetail}
+          onOpenFocus={onOpenFocus}
+          onSetDate={onSetDate}
+          onSetStart={onSetStart}
+          onUpdateDeadline={onUpdateEduDeadline}
+          onAddSession={onAddEduSession ? () => onAddEduSession(item.edu.id) : null}
+          onOpen={onGoToEducation}
+        />
+      );
     }
     if (item.type === "goal") {
       // A milestone's "done" is derived from whether all its actions are done — there's

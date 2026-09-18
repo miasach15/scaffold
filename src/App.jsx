@@ -375,6 +375,24 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     addTask({ title: sessionTitle, date, start: isAllDay ? null : timeToDecimal(time), duration: isAllDay ? null : duration, eduId, category: profile.educationCategory });
   };
 
+  // The Tasks page's one-click "+ Add session" on an expanded edu deadline — same
+  // auto-placed-day logic as TasksView's addGroupStep, so the two feel like the same
+  // feature: lands the day after the last existing session, capped the day before the
+  // due date, floored at today.
+  const quickAddEduSession = (eduId) => {
+    const item = eduItems.find((e) => e.id === eduId);
+    if (!item) return;
+    const todayISO = toISO(new Date());
+    const existingDates = tasks.filter((t) => t.eduId === eduId).map((t) => t.date).filter(Boolean).sort();
+    const lastDate = existingDates[existingDates.length - 1];
+    const dayAfterLast = lastDate ? toISO(addDays(new Date(lastDate + "T00:00:00"), 1)) : todayISO;
+    const cap = dayBefore(item.dueDate);
+    let date = dayAfterLast > cap ? cap : dayAfterLast;
+    if (date < todayISO) date = todayISO;
+    const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : `Work on: ${item.title}`;
+    addEduSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
+  };
+
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
   if (!profile.onboarded) return <OnboardingQuiz onComplete={completeOnboarding} />;
 
@@ -590,6 +608,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onDiscardInbox={removeInboxItem}
             eduItems={eduItems}
             onSetEduDone={setEduDone}
+            onUpdateEduDeadline={updateEduDeadline}
+            onAddEduSession={quickAddEduSession}
             onGoToEducation={() => setView("education")}
             goalActionChips={goalActionChips}
             goalMilestoneChips={goalMilestoneChips}
