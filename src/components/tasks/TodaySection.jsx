@@ -3,7 +3,7 @@ import { BatteryLow, Clock } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
-import { ghostBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
 
@@ -44,6 +44,9 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // completed" log — once you leave and come back, done items fall out of Today as usual.
   const [justDone, setJustDone] = useState(() => new Set());
   const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
+  // Which "From earlier" row (by task id) currently has its native date input open —
+  // only one at a time, same as TaskRow's own per-row editingDate toggle.
+  const [editingOverdueId, setEditingOverdueId] = useState(null);
   // "From earlier" collapses behind "+N more" past 3 — a glance at the oldest first, not
   // the whole backlog dumped on you. Plain component state: it's collapsed again the
   // next time this page loads, on purpose (no punishment for how big the pile looks).
@@ -93,12 +96,12 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // (groupItems/eduSessionItems), so including them here too would double them up.
   const overdueTaskItems = sortOverdueOldestFirst(tasks.filter((t) => !t.groupId && !t.eduId), todayISO)
     .map((t) => ({
-      id: t.id, title: t.title, done: t.done,
+      id: t.id, title: t.title, date: t.date, done: t.done,
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { markJustDone(t.id); onToggleDone(t.id, true); },
       onOpen: () => onOpenFocus(t.id, t.title),
-      onToday: onSetDate ? () => onSetDate(t.id, todayISO) : null,
-      onTomorrow: onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
+      onSetDate: onSetDate ? (date) => onSetDate(t.id, date) : null,
+      onMoveToToday: onSetDate ? () => onSetDate(t.id, todayISO) : null,
     }));
   const visibleOverdue = showAllOverdue ? overdueTaskItems : overdueTaskItems.slice(0, OVERDUE_VISIBLE_CAP);
   const hiddenOverdueCount = overdueTaskItems.length - visibleOverdue.length;
@@ -266,10 +269,31 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                 >
                   {it.title}
                 </button>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {it.onToday && <button onClick={it.onToday} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Today</button>}
-                  {it.onTomorrow && <button onClick={it.onTomorrow} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Tomorrow</button>}
-                </div>
+                {it.onMoveToToday && (
+                  <button onClick={it.onMoveToToday} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}>
+                    Move to today
+                  </button>
+                )}
+                {editingOverdueId === it.id ? (
+                  <input
+                    type="date"
+                    autoFocus
+                    value={it.date || ""}
+                    onChange={(e) => it.onSetDate?.(e.target.value)}
+                    onBlur={() => setEditingOverdueId(null)}
+                    style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px", minHeight: 44 }}
+                  />
+                ) : (
+                  it.onSetDate && (
+                    <button
+                      onClick={() => setEditingOverdueId(it.id)}
+                      title={`${formatShortDate(it.date)} (tap to change)`}
+                      style={{ background: "none", border: "none", padding: "0 4px", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44, minWidth: 44, flexShrink: 0 }}
+                    >
+                      <span style={{ fontSize: 12, color: "#93A0AD" }}>{formatShortDate(it.date)}</span>
+                    </button>
+                  )
+                )}
               </div>
             ))}
             {hiddenOverdueCount > 0 && (

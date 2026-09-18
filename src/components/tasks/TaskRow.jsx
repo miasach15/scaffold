@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FileText, Pencil, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, getLocalToday, getLocalTomorrow, isOverdueTask, timeToDecimal } from "../../lib/dateHelpers";
+import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, getLocalToday, isOverdueTask, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -13,12 +13,12 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 // alongside it) rather than a plain detail view — the pencil icon is the way in to
 // actually rename/re-date/edit notes.
 //
-// Moving a task is exactly three tap targets — Done (the checkbox), Today, Tomorrow —
-// each a real 44px target, no confirmation, no toast: this is the one thing that has to
-// be frictionless for the no-punishment principle to mean anything. Tapping the date
-// text itself is the one other way to change it (opens the same native date/time
-// inputs this row already had) — not a fourth button, since it's a different action
-// (pick any date) rather than "move."
+// Moving a task is just a checkbox (Done) and the date itself — tapping the date opens
+// the same native date/time inputs this row already had, updates instantly, no
+// confirmation. Both are real 44px targets. Overdue tasks get exactly one more thing: a
+// small "Move to today" button, since reaching for the date picker just to pick today's
+// date already sitting right there is one tap more than it needs to be — no other task
+// gets this button.
 export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDetail, onOpenFocus, onSetDate, onSetStart }) {
   const CATEGORY_COLORS = useCategoryColors();
   const category = t.category || "Personal";
@@ -54,11 +54,10 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
           School category (see App.jsx), so `col` above is already that live color —
           no separate hardcoded Education color needed here. */}
       {t.eduId && <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
-      {showDate && !t.done && onSetDate && (
-        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-          <button onClick={() => onSetDate(t.id, getLocalToday())} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Today</button>
-          <button onClick={() => onSetDate(t.id, getLocalTomorrow())} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px" }}>Tomorrow</button>
-        </div>
+      {overdue && onSetDate && (
+        <button onClick={() => onSetDate(t.id, getLocalToday())} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}>
+          Move to today
+        </button>
       )}
       {showDate && editingDate ? (
         <div
@@ -85,10 +84,13 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
           )}
         </div>
       ) : showDate && t.date ? (
+        // The visual badge/date text stays its normal small size — only the invisible tap
+        // zone around it grows to 44px, so this doesn't end up looking like every other
+        // row suddenly has an oversized date pill.
         <button
           onClick={() => setEditingDate(true)}
           title={`${formatShortDate(t.date)}${t.start != null ? ` · ${decimalToTimeLabel(t.start)}` : ""} (click to change)`}
-          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" }}
+          style={{ background: "none", border: "none", padding: "0 4px", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44, minWidth: 44 }}
         >
           {t.done || overdue ? (
             <span style={{ fontSize: 12, color: "#93A0AD" }}>{formatShortDate(t.date)}</span>
@@ -101,8 +103,8 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
           onClick={() => setEditingDate(true)}
           title="Add a due date"
           style={{
-            display: "inline-flex", alignItems: "center", gap: 3, background: "#fff", border: "1.5px dashed #D1D5DB",
-            borderRadius: 999, padding: "3px 9px 3px 6px", fontSize: 11.5, fontWeight: 700, color: "#93A0AD", cursor: "pointer", whiteSpace: "nowrap",
+            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 3, background: "#fff", border: "1.5px dashed #D1D5DB",
+            borderRadius: 999, padding: "0 9px 0 6px", minHeight: 44, minWidth: 44, fontSize: 11.5, fontWeight: 700, color: "#93A0AD", cursor: "pointer", whiteSpace: "nowrap",
           }}
         >
           <Plus size={12} strokeWidth={2.5} />
