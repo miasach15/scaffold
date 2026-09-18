@@ -1,4 +1,5 @@
 import { ROW_H } from "../../lib/constants";
+import { decimalToTimeLabel } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
 export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent }) {
@@ -24,9 +25,10 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
       <div style={{ fontSize: 11.5, fontWeight: 700, color: accent, textDecoration: done ? "line-through" : "none", lineHeight: 1.25, paddingRight: isTask ? 14 : 0 }}>
         {item.title}
       </div>
-      {height > 30 && item.duration != null && (
+      {height > 30 && item.start != null && (
         <div style={{ fontSize: 10, color: "#6B7280", marginTop: 1 }}>
-          {Math.round(item.duration)}m{item.category ? ` · ${item.category}` : ""}
+          {decimalToTimeLabel(item.start)}
+          {item.duration != null ? ` · ${Math.round(item.duration)}m${item.category ? ` · ${item.category}` : ""}` : ""}
         </div>
       )}
     </div>
