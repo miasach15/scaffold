@@ -76,6 +76,12 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const maxDays = scheduleMode === "pick" && Number(pickDaysCount) >= 1 ? Number(pickDaysCount) : null;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events, maxDays);
+      // distributeDatesByLoad spreads steps evenly across the whole window rather than
+      // packing from the front — so shifting the window's start to tomorrow isn't enough
+      // on its own; the first step could still land days into it. "Starting tomorrow"
+      // means the first step IS tomorrow, so force it explicitly (dates[0] is already the
+      // earliest of the batch by construction, so this can't collide with dates[1]).
+      if (scheduleMode === "every" && startFrom === "tomorrow" && dates.length > 0) dates[0] = startISO;
       setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim()) });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
