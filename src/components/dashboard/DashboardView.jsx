@@ -45,23 +45,6 @@ function greeting() {
   return "Good evening";
 }
 
-// A small rotating coaching note, same warm-but-brief voice as the "you did it — one
-// step closer"/"nice focus session" lines the Focus Timer already uses. Picked by day
-// of year so it holds steady all day instead of changing on every reload.
-const COACHING_NOTES = [
-  "you've got this, take a breath",
-  "small steps still count as progress",
-  "one thing at a time is plenty",
-  "done is better than perfect",
-  "you don't have to feel ready to start",
-  "future you will thank you for this",
-];
-function coachingNote() {
-  const start = new Date(new Date().getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((new Date() - start) / 86400000);
-  return COACHING_NOTES[dayOfYear % COACHING_NOTES.length];
-}
-
 export default function DashboardView({ profile, events, tasks, goals, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
@@ -180,11 +163,7 @@ export default function DashboardView({ profile, events, tasks, goals, habits, d
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
-          <div style={{ textAlign: "right", maxWidth: 260 }}>
-            <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 15, color: PRIMARY_DARK, lineHeight: 1.3 }}>"{coachingNote()}"</div>
-            <div style={{ fontSize: 10.5, color: MUTED, marginTop: 3 }}>— Scaffold coaching note</div>
-          </div>
+        <div style={{ display: "flex", alignItems: "flex-end", flexShrink: 0 }}>
           <button
             onClick={() => setShowBrainDump(true)}
             className="hoverable"
