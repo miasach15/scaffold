@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./hooks/AuthProvider";
 import { useProfile } from "./hooks/useProfile";
 import { useEvents } from "./hooks/useEvents";
@@ -44,6 +44,7 @@ const EducationView = lazy(() => import("./components/education/EducationView"))
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
 import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
 
 export default function App() {
@@ -68,11 +69,11 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
+  const { tasks, loading: tasksLoading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
-  const { eduItems, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw } = useEduItems(userId);
+  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
@@ -109,6 +110,42 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       setFirstTimeTour(true);
     }
   }, [profile, tourStarted]);
+
+  // Automatic overdue-session reflow (see src/lib/overdueSessions.js) — runs once
+  // tasks/edu items have loaded, and again at every local midnight the app happens to
+  // still be open across, so a session's own date never sits in the past. Silent by
+  // design: nothing in the UI announces it, it just keeps the calendar looking right.
+  // Refs (not the tasks/eduItems values themselves) back both the callback and the
+  // dependency check so the midnight timer always plans against whatever's actually
+  // loaded at the moment it fires, not a stale snapshot from when the effect first ran.
+  const tasksRef = useRef(tasks);
+  const eduItemsRef = useRef(eduItems);
+  useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+  useEffect(() => { eduItemsRef.current = eduItems; }, [eduItems]);
+  const runOverdueSessionReflow = useCallback(async () => {
+    const ops = planOverdueSessionReflow(tasksRef.current, eduItemsRef.current);
+    if (ops.length === 0) return;
+    await applyOverdueSessionOps(ops, tasksRef.current, { setTaskDate, setTaskNotes, removeTask });
+  }, [setTaskDate, setTaskNotes, removeTask]);
+  const reflowStartedRef = useRef(false);
+  useEffect(() => {
+    if (tasksLoading || eduItemsLoading || reflowStartedRef.current) return;
+    reflowStartedRef.current = true;
+    runOverdueSessionReflow();
+    let timeoutId;
+    const scheduleMidnightRun = () => {
+      const now = new Date();
+      // A few seconds past midnight, not exactly on it — keeps the run safely on the
+      // new day's side of the boundary rather than racing it.
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+      timeoutId = setTimeout(() => {
+        runOverdueSessionReflow();
+        scheduleMidnightRun();
+      }, next.getTime() - now.getTime());
+    };
+    scheduleMidnightRun();
+    return () => clearTimeout(timeoutId);
+  }, [tasksLoading, eduItemsLoading, runOverdueSessionReflow]);
 
   // Cmd/Ctrl+K opens search from anywhere; "/" does too, as long as you're not already
   // typing into something. Each modal still handles its own Escape-to-close.
