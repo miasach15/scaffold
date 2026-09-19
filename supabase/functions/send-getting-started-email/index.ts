@@ -1,13 +1,14 @@
 // Supabase Edge Function: sends a "here's how to set up Scaffold" email — 4 concrete
 // steps (colors, calendar, brain dump, a goal), same order as the in-app post-tour
-// setup flow (src/components/nav/SetupOverlay.jsx). Not cron-scheduled — this is a
-// one-time send you trigger yourself (see the deploy comment below for how), not
-// something that runs automatically on signup like send-welcome-email does.
+// setup flow (src/components/nav/SetupOverlay.jsx). Not cron-scheduled — it's called
+// directly by the same DB trigger that fires send-welcome-email on signup (see
+// migration_welcome_email_trigger.sql), so every new account gets both automatically.
+// Still callable manually the same way for a one-off resend/test — see below.
 //
 // Deploy with:  supabase functions deploy send-getting-started-email
 // Uses the same RESEND_API_KEY secret already set for send-welcome-email.
 //
-// To send it: POST to the function URL with a JSON body { "email": "you@example.com" }.
+// To send it manually: POST to the function URL with a JSON body { "email": "you@example.com" }.
 // From the Supabase Dashboard: Edge Functions → send-getting-started-email → there's an
 // "Invoke"/testing panel where you can paste that JSON body directly, no terminal
 // needed. Or from a terminal:
