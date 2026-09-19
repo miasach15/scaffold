@@ -1,8 +1,7 @@
 -- Schedules the send-daily-agenda Edge Function to run once a day, emailing today's
 -- schedule (timed tasks/events, anything untimed due today, anything carried over) to
--- whoever's in that function's ALLOWED_EMAILS list — currently just
--- miasachdev15@gmail.com, on purpose, while this is still being tried out. Deploy the
--- function FIRST:
+-- every real account (send-daily-agenda no longer restricts this to an allowlist).
+-- Deploy the function FIRST:
 --   supabase functions deploy send-daily-agenda
 -- and make sure RESEND_API_KEY is already set (same secret send-welcome-email uses).
 --
