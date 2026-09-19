@@ -32,14 +32,22 @@ serve(async (req) => {
 <style>body { margin:0; padding:0; background:#FDFCFB; }</style>
 </head>
 <body style="margin:0; padding:0; background:#FDFCFB;">
-  <div style="width:100%; background:#FDFCFB;">
-    <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #FDFCFB;">
-      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; font-weight: 400; color: #8290D8; margin-bottom: 6px;">Scaffold</div>
-      <p style="font-size: 15px; color: #1A1A2E; line-height: 1.5;">Welcome. Your calendar, tasks, goals, habits, and journal, all in one quiet place.</p>
-      <p style="font-size: 14px; color: #4B5563; line-height: 1.5;">Once you confirm your email and sign in, a quick tour will walk you through every page.</p>
-      <p style="font-size: 12px; color: #9CA3AF; margin-top: 32px;">You're getting this because you signed up at Scaffold.</p>
-    </div>
-  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FDFCFB;" bgcolor="#FDFCFB">
+    <tr>
+      <td align="center" style="background:#FDFCFB;" bgcolor="#FDFCFB">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; width:100%; background:#FDFCFB;" bgcolor="#FDFCFB">
+          <tr>
+            <td style="font-family: 'Inter', -apple-system, sans-serif; padding: 32px 24px;">
+              <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; font-weight: 400; color: #8290D8; margin-bottom: 6px;">Scaffold</div>
+              <p style="font-size: 15px; color: #1A1A2E; line-height: 1.5;">Welcome. Your calendar, tasks, goals, habits, and journal, all in one quiet place.</p>
+              <p style="font-size: 14px; color: #4B5563; line-height: 1.5;">Once you confirm your email and sign in, a quick tour will walk you through every page.</p>
+              <p style="font-size: 12px; color: #9CA3AF; margin-top: 32px;">You're getting this because you signed up at Scaffold.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 

@@ -55,42 +55,54 @@ function escapeHtml(s: string) {
 }
 
 const CARD_BG = "#FAFAF9";
+const SANS = "'Inter', -apple-system, sans-serif";
+const SERIF = "'Instrument Serif', Georgia, serif";
 function sectionLabel(text: string, color = "#9CA3AF") {
   return `<div style="font-size:11px; font-weight:700; color:${color}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">${text}</div>`;
 }
 
+// Table-based, not flex — a flex row of 3 cards was never going to fit legibly at this
+// email's own 480px cap anyway (about 130px each even on a wide screen), and flexbox/
+// media-query support is exactly the kind of thing mail apps are inconsistent about, so
+// this stacks unconditionally instead of hoping a `max-width` media query gets honored.
 function priorityCard(n: number, category: string, title: string, accent: string) {
   return `
-    <div style="flex:1; min-width:0; background:${CARD_BG}; border-radius:12px; padding:14px 16px;">
-      <div style="font-size:10.5px; font-weight:700; color:${accent}; letter-spacing:0.4px; margin-bottom:8px; white-space:nowrap;">${pad(n)} / ${escapeHtml((category || "PERSONAL").toUpperCase())}</div>
-      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:15px; color:#1A1A2E; line-height:1.3;">${escapeHtml(title)}</div>
+    <div style="background:${CARD_BG}; border-radius:12px; padding:14px 16px; margin-bottom:10px;">
+      <div style="font-family:${SANS}; font-size:10.5px; font-weight:700; color:${accent}; letter-spacing:0.4px; margin-bottom:8px;">${pad(n)} / ${escapeHtml((category || "PERSONAL").toUpperCase())}</div>
+      <div style="font-family:${SERIF}; font-size:15px; color:#1A1A2E; line-height:1.3;">${escapeHtml(title)}</div>
     </div>`;
 }
 
+// Tables for the time/dot/card layout, same reasoning as priorityCard — a table's
+// column widths hold regardless of whether the client's renderer supports flexbox.
 function scheduleRow(timeStr: string, durationStr: string, category: string, title: string, notes: string | null, accent: string) {
   return `
-    <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:10px;">
-      <div style="width:64px; flex-shrink:0; padding-top:14px; text-align:right;">
-        <div style="font-size:12.5px; font-weight:700; color:#1A1A2E;">${timeStr}</div>
-        <div style="font-size:10.5px; color:#9CA3AF;">${durationStr}</div>
-      </div>
-      <div style="width:8px; flex-shrink:0; padding-top:20px; display:flex; justify-content:center;">
-        <div style="width:8px; height:8px; border-radius:50%; background:${accent};"></div>
-      </div>
-      <div style="flex:1; min-width:0; background:${CARD_BG}; border-radius:12px; padding:12px 16px;">
-        <div style="font-size:13.5px; font-weight:700; color:#1A1A2E;">${escapeHtml(title)}</div>
-        ${notes ? `<div style="font-size:12px; color:#6B7280; margin-top:3px; line-height:1.4;">${escapeHtml(notes)}</div>` : ""}
-      </div>
-    </div>`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+      <tr>
+        <td width="64" valign="top" style="padding-top:14px; text-align:right; font-family:${SANS};">
+          <div style="font-size:12.5px; font-weight:700; color:#1A1A2E;">${timeStr}</div>
+          <div style="font-size:10.5px; color:#9CA3AF;">${durationStr}</div>
+        </td>
+        <td width="20" valign="top" style="padding-top:20px; text-align:center;">
+          <div style="width:8px; height:8px; border-radius:50%; background:${accent}; margin:0 auto;"></div>
+        </td>
+        <td valign="top" style="background:${CARD_BG}; border-radius:12px; padding:12px 16px; font-family:${SANS};">
+          <div style="font-size:13.5px; font-weight:700; color:#1A1A2E;">${escapeHtml(title)}</div>
+          ${notes ? `<div style="font-size:12px; color:#6B7280; margin-top:3px; line-height:1.4;">${escapeHtml(notes)}</div>` : ""}
+        </td>
+      </tr>
+    </table>`;
 }
 
 function simpleRow(title: string, category: string, sub: string, accent: string) {
   return `
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-      <div style="width:6px; height:6px; border-radius:50%; background:${accent}; flex-shrink:0;"></div>
-      <div style="flex:1; min-width:0; font-size:13px; color:#1A1A2E;">${escapeHtml(title)}</div>
-      <div style="font-size:11px; color:#9CA3AF; flex-shrink:0;">${escapeHtml(sub)}</div>
-    </div>`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+      <tr>
+        <td width="16" valign="middle"><div style="width:6px; height:6px; border-radius:50%; background:${accent};"></div></td>
+        <td valign="middle" style="font-family:${SANS}; font-size:13px; color:#1A1A2E;">${escapeHtml(title)}</td>
+        <td width="100" valign="middle" align="right" style="font-family:${SANS}; font-size:11px; color:#9CA3AF; white-space:nowrap;">${escapeHtml(sub)}</td>
+      </tr>
+    </table>`;
 }
 
 serve(async (_req) => {
@@ -159,7 +171,7 @@ serve(async (_req) => {
         if (priorities.length > 0) {
           parts.push(
             sectionLabel("Today's Core Priorities") +
-              `<div class="priority-row" style="display:flex; gap:10px; margin-bottom:28px;">` +
+              `<div style="margin-bottom:18px;">` +
               priorities.map((p, i) => priorityCard(i + 1, p.category, p.title, accentFor(p.category))).join("") +
               `</div>`
           );
@@ -198,33 +210,36 @@ serve(async (_req) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your day</title>
-<style>
-  body { margin:0; padding:0; background:#FDFCFB; }
-  /* Three priority cards side by side get too cramped to read on a phone-width
-     screen — stack them instead, same cards just full-width and top-to-bottom. */
-  @media (max-width: 480px) {
-    .priority-row { flex-direction: column !important; }
-    .priority-row > div { flex: none !important; margin-bottom: 10px; }
-    .priority-row > div:last-child { margin-bottom: 0; }
-  }
-</style>
+<style>body { margin:0; padding:0; background:#FDFCFB; }</style>
 </head>
 <body style="margin:0; padding:0; background:#FDFCFB;">
-  <div style="width:100%; background:#FDFCFB;">
-    <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #FDFCFB;">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #D9D3E6; margin-bottom:24px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:8px; height:8px; border-radius:50%; background:#FF9286; flex-shrink:0;"></div>
-          <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#8290D8;">Scaffold</div>
-        </div>
-        <div style="font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</div>
-      </div>
-      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
-      ${bodyHtml}
-      ${lookingAhead}
-      <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
-    </div>
-  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FDFCFB;" bgcolor="#FDFCFB">
+    <tr>
+      <td align="center" style="background:#FDFCFB;" bgcolor="#FDFCFB">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; width:100%; background:#FDFCFB;" bgcolor="#FDFCFB">
+          <tr>
+            <td style="font-family:${SANS}; padding:32px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom:1px solid #D9D3E6; margin-bottom:24px;">
+                <tr>
+                  <td style="padding-bottom:16px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td width="16" valign="middle"><div style="width:8px; height:8px; border-radius:50%; background:#FF9286;"></div></td>
+                      <td valign="middle" style="font-family:${SERIF}; font-style:italic; font-size:20px; color:#8290D8;">Scaffold</td>
+                    </tr></table>
+                  </td>
+                  <td align="right" valign="middle" style="padding-bottom:16px; font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</td>
+                </tr>
+              </table>
+              <div style="font-family:${SERIF}; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
+              ${bodyHtml}
+              ${lookingAhead}
+              <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
