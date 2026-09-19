@@ -10,19 +10,19 @@ const STEPS = [
   {
     key: "colors",
     title: "Make it yours",
-    body: "Pick colors for your categories — whatever's calm to look at. There's no wrong answer.",
+    body: "Pick colors for your categories, whatever's calm to look at. There's no wrong answer.",
     cta: "Next: your schedule",
   },
   {
     key: "calendar",
     title: "What's already set in stone?",
-    body: "Add what's already on the calendar for the next two weeks — classes, practice, appointments. Click any day to add one.",
+    body: "Add what's already on the calendar for the next two weeks: classes, practice, appointments. Click any day to add one.",
     cta: "Next: brain dump",
   },
   {
     key: "braindump",
     title: "Get it out of your head",
-    body: "Now list anything else coming up — assignments, errands, whatever's floating around. One line each. Sort it out later.",
+    body: "Now list anything else coming up: assignments, errands, whatever's floating around. One line each. Sort it out later.",
     cta: "Done",
   },
 ];
@@ -53,7 +53,7 @@ export default function SetupOverlay({ setView, onOpenSettings, onCloseSettings,
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.4 }}>
-          Quick setup — {i + 1} of {STEPS.length}
+          Quick setup · {i + 1} of {STEPS.length}
         </div>
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip setup</button>
       </div>

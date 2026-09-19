@@ -7,22 +7,22 @@ import { ghostBtn, primaryBtn } from "../../lib/styles";
 // head at once. A long tour is exactly the kind of thing that gets abandoned halfway.
 const CORE_STEPS = [
   { type: "view", view: "dashboard", title: "Welcome to Scaffold", bullets: [
-    "Nothing here keeps score. What you don't finish just carries forward to today — no red marks.",
+    "Nothing here keeps score. What you don't finish just carries forward to today, no red marks.",
   ] },
-  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["This is home base: today's plan, top goal, habits, what's due soon — all in one glance."] },
+  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["This is home base: today's plan, top goal, habits, what's due soon, all in one glance."] },
   { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add something. Drag a task to move it. Today's always highlighted."] },
   { type: "view", view: "calendar", title: "Sticky Note", bullets: ["That note in the corner: jot anything, hit Enter, sort it out later from your Tasks Inbox."] },
   { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Stuck? Tap \"What should I do right now?\" and let it pick for you."] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["For the big stuff — a real project, not a quick errand. Give it an end date; it builds the steps."] },
+  { type: "view", view: "goals", title: "Goals", bullets: ["For the big stuff: a real project, not a quick errand. Give it an end date; it builds the steps."] },
   { type: "view", view: "habits", title: "Habits", bullets: ["Add one, tap it done each day. Missing a day doesn't reset anything."] },
   { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt or free write. Whatever's easiest that day."] },
-  { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test with a due date — it can break the work into smaller sessions for you."] },
-  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, your way — total points or your own weighted categories."] },
+  { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test with a due date. It can break the work into smaller sessions for you."] },
+  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class, your way: total points or your own weighted categories."] },
 ];
 
 const MODAL_STEPS = [
-  { type: "modal", modal: "settings", title: "Settings", bullets: ["Colors, reminders, and this tour again — all live here whenever you need them."] },
-  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["A look back at what you finished this week. Wins only — no guilt trip."] },
+  { type: "modal", modal: "settings", title: "Settings", bullets: ["Colors, reminders, and this tour again, all live here whenever you need them."] },
+  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["A look back at what you finished this week. Wins only, no guilt trip."] },
 ];
 
 export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
