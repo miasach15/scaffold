@@ -316,6 +316,13 @@ export default function EducationView({
       <div data-tour="education-add">
         <AddRow>
           <input placeholder="Title..." value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
+          <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
+            <option>Assignment</option><option>Assessment</option><option>Homework</option>
+          </select>
+          <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 130 }} />
+          <datalist id="subjects-datalist">
+            {knownSubjects.map((s) => <option key={s} value={s} />)}
+          </datalist>
           <input type="date" value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} style={{ ...inputStyle, width: 150, border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
@@ -326,20 +333,13 @@ export default function EducationView({
       <div>
         <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
           {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
-          {showOptions ? "Hide options" : "Type, subject, or how to work it"}
+          {showOptions ? "Hide options" : "A specific time, or how to work it"}
         </button>
       </div>
 
       {showOptions && (
         <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-              <option>Assignment</option><option>Assessment</option><option>Homework</option>
-            </select>
-            <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 140 }} />
-            <datalist id="subjects-datalist">
-              {knownSubjects.map((s) => <option key={s} value={s} />)}
-            </datalist>
             <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 110 }} />
           </div>
 
