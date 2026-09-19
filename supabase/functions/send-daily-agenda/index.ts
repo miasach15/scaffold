@@ -40,9 +40,6 @@ const SWATCHES: Record<string, { accent: string }> = {
 const DEFAULT_CATEGORY_COLOR_KEYS: Record<string, string> = {
   School: "ocean", Personal: "pink", Health: "emerald", Social: "lilac", Extracurriculars: "coral",
 };
-const CATEGORY_EMOJI: Record<string, string> = {
-  School: "📚", Personal: "⭐", Health: "🏃", Social: "👥", Extracurriculars: "🎨",
-};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const isoOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -71,7 +68,6 @@ function priorityCard(n: number, category: string, title: string, accent: string
 }
 
 function scheduleRow(timeStr: string, durationStr: string, category: string, title: string, notes: string | null, accent: string) {
-  const emoji = CATEGORY_EMOJI[category] || "🔹";
   return `
     <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:10px;">
       <div style="width:64px; flex-shrink:0; padding-top:14px; text-align:right;">
@@ -82,7 +78,7 @@ function scheduleRow(timeStr: string, durationStr: string, category: string, tit
         <div style="width:8px; height:8px; border-radius:50%; background:${accent};"></div>
       </div>
       <div style="flex:1; min-width:0; background:${CARD_BG}; border-radius:12px; padding:12px 16px;">
-        <div style="font-size:13.5px; font-weight:700; color:#1A1A2E;">${emoji} ${escapeHtml(title)}</div>
+        <div style="font-size:13.5px; font-weight:700; color:#1A1A2E;">${escapeHtml(title)}</div>
         ${notes ? `<div style="font-size:12px; color:#6B7280; margin-top:3px; line-height:1.4;">${escapeHtml(notes)}</div>` : ""}
       </div>
     </div>`;
