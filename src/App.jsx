@@ -517,7 +517,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         .btn-ghost:hover:not(:disabled) { background: #F5F5F5 !important; border-color: #D1D5DB !important; }
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
-        .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; transform: translateY(-1px); }
+        .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
         /* Sidebar nav is a column (mobile top bar, then page content) below 861px, and a
            row (fixed-width rail beside content) at desktop widths — see Sidebar.jsx. */
