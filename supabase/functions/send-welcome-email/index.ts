@@ -29,13 +29,13 @@ serve(async (req) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome to Scaffold</title>
-<style>body { margin:0; padding:0; background:#FDFCFB; }</style>
+<style>body { margin:0; padding:0; background:#F0F0F0; }</style>
 </head>
-<body style="margin:0; padding:0; background:#FDFCFB;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FDFCFB;" bgcolor="#FDFCFB">
+<body style="margin:0; padding:0; background:#F0F0F0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F0F0F0;" bgcolor="#F0F0F0">
     <tr>
-      <td align="center" style="background:#FDFCFB;" bgcolor="#FDFCFB">
-        <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; width:100%; background:#FDFCFB;" bgcolor="#FDFCFB">
+      <td align="center" style="background:#F0F0F0; padding:32px 16px;" bgcolor="#F0F0F0">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; width:100%; background:#FFFFFF; border-radius:20px;" bgcolor="#FFFFFF">
           <tr>
             <td style="font-family: 'Inter', -apple-system, sans-serif; padding: 32px 24px;">
               <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; font-weight: 400; color: #8290D8; margin-bottom: 6px;">Scaffold</div>
