@@ -66,7 +66,7 @@ function priorityCard(n: number, category: string, title: string, accent: string
   return `
     <div style="flex:1; min-width:0; background:${CARD_BG}; border-radius:12px; padding:14px 16px;">
       <div style="font-size:10.5px; font-weight:700; color:${accent}; letter-spacing:0.4px; margin-bottom:8px; white-space:nowrap;">${pad(n)} / ${escapeHtml((category || "PERSONAL").toUpperCase())}</div>
-      <div style="font-family: Georgia, 'Playfair Display', serif; font-size:15px; color:#1A1A2E; line-height:1.3;">${escapeHtml(title)}</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:15px; color:#1A1A2E; line-height:1.3;">${escapeHtml(title)}</div>
     </div>`;
 }
 
@@ -192,20 +192,20 @@ serve(async (_req) => {
         ${sectionLabel("Looking Ahead")}
         <div style="background: linear-gradient(135deg, #2A2A3D, #1A1A2E); border-radius:14px; padding:28px 24px;">
           <div style="font-size:10.5px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Tomorrow's Focus</div>
-          <div style="font-family: Georgia, 'Playfair Display', serif; font-size:19px; color:#fff;">${escapeHtml(tomorrowTop.title)}</div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:19px; color:#fff;">${escapeHtml(tomorrowTop.title)}</div>
         </div>`
         : "";
 
       const html = `
-        <div style="font-family: -apple-system, 'IBM Plex Sans', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
           <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #ECECEC; margin-bottom:24px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <div style="width:8px; height:8px; border-radius:50%; background:#FF9286; flex-shrink:0;"></div>
-              <div style="font-family: Georgia, 'Playfair Display', serif; font-style: italic; font-size:20px; color:#1A1A2E;">Scaffold</div>
+              <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#1A1A2E;">Scaffold</div>
             </div>
             <div style="font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</div>
           </div>
-          <div style="font-family: Georgia, 'Playfair Display', serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
           ${bodyHtml}
           ${lookingAhead}
           <div style="border-top:1px solid #ECECEC; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
