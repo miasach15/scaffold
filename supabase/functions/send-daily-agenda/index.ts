@@ -6,10 +6,13 @@
 // Education work sessions — a plain task or event covers most days, and that collapsing
 // logic is real complexity not worth duplicating in a second runtime for a first version.
 //
-// Sends to every real account (up to the first 200 — see the listUsers call below), not
-// an allowlist. If the user base ever grows past 200, listUsers needs actual pagination
-// (loop on the `page` param until a short page comes back) — not worth building until
-// there's an actual user to hit that ceiling.
+// Sends to every real account created on or after ONBOARDING_CUTOFF (up to the first
+// 200 — see the listUsers call below), not an allowlist. The cutoff exists so turning
+// this on doesn't reach back and start emailing everyone who already had an account
+// before today — only accounts that sign up from here on get the daily send, same
+// scope as the other two onboarding emails. If the user base ever grows past 200,
+// listUsers needs actual pagination (loop on the `page` param until a short page comes
+// back) — not worth building until there's an actual user to hit that ceiling.
 //
 // Deploy with:  supabase functions deploy send-daily-agenda
 // Uses the same RESEND_API_KEY secret already set for send-welcome-email.
@@ -24,6 +27,10 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = Deno.env.get("DIGEST_FROM_EMAIL") || Deno.env.get("WELCOME_FROM_EMAIL") || "Scaffold <onboarding@resend.dev>";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+// Only accounts created at or after this moment get the daily send — everyone who
+// already existed before this went live is excluded, permanently, not just for today.
+const ONBOARDING_CUTOFF = new Date("2026-09-19T18:38:20Z");
 
 // Same swatch palette as src/lib/constants.js (CATEGORY_COLOR_SWATCHES + each swatch's
 // THEME_PRESETS.primary as `accent`) — duplicated here since a Deno edge function can't
@@ -115,8 +122,8 @@ serve(async (_req) => {
 
     const { data: usersPage, error: usersErr } = await admin.auth.admin.listUsers({ perPage: 200 });
     if (usersErr) return json({ error: usersErr.message }, 500);
-    const users = usersPage.users.filter((u) => !!u.email);
-    if (users.length === 0) return json({ ok: true, sent: 0, note: "no real accounts to send to" });
+    const users = usersPage.users.filter((u) => !!u.email && new Date(u.created_at) >= ONBOARDING_CUTOFF);
+    if (users.length === 0) return json({ ok: true, sent: 0, note: "no accounts created on/after the onboarding cutoff yet" });
 
     const userIds = users.map((u) => u.id);
     const [{ data: profiles }, { data: tasks }, { data: events }] = await Promise.all([
