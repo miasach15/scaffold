@@ -4,8 +4,7 @@
 -- miasachdev15@gmail.com, on purpose, while this is still being tried out. Deploy the
 -- function FIRST:
 --   supabase functions deploy send-daily-agenda
--- and make sure SENDGRID_API_KEY and SENDGRID_FROM_EMAIL are already set (same secrets
--- send-welcome-email uses).
+-- and make sure RESEND_API_KEY is already set (same secret send-welcome-email uses).
 --
 -- If `create extension pg_cron` errors with a permissions message, enable it from the
 -- Supabase Dashboard instead: Database → Extensions → search "pg_cron" → Enable.

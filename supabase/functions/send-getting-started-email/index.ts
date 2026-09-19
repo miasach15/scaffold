@@ -5,9 +5,7 @@
 // something that runs automatically on signup like send-welcome-email does.
 //
 // Deploy with:  supabase functions deploy send-getting-started-email
-// Uses the same SENDGRID_API_KEY / SENDGRID_FROM_EMAIL secrets as send-welcome-email —
-// SENDGRID_FROM_EMAIL must be a sender address verified in SendGrid (Settings → Sender
-// Authentication) or every send fails with a 403.
+// Uses the same RESEND_API_KEY secret already set for send-welcome-email.
 //
 // To send it: POST to the function URL with a JSON body { "email": "you@example.com" }.
 // From the Supabase Dashboard: Edge Functions → send-getting-started-email → there's an
@@ -20,19 +18,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
-const FROM_EMAIL_RAW = Deno.env.get("SENDGRID_FROM_EMAIL") || Deno.env.get("WELCOME_FROM_EMAIL") || "";
-
-// SendGrid wants `from` as a {email, name} object, not the combined "Name <email>"
-// string Resend accepted directly — this pulls the two apart.
-function parseFromAddress(raw: string): { email: string; name?: string } {
-  const m = raw.match(/^(.*)<(.+)>\s*$/);
-  if (m) {
-    const name = m[1].trim();
-    return { email: m[2].trim(), name: name || undefined };
-  }
-  return { email: raw.trim() };
-}
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const FROM_EMAIL = Deno.env.get("WELCOME_FROM_EMAIL") || "Scaffold <onboarding@resend.dev>";
 
 // Brand kit values (Figma "Brand & Identity" section — color palette + typography specs):
 //   Background #FDFCFB · Surface #FAFAF9 · Ink Black #1A1A2E · Muted Gray #6B7280/#4B5563
@@ -58,8 +45,7 @@ serve(async (req) => {
     const payload = await req.json();
     const email = payload.email;
     if (!email) return new Response(JSON.stringify({ error: "missing email" }), { status: 400 });
-    if (!SENDGRID_API_KEY) return new Response(JSON.stringify({ error: "SENDGRID_API_KEY not set" }), { status: 500 });
-    if (!FROM_EMAIL_RAW) return new Response(JSON.stringify({ error: "SENDGRID_FROM_EMAIL not set" }), { status: 500 });
+    if (!RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500 });
 
     const html = `
       <div style="font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif; max-width: 480px; margin: 0 auto; padding: 36px 24px; background: #FDFCFB;">
@@ -93,15 +79,10 @@ serve(async (req) => {
         <p style="font-size: 12px; color: #6B7280; margin-top: 24px; line-height: 1.5;">That's it — everything else in Scaffold builds on those four. Take them one at a time; there's no rush.</p>
       </div>`;
 
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${SENDGRID_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email }] }],
-        from: parseFromAddress(FROM_EMAIL_RAW),
-        subject: "Getting set up in Scaffold",
-        content: [{ type: "text/html", value: html }],
-      }),
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM_EMAIL, to: email, subject: "Getting set up in Scaffold", html }),
     });
 
     if (!res.ok) return new Response(JSON.stringify({ error: await res.text() }), { status: 502 });
