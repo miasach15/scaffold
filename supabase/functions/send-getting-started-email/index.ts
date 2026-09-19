@@ -134,7 +134,7 @@ serve(async (req) => {
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${STEP_BORDER}; padding-top:16px;">
                 <tr>
-                  <td style="font-family:${SANS}; font-size:11px; color:${SUBTLE};">Sent automatically by Scaffold &bull; Unsubscribe</td>
+                  <td style="font-family:${SANS}; font-size:11px; color:${SUBTLE};">Sent automatically by Scaffold</td>
                   <td align="right"><div style="width:14px; height:14px; border-radius:4px; background:${PURPLE};"></div></td>
                 </tr>
               </table>

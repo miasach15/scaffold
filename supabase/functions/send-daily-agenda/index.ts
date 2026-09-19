@@ -233,7 +233,12 @@ serve(async (_req) => {
               <div style="font-family:${SERIF}; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
               ${bodyHtml}
               ${lookingAhead}
-              <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px;">
+                <tr>
+                  <td style="font-family:${SANS}; font-size:11px; color:#9CA3AF;">Sent automatically by Scaffold</td>
+                  <td align="right"><div style="width:14px; height:14px; border-radius:4px; background:#8290D8;"></div></td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
