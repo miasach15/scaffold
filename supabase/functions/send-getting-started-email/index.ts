@@ -47,37 +47,49 @@ serve(async (req) => {
     if (!email) return new Response(JSON.stringify({ error: "missing email" }), { status: 400 });
     if (!RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500 });
 
-    const html = `
-      <div style="font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif; max-width: 480px; margin: 0 auto; padding: 36px 24px; background: #FDFCFB;">
-        <div style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 32px; color: #8290D8; margin-bottom: 6px;">Scaffold</div>
-        <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 18px; color: #4B5563; margin-bottom: 14px;">Getting set up</div>
-        <p style="font-size: 14px; color: #4B5563; line-height: 1.5; margin: 0 0 24px;">Four steps, in order. Do them one at a time — each one only takes a couple minutes, and the app is actually ready for you after, not just installed.</p>
-        ${step(
-          "01",
-          "Change your colors",
-          "Settings → Categories → tap a swatch on each one.",
-          "School, Personal, Health, Social, and Extracurriculars are already set up — just pick colors that feel calm to look at, not stressful. You'll see these everywhere, so go with whatever's easiest on your eyes."
-        )}
-        ${step(
-          "02",
-          "Put in your schedule",
-          "Calendar → tap any day → add what's already set for the next 2 weeks.",
-          "Classes, practice, appointments — the stuff that's already decided, not stuff you're still planning. This part usually takes about 5 minutes and saves you from re-adding the same things later."
-        )}
-        ${step(
-          "03",
-          "Brain dump",
-          "Dashboard → Brain Dump button → list anything else floating around.",
-          "Assignments, errands, things you don't want to forget — one line each, no sorting or prioritizing needed right now. Just get it out of your head; you can turn any line into a real task later."
-        )}
-        ${step(
-          "04",
-          "Add a goal",
-          "Goals page → New Goal → give it an end date.",
-          "Something bigger than a quick errand — an application, a big project, a class you're working toward. Once it has a deadline, Scaffold breaks it into milestones and steps for you automatically."
-        )}
-        <p style="font-size: 12px; color: #6B7280; margin-top: 24px; line-height: 1.5;">That's it — everything else in Scaffold builds on those four. Take them one at a time; there's no rush.</p>
-      </div>`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting set up in Scaffold</title>
+<style>body { margin:0; padding:0; background:#FDFCFB; }</style>
+</head>
+<body style="margin:0; padding:0; background:#FDFCFB;">
+  <div style="width:100%; background:#FDFCFB;">
+    <div style="font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif; max-width: 480px; margin: 0 auto; padding: 36px 24px; background: #FDFCFB;">
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 32px; color: #8290D8; margin-bottom: 6px;">Scaffold</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 18px; color: #4B5563; margin-bottom: 14px;">Getting set up</div>
+      <p style="font-size: 14px; color: #4B5563; line-height: 1.5; margin: 0 0 24px;">Four steps, in order. Do them one at a time — each one only takes a couple minutes, and the app is actually ready for you after, not just installed.</p>
+      ${step(
+        "01",
+        "Change your colors",
+        "Settings → Categories → tap a swatch on each one.",
+        "School, Personal, Health, Social, and Extracurriculars are already set up — just pick colors that feel calm to look at, not stressful. You'll see these everywhere, so go with whatever's easiest on your eyes."
+      )}
+      ${step(
+        "02",
+        "Put in your schedule",
+        "Calendar → tap any day → add what's already set for the next 2 weeks.",
+        "Classes, practice, appointments — the stuff that's already decided, not stuff you're still planning. This part usually takes about 5 minutes and saves you from re-adding the same things later."
+      )}
+      ${step(
+        "03",
+        "Brain dump",
+        "Dashboard → Brain Dump button → list anything else floating around.",
+        "Assignments, errands, things you don't want to forget — one line each, no sorting or prioritizing needed right now. Just get it out of your head; you can turn any line into a real task later."
+      )}
+      ${step(
+        "04",
+        "Add a goal",
+        "Goals page → New Goal → give it an end date.",
+        "Something bigger than a quick errand — an application, a big project, a class you're working toward. Once it has a deadline, Scaffold breaks it into milestones and steps for you automatically."
+      )}
+      <p style="font-size: 12px; color: #6B7280; margin-top: 24px; line-height: 1.5;">That's it — everything else in Scaffold builds on those four. Take them one at a time; there's no rush.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

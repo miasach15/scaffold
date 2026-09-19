@@ -163,7 +163,7 @@ serve(async (_req) => {
         if (priorities.length > 0) {
           parts.push(
             sectionLabel("Today's Core Priorities") +
-              `<div style="display:flex; gap:10px; margin-bottom:28px;">` +
+              `<div class="priority-row" style="display:flex; gap:10px; margin-bottom:28px;">` +
               priorities.map((p, i) => priorityCard(i + 1, p.category, p.title, accentFor(p.category))).join("") +
               `</div>`
           );
@@ -196,20 +196,41 @@ serve(async (_req) => {
         </div>`
         : "";
 
-      const html = `
-        <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #FDFCFB;">
-          <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #D9D3E6; margin-bottom:24px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div style="width:8px; height:8px; border-radius:50%; background:#FF9286; flex-shrink:0;"></div>
-              <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#8290D8;">Scaffold</div>
-            </div>
-            <div style="font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</div>
-          </div>
-          <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
-          ${bodyHtml}
-          ${lookingAhead}
-          <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
-        </div>`;
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your day</title>
+<style>
+  body { margin:0; padding:0; background:#FDFCFB; }
+  /* Three priority cards side by side get too cramped to read on a phone-width
+     screen — stack them instead, same cards just full-width and top-to-bottom. */
+  @media (max-width: 480px) {
+    .priority-row { flex-direction: column !important; }
+    .priority-row > div { flex: none !important; margin-bottom: 10px; }
+    .priority-row > div:last-child { margin-bottom: 0; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background:#FDFCFB;">
+  <div style="width:100%; background:#FDFCFB;">
+    <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #FDFCFB;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #D9D3E6; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:8px; height:8px; border-radius:50%; background:#FF9286; flex-shrink:0;"></div>
+          <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#8290D8;">Scaffold</div>
+        </div>
+        <div style="font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</div>
+      </div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
+      ${bodyHtml}
+      ${lookingAhead}
+      <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
+    </div>
+  </div>
+</body>
+</html>`;
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
