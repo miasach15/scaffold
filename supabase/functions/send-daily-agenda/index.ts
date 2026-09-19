@@ -57,7 +57,7 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }
 
-const CARD_BG = "#F6F6F4";
+const CARD_BG = "#FAFAF9";
 function sectionLabel(text: string, color = "#9CA3AF") {
   return `<div style="font-size:11px; font-weight:700; color:${color}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">${text}</div>`;
 }
@@ -197,18 +197,18 @@ serve(async (_req) => {
         : "";
 
       const html = `
-        <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #ffffff;">
-          <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #ECECEC; margin-bottom:24px;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 28px; background: #FDFCFB;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid #D9D3E6; margin-bottom:24px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <div style="width:8px; height:8px; border-radius:50%; background:#FF9286; flex-shrink:0;"></div>
-              <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#1A1A2E;">Scaffold</div>
+              <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size:20px; color:#8290D8;">Scaffold</div>
             </div>
             <div style="font-size:10.5px; font-weight:700; color:#9CA3AF; letter-spacing:0.5px; white-space:nowrap;">DAILY AGENDA &bull; ${dateShort}</div>
           </div>
           <div style="font-family: 'Instrument Serif', Georgia, serif; font-size:28px; color:#1A1A2E; margin-bottom:24px;">Good morning${firstName ? `, ${firstName}` : ""}.</div>
           ${bodyHtml}
           ${lookingAhead}
-          <div style="border-top:1px solid #ECECEC; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
+          <div style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px; font-size:11.5px; color:#9CA3AF;">Sent automatically by Scaffold.</div>
         </div>`;
 
       const res = await fetch("https://api.resend.com/emails", {
