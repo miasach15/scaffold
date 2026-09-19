@@ -31,6 +31,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
       >
         <button
           onClick={() => setExpanded((x) => !x)}
+          className="expand-toggle"
           style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
         >
           {expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />}

@@ -27,6 +27,7 @@ export default function EduDeadlineRow({ item, col, sessions, onToggleItemDone, 
         <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>{item.type}</div>
         <button
           onClick={() => setExpanded((x) => !x)}
+          className="expand-toggle"
           style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
         >
           {sessions.length > 0 && (expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />)}

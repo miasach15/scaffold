@@ -509,6 +509,15 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
         button:disabled { cursor: default; }
+        /* A click still leaves a button focused, which some browsers/webviews then draw
+           a persistent outline around — only actually useful for keyboard navigation, so
+           it stays for that (:focus-visible) and gets dropped for a mouse click. */
+        button:focus:not(:focus-visible) { outline: none; }
+        /* Expand/collapse toggles (a "break it down" group or Education deadline row on
+           Tasks) get tapped repeatedly in quick succession — the global press-shrink felt
+           like a bounce there specifically, so they skip it and rely on the row's own
+           hover shadow for feedback instead. */
+        .expand-toggle:active:not(:disabled) { transform: none !important; }
         input, select, textarea { font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: ${PRIMARY} !important; box-shadow: 0 0 0 3px rgba(110,147,183,0.16); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
