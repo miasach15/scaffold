@@ -1,23 +1,9 @@
-import { PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { serifFont } from "../../lib/constants";
 
-// The brand kit's monogram — three stacked bars (widening top to bottom) on a solid
-// rounded badge, per its "Logo & Monogram" section. Shared so every wordmark
-// (Sidebar, AuthScreen, Dashboard) uses the exact same mark.
-export function Monogram({ size = 28, color = PRIMARY_DARK }) {
-  return (
-    <div
-      style={{
-        width: size, height: size, borderRadius: size * 0.2, background: color,
-        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-      }}
-    >
-      <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ display: "block" }}>
-        <rect x="13.5" y="10" width="13" height="4" rx="2" fill="#fff" />
-        <rect x="9" y="18" width="22" height="4" rx="2" fill="#fff" />
-        <rect x="5" y="27" width="30" height="4" rx="2" fill="#fff" />
-      </svg>
-    </div>
-  );
+// The brand kit's monogram — the "S" mark, transparent background. Shared so every
+// wordmark (Sidebar, AuthScreen, OnboardingQuiz) uses the exact same mark.
+export function Monogram({ size = 28 }) {
+  return <img src="/logo-mark.png" width={size} height={size} alt="" style={{ display: "block", flexShrink: 0 }} />;
 }
 
 // `right` is an optional slot for a page-specific stat/badge next to the title (e.g.

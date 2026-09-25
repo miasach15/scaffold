@@ -70,7 +70,7 @@ export default function OnboardingQuiz({ onComplete }) {
       `}</style>
       <div className="onboard-card" style={{ ...cardStyle, width: 460, maxWidth: "100%", padding: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <Monogram size={26} color={SKY} />
+          <Monogram size={26} />
           <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
         </div>
         <div style={{ display: "flex", gap: 5, marginBottom: 22 }}>

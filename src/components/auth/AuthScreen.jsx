@@ -88,7 +88,7 @@ export default function AuthScreen() {
       `}</style>
       <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <Monogram size={26} color={SKY} />
+          <Monogram size={26} />
           <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
         </div>
         <div style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>
