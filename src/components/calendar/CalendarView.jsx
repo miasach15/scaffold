@@ -6,7 +6,7 @@ import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, tasks, dueChips, onCellClick, onToggleTask, onChipClick, onOpenFocus, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const onDropItem = (kind, id, iso) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, null));
@@ -19,19 +19,20 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const now = new Date();
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
 
-  // Anything that's actually DUE (a deadline) is filled solid in its own color — a plain
-  // task, a breakdown's overall due date, an Education deadline, a goal deadline/
-  // milestone. Anything that's just a day of WORK toward something (a breakdown step, a
-  // goal action) stays outline-only, same as before — it's not a deadline, it's a to-do.
-  const isDueKind = (chip) => (chip.kind === "task" && !chip.groupId && !chip.eduId) || chip.kind === "task-group-due" || chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
+  // Calendar shows deadlines, not day-to-day to-dos: Education due dates (homework,
+  // assignments, tests) and goal deadlines/milestones. Plain tasks, "break it down"
+  // groups (their own due date and their individual work-day steps alike), and
+  // Education work sessions ("Work on: X"/"Study: X") never render here at all — those
+  // live on the Tasks/Education pages instead. This intentionally narrows what used to
+  // render on Calendar; see the Tasks page for the day-to-day list.
+  const isDueKind = (chip) => chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
   const chipStyle = (chip) => {
     if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     if (isDueKind(chip)) {
       const c = chip.kind === "edu" ? eduCol : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
       return { bg: c.border, border: c.border, text: "#fff" };
     }
-    // "goal" (small actions) and grouped "task" (breakdown steps): colored outline only —
-    // work days, not deadlines.
+    // "goal" (small actions): colored outline only — a work day, not a deadline.
     const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     return { ...c, bg: "#fff" };
   };
@@ -39,27 +40,18 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     if (isDueKind(chip)) return `Due: ${chip.title}`;
     return chip.title;
   };
-  // A plain task's date IS its due date now, so it belongs in "Due" with everything else
-  // that's a deadline (goal deadlines/milestones, Education). The "Tasks" row is reserved
-  // for the actual day-to-day doing: a step from a "break it down" task (its date is the
-  // day you work on that step, not the project's overall due date) and goal actions
-  // (already a concrete "do this on this day" step, not an aggregate deadline). Assessments
-  // sit in "All day" instead — an assessment is the whole day it happens, not a step you
-  // work through.
-  // A due chip with a specific time (an edu deadline or a breakdown's overall due date)
-  // gets the same treatment a timed plain task already gets — it moves into the hourly
-  // grid at that time instead of sitting in a flat, dateless-looking strip row.
-  const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment") || c.kind === "task-group-due" || (c.kind === "task" && !c.groupId && !c.eduId)));
-  // An Education-generated "Work on:"/"Study" session is a plain (ungrouped) task, but
-  // it's still a work day, not a deadline — the deadline is the edu_item's own due date
-  // (the separate "edu" chip above). So it belongs here, same as a breakdown step.
-  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal" || (c.kind === "task" && (c.groupId || c.eduId)));
+  // Assessments sit in "All day" instead — a test is the whole day it happens, not a
+  // step you work through. A due chip with a specific time (an Education deadline) gets
+  // the same treatment a timed event already gets — it moves into the hourly grid at
+  // that time instead of sitting in a flat, dateless-looking strip row.
+  const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment")));
+  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal");
   const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment" && c.start == null);
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
     ...assessmentChips,
   ];
-  const timedDueChips = dueChips.filter((c) => c.start != null && (c.kind === "edu" || c.kind === "task-group-due"));
+  const timedDueChips = dueChips.filter((c) => c.start != null && c.kind === "edu");
 
   const isDay = !!dayView;
   const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));
@@ -135,7 +127,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 the deadline-vs-work distinction, so splitting them into separate rows was
                 mostly redundant with that. */}
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Tasks" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
+              <StripRow label="Due" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
@@ -171,9 +163,6 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                       {events.filter((e) => e.date === iso && e.start != null).map((e) => (
                         <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} />
                       ))}
-                      {tasks.filter((t) => t.date === iso && t.start != null).map((t) => (
-                        <CalBlock key={t.id} item={t} color={{ ...(CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal), bg: "#fff" }} done={t.done} isTask onOpenFocus={() => onOpenFocus(t.id, t.title)} onToggleDone={() => onToggleTask(t.id, !t.done)} />
-                      ))}
                       {timedDueChips.filter((c) => c.date === iso).map((c) => (
                         <CalBlock key={c.kind + c.id} item={{ ...c, title: `${chipLabel(c)} · ${decimalToTimeLabel(c.start)}`, duration: 30 }} color={chipStyle(c)} onEditEvent={() => onChipClick(c)} />
                       ))}
@@ -192,12 +181,10 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
         </div>
       </div>
       <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, marginRight: 56, flexShrink: 0 }}>
-        {/* Drag-to-reschedule is HTML5 drag-and-drop (see CalBlock's draggable prop), which
-            touch screens don't trigger — the hint below is wrong there, so swap it for
-            wording that doesn't promise a gesture that won't do anything on a phone. Also
-            leaves room on the right so the floating quick-capture button (bottom-right,
-            see StickyNoteCorner) never sits on top of this text on a narrow screen. */}
-        <span className="cal-hint-desktop">Click any cell to add an event or task. Drag a task to reschedule it.</span>
+        {/* Click vs. tap wording for desktop vs. touch. Also leaves room on the right so
+            the floating quick-capture button (bottom-right, see StickyNoteCorner) never
+            sits on top of this text on a narrow screen. */}
+        <span className="cal-hint-desktop">Click any cell to add an event or task.</span>
         <span className="cal-hint-mobile">Tap any cell to add an event or task.</span>
         <style>{`
           .cal-hint-mobile { display: none; }

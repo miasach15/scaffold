@@ -447,7 +447,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
     let date = dayAfterLast > cap ? cap : dayAfterLast;
     if (date < todayISO) date = todayISO;
     const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : `Work on: ${item.title}`;
-    addEduSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
+    addEduSession(eduId, sessionTitle, date, "17:00", 60, true);
   };
 
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
@@ -648,12 +648,9 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onSetDayView={setDayView}
             onEnterMonth={enterMonth}
             events={events}
-            tasks={visibleTasks}
             dueChips={dueChips}
             onCellClick={(date, hour) => setModal({ date, hour })}
-            onToggleTask={setTaskDone}
             onChipClick={onChipClick}
-            onOpenFocus={openFocus}
             onRescheduleTask={rescheduleTask}
             onRescheduleEvent={(id, date) => updateEvent(id, { date })}
             onEditEvent={setEditingEvent}

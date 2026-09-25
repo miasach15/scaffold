@@ -177,12 +177,14 @@ export default function EducationView({
     resetAddForm();
   };
 
-  // one-click quick add from the day picker: Assessments get a timed study session, Assignments get an all-day sub-task
+  // one-click quick add from the day picker: every quick-added session is all-day,
+  // regardless of type — a timed default (previously 5pm for Assessments) just meant an
+  // extra edit every time.
   const quickAddSession = (eduId, date) => {
     const item = eduItems.find((e) => e.id === eduId);
     if (!item || !date) return;
     const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : `Work on: ${item.title}`;
-    onAddSession(eduId, sessionTitle, date, "17:00", 60, item.type === "Assignment");
+    onAddSession(eduId, sessionTitle, date, "17:00", 60, true);
   };
 
   // Replaces every existing session/sub-task for this item with a fresh AI-generated
@@ -205,7 +207,7 @@ export default function EducationView({
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
       tasks.filter((t) => t.eduId === item.id).forEach((t) => onRemoveSession(t.id));
-      steps.forEach((stepTitle, i) => onAddSession(item.id, stepTitle, dates[i], "17:00", 60, item.type === "Assignment"));
+      steps.forEach((stepTitle, i) => onAddSession(item.id, stepTitle, dates[i], "17:00", 60, true));
     } catch (e) {
       setSessionBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
