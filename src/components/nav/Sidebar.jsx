@@ -103,7 +103,7 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Monogram size={30} />
+              <Monogram size={30} recolor />
               <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
             </div>
             <button

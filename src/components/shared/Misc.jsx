@@ -1,8 +1,28 @@
-import { serifFont } from "../../lib/constants";
+import { PRIMARY, serifFont } from "../../lib/constants";
 
 // The brand kit's monogram — the "S" mark, transparent background. Shared so every
 // wordmark (Sidebar, AuthScreen, OnboardingQuiz) uses the exact same mark.
-export function Monogram({ size = 28 }) {
+// `recolor`: once signed in, the Sidebar's copy (top-left, every page) tracks the
+// user's chosen accent color instead of staying the fixed brand purple/coral — masks the
+// PNG's alpha channel with the current --primary CSS var so the whole mark becomes one
+// solid theme color. The pre-login mark (AuthScreen/OnboardingQuiz) stays native-colored,
+// since there's no "your color" yet at that point.
+export function Monogram({ size = 28, recolor = false }) {
+  if (recolor) {
+    return (
+      <div
+        role="img"
+        aria-label="Scaffold"
+        style={{
+          width: size, height: size, flexShrink: 0, background: PRIMARY,
+          WebkitMaskImage: "url(/logo-mark.png)", maskImage: "url(/logo-mark.png)",
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+        }}
+      />
+    );
+  }
   return <img src="/logo-mark.png" width={size} height={size} alt="" style={{ display: "block", flexShrink: 0 }} />;
 }
 
