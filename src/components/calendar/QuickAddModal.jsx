@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { TONE } from "../../lib/constants";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
-import { ghostBtn, inputStyle, labelStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { DatePickerButton } from "../shared/Misc";
 
 export default function QuickAddModal({ initial, event, hasFollowing, onClose, onSave, onUpdate, onDelete }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -63,7 +64,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label style={labelStyle}>Date</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} {...noTypeDateProps} style={inputStyle} />
+            <DatePickerButton value={date} onChange={(e) => setDate(e.target.value)} style={{ width: "100%" }} />
           </div>
           {!allDay && (
             <div style={{ flex: 1 }}>

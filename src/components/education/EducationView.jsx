@@ -3,8 +3,8 @@ import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { ghostBtn, inputStyle, noTypeDateProps, primaryBtn } from "../../lib/styles";
-import { AddRow, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { AddRow, DatePickerButton, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
 import EduSessionsModal from "./EduSessionsModal";
@@ -334,7 +334,7 @@ export default function EducationView({
           <datalist id="subjects-datalist">
             {knownSubjects.map((s) => <option key={s} value={s} />)}
           </datalist>
-          <input type="date" value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} {...noTypeDateProps} style={{ ...inputStyle, width: 150, border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
+          <DatePickerButton value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} placeholder="Due date" style={{ border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
           </button>

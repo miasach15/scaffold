@@ -1,4 +1,8 @@
-import { PRIMARY, serifFont } from "../../lib/constants";
+import { useRef } from "react";
+import { Calendar } from "lucide-react";
+import { PRIMARY, BORDER, MUTED, serifFont } from "../../lib/constants";
+import { formatShortDate } from "../../lib/dateHelpers";
+import { noTypeDateProps } from "../../lib/styles";
 
 // The brand kit's monogram — the "S" mark, transparent background. Shared so every
 // wordmark (Sidebar, AuthScreen, OnboardingQuiz) uses the exact same mark.
@@ -24,6 +28,54 @@ export function Monogram({ size = 28, recolor = false }) {
     );
   }
   return <img src="/logo-mark.png" width={size} height={size} alt="" style={{ display: "block", flexShrink: 0 }} />;
+}
+
+// A date field that shows only a calendar icon (plus the picked date once there is one)
+// instead of a typeable mm/dd/yyyy box — a lot of people don't realize that box has a
+// clickable picker and just try to type the date out, which is slower and easy to get
+// wrong. The real `<input type="date">` stays in the DOM (still needed for the native
+// picker and for form semantics) but is fully invisible and un-clickable; the button
+// calls `showPicker()` on it directly. Falls back to focusing it on browsers without
+// `showPicker` (older Safari/Firefox) — typing is still blocked there too via
+// `noTypeDateProps`, so at worst you fall back to the icon-only look without the popup.
+export function DatePickerButton({ value, onChange, title, placeholder = "Add date", style, inputRef }) {
+  const ownRef = useRef(null);
+  const ref = inputRef || ownRef;
+  const open = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof el.showPicker === "function") {
+      try { el.showPicker(); } catch { el.focus(); }
+    } else {
+      el.focus();
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={open}
+      title={title}
+      style={{
+        position: "relative", display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
+        fontSize: 13, color: value ? "#1A1A2E" : MUTED, cursor: "pointer", whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      <Calendar size={14} strokeWidth={2.2} color={PRIMARY} style={{ flexShrink: 0 }} />
+      {value ? formatShortDate(value) : placeholder}
+      <input
+        ref={ref}
+        type="date"
+        value={value || ""}
+        onChange={onChange}
+        {...noTypeDateProps}
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none", border: "none", padding: 0 }}
+      />
+    </button>
+  );
 }
 
 // `right` is an optional slot for a page-specific stat/badge next to the title (e.g.

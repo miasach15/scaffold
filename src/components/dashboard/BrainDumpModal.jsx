@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { SURFACE } from "../../lib/constants";
-import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { DatePickerButton } from "../shared/Misc";
 import { uid } from "../../lib/id";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -170,13 +171,12 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                       ))}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                      <input
-                        type="date"
+                      <DatePickerButton
                         value={d.date}
                         onChange={(e) => updateDraft(d.id, { date: e.target.value, breakdown: e.target.value ? d.breakdown : false })}
                         title="Optional: leave blank to skip a due date"
-                        {...noTypeDateProps}
-                        style={{ ...inputStyle, padding: "3px 6px", fontSize: 11.5 }}
+                        placeholder="No due date"
+                        style={{ padding: "3px 8px", fontSize: 11.5 }}
                       />
                       {d.date && (
                         <button
