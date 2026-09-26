@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Clock, Flame } from "lucide-react";
+import { Brain, Clock, Flame, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
-import { ghostBtn, inputStyle, noTypeDateProps, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -261,18 +261,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               </div>
             </div>
 
-            <div style={{ position: "relative", width: 148, height: 148, margin: "0 auto 20px" }}>
-              <svg width={148} height={148} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={74} cy={74} r={68} fill="none" stroke="#DDE1EE" strokeWidth={6} />
-                <circle
-                  cx={74} cy={74} r={68} fill="none" stroke={PRIMARY_DARK} strokeWidth={6} strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 68} strokeDashoffset={2 * Math.PI * 68 * 0.04}
-                />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 33, color: INK }}>{pad(focusMinutes)}:00</div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6 }}>{focusMinutes} min focus</div>
-              </div>
+            <div style={{ textAlign: "center", margin: "4px 0 20px" }}>
+              <div style={{ fontFamily: serifFont, fontSize: 48, color: INK, letterSpacing: 0.5 }}>{pad(focusMinutes)}:00</div>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginTop: 2 }}>{focusMinutes} min focus</div>
             </div>
 
             <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
@@ -311,10 +302,14 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 if (t) onStartFocus(t.id, t.title, focusMinutes);
               }}
               disabled={!focusTaskId}
-              className="btn-primary"
-              style={{ ...primaryBtn, width: "100%", padding: "12px 0", fontSize: 14.5, opacity: focusTaskId ? 1 : 0.5 }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
+                fontSize: 14.5, fontWeight: 700, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
+              }}
             >
-              Start
+              <Play size={16} fill="#fff" />
+              Start Session
             </button>
           </div>
 
