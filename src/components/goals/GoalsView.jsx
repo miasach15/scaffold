@@ -3,7 +3,7 @@ import { ChevronUp, Plus } from "lucide-react";
 import { BORDER, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
-import { inputStyle, primaryBtn } from "../../lib/styles";
+import { inputStyle, noTypeDateProps, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
 
@@ -123,6 +123,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
                 value={outcomeDeadline}
                 onChange={(e) => setOutcomeDeadline(e.target.value)}
                 title="Give it an end date and every milestone/action gets a date spread automatically around your existing events and tasks, instead of landing undated"
+                {...noTypeDateProps}
                 style={{ ...inputStyle, width: 150, background: "#fff" }}
               />
             </div>
@@ -146,7 +147,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
               <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130 }}>
                 {categoryKeys.map((c) => <option key={c}>{c}</option>)}
               </select>
-              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" style={{ ...inputStyle, width: 150 }} />
+              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} title="Goal deadline (optional)" {...noTypeDateProps} style={{ ...inputStyle, width: 150 }} />
             </div>
           )}
         </div>

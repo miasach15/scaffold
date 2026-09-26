@@ -4,7 +4,7 @@ import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsCo
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
-import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, noTypeDateProps, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TodaySection from "./TodaySection";
@@ -314,7 +314,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
           <div>
             <div style={fieldLabelStyle}>Due by</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} title="Optional: a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} {...noTypeDateProps} title="Optional: a task with no due date just sits in Today until you finish it" style={{ ...inputStyle, width: 150 }} />
               {date && (
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)} title="Optional: a specific time it's due, works fine alongside breaking it down" style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }} />
               )}

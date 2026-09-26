@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { TONE } from "../../lib/constants";
 import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
-import { ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
@@ -43,6 +43,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
                 autoFocus
                 value={task.date || ""}
                 onChange={(e) => onSetDate(task.id, e.target.value)}
+                {...noTypeDateProps}
                 style={{ ...inputStyle, width: 150, fontSize: 12.5, padding: "5px 8px" }}
               />
               {onSetStart && (

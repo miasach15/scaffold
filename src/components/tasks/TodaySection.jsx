@@ -3,7 +3,7 @@ import { BatteryLow, Clock } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
-import { ghostBtn, inputStyle } from "../../lib/styles";
+import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
 
@@ -281,6 +281,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                     value={it.date || ""}
                     onChange={(e) => it.onSetDate?.(e.target.value)}
                     onBlur={() => setEditingOverdueId(null)}
+                    {...noTypeDateProps}
                     style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px", minHeight: 44 }}
                   />
                 ) : (

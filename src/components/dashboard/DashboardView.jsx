@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
-import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, noTypeDateProps, primaryBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -392,7 +392,7 @@ function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, o
           onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditing(false); }}
           style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
         >
-          <input type="date" autoFocus value={chip.date} onChange={(e) => handleDateChange(e.target.value)} style={{ ...inputStyle, width: 128, fontSize: 11.5, padding: "3px 6px" }} />
+          <input type="date" autoFocus value={chip.date} onChange={(e) => handleDateChange(e.target.value)} {...noTypeDateProps} style={{ ...inputStyle, width: 128, fontSize: 11.5, padding: "3px 6px" }} />
           <input type="time" value={decimalToTimeInput(chip.start)} onChange={(e) => handleTimeChange(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 92, fontSize: 11.5, padding: "3px 6px" }} />
         </div>
       ) : (

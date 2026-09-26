@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FileText, Pencil, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, getLocalToday, isOverdueTask, timeToDecimal } from "../../lib/dateHelpers";
-import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
@@ -71,6 +71,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
             autoFocus
             value={t.date || ""}
             onChange={(e) => onSetDate(t.id, e.target.value)}
+            {...noTypeDateProps}
             style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
           />
           {onSetStart && (

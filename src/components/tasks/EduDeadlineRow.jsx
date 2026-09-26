@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { BORDER } from "../../lib/constants";
 import { decimalToTimeLabel, formatShortDate } from "../../lib/dateHelpers";
-import { inputStyle } from "../../lib/styles";
+import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import TaskRow from "./TaskRow";
@@ -45,6 +45,7 @@ export default function EduDeadlineRow({ item, col, sessions, onToggleItemDone, 
               autoFocus
               value={item.dueDate}
               onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
+              {...noTypeDateProps}
               style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
             />
           </div>

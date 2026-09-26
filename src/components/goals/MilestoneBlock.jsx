@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatShortDate } from "../../lib/dateHelpers";
-import { inputStyle } from "../../lib/styles";
+import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import { INK, MUTED, PRIMARY_DARK } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
@@ -124,6 +124,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
             value={milestone.dueDate || ""}
             onChange={(e) => { onSetMilestoneDueDate(e.target.value); setEditingMilestoneDate(false); }}
             onBlur={() => setEditingMilestoneDate(false)}
+            {...noTypeDateProps}
             style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
           />
         ) : milestone.dueDate ? (
@@ -187,6 +188,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
                   value={a.dueDate || ""}
                   onChange={(e) => { onSetActionDueDate(a.id, e.target.value); setEditingDateId(null); }}
                   onBlur={() => setEditingDateId(null)}
+                  {...noTypeDateProps}
                   style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
                 />
               ) : a.dueDate ? (
@@ -203,7 +205,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
       )}
       <div style={{ display: "flex", gap: 6, paddingLeft: 28, flexWrap: "wrap", rowGap: 6 }}>
         <input placeholder="Next action..." value={actionTitle} onChange={(e) => setActionTitle(e.target.value)} style={{ ...inputStyle, flex: "1 1 140px", minWidth: 0, fontSize: 12.5, padding: "6px 8px" }} onKeyDown={(e) => e.key === "Enter" && addAction()} />
-        <input type="date" value={actionDate} onChange={(e) => setActionDate(e.target.value)} style={{ ...inputStyle, width: 124, fontSize: 12.5, padding: "6px 8px" }} />
+        <input type="date" value={actionDate} onChange={(e) => setActionDate(e.target.value)} {...noTypeDateProps} style={{ ...inputStyle, width: 124, fontSize: 12.5, padding: "6px 8px" }} />
         <button onClick={addAction} style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px" }}>Add</button>
       </div>
     </div>

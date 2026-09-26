@@ -4,7 +4,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, serifFont } from "../../lib/constants";
-import { deleteBtn, inputStyle, ghostBtn } from "../../lib/styles";
+import { deleteBtn, inputStyle, ghostBtn, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import MilestoneBlock from "./MilestoneBlock";
 
@@ -146,6 +146,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                   value={goal.deadline || ""}
                   onChange={(e) => { onSetGoalDeadline(goal.id, e.target.value); setEditingDeadline(false); }}
                   onBlur={() => setEditingDeadline(false)}
+                  {...noTypeDateProps}
                   style={{ ...inputStyle, width: 138, fontSize: 11.5, padding: "3px 6px" }}
                 />
               ) : goal.deadline ? (

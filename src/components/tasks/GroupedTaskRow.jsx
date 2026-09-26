@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
-import { inputStyle } from "../../lib/styles";
+import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import TaskRow from "./TaskRow";
 
@@ -47,6 +47,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
               autoFocus
               value={groupDueDate || ""}
               onChange={(e) => e.target.value && onSetGroupDeadline(e.target.value, groupDueStart)}
+              {...noTypeDateProps}
               style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
             />
             <input

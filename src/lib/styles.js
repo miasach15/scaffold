@@ -12,3 +12,12 @@ export const deleteBtn = { border: "none", background: "none", fontSize: 16, col
 export const rowStyle = { display: "flex", alignItems: "center", gap: 10, padding: "9px 4px", borderBottom: `1px solid ${BORDER}` };
 export const overlayStyle = { position: "fixed", inset: 0, background: "rgba(26,26,46,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 };
 export const modalStyle = { background: SURFACE, borderRadius: 14, padding: 20, width: 360, maxWidth: "100%", boxShadow: "0 20px 50px rgba(26,26,46,0.18)" };
+
+// Spread onto every native `<input type="date">` — blocks typing a date out by hand (no
+// keyboard entry, no paste) while leaving the calendar-picker icon fully clickable. A lot
+// of people don't realize that icon opens a picker and try to type the date instead,
+// which is slower and easy to fumble; this makes the icon the only way in.
+export const noTypeDateProps = {
+  onKeyDown: (e) => { if (e.key !== "Tab") e.preventDefault(); },
+  onPaste: (e) => e.preventDefault(),
+};

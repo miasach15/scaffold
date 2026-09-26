@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { SURFACE } from "../../lib/constants";
-import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 import { uid } from "../../lib/id";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -175,6 +175,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                         value={d.date}
                         onChange={(e) => updateDraft(d.id, { date: e.target.value, breakdown: e.target.value ? d.breakdown : false })}
                         title="Optional: leave blank to skip a due date"
+                        {...noTypeDateProps}
                         style={{ ...inputStyle, padding: "3px 6px", fontSize: 11.5 }}
                       />
                       {d.date && (
