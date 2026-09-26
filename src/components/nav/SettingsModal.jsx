@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
-import { CATEGORY_COLOR_SWATCHES, MUTED_RAINBOW_GRADIENT, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
@@ -9,6 +9,21 @@ import { usePushNotifications } from "../../hooks/usePushNotifications";
 import CategoryEditor from "../shared/CategoryEditor";
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
+
+// A plain, uncolored color-wheel symbol — shown on a custom swatch before any custom
+// color has been picked, instead of an actual colored preview (there's no color to
+// preview yet).
+function ColorWheelIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="3" x2="12" y2="21" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+      <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" />
+    </svg>
+  );
+}
 
 export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
@@ -106,11 +121,13 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
               >
                 <div
                   style={{
-                    width: 28, height: 28, borderRadius: "50%",
-                    background: isCustom ? customHex : MUTED_RAINBOW_GRADIENT,
+                    width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: isCustom ? customHex : "#F3F4F6",
                     boxShadow: isCustom ? `0 0 0 3px ${customHex}1F` : "none",
                   }}
-                />
+                >
+                  {!isCustom && <ColorWheelIcon size={16} />}
+                </div>
                 <span style={{ fontSize: 12, fontWeight: 600, color: isCustom ? customHex : "#4A5568" }}>Custom</span>
                 <input
                   type="color"
@@ -160,11 +177,13 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                           title="Custom color"
                           style={{
                             position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                            background: isCustom ? customHex : MUTED_RAINBOW_GRADIENT,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            background: isCustom ? customHex : "#F3F4F6",
                             border: `2px solid ${isCustom ? customHex : "transparent"}`,
                             boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
                           }}
                         >
+                          {!isCustom && <ColorWheelIcon size={14} />}
                           <input
                             type="color"
                             value={customHex}
