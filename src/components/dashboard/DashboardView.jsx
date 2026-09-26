@@ -45,7 +45,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, autoOpenBrainDump, onAutoOpenBrainDumpHandled }) {
+export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -253,67 +253,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
         </div>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
-          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-              <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
-                <Clock size={14} />
-              </div>
-            </div>
-
-            <div style={{ textAlign: "center", margin: "4px 0 20px" }}>
-              <div style={{ fontFamily: serifFont, fontSize: 48, color: INK, letterSpacing: 0.5 }}>{pad(focusMinutes)}:00</div>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginTop: 2 }}>{focusMinutes} min focus</div>
-            </div>
-
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
-              {FOCUS_PRESETS.map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setFocusMinutes(m)}
-                  style={{
-                    ...ghostBtn, padding: "6px 14px", background: "#fff",
-                    borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
-                    color: focusMinutes === m ? PRIMARY_DARK : MUTED,
-                    fontWeight: focusMinutes === m ? 700 : 600,
-                  }}
-                >
-                  {m}m
-                </button>
-              ))}
-            </div>
-
-            {focusableTasks.length > 0 ? (
-              <select
-                value={focusTaskId || ""}
-                onChange={(e) => setFocusTaskId(e.target.value)}
-                title="What this session is for"
-                style={{ ...inputStyle, width: "100%", marginBottom: 10 }}
-              >
-                {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-              </select>
-            ) : (
-              <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Nothing due today to focus on yet.</div>
-            )}
-
-            <button
-              onClick={() => {
-                const t = focusableTasks.find((x) => x.id === focusTaskId);
-                if (t) onStartFocus(t.id, t.title, focusMinutes);
-              }}
-              disabled={!focusTaskId}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
-                fontSize: 14.5, fontWeight: 700, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
-              }}
-            >
-              <Play size={16} fill="#fff" />
-              Start Session
-            </button>
-          </div>
-
-          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div className="dv-card" style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <EmptyState text="Nothing due soon." />
@@ -350,6 +290,77 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               </div>
             )}
           </div>
+
+          {/* Sits at the bottom of the right column — that's "the corner" for Dashboard's
+              own copy of the focus timer. When a session is already running, this becomes
+              an empty slot: App.jsx portals the SAME floating-timer component (see
+              FocusTimerModal's portalTarget) into it instead of leaving the idle picker
+              showing underneath, so there's never two timers visible at once. Leaving
+              Dashboard unmounts this slot, which is exactly what lets the timer reappear
+              as the normal floating bottom-right card everywhere else. */}
+          {hasActiveFocusSession ? (
+            <div ref={focusSlotRef} style={{ ...dividedSection, flexShrink: 0 }} />
+          ) : (
+            <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
+                <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
+                  <Clock size={14} />
+                </div>
+              </div>
+
+              <div style={{ textAlign: "center", margin: "4px 0 20px" }}>
+                <div style={{ fontFamily: serifFont, fontSize: 48, color: INK, letterSpacing: 0.5 }}>{pad(focusMinutes)}:00</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginTop: 2 }}>{focusMinutes} min focus</div>
+              </div>
+
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+                {FOCUS_PRESETS.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setFocusMinutes(m)}
+                    style={{
+                      ...ghostBtn, padding: "6px 14px", background: "#fff",
+                      borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
+                      color: focusMinutes === m ? PRIMARY_DARK : MUTED,
+                      fontWeight: focusMinutes === m ? 700 : 600,
+                    }}
+                  >
+                    {m}m
+                  </button>
+                ))}
+              </div>
+
+              {focusableTasks.length > 0 ? (
+                <select
+                  value={focusTaskId || ""}
+                  onChange={(e) => setFocusTaskId(e.target.value)}
+                  title="What this session is for"
+                  style={{ ...inputStyle, width: "100%", marginBottom: 10 }}
+                >
+                  {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+              ) : (
+                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Nothing due today to focus on yet.</div>
+              )}
+
+              <button
+                onClick={() => {
+                  const t = focusableTasks.find((x) => x.id === focusTaskId);
+                  if (t) onStartFocus(t.id, t.title, focusMinutes);
+                }}
+                disabled={!focusTaskId}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
+                  fontSize: 14.5, fontWeight: 500, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
+                }}
+              >
+                <Play size={16} fill="#fff" />
+                Start Session
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

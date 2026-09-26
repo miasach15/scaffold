@@ -91,6 +91,11 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const [modal, setModal] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [focusTask, setFocusTask] = useState(null);
+  // Set (via a callback ref) once Dashboard has mounted its own focus-timer slot, and
+  // reset back to null automatically when Dashboard unmounts (React calls a callback ref
+  // with null on unmount) — that's what lets the floating corner timer reappear the
+  // moment you navigate away, with no extra effect needed.
+  const [dashboardFocusSlot, setDashboardFocusSlot] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -616,6 +621,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onUpdateEduDeadline={updateEduDeadline}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
+            hasActiveFocusSession={!!focusTask}
+            focusSlotRef={setDashboardFocusSlot}
           />
         )}
         {view === "calendar" && monthView && (
@@ -823,6 +830,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); }}
           defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
           onOpenDetail={openTaskDetail}
+          portalTarget={view === "dashboard" ? dashboardFocusSlot : null}
         />
       )}
 

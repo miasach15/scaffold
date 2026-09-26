@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { pad, toISO } from "../../lib/dateHelpers";
@@ -34,7 +35,7 @@ async function notifySessionDone(title) {
   }
 }
 
-export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail }) {
+export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   const initial = (defaultMinutes || 25) * 60;
@@ -192,14 +193,12 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   }, [celebrating, tasks, task.id]);
 
   if (!celebrating) {
-    return (
-      <div
-        style={{
-          position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: 20, zIndex: 150,
-          width: 340, maxWidth: "calc(100vw - 32px)",
-        }}
-      >
-        <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px" }}>
+    // Rendered either as a fixed bottom-right floating card (the default, everywhere
+    // except Dashboard), or portaled into Dashboard's own focus-timer slot as a plain
+    // in-flow card — same single component instance either way, so the running timer's
+    // state never resets when `portalTarget` flips (see App.jsx's dashboardFocusSlot).
+    const card = (
+      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "none" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -250,7 +249,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
-                fontSize: 14.5, fontWeight: 700, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
+                fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
               }}
             >
               {running ? <Pause size={16} fill="#fff" /> : <Play size={16} fill="#fff" />}
@@ -293,7 +292,18 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               </div>
             </div>
           )}
-        </div>
+      </div>
+    );
+
+    if (portalTarget) return createPortal(card, portalTarget);
+    return (
+      <div
+        style={{
+          position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: 20, zIndex: 150,
+          width: 340, maxWidth: "calc(100vw - 32px)",
+        }}
+      >
+        {card}
       </div>
     );
   }
