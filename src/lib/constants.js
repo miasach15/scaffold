@@ -100,6 +100,34 @@ export function resolveTheme(themeColor) {
   return THEME_PRESETS[themeColor] || THEME_PRESETS[DEFAULT_THEME];
 }
 
+// Mixes a hex color toward black by `amount` (0 = unchanged, 1 = black) — used to derive
+// a readable dark "text" shade for a custom category color, the same role each preset's
+// hand-picked text color plays below.
+function darkenHex(hex, amount) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16) || 0;
+  const g = parseInt(h.slice(2, 4), 16) || 0;
+  const b = parseInt(h.slice(4, 6), 16) || 0;
+  const mix = (c) => Math.round(c * (1 - amount));
+  const toHex = (c) => c.toString(16).padStart(2, "0");
+  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+}
+
+// A category's own color (picked per-category in Settings) is either one of the 11
+// preset keys, or — same "custom:#rrggbb" convention as resolveTheme above — a color
+// picked via that category's own color wheel. Derives the same {bg,border,text,accent}
+// shape CATEGORY_COLOR_SWATCHES already provides per preset, just computed from the raw
+// hex instead of hand-picked.
+export function resolveCategoryColor(key) {
+  if (typeof key === "string" && key.startsWith("custom:")) {
+    const hex = key.slice(7);
+    return { bg: lightenHex(hex, 0.85), border: lightenHex(hex, 0.35), text: darkenHex(hex, 0.45), accent: hex };
+  }
+  const swatch = CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.slate;
+  const accent = (THEME_PRESETS[key] || THEME_PRESETS[DEFAULT_THEME]).primary;
+  return { ...swatch, accent };
+}
+
 // Default-theme category colors, used as the CategoryColorsContext fallback and
 // anywhere rendered before a user's customization has loaded.
 // `accent` (the swatch's own raw, undarkened hex — same as the accent-color picker) is

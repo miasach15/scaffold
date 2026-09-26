@@ -44,7 +44,7 @@ const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
-import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS, resolveTheme } from "./lib/constants";
+import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -461,7 +461,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // accent-color picker. `text` is deliberately darkened for legible body copy on a
     // pale bg, but that same darkening makes a warm color like Pink read as maroon when
     // used as a short bold label instead — `accent` is what a caller should reach for there.
-    resolvedCategoryColors[cat] = { ...(CATEGORY_COLOR_SWATCHES[key] || CATEGORY_COLOR_SWATCHES.slate), accent: (THEME_PRESETS[key] || THEME_PRESETS[DEFAULT_THEME]).primary };
+    resolvedCategoryColors[cat] = resolveCategoryColor(key);
   });
   // A handful of places across the app fall back to CATEGORY_COLORS.Personal when a
   // task/event's own category isn't recognized — safe when "Personal" is one of the
@@ -469,8 +469,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // quiet safety net regardless, so nothing crashes; it just won't be offered as an
   // actual pickable category unless it's genuinely still in categoryKeys.
   if (!resolvedCategoryColors.Personal) {
-    const personalKey = DEFAULT_CATEGORY_COLOR_KEYS.Personal;
-    resolvedCategoryColors.Personal = { ...CATEGORY_COLOR_SWATCHES[personalKey], accent: THEME_PRESETS[personalKey].primary };
+    resolvedCategoryColors.Personal = resolveCategoryColor(DEFAULT_CATEGORY_COLOR_KEYS.Personal);
   }
 
   const setCategoryColor = (category, swatchKey) => {

@@ -144,10 +144,12 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {(categoryKeys || []).map((cat) => {
             const activeKey = categoryColors?.[cat];
+            const isCustom = typeof activeKey === "string" && activeKey.startsWith("custom:");
+            const customHex = isCustom ? activeKey.slice(7) : "#8290D8";
             return (
               <div key={cat}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>{cat}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                   {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
                     const active = activeKey === key;
                     return (
@@ -163,6 +165,24 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                       />
                     );
                   })}
+                  {/* Same hidden-<input type="color">-in-a-label trick as the accent
+                      picker's own Custom swatch above — opens the native color wheel. */}
+                  <label
+                    title="Custom color"
+                    style={{
+                      position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
+                      background: isCustom ? customHex : "conic-gradient(from 0deg, #FF5A5F, #FFC93C, #4ECB71, #3EC6E0, #4A6FE3, #B15AE0, #FF5A5F)",
+                      border: `2px solid ${isCustom ? customHex : "transparent"}`,
+                      boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
+                    }}
+                  >
+                    <input
+                      type="color"
+                      value={customHex}
+                      onChange={(e) => onSetCategoryColor(cat, `custom:${e.target.value}`)}
+                      style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                    />
+                  </label>
                 </div>
               </div>
             );
