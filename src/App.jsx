@@ -566,6 +566,13 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         @media (min-width: 861px) {
           .app-shell { flex-direction: row; }
         }
+        /* Dashboard fits one screen once there's room for its 2-column grid — each
+           column scrolls internally on its own (see DashboardView's .dv-col) instead of
+           the whole page scrolling. Below that the grid stacks to one column and needs
+           normal page scroll instead, like every other mobile view. */
+        @media (min-width: 901px) {
+          .dashboard-wrap { overflow-y: hidden !important; }
+        }
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
@@ -617,6 +624,7 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
             focusSlotRef={setDashboardFocusSlot}
+            educationCategory={profile.educationCategory}
           />
         )}
         {view === "calendar" && monthView && (
