@@ -3,6 +3,7 @@ import { useAuth } from "../../hooks/AuthProvider";
 import { INK, MUTED, PAPER_BG, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 import { inputStyle, primaryBtn, ghostBtn } from "../../lib/styles";
+import IntroSplash from "./IntroSplash";
 
 // The opening screens (this one + OnboardingQuiz) get their own accent — Sky — matching
 // the dedicated "scaffold-opening" launch screen in Figma (monogram + tagline both use
@@ -13,6 +14,7 @@ const SKY = THEME_PRESETS.sky.primary;
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
+  const [showIntro, setShowIntro] = useState(true);
   const [mode, setMode] = useState("sign-in"); // 'sign-in' | 'sign-up' | 'forgot'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,6 +68,7 @@ export default function AuthScreen() {
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      {showIntro && <IntroSplash onDone={() => setShowIntro(false)} />}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
