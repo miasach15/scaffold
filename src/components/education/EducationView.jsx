@@ -3,56 +3,12 @@ import { ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { BORDER } from "../../lib/constants";
-import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
-import Checkbox from "../shared/Checkbox";
-import UrgencyBadge from "../shared/UrgencyBadge";
 import EduItemRow from "./EduItemRow";
 import EduSessionsModal from "./EduSessionsModal";
 import WorkItemRow from "./WorkItemRow";
-
-// A compact card for one of the three "Upcoming" type-rows (Assessments/Assignments/
-// Homework) — narrow and fixed-width on purpose so several sit side by side in a
-// horizontally-scrolling strip, unlike EduItemRow's full-width stacked layout used
-// elsewhere. Keeps the same actions EduItemRow has (toggle done, open, delete-with-
-// confirm for a recurring series) just laid out vertically to fit the narrower card.
-function EduUpcomingCard({ item, col, onToggleDone, onRemove, onOpen, hasFollowing }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  return (
-    <div
-      className="hoverable"
-      style={{
-        width: 190, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8,
-        border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px", background: "#fff",
-        transition: "box-shadow .15s ease, transform .15s ease",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
-        {!confirmDelete && (
-          <button onClick={() => (hasFollowing ? setConfirmDelete(true) : onRemove(item.id, "one"))} className="btn-delete" style={deleteBtn}>×</button>
-        )}
-      </div>
-      <button onClick={onOpen} style={{ textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-        <div style={{ fontSize: 13, fontWeight: 600, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-          {item.title}
-        </div>
-        {item.subject && <div style={{ fontSize: 10, color: "#93A0AD", marginTop: 4 }}>{item.subject}</div>}
-      </button>
-      {confirmDelete ? (
-        <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
-          <button onClick={() => onRemove(item.id, "one")} style={{ ...ghostBtn, fontSize: 10, padding: "4px 7px" }}>This one</button>
-          <button onClick={() => onRemove(item.id, "following")} style={{ ...ghostBtn, fontSize: 10, padding: "4px 7px" }}>+ following</button>
-          <button onClick={() => setConfirmDelete(false)} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
-        </div>
-      ) : (
-        <UrgencyBadge iso={item.dueDate} done={item.done} leadDays={2} />
-      )}
-    </div>
-  );
-}
 
 const toggleBtn = {
   display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
@@ -491,22 +447,29 @@ export default function EducationView({
         {upcoming.length === 0 ? (
           <EmptyState text="Nothing upcoming." />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {[
-              ["Assessments", upcomingAssessments],
-              ["Assignments", upcomingAssignments],
-              ["Homework", upcomingHomework],
-            ].map(([label, items]) => items.length > 0 && (
-              <div key={label}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>{label}</div>
-                <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
-                  {items.map((e) => (
-                    <EduUpcomingCard key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
-                  ))}
+          <>
+            <style>{`
+              @media (max-width: 720px) {
+                .edu-upcoming-grid { grid-template-columns: 1fr !important; }
+              }
+            `}</style>
+            <div className="edu-upcoming-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, alignItems: "start" }}>
+              {[
+                ["Assessments", upcomingAssessments],
+                ["Assignments", upcomingAssignments],
+                ["Homework", upcomingHomework],
+              ].map(([label, items]) => items.length > 0 && (
+                <div key={label} style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>{label}</div>
+                  <div>
+                    {items.map((e) => (
+                      <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
