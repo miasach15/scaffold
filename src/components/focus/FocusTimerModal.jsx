@@ -42,6 +42,28 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
+  // The floating card is anchored bottom-right, so its one resize handle sits at the
+  // opposite (top-left) corner — pulling it away from the anchor grows the card, same
+  // direction the cursor actually moves. `null` means "default size, not resized yet".
+  const [boxSize, setBoxSize] = useState(null);
+  const startResize = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = boxSize?.width ?? 340;
+    const startHeight = boxSize?.height ?? e.currentTarget.parentElement.getBoundingClientRect().height;
+    const onMove = (ev) => {
+      const width = Math.min(Math.max(300, startWidth + (startX - ev.clientX)), window.innerWidth - 40);
+      const height = Math.min(Math.max(280, startHeight + (startY - ev.clientY)), window.innerHeight - 40);
+      setBoxSize({ width, height });
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
   // The celebration screen replaces the timer face once you mark the task done — see
   // "Task Completed!" in the Figma kit. Distinct from `finished` (the timer running out
   // on its own): you can mark complete at any point, timer running or not.
@@ -198,7 +220,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // in-flow card — same single component instance either way, so the running timer's
     // state never resets when `portalTarget` flips (see App.jsx's dashboardFocusSlot).
     const card = (
-      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "none" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px" }}>
+      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "none" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -300,9 +322,18 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
       <div
         style={{
           position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: 20, zIndex: 150,
-          width: 340, maxWidth: "calc(100vw - 32px)",
+          width: boxSize?.width ?? 340, height: boxSize?.height, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 40px)",
         }}
       >
+        <div
+          onMouseDown={startResize}
+          title="Drag to resize"
+          style={{
+            position: "absolute", top: -6, left: -6, width: 16, height: 16, borderRadius: "50%",
+            background: "#fff", border: `1.5px solid ${BORDER}`, cursor: "nwse-resize", zIndex: 1,
+            boxShadow: "0 1px 4px rgba(15,23,42,0.15)",
+          }}
+        />
         {card}
       </div>
     );

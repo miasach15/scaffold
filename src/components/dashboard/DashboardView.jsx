@@ -142,7 +142,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
   );
 
   return (
-    <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today's plan</div>
@@ -163,30 +163,14 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", alignItems: "start", gap: 28 }} className="dashboard-grid">
         <style>{`
           @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr !important; flex: none !important; min-height: 0 !important; }
-            /* Below the breakpoint where the dashboard stops being a single fixed-height
-               screen (see App.jsx's ".dashboard-wrap" comment), the whole page scrolls
-               normally instead — so every level below that was sized via flex:1/minHeight:0
-               to fit a fixed viewport (and would otherwise clip its content into its own
-               tiny internal scrollbar) needs to fall back to natural content height here,
-               leaving .dashboard-wrap as the one real scroll container. */
-            .dv-root, .dv-col, .dv-card { flex: none !important; min-height: 0 !important; }
-            .dv-card-list { overflow: visible !important; min-height: 0 !important; }
-            /* .dashboard-wrap (App.jsx) still gets forced to fill the full screen height
-               below this breakpoint even though its content no longer stretches to match
-               (the rule above) — left alone, that's dead white space trailing below
-               whichever card ends up last. The last card (Focus Timer, always at the
-               bottom of this column) grows to soak up whatever's left instead, with its
-               own content centered in that space, rather than pinned to the top with a
-               blank gap underneath it. */
-            .dv-card-focus { flex: 1 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; min-height: 0 !important; }
+            .dashboard-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
           <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
@@ -213,12 +197,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             </div>
           </div>
 
-          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12, flexShrink: 0 }}>Today's Scaffolded Steps</div>
+          <div style={{ ...dividedSection, padding: "20px 20px 0" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12 }}>Today's Scaffolded Steps</div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               <EmptyState text="Nothing scheduled for today yet." />
             ) : (
-              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {todaysTimedTasks.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {todaysTimedTasks.map((item, i) => (
@@ -260,13 +244,13 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           </div>
         </div>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, minHeight: 0 }}>
-          <div className="dv-card" style={{ ...flatSection, padding: "0 20px", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Coming Up</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
+          <div style={{ ...flatSection, padding: "0 20px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <EmptyState text="Nothing due soon." />
             ) : (
-              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {upcoming.map((c) => (
                   <ComingUpRow key={c.id} chip={c} col={c.subject || c.category ? CATEGORY_COLORS[c.subject || c.category] || CATEGORY_COLORS.Personal : null} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} />
                 ))}
@@ -274,12 +258,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             )}
           </div>
 
-          <div className="dv-card" style={{ ...dividedSection, padding: "20px 20px 0", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10, flexShrink: 0 }}>Habits Checklist</div>
+          <div style={{ ...dividedSection, padding: "20px 20px 0" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
             ) : (
-              <div className="dv-card-list" style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto", minHeight: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
@@ -307,9 +291,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               Dashboard unmounts this slot, which is exactly what lets the timer reappear
               as the normal floating bottom-right card everywhere else. */}
           {hasActiveFocusSession ? (
-            <div ref={focusSlotRef} className="dv-card-focus" style={{ ...dividedSection, flexShrink: 0 }} />
+            <div ref={focusSlotRef} style={{ ...dividedSection }} />
           ) : (
-            <div className="dv-card-focus" style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+            <div style={{ ...dividedSection, padding: "20px 20px 0" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
                 <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
                 <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>

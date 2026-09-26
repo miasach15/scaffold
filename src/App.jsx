@@ -566,12 +566,6 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
         @media (min-width: 861px) {
           .app-shell { flex-direction: row; }
         }
-        /* Dashboard fits one screen (no page scroll, cards scroll internally) once
-           there's room for its 2-column grid — below that the grid stacks to one
-           column and needs normal page scroll instead, like every other mobile view. */
-        @media (min-width: 901px) {
-          .dashboard-wrap { overflow-y: hidden !important; }
-        }
         @media (max-width: 640px) {
           input, select, textarea { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
