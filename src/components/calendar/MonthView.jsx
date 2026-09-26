@@ -78,12 +78,16 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
                 style={{
                   border: "1px solid #F4F6F8", background: "none", textAlign: "left", padding: "6px 6px",
                   display: "flex", flexDirection: "column", gap: 3, cursor: "pointer", minWidth: 0, minHeight: 0,
-                  opacity: inMonth ? 1 : 0.4,
                 }}
               >
+                {/* Only the date number itself is muted for a leading/trailing day from
+                    another month — items on that day (events, due chips) stay at full
+                    opacity/color so they're never harder to read just for falling on one
+                    of these days. */}
                 <div style={{
                   fontSize: 12, fontWeight: 700, width: 22, height: 22, lineHeight: "22px", textAlign: "center", borderRadius: "50%",
-                  background: isToday ? "var(--primary, #7B6EF0)" : "transparent", color: isToday ? "#fff" : "#000000", flexShrink: 0,
+                  background: isToday ? "var(--primary, #7B6EF0)" : "transparent",
+                  color: isToday ? "#fff" : inMonth ? "#000000" : "#C4CAD2", flexShrink: 0,
                 }}>{date.getDate()}</div>
                 <div className="mv-pills" style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                   {shown.map((it, i) => {
