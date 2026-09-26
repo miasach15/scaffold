@@ -73,6 +73,11 @@ export const THEME_PRESETS = {
 };
 export const DEFAULT_THEME = "ocean";
 
+// The custom-color swatch's "not picked yet" icon — a color wheel built from this same
+// muted preset palette (rather than a bright/saturated rainbow) so it matches the calmer
+// tone of every other swatch in the picker.
+export const MUTED_RAINBOW_GRADIENT = `conic-gradient(from 0deg, ${THEME_PRESETS.coral.primary}, ${THEME_PRESETS.amber.primary}, ${THEME_PRESETS.emerald.primary}, ${THEME_PRESETS.teal.primary}, ${THEME_PRESETS.ocean.primary}, ${THEME_PRESETS.lilac.primary}, ${THEME_PRESETS.coral.primary})`;
+
 // Mixes a hex color toward white by `amount` (0 = unchanged, 1 = white) — used to derive
 // a pale "tint" wash for a user's own custom accent color, the same role each preset's
 // hand-picked primaryTint plays above.

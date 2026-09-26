@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
-import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { CATEGORY_COLOR_SWATCHES, MUTED_RAINBOW_GRADIENT, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
@@ -107,7 +107,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 <div
                   style={{
                     width: 28, height: 28, borderRadius: "50%",
-                    background: isCustom ? customHex : "conic-gradient(from 0deg, #FF5A5F, #FFC93C, #4ECB71, #3EC6E0, #4A6FE3, #B15AE0, #FF5A5F)",
+                    background: isCustom ? customHex : MUTED_RAINBOW_GRADIENT,
                     boxShadow: isCustom ? `0 0 0 3px ${customHex}1F` : "none",
                   }}
                 />
@@ -151,6 +151,29 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>{cat}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                   {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
+                    // The custom swatch takes over the Peach slot (rather than tacking on
+                    // a 12th dot) so this row keeps the same length and stays on one line.
+                    if (key === "peach") {
+                      return (
+                        <label
+                          key="custom"
+                          title="Custom color"
+                          style={{
+                            position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
+                            background: isCustom ? customHex : MUTED_RAINBOW_GRADIENT,
+                            border: `2px solid ${isCustom ? customHex : "transparent"}`,
+                            boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
+                          }}
+                        >
+                          <input
+                            type="color"
+                            value={customHex}
+                            onChange={(e) => onSetCategoryColor(cat, `custom:${e.target.value}`)}
+                            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                          />
+                        </label>
+                      );
+                    }
                     const active = activeKey === key;
                     return (
                       <button
@@ -165,26 +188,6 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                       />
                     );
                   })}
-                  {/* Same hidden-<input type="color">-in-a-label trick as the accent
-                      picker's own Custom swatch above — opens the native color wheel.
-                      Shown as a solid peach dot (not the rainbow wheel) before a custom
-                      color is picked, to match this row's calmer, muted palette. */}
-                  <label
-                    title="Custom color"
-                    style={{
-                      position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                      background: isCustom ? customHex : THEME_PRESETS.peach.primary,
-                      border: `2px solid ${isCustom ? customHex : "transparent"}`,
-                      boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
-                    }}
-                  >
-                    <input
-                      type="color"
-                      value={customHex}
-                      onChange={(e) => onSetCategoryColor(cat, `custom:${e.target.value}`)}
-                      style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-                    />
-                  </label>
                 </div>
               </div>
             );
