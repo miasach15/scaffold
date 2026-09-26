@@ -166,12 +166,14 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                     );
                   })}
                   {/* Same hidden-<input type="color">-in-a-label trick as the accent
-                      picker's own Custom swatch above — opens the native color wheel. */}
+                      picker's own Custom swatch above — opens the native color wheel.
+                      Shown as a solid peach dot (not the rainbow wheel) before a custom
+                      color is picked, to match this row's calmer, muted palette. */}
                   <label
                     title="Custom color"
                     style={{
                       position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                      background: isCustom ? customHex : "conic-gradient(from 0deg, #FF5A5F, #FFC93C, #4ECB71, #3EC6E0, #4A6FE3, #B15AE0, #FF5A5F)",
+                      background: isCustom ? customHex : THEME_PRESETS.peach.primary,
                       border: `2px solid ${isCustom ? customHex : "transparent"}`,
                       boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
                     }}

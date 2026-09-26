@@ -5,17 +5,17 @@
 // here in one place, each derived from that swatch's own THEME_PRESETS primary hue (a
 // pale bg, a mid-tone border, a dark readable text — same hue carried through all three).
 export const CATEGORY_COLOR_SWATCHES = {
-  ocean: { bg: "#E3E6F2", border: "#A1A9CE", text: "#42496C" },
-  sky: { bg: "#E0E4F5", border: "#9AA3D6", text: "#3B4473" },
-  emerald: { bg: "#D9FCF1", border: "#84EBCB", text: "#24896A" },
-  pink: { bg: "#FCD9E4", border: "#EB84A5", text: "#8C2144" },
-  amber: { bg: "#FCEAD9", border: "#EBB684", text: "#885525" },
-  teal: { bg: "#DBFAF7", border: "#8AE6DB", text: "#2B8278" },
-  slate: { bg: "#E9EAEC", border: "#B2B6BD", text: "#52555C" },
-  coral: { bg: "#FCDDD9", border: "#EB8E84", text: "#8C2C21" },
-  lilac: { bg: "#EBE1F4", border: "#B99CD3", text: "#583D70" },
-  beige: { bg: "#F0EBE6", border: "#C7BAA9", text: "#655949" },
-  peach: { bg: "#FCDCD9", border: "#EB8D84", text: "#8B2B22" },
+  ocean: { bg: "#E7EAF4", border: "#B9BFDA", text: "#42496C" },
+  sky: { bg: "#E5E8F7", border: "#B3BAE0", text: "#3B4473" },
+  emerald: { bg: "#DFFCF3", border: "#A3F0D8", text: "#24896A" },
+  pink: { bg: "#FCDFE8", border: "#F0A3BC", text: "#8C2144" },
+  amber: { bg: "#FCEDDF", border: "#F0C8A3", text: "#885525" },
+  teal: { bg: "#E0FBF8", border: "#A7ECE4", text: "#2B8278" },
+  slate: { bg: "#ECEDEF", border: "#C5C8CE", text: "#52555C" },
+  coral: { bg: "#FCE2DF", border: "#F0AAA3", text: "#8C2C21" },
+  lilac: { bg: "#EEE6F6", border: "#CBB5DE", text: "#583D70" },
+  beige: { bg: "#F2EEEA", border: "#D5CBBF", text: "#655949" },
+  peach: { bg: "#FCE1DF", border: "#F0AAA3", text: "#8B2B22" },
 };
 
 // The starting set before a user renames/adds/removes any — after that, the live list
@@ -47,9 +47,9 @@ export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" }
 // main brand color is this indigo/blue-purple leaning blue.
 // PRIMARY_DARK intentionally equals PRIMARY here — the exact hex sampled from Figma,
 // left alone rather than synthetically darkened.
-export const PRIMARY = "var(--primary, #7F8BFF)";
-export const PRIMARY_DARK = "var(--primary-dark, #7F8BFF)";
-export const PRIMARY_TINT = "var(--primary-tint, #E5E8FF)";
+export const PRIMARY = "var(--primary, #99A2FF)";
+export const PRIMARY_DARK = "var(--primary-dark, #99A2FF)";
+export const PRIMARY_TINT = "var(--primary-tint, #EBECFF)";
 
 // Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
 // color-grid), hex-sampled directly from its color-dot assets — re-checked directly in
@@ -59,17 +59,17 @@ export const PRIMARY_TINT = "var(--primary-tint, #E5E8FF)";
 // primaryTint (a pale wash, not in the kit) is derived from each swatch's own hue, same
 // relationship as the prior preset set.
 export const THEME_PRESETS = {
-  ocean: { label: "Ocean", primary: "#7F8BFF", primaryDark: "#7F8BFF", primaryTint: "#E5E8FF" },
-  sky: { label: "Sky", primary: "#8290D8", primaryDark: "#8290D8", primaryTint: "#E6E9F7" },
-  emerald: { label: "Emerald", primary: "#8FD2A8", primaryDark: "#8FD2A8", primaryTint: "#E9F6EE" },
-  pink: { label: "Pink", primary: "#FFB2C5", primaryDark: "#FFB2C5", primaryTint: "#FFF0F3" },
-  amber: { label: "Amber", primary: "#FFD28A", primaryDark: "#FFD28A", primaryTint: "#FFF6E8" },
-  teal: { label: "Teal", primary: "#56B3C8", primaryDark: "#56B3C8", primaryTint: "#DDF0F4" },
-  slate: { label: "Slate", primary: "#A8B0C2", primaryDark: "#A8B0C2", primaryTint: "#EEEFF3" },
-  coral: { label: "Coral", primary: "#FF9286", primaryDark: "#FF9286", primaryTint: "#FFE9E7" },
-  lilac: { label: "Lilac", primary: "#CDB8FF", primaryDark: "#CDB8FF", primaryTint: "#F5F1FF" },
-  beige: { label: "Beige", primary: "#F3E1C7", primaryDark: "#F3E1C7", primaryTint: "#FDF9F4" },
-  peach: { label: "Peach", primary: "#FFB3A4", primaryDark: "#FFB3A4", primaryTint: "#FFF0ED" },
+  ocean: { label: "Ocean", primary: "#99A2FF", primaryDark: "#99A2FF", primaryTint: "#EBECFF" },
+  sky: { label: "Sky", primary: "#9BA6E0", primaryDark: "#9BA6E0", primaryTint: "#EBEDF9" },
+  emerald: { label: "Emerald", primary: "#A5DBB9", primaryDark: "#A5DBB9", primaryTint: "#EDF8F1" },
+  pink: { label: "Pink", primary: "#FFC1D1", primaryDark: "#FFC1D1", primaryTint: "#FFF3F6" },
+  amber: { label: "Amber", primary: "#FFDBA1", primaryDark: "#FFDBA1", primaryTint: "#FFF8EC" },
+  teal: { label: "Teal", primary: "#78C2D3", primaryDark: "#78C2D3", primaryTint: "#E4F3F6" },
+  slate: { label: "Slate", primary: "#B9C0CE", primaryDark: "#B9C0CE", primaryTint: "#F1F2F5" },
+  coral: { label: "Coral", primary: "#FFA89E", primaryDark: "#FFA89E", primaryTint: "#FFEEEC" },
+  lilac: { label: "Lilac", primary: "#D7C6FF", primaryDark: "#D7C6FF", primaryTint: "#F7F4FF" },
+  beige: { label: "Beige", primary: "#F5E7D2", primaryDark: "#F5E7D2", primaryTint: "#FDFAF6" },
+  peach: { label: "Peach", primary: "#FFC2B6", primaryDark: "#FFC2B6", primaryTint: "#FFF3F0" },
 };
 export const DEFAULT_THEME = "ocean";
 
