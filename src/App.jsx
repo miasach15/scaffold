@@ -54,7 +54,7 @@ export default function App() {
   if (authLoading) return <FullScreenMessage text="Loading..." />;
   if (passwordRecovery) return <ResetPasswordScreen />;
   if (!user) return <AuthScreen />;
-  return <ScaffoldApp userId={user.id} email={user.email} onSignOut={signOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
+  return <ScaffoldApp userId={user.id} onSignOut={signOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
 }
 
 function FullScreenMessage({ text }) {
@@ -65,7 +65,7 @@ function FullScreenMessage({ text }) {
   );
 }
 
-function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
+function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
   const { tasks, loading: tasksLoading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
@@ -585,8 +585,6 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
       <Sidebar
         view={view}
         setView={setView}
-        profile={profile}
-        email={email}
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}

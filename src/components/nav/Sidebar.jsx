@@ -33,15 +33,8 @@ const TAB_BAR_ITEMS = [
 ];
 const MORE_DRAWER_VIEWS = ["goals", "habits", "grades", "journal"];
 
-function initialFrom(name, email) {
-  const source = (name || "").trim() || (email || "").trim();
-  return source ? source[0].toUpperCase() : "?";
-}
-
-
-export default function Sidebar({ view, setView, profile, email, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
+export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
   const [open, setOpen] = useState(false);
-  const displayName = profile?.name || (email ? email.split("@")[0] : "");
   // The bottom bar's own Menu/"More" tab stands in for whichever page it's covering —
   // active either while the drawer is actually open, or while sitting on one of the
   // pages that only lives inside it.
@@ -153,24 +146,6 @@ export default function Sidebar({ view, setView, profile, email, onOpenWeeklyRev
             <button onClick={onSignOut} title="Sign out" className="btn-ghost" style={iconBtnStyle}>
               <LogOut size={15} />
             </button>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-            <div
-              style={{
-                width: 36, height: 36, borderRadius: "50%", background: PRIMARY_DARK, color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0,
-              }}
-            >
-              {initialFrom(profile?.name, email)}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {displayName || "You"}
-              </div>
-              <div style={{ fontSize: 11, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {email}
-              </div>
-            </div>
           </div>
         </div>
       </div>
