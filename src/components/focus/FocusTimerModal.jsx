@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil } from "lucide-react";
+import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
-import { pad } from "../../lib/dateHelpers";
+import { pad, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
@@ -34,6 +35,8 @@ async function notifySessionDone(title) {
 }
 
 export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail }) {
+  const CATEGORY_COLORS = useCategoryColors();
+  const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   const initial = (defaultMinutes || 25) * 60;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
@@ -134,7 +137,6 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const reset = () => { setRunning(false); setRemaining(totalSeconds); prevRemainingRef.current = totalSeconds; };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
-  const pct = totalSeconds > 0 ? ((totalSeconds - remaining) / totalSeconds) * 100 : 0;
   const finished = remaining === 0;
 
   // The rest of this task's breakdown (if it's one step of a "break it down" group) —
@@ -171,6 +173,9 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
 
   const investedMin = Math.round(Math.max(0, totalSeconds - remaining) / 60);
   const stepsDoneInfo = task.groupId ? { done: steps.filter((s) => s.done).length, total: steps.length } : null;
+  // How many tasks you've actually finished today — real data, not a made-up daily quota.
+  const todayISO = toISO(new Date());
+  const completedTodayCount = (tasks || []).filter((t) => t.done && t.date === todayISO).length;
   const firstName = (profile?.name || "").trim().split(" ")[0];
   // The next thing worth focusing on — soonest date, then soonest time of day, skipping
   // whatever's already done and the task that was just wrapped up.
@@ -186,12 +191,118 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [celebrating, tasks, task.id]);
 
+  if (!celebrating) {
+    return (
+      <div
+        style={{
+          position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: 20, zIndex: 150,
+          width: 340, maxWidth: "calc(100vw - 32px)",
+        }}
+      >
+        <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {task.id && onOpenDetail && (
+                <button
+                  onClick={() => { onOpenDetail(task.id); onClose(); }}
+                  title="Edit this task"
+                  style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}
+                >
+                  <Pencil size={13} strokeWidth={2.2} />
+                </button>
+              )}
+              <button onClick={onClose} title="Close" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}>
+                <X size={15} strokeWidth={2.2} />
+              </button>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+            <div style={{ fontFamily: serifFont, fontSize: 19, color: INK, lineHeight: 1.2, minWidth: 0 }}>{task.title}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, background: catColor.bg, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {task.category}
+            </div>
+          </div>
+
+          <div style={{ fontFamily: serifFont, fontSize: 48, color: INK, textAlign: "center", margin: "16px 0 4px", letterSpacing: 0.5 }}>
+            {pad(mm)}:{pad(ss)}
+          </div>
+          {task.notes ? (
+            <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.notes}</div>
+          ) : (
+            <div style={{ marginBottom: 14 }} />
+          )}
+
+          {finished ? (
+            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginBottom: 14 }}>Time's up. Nice focus session.</div>
+          ) : (
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+              {[15, 25, 50].map((m) => (
+                <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? ACCENT.border : BORDER, color: totalSeconds === m * 60 ? ACCENT.text : MUTED }}>{m}m</button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <button
+              onClick={toggleRunning}
+              disabled={finished}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
+                fontSize: 14.5, fontWeight: 700, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
+              }}
+            >
+              {running ? <Pause size={16} fill="#fff" /> : <Play size={16} fill="#fff" />}
+              {running ? "Pause Session" : "Start Session"}
+            </button>
+            <button
+              onClick={reset}
+              title="Reset"
+              style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
+            </button>
+          </div>
+
+          {task.id && (
+            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: "0 0 12px", fontSize: 12.5, fontWeight: 700, color: ACCENT.text, cursor: "pointer" }}>
+              Mark complete
+            </button>
+          )}
+
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 12, color: MUTED }}>Completed today: {completedTodayCount}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>{investedMin}m this session</div>
+          </div>
+
+          {steps.length > 0 && (
+            <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", marginTop: 12, paddingTop: 12 }}>
+              <div style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+                Whole breakdown
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {steps.map((s) => (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={ACCENT} />
+                    <div style={{ flex: 1, fontSize: 13, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1, fontWeight: s.id === task.id ? 700 : 400 }}>
+                      {s.title}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, width: celebrating ? 440 : 320, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-        {celebrating ? (
-          <div>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_TINT, border: `2px solid ${PRIMARY}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+      <div style={{ ...modalStyle, width: 440, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+        <div>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_TINT, border: `2px solid ${PRIMARY}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
               <Check size={28} color={PRIMARY_DARK} strokeWidth={2.5} />
             </div>
             <div style={{ display: "inline-block", background: PRIMARY_TINT, color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, padding: "5px 12px", borderRadius: 20, marginBottom: 16 }}>
@@ -243,84 +354,6 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               <button onClick={continueToDashboard} style={{ ...primaryBtn, flex: 1 }}>Continue to Dashboard</button>
             </div>
           </div>
-        ) : (
-          <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: 11.5, color: MUTED, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>Focus session</div>
-              {task.id && onOpenDetail && (
-                <button
-                  onClick={() => { onOpenDetail(task.id); onClose(); }}
-                  title="Edit this task"
-                  style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}
-                >
-                  <Pencil size={13} strokeWidth={2.2} />
-                </button>
-              )}
-            </div>
-            <div style={{ fontFamily: serifFont, fontSize: 19, margin: task.notes ? "4px 0 10px" : "4px 0 18px", color: INK }}>{task.title}</div>
-            {task.notes && (
-              <div style={{ textAlign: "left", background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "9px 11px", marginBottom: 14, fontSize: 12.5, color: INK, lineHeight: 1.4 }}>
-                <div style={{ fontSize: 9.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 3 }}>Notes</div>
-                {task.notes}
-              </div>
-            )}
-
-            <div style={{ position: "relative", width: 160, height: 160, margin: "0 auto 18px" }}>
-              <svg width="160" height="160" viewBox="0 0 160 160" style={{ transform: "rotate(-90deg)" }}>
-                <circle cx="80" cy="80" r="70" fill="none" stroke="#EDEDED" strokeWidth="10" />
-                <circle
-                  cx="80" cy="80" r="70" fill="none" stroke={finished ? TONE.warn.text : ACCENT.accent} strokeWidth="10"
-                  strokeDasharray={2 * Math.PI * 70}
-                  strokeDashoffset={2 * Math.PI * 70 * (1 - pct / 100)}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke-dashoffset .3s linear" }}
-                />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serifFont, fontSize: 34, color: INK }}>
-                {pad(mm)}:{pad(ss)}
-              </div>
-            </div>
-
-            {finished ? (
-              <div style={{ fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginBottom: 14 }}>Time's up. Nice focus session.</div>
-            ) : (
-              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
-                {[15, 25, 50].map((m) => (
-                  <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? ACCENT.border : BORDER, color: totalSeconds === m * 60 ? ACCENT.text : MUTED }}>{m}m</button>
-                ))}
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              <button onClick={toggleRunning} disabled={finished} style={{ ...primaryBtn, flex: 1, opacity: finished ? 0.4 : 1 }}>{running ? "Pause" : "Start"}</button>
-              <button onClick={reset} className="btn-ghost" style={ghostBtn}>Reset</button>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: steps.length > 0 ? 16 : 0 }}>
-              <button onClick={onClose} style={{ ...ghostBtn, flex: 1 }}>Close</button>
-              {task.id && (
-                <button onClick={markComplete} style={{ ...ghostBtn, flex: 1, background: "#fff", borderColor: ACCENT.border, color: ACCENT.text, fontWeight: 700 }}>Mark complete</button>
-              )}
-            </div>
-
-            {steps.length > 0 && (
-              <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-                <div style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
-                  Whole breakdown
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                  {steps.map((s) => (
-                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={ACCENT} />
-                      <div style={{ flex: 1, fontSize: 13, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1, fontWeight: s.id === task.id ? 700 : 400 }}>
-                        {s.title}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
       </div>
     </div>
   );
