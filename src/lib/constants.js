@@ -47,28 +47,29 @@ export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" }
 // main brand color is this indigo/blue-purple leaning blue.
 // PRIMARY_DARK intentionally equals PRIMARY here — the exact hex sampled from Figma,
 // left alone rather than synthetically darkened.
-export const PRIMARY = "var(--primary, #4A5BA8)";
-export const PRIMARY_DARK = "var(--primary-dark, #4A5BA8)";
-export const PRIMARY_TINT = "var(--primary-tint, #E0E2EB)";
+export const PRIMARY = "var(--primary, #7F8BFF)";
+export const PRIMARY_DARK = "var(--primary-dark, #7F8BFF)";
+export const PRIMARY_TINT = "var(--primary-tint, #E5E8FF)";
 
 // Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
 // color-grid), hex-sampled directly from its color-dot assets — re-checked directly in
-// Figma; this pass only Coral/Beige/Peach had moved (the other 8 held steady).
+// Figma; this pass every preset except Sky and Coral had moved, most toward a lighter,
+// more pastel version of the same hue.
 // primaryDark deliberately equals primary — the sampled color used as-is, not darkened.
 // primaryTint (a pale wash, not in the kit) is derived from each swatch's own hue, same
 // relationship as the prior preset set.
 export const THEME_PRESETS = {
-  ocean: { label: "Ocean", primary: "#4A5BA8", primaryDark: "#4A5BA8", primaryTint: "#E0E2EB" },
-  sky: { label: "Sky", primary: "#8290D8", primaryDark: "#8290D8", primaryTint: "#DEE1ED" },
-  emerald: { label: "Emerald", primary: "#059669", primaryDark: "#059669", primaryTint: "#D9F2EA" },
-  pink: { label: "Pink", primary: "#FF8CB1", primaryDark: "#FF8CB1", primaryTint: "#F2D9E1" },
-  amber: { label: "Amber", primary: "#F57C0B", primaryDark: "#F57C0B", primaryTint: "#F2E5D9" },
-  teal: { label: "Teal", primary: "#14B8A6", primaryDark: "#14B8A6", primaryTint: "#DAF1EE" },
-  slate: { label: "Slate", primary: "#6B7280", primaryDark: "#6B7280", primaryTint: "#E4E5E7" },
-  coral: { label: "Coral", primary: "#FF9286", primaryDark: "#FF9286", primaryTint: "#F2DBD9" },
-  lilac: { label: "Lilac", primary: "#B894D9", primaryDark: "#B894D9", primaryTint: "#E6DFEC" },
-  beige: { label: "Beige", primary: "#CEBFAB", primaryDark: "#CEBFAB", primaryTint: "#E9E6E2" },
-  peach: { label: "Peach", primary: "#FEABA3", primaryDark: "#FEABA3", primaryTint: "#F2DBD9" },
+  ocean: { label: "Ocean", primary: "#7F8BFF", primaryDark: "#7F8BFF", primaryTint: "#E5E8FF" },
+  sky: { label: "Sky", primary: "#8290D8", primaryDark: "#8290D8", primaryTint: "#E6E9F7" },
+  emerald: { label: "Emerald", primary: "#8FD2A8", primaryDark: "#8FD2A8", primaryTint: "#E9F6EE" },
+  pink: { label: "Pink", primary: "#FFB2C5", primaryDark: "#FFB2C5", primaryTint: "#FFF0F3" },
+  amber: { label: "Amber", primary: "#FFD28A", primaryDark: "#FFD28A", primaryTint: "#FFF6E8" },
+  teal: { label: "Teal", primary: "#56B3C8", primaryDark: "#56B3C8", primaryTint: "#DDF0F4" },
+  slate: { label: "Slate", primary: "#A8B0C2", primaryDark: "#A8B0C2", primaryTint: "#EEEFF3" },
+  coral: { label: "Coral", primary: "#FF9286", primaryDark: "#FF9286", primaryTint: "#FFE9E7" },
+  lilac: { label: "Lilac", primary: "#CDB8FF", primaryDark: "#CDB8FF", primaryTint: "#F5F1FF" },
+  beige: { label: "Beige", primary: "#F3E1C7", primaryDark: "#F3E1C7", primaryTint: "#FDF9F4" },
+  peach: { label: "Peach", primary: "#FFB3A4", primaryDark: "#FFB3A4", primaryTint: "#FFF0ED" },
 };
 export const DEFAULT_THEME = "ocean";
 
@@ -117,13 +118,15 @@ export const CATEGORY_COLORS = {
 // MUTED is secondary text, BORDER is the standard hairline. PAPER_BG is the one
 // background color for the whole app — every page, the sidebar, auth/onboarding, all of
 // it. SURFACE is the layer that sits just above it — cards, modals, chips — a hair
-// warmer/grayer than pure white so it reads as a distinct plane, not a cutout. Both
-// hex-sampled from the Figma kit's "Base & Typography" swatches (Background/Surface).
+// warmer/grayer than pure white so it reads as a distinct plane, not a cutout. All four
+// hex-sampled from the Figma kit's neutrals palette (Background/Surface/Ink Black/Muted
+// Gray/Border Light) — re-checked directly in Figma, only BORDER had actually drifted
+// from its real "Border Light" value (a faint brand lavender, not a plain neutral gray).
 export const PAPER_BG = "#FDFCFB";
 export const SURFACE = "#FAFAF9";
 export const INK = "#1A1A2E";
 export const MUTED = "#6B7280";
-export const BORDER = "#E5E7EB";
+export const BORDER = "#D9D3E6";
 export const TONE = {
   danger: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
   warn: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
