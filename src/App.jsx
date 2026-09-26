@@ -44,7 +44,7 @@ const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
-import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS } from "./lib/constants";
+import { CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_THEME, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, THEME_PRESETS, resolveTheme } from "./lib/constants";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -448,7 +448,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
   if (!profile.onboarded) return <OnboardingQuiz onComplete={completeOnboarding} />;
 
-  const theme = THEME_PRESETS[profile.themeColor] || THEME_PRESETS[DEFAULT_THEME];
+  const theme = resolveTheme(profile.themeColor);
 
   const categoryKeys = profile.categoryKeys;
   const resolvedCategoryColors = {};

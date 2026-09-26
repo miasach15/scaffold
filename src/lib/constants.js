@@ -72,6 +72,33 @@ export const THEME_PRESETS = {
 };
 export const DEFAULT_THEME = "ocean";
 
+// Mixes a hex color toward white by `amount` (0 = unchanged, 1 = white) — used to derive
+// a pale "tint" wash for a user's own custom accent color, the same role each preset's
+// hand-picked primaryTint plays above.
+function lightenHex(hex, amount) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16) || 0;
+  const g = parseInt(h.slice(2, 4), 16) || 0;
+  const b = parseInt(h.slice(4, 6), 16) || 0;
+  const mix = (c) => Math.round(c + (255 - c) * amount);
+  const toHex = (c) => c.toString(16).padStart(2, "0");
+  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+}
+
+// A custom accent color (picked via the settings color wheel) is stored as the plain
+// string "custom:#rrggbb" right in profile.themeColor — no separate DB column needed,
+// since that column already just holds a string and every reader already treats an
+// unrecognized value as "fall back to default" rather than crashing. This is the one
+// place that has to know about the "custom:" prefix; everywhere else just calls this
+// instead of indexing THEME_PRESETS directly.
+export function resolveTheme(themeColor) {
+  if (typeof themeColor === "string" && themeColor.startsWith("custom:")) {
+    const hex = themeColor.slice(7);
+    return { label: "Custom", primary: hex, primaryDark: hex, primaryTint: lightenHex(hex, 0.8) };
+  }
+  return THEME_PRESETS[themeColor] || THEME_PRESETS[DEFAULT_THEME];
+}
+
 // Default-theme category colors, used as the CategoryColorsContext fallback and
 // anywhere rendered before a user's customization has loaded.
 // `accent` (the swatch's own raw, undarkened hex — same as the accent-color picker) is

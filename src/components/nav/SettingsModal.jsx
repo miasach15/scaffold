@@ -89,6 +89,38 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
               </button>
             );
           })}
+          {(() => {
+            const isCustom = typeof themeColor === "string" && themeColor.startsWith("custom:");
+            const customHex = isCustom ? themeColor.slice(7) : "#8290D8";
+            return (
+              // A label wrapping a real (visually hidden) <input type="color"> — clicking
+              // anywhere in it opens the browser's native color picker (a color wheel on
+              // most platforms) with no extra JS needed to trigger it; onChange is the
+              // only handler this actually needs.
+              <label
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                  padding: "12px 8px", borderRadius: 12, border: `1.5px solid ${isCustom ? customHex : "#E5E7EB"}`,
+                  background: isCustom ? `${customHex}1F` : "#fff", cursor: "pointer",
+                }}
+              >
+                <div
+                  style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: isCustom ? customHex : "conic-gradient(from 0deg, #FF5A5F, #FFC93C, #4ECB71, #3EC6E0, #4A6FE3, #B15AE0, #FF5A5F)",
+                    boxShadow: isCustom ? `0 0 0 3px ${customHex}1F` : "none",
+                  }}
+                />
+                <span style={{ fontSize: 12, fontWeight: 600, color: isCustom ? customHex : "#4A5568" }}>Custom</span>
+                <input
+                  type="color"
+                  value={customHex}
+                  onChange={(e) => onSetTheme(`custom:${e.target.value}`)}
+                  style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                />
+              </label>
+            );
+          })()}
         </div>
 
         {categoryKeys && (
