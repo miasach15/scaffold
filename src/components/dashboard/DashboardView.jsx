@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
@@ -175,6 +175,14 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                leaving .dashboard-wrap as the one real scroll container. */
             .dv-root, .dv-col, .dv-card { flex: none !important; min-height: 0 !important; }
             .dv-card-list { overflow: visible !important; min-height: 0 !important; }
+            /* .dashboard-wrap (App.jsx) still gets forced to fill the full screen height
+               below this breakpoint even though its content no longer stretches to match
+               (the rule above) — left alone, that's dead white space trailing below
+               whichever card ends up last. The last card (Focus Timer, always at the
+               bottom of this column) grows to soak up whatever's left instead, with its
+               own content centered in that space, rather than pinned to the top with a
+               blank gap underneath it. */
+            .dv-card-focus { flex: 1 !important; display: flex !important; flex-direction: column !important; justify-content: center !important; min-height: 0 !important; }
           }
         `}</style>
 
@@ -299,9 +307,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               Dashboard unmounts this slot, which is exactly what lets the timer reappear
               as the normal floating bottom-right card everywhere else. */}
           {hasActiveFocusSession ? (
-            <div ref={focusSlotRef} style={{ ...dividedSection, flexShrink: 0 }} />
+            <div ref={focusSlotRef} className="dv-card-focus" style={{ ...dividedSection, flexShrink: 0 }} />
           ) : (
-            <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+            <div className="dv-card-focus" style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
                 <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
                 <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
@@ -352,11 +360,11 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 disabled={!focusTaskId}
                 style={{
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
+                  padding: "13px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
                   fontSize: 14.5, fontWeight: 500, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
                 }}
               >
-                <Play size={16} fill="#fff" />
+                <Play size={16} color={PRIMARY_DARK} />
                 Start Session
               </button>
             </div>

@@ -237,7 +237,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           ) : (
             <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
               {[15, 25, 50].map((m) => (
-                <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? ACCENT.border : BORDER, color: totalSeconds === m * 60 ? ACCENT.text : MUTED }}>{m}m</button>
+                <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}>{m}m</button>
               ))}
             </div>
           )}
@@ -248,11 +248,11 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               disabled={finished}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "13px", borderRadius: 14, border: "none", background: INK, color: "#fff",
+                padding: "13px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
                 fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
               }}
             >
-              {running ? <Pause size={16} fill="#fff" /> : <Play size={16} fill="#fff" />}
+              {running ? <Pause size={16} color={PRIMARY_DARK} /> : <Play size={16} color={PRIMARY_DARK} />}
               {running ? "Pause Session" : "Start Session"}
             </button>
             <button
@@ -265,7 +265,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
 
           {task.id && (
-            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: "0 0 12px", fontSize: 12.5, fontWeight: 700, color: ACCENT.text, cursor: "pointer" }}>
+            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: "0 0 12px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>
               Mark complete
             </button>
           )}
@@ -283,7 +283,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 {steps.map((s) => (
                   <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={ACCENT} />
+                    <Checkbox checked={s.done} onClick={() => onToggleStepDone(s.id, !s.done)} color={{ border: PRIMARY_DARK }} />
                     <div style={{ flex: 1, fontSize: 13, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1, fontWeight: s.id === task.id ? 700 : 400 }}>
                       {s.title}
                     </div>
