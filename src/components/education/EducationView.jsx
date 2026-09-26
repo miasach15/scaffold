@@ -1,14 +1,58 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
+import { ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { BORDER } from "../../lib/constants";
+import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
+import Checkbox from "../shared/Checkbox";
+import UrgencyBadge from "../shared/UrgencyBadge";
 import EduItemRow from "./EduItemRow";
 import EduSessionsModal from "./EduSessionsModal";
 import WorkItemRow from "./WorkItemRow";
+
+// A compact card for one of the three "Upcoming" type-rows (Assessments/Assignments/
+// Homework) — narrow and fixed-width on purpose so several sit side by side in a
+// horizontally-scrolling strip, unlike EduItemRow's full-width stacked layout used
+// elsewhere. Keeps the same actions EduItemRow has (toggle done, open, delete-with-
+// confirm for a recurring series) just laid out vertically to fit the narrower card.
+function EduUpcomingCard({ item, col, onToggleDone, onRemove, onOpen, hasFollowing }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  return (
+    <div
+      className="hoverable"
+      style={{
+        width: 190, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8,
+        border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px", background: "#fff",
+        transition: "box-shadow .15s ease, transform .15s ease",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
+        {!confirmDelete && (
+          <button onClick={() => (hasFollowing ? setConfirmDelete(true) : onRemove(item.id, "one"))} className="btn-delete" style={deleteBtn}>×</button>
+        )}
+      </div>
+      <button onClick={onOpen} style={{ textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+          {item.title}
+        </div>
+        {item.subject && <div style={{ fontSize: 10, color: "#93A0AD", marginTop: 4 }}>{item.subject}</div>}
+      </button>
+      {confirmDelete ? (
+        <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+          <button onClick={() => onRemove(item.id, "one")} style={{ ...ghostBtn, fontSize: 10, padding: "4px 7px" }}>This one</button>
+          <button onClick={() => onRemove(item.id, "following")} style={{ ...ghostBtn, fontSize: 10, padding: "4px 7px" }}>+ following</button>
+          <button onClick={() => setConfirmDelete(false)} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
+        </div>
+      ) : (
+        <UrgencyBadge iso={item.dueDate} done={item.done} leadDays={2} />
+      )}
+    </div>
+  );
+}
 
 const toggleBtn = {
   display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
@@ -63,7 +107,6 @@ export default function EducationView({
   const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
   const [addError, setAddError] = useState(null); // shown right under the add row when title/due date is missing — Add otherwise silently does nothing
   const [subjectFilter, setSubjectFilter] = useState("All");
-  const [showAllUpcoming, setShowAllUpcoming] = useState(false); // capped by default — a long flat list is its own kind of overwhelm
   // Checking something off in Today shouldn't yank it out of the list mid-glance — it
   // stays put, just visibly crossed off, same as Tasks' Today does. Session-local: once
   // you leave and come back, done items fall out of Today as usual.
@@ -237,9 +280,11 @@ export default function EducationView({
     onSetEduDone(id, done);
   };
   const upcoming = eduItems.filter((e) => (!e.done || justDone.has(e.id)) && !todayIds.has(e.id) && bySubject(e)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const UPCOMING_CAP = 5;
-  const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_CAP);
-  const hiddenUpcomingCount = upcoming.length - visibleUpcoming.length;
+  // Three separate horizontally-scrolling rows instead of one flowing list — each type
+  // scrolls on its own rather than the whole page needing a "show N more" toggle.
+  const upcomingAssessments = upcoming.filter((e) => e.type === "Assessment");
+  const upcomingAssignments = upcoming.filter((e) => e.type === "Assignment");
+  const upcomingHomework = upcoming.filter((e) => e.type === "Homework");
 
   const sessionRows = tasks.filter((t) => t.eduId).map((t) => {
     const parent = eduItems.find((e) => e.id === t.eduId);
@@ -446,14 +491,22 @@ export default function EducationView({
         {upcoming.length === 0 ? (
           <EmptyState text="Nothing upcoming." />
         ) : (
-          <>
-            <div>{visibleUpcoming.map((e) => <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />)}</div>
-            {hiddenUpcomingCount > 0 && (
-              <button onClick={() => setShowAllUpcoming(true)} className="hoverable" style={{ ...toggleBtn, marginTop: 2 }}>
-                <ChevronDown size={13} strokeWidth={2.5} /> {hiddenUpcomingCount} more
-              </button>
-            )}
-          </>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[
+              ["Assessments", upcomingAssessments],
+              ["Assignments", upcomingAssignments],
+              ["Homework", upcomingHomework],
+            ].map(([label, items]) => items.length > 0 && (
+              <div key={label}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>{label}</div>
+                <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+                  {items.map((e) => (
+                    <EduUpcomingCard key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

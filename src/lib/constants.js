@@ -182,11 +182,11 @@ export const SUGGESTED_BUCKET_LIST = [
   "Swim in the ocean at night",
 ];
 export const SUGGESTED_HABITS = [
-  "Drink water", "Stretch", "Journal", "No phone before bed", "Read 10 pages", "Make your bed", "Tidy desk", "Walk outside",
+  "Drink 8 glasses of water", "Stretch", "Journal", "No phone before bed", "Read 10 pages", "Make your bed", "Tidy desk", "Walk outside",
   "Meditate 5 minutes", "Eat a vegetable", "Take your vitamins", "Floss", "Go to bed by 11", "No phone first hour awake",
   "Do 10 pushups", "Write 3 gratitudes", "Plan tomorrow", "Check in with a friend", "Practice an instrument", "Study a language",
-  "Take the stairs", "Pack lunch", "Declutter one thing", "Get sunlight", "Stretch before bed", "No sugar today",
-  "Move your body", "Save a little money", "Say something kind", "Unplug for an hour", "Clean as you go",
+  "Pack lunch", "Declutter one thing", "Get sunlight", "Stretch before bed", "No sugar today",
+  "Move your body", "Save a little money", "Say something kind", "Unplug for an hour",
 ];
 export const JOURNAL_PROMPTS = {
   Confidence: [

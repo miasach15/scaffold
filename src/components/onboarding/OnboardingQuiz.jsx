@@ -14,7 +14,7 @@ const SKY = THEME_PRESETS.sky.primary;
 // onboarding is a first impression, not the place to dump all 30 options on someone.
 // HabitsView's own "suggested" picker still offers the full list later, once they're
 // actually looking for more.
-const ONBOARDING_HABIT_SUGGESTIONS = ["Drink water", "Stretch", "Journal", "Read 10 pages", "Walk outside", "Go to bed by 11", "Plan tomorrow", "Move your body"];
+const ONBOARDING_HABIT_SUGGESTIONS = ["Drink 8 glasses of water", "Stretch", "Journal", "Read 10 pages", "Walk outside", "Go to bed by 11", "Plan tomorrow", "Move your body"];
 
 export default function OnboardingQuiz({ onComplete }) {
   // No CategoryColorsProvider exists yet at this point (onboarding happens before one is
