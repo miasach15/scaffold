@@ -1,21 +1,23 @@
 // Shared swatch palette a user can assign to any category (see CategoryColorsContext +
-// SettingsModal) — the same 11 named colors as the accent-color picker's THEME_PRESETS,
-// so a category color and an app accent color always mean the same "Ocean"/"Coral"/etc.
+// SettingsModal) — the same named colors as the accent-color picker's THEME_PRESETS, so
+// a category color and an app accent color always mean the same "Sky"/"Coral"/etc.
 // Keys are stable identifiers stored per-user; the actual {bg,border,text} triples live
 // here in one place, each derived from that swatch's own THEME_PRESETS primary hue (a
 // pale bg, a mid-tone border, a dark readable text — same hue carried through all three).
 export const CATEGORY_COLOR_SWATCHES = {
-  ocean: { bg: "#E7EAF4", border: "#B9BFDA", text: "#42496C" },
-  sky: { bg: "#E5E8F7", border: "#B3BAE0", text: "#3B4473" },
-  emerald: { bg: "#DFFCF3", border: "#A3F0D8", text: "#24896A" },
   pink: { bg: "#FCDFE8", border: "#F0A3BC", text: "#8C2144" },
-  amber: { bg: "#FCEDDF", border: "#F0C8A3", text: "#885525" },
-  teal: { bg: "#E0FBF8", border: "#A7ECE4", text: "#2B8278" },
-  slate: { bg: "#ECEDEF", border: "#C5C8CE", text: "#52555C" },
-  coral: { bg: "#FCE2DF", border: "#F0AAA3", text: "#8C2C21" },
-  lilac: { bg: "#EEE6F6", border: "#CBB5DE", text: "#583D70" },
-  beige: { bg: "#F2EEEA", border: "#D5CBBF", text: "#655949" },
   peach: { bg: "#FCE1DF", border: "#F0AAA3", text: "#8B2B22" },
+  coral: { bg: "#FCE2DF", border: "#F0AAA3", text: "#8C2C21" },
+  amber: { bg: "#FCEDDF", border: "#F0C8A3", text: "#885525" },
+  emerald: { bg: "#F4FBF3", border: "#D6EFD3", text: "#5E7B5A" },
+  teal: { bg: "#E0FBF8", border: "#A7ECE4", text: "#2B8278" },
+  sky: { bg: "#E5E8F7", border: "#B3BAE0", text: "#3B4473" },
+  lilac: { bg: "#EEE6F6", border: "#CBB5DE", text: "#583D70" },
+  slate: { bg: "#ECEDEF", border: "#C5C8CE", text: "#52555C" },
+  beige: { bg: "#F2EEEA", border: "#D5CBBF", text: "#655949" },
+  mocha: { bg: "#F1ECEA", border: "#C7B7AF", text: "#4C3B32" },
+  charcoal: { bg: "#E8E8EB", border: "#A7A9B0", text: "#292B33" },
+  midnight: { bg: "#E7EAF1", border: "#A3ADC8", text: "#242F4E" },
 };
 
 // The starting set before a user renames/adds/removes any — after that, the live list
@@ -26,11 +28,11 @@ export const CATEGORY_COLOR_SWATCHES = {
 // never removed.
 export const DEFAULT_CATEGORY_KEYS = ["School", "Personal", "Health", "Social", "Extracurriculars"];
 export const CATEGORY_KEYS = DEFAULT_CATEGORY_KEYS;
-export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "ocean", Personal: "pink", Health: "emerald", Social: "lilac", Extracurriculars: "coral" };
+export const DEFAULT_CATEGORY_COLOR_KEYS = { School: "sky", Personal: "pink", Health: "emerald", Social: "lilac", Extracurriculars: "coral" };
 // Colors assigned to a custom category that isn't one of the 5 defaults and hasn't been
 // explicitly recolored yet — cycles through so several new categories don't all end up
 // the same color. Skips whichever swatches the 5 defaults above already use.
-export const FALLBACK_CATEGORY_COLOR_ROTATION = ["sky", "amber", "teal", "slate", "peach", "beige"];
+export const FALLBACK_CATEGORY_COLOR_ROTATION = ["amber", "teal", "slate", "peach", "beige", "mocha", "charcoal", "midnight"];
 
 // Education used to get its own fixed color (EDU_TYPE_COLORS) regardless of type —
 // every consumer now instead reads the user's actual School category color live via
@@ -42,36 +44,41 @@ export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };
 // PRIMARY/PRIMARY_DARK/PRIMARY_TINT resolve to whatever accent theme is currently
 // applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
-// properties on the root element). The fallback values are the default "Ocean" theme,
-// matched to the connected Figma identity kit's settings-accent-color-picker — its
-// main brand color is this indigo/blue-purple leaning blue.
+// properties on the root element). The fallback values are the default "Sky" theme —
+// the connected Figma identity kit's own "Core Colors" section (Ink/Sky/Coral/Paper)
+// names Sky as the brand's main indigo/blue-purple accent; the picker's old "Ocean"
+// preset no longer exists in the kit.
 // PRIMARY_DARK intentionally equals PRIMARY here — the exact hex sampled from Figma,
 // left alone rather than synthetically darkened.
-export const PRIMARY = "var(--primary, #99A2FF)";
-export const PRIMARY_DARK = "var(--primary-dark, #99A2FF)";
-export const PRIMARY_TINT = "var(--primary-tint, #EBECFF)";
+export const PRIMARY = "var(--primary, #9BA6E0)";
+export const PRIMARY_DARK = "var(--primary-dark, #9BA6E0)";
+export const PRIMARY_TINT = "var(--primary-tint, #EBEDF9)";
 
 // Matched 1:1 to the Figma kit's accent picker (settings-accent-color-picker's
-// color-grid), hex-sampled directly from its color-dot assets — re-checked directly in
-// Figma; this pass every preset except Sky and Coral had moved, most toward a lighter,
-// more pastel version of the same hue.
+// color-grid), hex-sampled directly from its color-dot assets. Re-synced against the
+// live file: "Ocean" is gone, "Mocha"/"Charcoal"/"Midnight" are new darker/neutral
+// options, and one node the file mislabeled "Teal" (a green hue, distinct from the
+// existing cyan "Teal") is carried in here as "Emerald" instead, since that's the color
+// family it actually replaces.
 // primaryDark deliberately equals primary — the sampled color used as-is, not darkened.
 // primaryTint (a pale wash, not in the kit) is derived from each swatch's own hue, same
 // relationship as the prior preset set.
 export const THEME_PRESETS = {
-  ocean: { label: "Ocean", primary: "#99A2FF", primaryDark: "#99A2FF", primaryTint: "#EBECFF" },
-  sky: { label: "Sky", primary: "#9BA6E0", primaryDark: "#9BA6E0", primaryTint: "#EBEDF9" },
-  emerald: { label: "Emerald", primary: "#A5DBB9", primaryDark: "#A5DBB9", primaryTint: "#EDF8F1" },
   pink: { label: "Pink", primary: "#FFC1D1", primaryDark: "#FFC1D1", primaryTint: "#FFF3F6" },
-  amber: { label: "Amber", primary: "#FFDBA1", primaryDark: "#FFDBA1", primaryTint: "#FFF8EC" },
-  teal: { label: "Teal", primary: "#78C2D3", primaryDark: "#78C2D3", primaryTint: "#E4F3F6" },
-  slate: { label: "Slate", primary: "#B9C0CE", primaryDark: "#B9C0CE", primaryTint: "#F1F2F5" },
-  coral: { label: "Coral", primary: "#FFA89E", primaryDark: "#FFA89E", primaryTint: "#FFEEEC" },
-  lilac: { label: "Lilac", primary: "#D7C6FF", primaryDark: "#D7C6FF", primaryTint: "#F7F4FF" },
-  beige: { label: "Beige", primary: "#F5E7D2", primaryDark: "#F5E7D2", primaryTint: "#FDFAF6" },
   peach: { label: "Peach", primary: "#FFC2B6", primaryDark: "#FFC2B6", primaryTint: "#FFF3F0" },
+  coral: { label: "Coral", primary: "#FFA89E", primaryDark: "#FFA89E", primaryTint: "#FFEEEC" },
+  amber: { label: "Amber", primary: "#FFDBA1", primaryDark: "#FFDBA1", primaryTint: "#FFF8EC" },
+  emerald: { label: "Emerald", primary: "#BCE5B6", primaryDark: "#BCE5B6", primaryTint: "#F2FAF0" },
+  teal: { label: "Teal", primary: "#78C2D3", primaryDark: "#78C2D3", primaryTint: "#E4F3F6" },
+  sky: { label: "Sky", primary: "#9BA6E0", primaryDark: "#9BA6E0", primaryTint: "#EBEDF9" },
+  lilac: { label: "Lilac", primary: "#D7C6FF", primaryDark: "#D7C6FF", primaryTint: "#F7F4FF" },
+  slate: { label: "Slate", primary: "#B9C0CE", primaryDark: "#B9C0CE", primaryTint: "#F1F2F5" },
+  beige: { label: "Beige", primary: "#F5E7D2", primaryDark: "#F5E7D2", primaryTint: "#FDFAF6" },
+  mocha: { label: "Mocha", primary: "#A2897B", primaryDark: "#A2897B", primaryTint: "#ECE7E5" },
+  charcoal: { label: "Charcoal", primary: "#6E717D", primaryDark: "#6E717D", primaryTint: "#E2E3E5" },
+  midnight: { label: "Midnight", primary: "#6777A4", primaryDark: "#6777A4", primaryTint: "#E1E4ED" },
 };
-export const DEFAULT_THEME = "ocean";
+export const DEFAULT_THEME = "sky";
 
 // Mixes a hex color toward white by `amount` (0 = unchanged, 1 = white) — used to derive
 // a pale "tint" wash for a user's own custom accent color, the same role each preset's
