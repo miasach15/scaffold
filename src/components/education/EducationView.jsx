@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -39,9 +39,6 @@ export default function EducationView({
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.School || CATEGORY_COLORS.Personal;
 
   const [title, setTitle] = useState("");
-  // Type/subject/scheduling stay tucked behind a toggle by default — title and a due
-  // date are the only two things you actually need to file something.
-  const [showOptions, setShowOptions] = useState(false);
   const [editingEduId, setEditingEduId] = useState(null);
   const [sessionBreakingDown, setSessionBreakingDown] = useState(false);
   const [sessionBreakdownError, setSessionBreakdownError] = useState(null);
@@ -56,7 +53,6 @@ export default function EducationView({
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [dueTime, setDueTime] = useState("");
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
   const [startFrom, setStartFrom] = useState("today"); // "today" or "tomorrow" — only matters in "every day" mode
@@ -89,7 +85,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setDueTime(""); setAssignmentDetails(""); setAddError(null);
+    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -163,7 +159,7 @@ export default function EducationView({
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
-    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, "None", null);
+    onAddEduItem(title.trim(), type, subject, dueDate, null, "None", null);
     resetAddForm();
   };
 
@@ -172,7 +168,7 @@ export default function EducationView({
     // previewItems carries whatever the user edited/removed in the modal — used exactly
     // as-is for the first occurrence; if this assignment repeats, later occurrences fall
     // back to auto-computing their own schedule from `schedule` since we only preview one.
-    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
+    onAddEduItem(title.trim(), type, subject, dueDate, null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
     setPendingPlan(null);
     resetAddForm();
   };
@@ -318,9 +314,22 @@ export default function EducationView({
       <div data-tour="education-add">
         <AddRow>
           <input placeholder="Title..." value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
-          <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, width: 130 }}>
-            <option>Assignment</option><option>Assessment</option><option>Homework</option>
-          </select>
+          <div style={{ display: "flex", gap: 6 }}>
+            {["Assignment", "Assessment", "Homework"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                style={{
+                  padding: "8px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
+                  border: `1px solid ${type === t ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                  background: type === t ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                  color: type === t ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
           <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 130 }} />
           <datalist id="subjects-datalist">
             {knownSubjects.map((s) => <option key={s} value={s} />)}
@@ -332,19 +341,8 @@ export default function EducationView({
         </AddRow>
         {addError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: -2, marginBottom: 8 }}>{addError}</div>}
       </div>
-      <div>
-        <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={{ ...toggleBtn, marginBottom: showOptions ? 10 : 16 }}>
-          {showOptions ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
-          {showOptions ? "Hide options" : "A specific time, or how to work it"}
-        </button>
-      </div>
 
-      {showOptions && (
-        <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 110 }} />
-          </div>
-
+      <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           {type === "Homework" && (
             <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets one reminder to work on it, the day before it's due — for something bigger that needs its own spread of sessions, use Assignment instead.</div>
           )}
@@ -420,8 +418,7 @@ export default function EducationView({
               )}
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       <SubHeader>Today</SubHeader>
       {today_.length === 0 && leftTodayItems.length === 0 ? (

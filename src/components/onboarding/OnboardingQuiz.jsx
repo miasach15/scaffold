@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Brain, CalendarDays } from "lucide-react";
-import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, EVENT_COLOR, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, PAPER_BG, SUGGESTED_HABITS, TASK_COLOR, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, DEFAULT_CATEGORY_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, HABIT_COLOR, INK, MUTED, PAPER_BG, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { Monogram } from "../shared/Misc";
 import { ghostBtn, primaryBtn, inputStyle } from "../../lib/styles";
@@ -10,6 +9,12 @@ import CategoryEditor from "../shared/CategoryEditor";
 // launch screen in Figma — not the user's own app theme (which doesn't exist yet at this
 // point anyway).
 const SKY = THEME_PRESETS.sky.primary;
+
+// A small, broadly-appealing slice of the full SUGGESTED_HABITS pool (see constants.js) —
+// onboarding is a first impression, not the place to dump all 30 options on someone.
+// HabitsView's own "suggested" picker still offers the full list later, once they're
+// actually looking for more.
+const ONBOARDING_HABIT_SUGGESTIONS = ["Drink water", "Stretch", "Journal", "Read 10 pages", "Walk outside", "Go to bed by 11", "Plan tomorrow", "Move your body"];
 
 export default function OnboardingQuiz({ onComplete }) {
   // No CategoryColorsProvider exists yet at this point (onboarding happens before one is
@@ -100,7 +105,7 @@ export default function OnboardingQuiz({ onComplete }) {
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Any habits you want to start with?</div>
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These'll already be in your Habits list. You can always add more later.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {SUGGESTED_HABITS.map((h) => (
+              {ONBOARDING_HABIT_SUGGESTIONS.map((h) => (
                 <button
                   key={h}
                   onClick={() => toggleHabit(h)}
@@ -122,26 +127,10 @@ export default function OnboardingQuiz({ onComplete }) {
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
             {habitPicks.length > 0 && (
-              <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, marginBottom: 16 }}>
+              <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6 }}>
                 Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}.
               </div>
             )}
-
-            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Up next</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: EVENT_COLOR.bg, border: `1px solid ${EVENT_COLOR.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <CalendarDays size={14} color={EVENT_COLOR.text} strokeWidth={2.2} />
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Add your events for the next two weeks</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, border: `1px solid ${BORDER}` }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: TASK_COLOR.bg, border: `1px solid ${TASK_COLOR.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Brain size={14} color={TASK_COLOR.text} strokeWidth={2.2} />
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Brain dump your tasks</div>
-              </div>
-            </div>
           </div>
         )}
 

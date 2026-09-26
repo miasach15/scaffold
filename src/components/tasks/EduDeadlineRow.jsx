@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { BORDER } from "../../lib/constants";
-import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
+import { decimalToTimeLabel, formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -46,13 +46,6 @@ export default function EduDeadlineRow({ item, col, sessions, onToggleItemDone, 
               value={item.dueDate}
               onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
               style={{ ...inputStyle, width: 130, fontSize: 11.5, padding: "3px 6px" }}
-            />
-            <input
-              type="time"
-              value={decimalToTimeInput(item.dueStart)}
-              onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
-              title="Optional: a specific time it's due"
-              style={{ ...inputStyle, width: 96, fontSize: 11.5, padding: "3px 6px" }}
             />
           </div>
         ) : (

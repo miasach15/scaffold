@@ -31,7 +31,6 @@ import { useDarkMode } from "./hooks/useDarkMode";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
-import SetupOverlay from "./components/nav/SetupOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
 
 // These pages aren't needed for first paint (the app opens on Calendar) — loading them
@@ -97,17 +96,12 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const [showSettings, setShowSettings] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStarted, setTourStarted] = useState(false);
-  // Only the very first, automatic tour chains into the "let's set you up" flow — someone
-  // replaying the tour from Settings later has already been through that part.
-  const [firstTimeTour, setFirstTimeTour] = useState(false);
-  const [setupOpen, setSetupOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     if (profile && profile.onboarded && !profile.tourSeen && !tourStarted) {
       setTourOpen(true);
       setTourStarted(true);
-      setFirstTimeTour(true);
     }
   }, [profile, tourStarted]);
 
@@ -168,12 +162,8 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
   const finishTour = () => {
     setTourOpen(false);
     updateProfile({ tourSeen: true });
-    if (firstTimeTour) {
-      setFirstTimeTour(false);
-      setSetupOpen(true);
-    }
+    setView("dashboard");
   };
-  const finishSetup = () => setSetupOpen(false);
 
   // Deleting a task doesn't happen instantly anymore — it disappears from the UI right
   // away, but the actual delete is held for a few seconds so a misclick (or change of
@@ -887,16 +877,6 @@ function ScaffoldApp({ userId, email, onSignOut, darkMode, onToggleDarkMode }) {
           onOpenWeeklyReview={() => setShowWeeklyReview(true)}
           onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); }}
           onFinish={finishTour}
-        />
-      )}
-
-      {setupOpen && (
-        <SetupOverlay
-          setView={setView}
-          onOpenSettings={() => setShowSettings(true)}
-          onCloseSettings={() => setShowSettings(false)}
-          onOpenBrainDump={() => { setView("dashboard"); setAutoOpenBrainDump(true); }}
-          onFinish={finishSetup}
         />
       )}
     </div>
