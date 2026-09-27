@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Clock, Flame, GripVertical, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
-import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
+import { ghostBtn, inputStyle } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -12,7 +12,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // background rather than a boxed-off panel. Applied to every section after the first one
 // in each column.
 const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -21,17 +21,18 @@ import BrainDumpModal from "./BrainDumpModal";
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
 // next row, per category color. Figma's dashboard mockup carries this same treatment.
-function TimelineRow({ item, col, isFirst, isLast }) {
+function TimelineRow({ item, col, isFirst, isLast, isPast }) {
   return (
-    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14 }}>
+    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isFirst ? col.accent : col.bg, border: isFirst ? "none" : `1.5px solid ${col.border}` }} />
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isPast ? "transparent" : isFirst ? col.accent : col.bg, border: isPast ? `1.5px solid ${BORDER}` : isFirst ? "none" : `1.5px solid ${col.border}` }} />
         {!isLast && <div style={{ flex: 1, width: 1.5, background: col.border, marginTop: 2 }} />}
       </div>
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+        {item.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.notes}</div>}
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
     </div>
@@ -45,7 +46,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, educationCategory }) {
+export default function DashboardView({ profile, events, tasks, habits, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -54,29 +55,6 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
   // it started from can dim itself while it's in flight.
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const todayISO = toISO(new Date());
-  // A focus session always has to be about something real, and specifically something
-  // due today — not the whole task list. Timed tasks sort first by their time slot,
-  // untimed ones after, matching how "Today's Scaffolded Steps" orders things below.
-  const focusableTasks = useMemo(
-    () => tasks.filter((t) => !t.done && t.date === todayISO).sort((a, b) => (a.start ?? 99) - (b.start ?? 99)),
-    [tasks, todayISO]
-  );
-  const [focusTaskId, setFocusTaskId] = useState(null);
-  useEffect(() => {
-    if (!focusableTasks.some((t) => t.id === focusTaskId)) setFocusTaskId(focusableTasks[0]?.id || null);
-  }, [focusableTasks, focusTaskId]);
-  const [showBrainDump, setShowBrainDump] = useState(false);
-  // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
-  // the second of the two "Up next" steps the onboarding Done screen just promised.
-  useEffect(() => {
-    if (autoOpenBrainDump) {
-      setShowBrainDump(true);
-      onAutoOpenBrainDumpHandled?.();
-    }
-  }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
-  const weekStart = startOfWeek(new Date());
-  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
-  const firstName = (profile?.name || "").trim().split(" ")[0];
 
   // Tasks always come first and are ordered by how urgent they are — a timed task is
   // more pressing the sooner today it's due, so those sort by start time ascending;
@@ -123,15 +101,19 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
     }),
     ...groupItems,
     ...eduSessionItems,
-    // Manually moved items (see moveUntimed/onReorderTasks) sort by that order first —
-    // same "indexed items float to the top, everything else falls back to date" rule
-    // goal_actions' own moveAction already uses — anything not yet touched just keeps
-    // sorting by date underneath whatever's been deliberately placed.
+    // How close a step's own due date is comes first — overdue/carried-over items
+    // lead, then today's, then whatever's shown early because it's coming up soon —
+    // so the list itself shows what's actually urgent instead of urgency living only
+    // in a separate panel. Manual drag order (see moveUntimed/onReorderTasks) only
+    // breaks ties between steps that are equally due, the same day.
   ].sort((a, b) => {
+    const ad = a.date || "9999-99-99";
+    const bd = b.date || "9999-99-99";
+    if (ad !== bd) return ad.localeCompare(bd);
     if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
     if (a.orderIndex != null) return -1;
     if (b.orderIndex != null) return 1;
-    return (a.date || "").localeCompare(b.date || "");
+    return 0;
   });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
@@ -178,23 +160,36 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
     ? todaysUntimed[0]
     : [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
 
-  // Just real due dates here — goal deadlines/milestones/actions aren't included; those
-  // live on the Goals page. Within tasks: only a standalone one-time task or a "break it
-  // down" project's own overall due date, never one of its individual steps — those are
-  // work days, not deadlines, and would otherwise flood this list with entries for the
-  // same project. Education
-  // items (tests, homework, assignments alike) are real deadlines and belong here too;
-  // an Education-generated "work on X" session task is excluded the same way a
-  // breakdown step is, for the same reason.
-  const upcoming = useMemo(
-    () =>
-      dueChips
-        .filter((c) => !c.done && c.date >= todayISO)
-        .filter((c) => (c.kind === "task" && !c.groupId && !c.eduId) || c.kind === "task-group-due" || c.kind === "edu" || c.kind === "goal")
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(0, 4),
-    [dueChips, todayISO]
-  );
+  // A focus session always has to be about something real — and specifically the same
+  // "actionable today" set already shown above (timed tasks, then whatever's due,
+  // carried over, or early-surfaced in Anytime Today), not a stricter list of its own.
+  // Sharing that set is what keeps this picker's own default in sync with the
+  // highlighted suggestion's Start button instead of the two aiming at different tasks —
+  // a decision to make right when someone's trying to begin, instead of one obvious
+  // next action.
+  const focusableTasks = useMemo(() => [...todaysTimedTasks, ...todaysUntimed], [todaysTimedTasks, todaysUntimed]);
+  const [focusTaskId, setFocusTaskId] = useState(null);
+  useEffect(() => {
+    if (!focusableTasks.some((t) => t.id === focusTaskId)) {
+      const preferred = suggestedNext && focusableTasks.some((t) => t.id === suggestedNext.id) ? suggestedNext.id : focusableTasks[0]?.id || null;
+      setFocusTaskId(preferred);
+    }
+  }, [focusableTasks, focusTaskId, suggestedNext]);
+  const [showBrainDump, setShowBrainDump] = useState(false);
+  // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
+  // the second of the two "Up next" steps the onboarding Done screen just promised.
+  useEffect(() => {
+    if (autoOpenBrainDump) {
+      setShowBrainDump(true);
+      onAutoOpenBrainDumpHandled?.();
+    }
+  }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
+  const weekStart = startOfWeek(new Date());
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const firstName = (profile?.name || "").trim().split(" ")[0];
+  // "This week" strip's per-day load dots — how many tasks/events actually land on
+  // that day, capped at 3 dots so a heavy day doesn't sprawl sideways.
+  const dayLoad = (iso) => Math.min(3, tasks.filter((t) => !t.done && t.date === iso).length + events.filter((e) => e.date === iso).length);
 
   return (
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
@@ -233,25 +228,31 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
               {weekDays.map((d) => {
                 const iso = toISO(d);
                 const isToday = iso === todayISO;
+                const load = dayLoad(iso);
                 return (
                   <button
                     key={iso}
                     onClick={() => { onSelectDay(iso); setView("calendar"); }}
                     style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 2px",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "6px 2px",
                       borderRadius: 10, background: isToday ? "#DDE1EE" : "transparent", border: `1px solid ${isToday ? "#B1BBDD" : "transparent"}`,
                       cursor: "pointer",
                     }}
                   >
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 1).toUpperCase()}</div>
-                    <div style={{ fontFamily: serifFont, fontSize: 19, color: isToday ? PRIMARY_DARK : INK }}>{d.getDate()}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 1).toUpperCase()}</div>
+                    <div style={{ fontFamily: serifFont, fontSize: 17, color: isToday ? PRIMARY_DARK : INK }}>{d.getDate()}</div>
+                    <div style={{ display: "flex", gap: 2, height: 4, alignItems: "center" }}>
+                      {Array.from({ length: load }).map((_, i) => (
+                        <div key={i} style={{ width: 4, height: 4, borderRadius: 2, background: isToday ? PRIMARY_DARK : "#C3CAD3" }} />
+                      ))}
+                    </div>
                   </button>
                 );
               })}
@@ -259,7 +260,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           </div>
 
           <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12 }}>Today's Scaffolded Steps</div>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Today's Scaffolded Steps</div>
+              <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
+                {freeHoursLeft > 0 ? `≈${freeHoursLeft % 1 === 0 ? freeHoursLeft : freeHoursLeft.toFixed(1)}h free left today` : "No free time left today"}
+              </div>
+            </div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               <EmptyState text="Nothing scheduled for today yet." />
             ) : (
@@ -267,7 +273,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 {todaysTimedTasks.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {todaysTimedTasks.map((item, i) => (
-                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} />
+                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
                     ))}
                   </div>
                 )}
@@ -282,8 +288,13 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                           border: `1px solid ${fitsInTime ? PRIMARY : TONE.warn.border}`,
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
+                          </div>
+                          {suggestedNext.notes && (
+                            <div style={{ fontSize: 11.5, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{suggestedNext.notes}</div>
+                          )}
                         </div>
                         {onStartFocus && (
                           <button
@@ -300,7 +311,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                       </div>
                     )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {todaysUntimed.map((t) => {
+                      {todaysUntimed.filter((t) => t.id !== suggestedNext?.id).map((t) => {
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const dragProps = onReorderTasks
                           ? {
@@ -326,8 +337,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                                 <GripVertical size={14} strokeWidth={2} />
                               </div>
                             )}
-                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0 }} />
-                            <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0, marginTop: t.notes ? 3 : 0, alignSelf: t.notes ? "flex-start" : "center" }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                              {t.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notes}</div>}
+                            </div>
+                            {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
                             {t.date && t.date !== todayISO && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
                             )}
@@ -342,7 +357,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
-                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} />
+                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
                       ))}
                     </div>
                   </div>
@@ -431,19 +446,6 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           )}
 
           <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 8 }}>Coming Up</div>
-            {upcoming.length === 0 ? (
-              <EmptyState text="Nothing due soon." />
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {upcoming.map((c) => (
-                  <ComingUpRow key={c.id} chip={c} col={CATEGORY_COLORS[c.kind === "edu" ? educationCategory : c.category] || CATEGORY_COLORS.Personal} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} onGoToGoals={() => setView("goals")} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
@@ -473,52 +475,3 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
   );
 }
 
-// A Coming Up row's due date/time is its own click target, same inline native
-// date/time editor every other due-date editor in the app uses — dispatched by chip
-// kind since a plain task, a "break it down" group's overall due date, and an
-// Education deadline each save through a different function (the last two also
-// reflow their not-done steps/sessions to the new window).
-function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, onGoToGoals }) {
-  const [editing, setEditing] = useState(false);
-  const label = chip.subject || chip.category;
-  // A goal action's date lives on the Goals page, not the tasks table — there's no
-  // setter here that could safely edit it inline, so clicking opens Goals instead of
-  // the date/time editor every other kind gets.
-  const isGoalAction = chip.kind === "goal";
-  const onSave = chip.kind === "task-group-due" ? onUpdateGroupDueDate : chip.kind === "edu" ? onUpdateEduDeadline : null;
-  const handleDateChange = (date) => {
-    if (!date) return;
-    if (onSave) onSave(chip.id, date, chip.start);
-    else onSetDate(chip.id, date);
-  };
-  const handleTimeChange = (time) => {
-    const start = time ? timeToDecimal(time) : null;
-    if (onSave) onSave(chip.id, chip.date, start);
-    else onSetStart(chip.id, start);
-  };
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "2px 0" }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chip.title}</div>
-      </div>
-      {isGoalAction ? (
-        <button onClick={onGoToGoals} title="Open in Goals" style={{ background: "none", border: "none", padding: 0, flexShrink: 0, cursor: "pointer", display: "inline-flex" }}>
-          <UrgencyBadge iso={chip.date} done={chip.done} leadDays={2} />
-        </button>
-      ) : editing ? (
-        <div
-          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditing(false); }}
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
-        >
-          <input type="date" autoFocus value={chip.date} onChange={(e) => handleDateChange(e.target.value)} {...noTypeDateProps} style={{ ...inputStyle, width: 128, fontSize: 11.5, padding: "3px 6px" }} />
-          <input type="time" value={decimalToTimeInput(chip.start)} onChange={(e) => handleTimeChange(e.target.value)} title="Optional: a specific time it's due" style={{ ...inputStyle, width: 92, fontSize: 11.5, padding: "3px 6px" }} />
-        </div>
-      ) : (
-        <button onClick={() => setEditing(true)} title="Click to change" style={{ background: "none", border: "none", padding: 0, flexShrink: 0, cursor: "pointer", display: "inline-flex" }}>
-          <UrgencyBadge iso={chip.date} done={chip.done} leadDays={2} />
-        </button>
-      )}
-    </div>
-  );
-}

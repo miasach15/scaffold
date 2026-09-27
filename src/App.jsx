@@ -605,24 +605,17 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             profile={profile}
             events={events}
             tasks={visibleTasks}
-            goals={goals}
             habits={habits}
-            dueChips={dueChips}
             onSetHabitDone={setHabitDone}
             setView={setView}
             onSelectDay={setDayView}
             onStartFocus={openFocus}
             onAddTask={addTask}
-            onSetDate={setTaskDate}
-            onSetStart={setTaskStart}
-            onUpdateGroupDueDate={updateGroupDueDate}
-            onUpdateEduDeadline={updateEduDeadline}
             onReorderTasks={reorderTasks}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
             focusSlotRef={setDashboardFocusSlot}
-            educationCategory={profile.educationCategory}
           />
         )}
         {view === "calendar" && monthView && (

@@ -100,11 +100,11 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
 
         {onSetNotes && (
           <div style={{ marginTop: 14 }}>
-            <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>Notes</label>
+            <label style={{ fontSize: 9.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>First step (optional)</label>
             <textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
-              placeholder="Anything extra, e.g. other steps that landed on this same day"
+              placeholder={'A tiny, concrete first move — e.g. "Open Pearson, do problems 1–3 (~10 min)"'}
               rows={2}
               style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 12.5, marginTop: 3 }}
             />
