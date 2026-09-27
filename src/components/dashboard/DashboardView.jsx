@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Clock, Flame, Play } from "lucide-react";
+import { Clock, Flame, GripVertical, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
@@ -50,6 +50,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
+  // Drag-to-reorder "Anytime today" — which task is currently being dragged, so the row
+  // it started from can dim itself while it's in flight.
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
   const todayISO = toISO(new Date());
   // A focus session always has to be about something real, and specifically something
   // due today — not the whole task list. Timed tasks sort first by their time slot,
@@ -132,16 +135,19 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
   });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
-  // Swaps an "Anytime today" item with its neighbor and persists the WHOLE visible
-  // list's new order (not just the swapped pair) — matches moveAction's own
-  // reindex-everything behavior, so a partial reorder never leaves some items floating
-  // on manual order and others still on date order in a way that's hard to predict.
-  const moveUntimed = (taskId, direction) => {
+  // Dragging one "Anytime today" row onto another moves the dragged one to sit right
+  // before the drop target, then persists the WHOLE visible list's new order (not just
+  // the two rows involved) — matches moveAction's own reindex-everything behavior, so a
+  // partial reorder never leaves some items floating on manual order and others still on
+  // date order in a way that's hard to predict.
+  const dropUntimedOn = (targetId) => {
+    if (!draggedTaskId || draggedTaskId === targetId) return;
     const ids = todaysUntimed.map((t) => t.id);
-    const i = ids.indexOf(taskId);
-    const j = direction === "up" ? i - 1 : i + 1;
-    if (i === -1 || j < 0 || j >= ids.length) return;
-    [ids[i], ids[j]] = [ids[j], ids[i]];
+    const from = ids.indexOf(draggedTaskId);
+    const to = ids.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, draggedTaskId);
     onReorderTasks?.(ids);
   };
 
@@ -242,28 +248,30 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {todaysUntimed.map((t, i) => {
+                      {todaysUntimed.map((t) => {
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
+                        const dragProps = onReorderTasks
+                          ? {
+                              draggable: true,
+                              onDragStart: () => setDraggedTaskId(t.id),
+                              onDragOver: (e) => e.preventDefault(),
+                              onDrop: (e) => { e.preventDefault(); dropUntimedOn(t.id); },
+                              onDragEnd: () => setDraggedTaskId(null),
+                            }
+                          : {};
                         return (
-                          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+                          <div
+                            key={t.id}
+                            {...dragProps}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 14,
+                              border: `1px solid ${BORDER}`, background: "#fff",
+                              opacity: draggedTaskId === t.id ? 0.4 : 1,
+                            }}
+                          >
                             {onReorderTasks && (
-                              <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-                                <button
-                                  onClick={() => moveUntimed(t.id, "up")}
-                                  disabled={i === 0}
-                                  title="Move up"
-                                  style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: 0, color: i === 0 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
-                                >
-                                  <ChevronUp size={12} strokeWidth={2.5} />
-                                </button>
-                                <button
-                                  onClick={() => moveUntimed(t.id, "down")}
-                                  disabled={i === todaysUntimed.length - 1}
-                                  title="Move down"
-                                  style={{ background: "none", border: "none", cursor: i === todaysUntimed.length - 1 ? "default" : "pointer", padding: 0, color: i === todaysUntimed.length - 1 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
-                                >
-                                  <ChevronDown size={12} strokeWidth={2.5} />
-                                </button>
+                              <div title="Drag to reorder" style={{ display: "flex", flexShrink: 0, color: "#D1D5DB", cursor: "grab" }}>
+                                <GripVertical size={14} strokeWidth={2} />
                               </div>
                             )}
                             <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0 }} />

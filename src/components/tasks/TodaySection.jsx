@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { BatteryLow, Clock } from "lucide-react";
+import { BatteryLow } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
-import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, getLocalTomorrow, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
+import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WhatNowModal from "./WhatNowModal";
@@ -69,7 +69,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     }
   }, [lowEnergy]);
   const todayISO = getLocalToday();
-  const tomorrowISO = getLocalTomorrow();
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
   // Only a task/step you own gets a "Not today" button — pushing its date forward is
@@ -86,7 +85,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
-      onSnooze: t.date && onSetDate ? () => onSetDate(t.id, tomorrowISO) : null,
     }));
 
   // Plain, undone, overdue tasks — sorted oldest first, so whatever's been avoided
@@ -126,7 +124,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
-      onSnooze: next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
     }];
   });
 
@@ -162,7 +159,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
           ? () => onToggleDone(next.id, false)
           : () => { markJustDone(`group-${groupId}`); onToggleDone(next.id, true); },
         onOpen: () => onOpenFocus(next.id, next.title),
-        onSnooze: !allDone && next.date && onSetDate ? () => onSetDate(next.id, tomorrowISO) : null,
       };
     })
     .filter(Boolean);
@@ -172,7 +168,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO)
     .map((e) => ({
-      id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, onSnooze: null, done: e.done,
+      id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, done: e.done,
       category: educationCategory, col: CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!e.done) markJustDone(`edu-${e.id}`); onSetEduDone(e.id, !e.done); }, onOpen: onGoToEducation,
     }));
@@ -180,7 +176,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   const goalItems = (goalChips || [])
     .filter((c) => (!c.done || justDone.has(`goal-${c.id}`)) && c.date && c.date <= todayISO)
     .map((c) => ({
-      id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, onSnooze: null, done: c.done,
+      id: `goal-${c.id}`, title: c.title, date: c.date, leadDays: null, isGroup: false, focusId: null, done: c.done,
       category: c.category || "Personal", col: CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!c.done) markJustDone(`goal-${c.id}`); onToggleGoalChip(c); }, onOpen: onGoToGoals,
     }));
@@ -356,16 +352,6 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                 )}
                 {!it.done && waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>
-                )}
-                {!it.done && it.onSnooze && (
-                  <button
-                    onClick={it.onSnooze}
-                    title="Push this to tomorrow"
-                    className="hoverable"
-                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: "#fff", border: "1.5px solid #E5E9ED", color: "#7B8794", flexShrink: 0, cursor: "pointer" }}
-                  >
-                    <Clock size={12} strokeWidth={2.3} />
-                  </button>
                 )}
               </div>
             );
