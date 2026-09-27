@@ -1,20 +1,41 @@
 import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 
-// Every row here — a work session or homework — is an Education item, so it's always
-// your School category color (item.col, set by EducationView), not whatever category
-// the underlying task happens to carry. Only ever shown inside "Today," so there's no
-// date or "Due today" badge to repeat — just what it is, and a time if it has one.
 // A session's notes can be several AI-generated micro-steps joined into one comma
 // list (see groupItemsByDate) when more than one landed on the same work day — reading
 // all of them at once is exactly the "five things to start" overwhelm that makes
-// starting harder. Only the first one shows plainly; the rest collapse into a count.
-const formatSteps = (subtitle) => {
-  const parts = subtitle.split(",").map((s) => s.trim()).filter(Boolean);
-  if (parts.length <= 1) return subtitle;
-  return `Next: ${parts[0]} (+${parts.length - 1} more)`;
+// starting harder, and one that just repeats the row's own title adds nothing at all.
+// Only the next concrete thing shows by default — the rest are a click away instead of
+// gone outright.
+const stepParts = (subtitle, title) => {
+  if (!subtitle) return [];
+  return subtitle.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
 };
+
+function StepNotes({ subtitle, title }) {
+  const [expanded, setExpanded] = useState(false);
+  const parts = stepParts(subtitle, title);
+  if (parts.length === 0) return null;
+  if (parts.length === 1) return <div style={{ fontSize: 10.5, color: "#93A0AD" }}>Next: {parts[0]}</div>;
+  return (
+    <div>
+      <button
+        onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
+        style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 10.5, color: "#93A0AD", maxWidth: "100%" }}
+      >
+        {expanded ? <ChevronDown size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</span>
+      </button>
+      {expanded && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 14 }}>
+          {parts.slice(1).map((p, i) => <div key={i} style={{ fontSize: 10, color: "#93A0AD" }}>{p}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function WorkItemRow({ item }) {
   const col = item.col;
@@ -34,7 +55,11 @@ export default function WorkItemRow({ item }) {
         ) : (
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
         )}
-        {item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{formatSteps(item.subtitle)}</div>}
+        {item.onFocus ? (
+          <StepNotes subtitle={item.subtitle} title={item.title} />
+        ) : (
+          item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>
+        )}
       </div>
       {item.timeLabel && <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.timeLabel}</div>}
       {confirmDelete ? (

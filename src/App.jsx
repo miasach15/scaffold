@@ -891,9 +891,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           tasks={tasks}
           goals={goals}
           habits={habits}
-          eduItems={eduItems}
           journalEntries={journalEntries}
-          educationCategory={profile.educationCategory}
           onClose={() => setShowWeeklyReview(false)}
         />
       )}

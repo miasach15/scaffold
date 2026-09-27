@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clock, Flame, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
@@ -18,21 +18,50 @@ import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
 
-// A session's notes can be several comma-joined micro-steps (see groupItemsByDate) —
-// showing the whole pile is overwhelming, and any duplicate/out-of-order/self-titled
-// entries in it just add noise on top of that. Only the next concrete thing to do is
-// worth surfacing here; a step that just repeats the row's own title is dropped too.
-const nextStepLabel = (notes, title) => {
-  if (!notes) return null;
-  const parts = notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
-  return parts.length > 0 ? `Next: ${parts[0]}` : null;
+// A session's notes can be several comma-joined micro-steps (see groupItemsByDate) — a
+// step that just repeats the row's own title is dropped outright (adds nothing), and
+// showing every remaining one at once is overwhelming. Only the next concrete thing to
+// do shows by default; the rest are still there, just a click away instead of gone.
+const stepParts = (notes, title) => {
+  if (!notes) return [];
+  return notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
 };
+
+function StepNotes({ notes, title, color }) {
+  const [expanded, setExpanded] = useState(false);
+  const parts = stepParts(notes, title);
+  if (parts.length === 0) return null;
+  return (
+    <div style={{ marginTop: 1 }}>
+      {parts.length > 1 ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", padding: 0, cursor: "pointer",
+            fontSize: 11.5, color: color || MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%",
+          }}
+        >
+          {expanded ? <ChevronDown size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</span>
+        </button>
+      ) : (
+        <div style={{ fontSize: 11.5, color: color || MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</div>
+      )}
+      {expanded && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 15 }}>
+          {parts.slice(1).map((p, i) => (
+            <div key={i} style={{ fontSize: 11, color: MUTED }}>{p}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
 // next row, per category color. Figma's dashboard mockup carries this same treatment.
 function TimelineRow({ item, col, isFirst, isLast, isPast }) {
-  const nextStep = nextStepLabel(item.notes, item.title);
   return (
     <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
@@ -43,7 +72,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-        {nextStep && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStep}</div>}
+        <StepNotes notes={item.notes} title={item.title} />
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
     </div>
@@ -303,9 +332,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
                           </div>
-                          {nextStepLabel(suggestedNext.notes, suggestedNext.title) && (
-                            <div style={{ fontSize: 11.5, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStepLabel(suggestedNext.notes, suggestedNext.title)}</div>
-                          )}
+                          <StepNotes notes={suggestedNext.notes} title={suggestedNext.title} color={fitsInTime ? PRIMARY_DARK : TONE.warn.text} />
                         </div>
                         {suggestedNext.date && suggestedNext.date !== todayISO && (
                           <div style={{ flexShrink: 0 }}>
@@ -356,7 +383,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             {onToggleDone && <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={col} size={16} />}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                              {nextStepLabel(t.notes, t.title) && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStepLabel(t.notes, t.title)}</div>}
+                              <StepNotes notes={t.notes} title={t.title} />
                             </div>
                             {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
                             {t.date && t.date !== todayISO && (

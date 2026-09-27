@@ -54,15 +54,17 @@ function ReviewSection({ title, items, color }) {
   );
 }
 
-export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, journalEntries, educationCategory, onClose }) {
+export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries, onClose }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const weekStart = toISO(startOfWeek(new Date()));
   const weekEnd = toISO(addDays(startOfWeek(new Date()), 6));
   const inWeek = (iso) => iso && iso >= weekStart && iso <= weekEnd;
 
+  // Education deadlines (the assignment/test itself) used to get their own separate
+  // "Education items completed" section here, alongside "Tasks completed" — but every
+  // Education work session IS a task, so this just doubled up on the same underlying
+  // work with a second, differently-worded list. One list now.
   const tasksDone = tasks.filter((t) => t.done && inWeek(t.date));
-  const eduDone = eduItems.filter((e) => e.done && inWeek(e.dueDate));
   const actionsDone = [];
   goals.forEach((g) => g.milestones.forEach((m) => m.actions.forEach((a) => {
     if (a.done && inWeek(a.dueDate)) actionsDone.push({ goal: g.title, title: a.title });
@@ -70,7 +72,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
   const habitStats = habits.map((h) => ({ title: h.title, count: h.doneDates.filter((d) => inWeek(d)).length })).filter((h) => h.count > 0);
   const entriesThisWeek = journalEntries.filter((e) => inWeek(e.date));
 
-  const totalWins = tasksDone.length + eduDone.length + actionsDone.length;
+  const totalWins = tasksDone.length + actionsDone.length;
   const isSunday = new Date().getDay() === 0;
 
   return (
@@ -89,9 +91,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, eduItems, jour
             )}
             {actionsDone.length > 0 && (
               <ReviewSection title={`Goal actions completed (${actionsDone.length})`} items={actionsDone.map((a) => `${a.title} · ${a.goal}`)} color={CATEGORY_COLORS.Personal} />
-            )}
-            {eduDone.length > 0 && (
-              <ReviewSection title={`Education items completed (${eduDone.length})`} items={eduDone.map((e) => `${e.type}: ${e.title}`)} color={eduCol} />
             )}
             {habitStats.length > 0 && (
               <ReviewSection title="Habits kept up" items={habitStats.map((h) => `${h.title} · ${h.count}x this week`)} color={HABIT_COLOR} />
