@@ -68,7 +68,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, loading: tasksLoading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
+  const { tasks, loading: tasksLoading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
@@ -843,6 +843,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onOpenFocus={openFocus}
           onSetDate={setTaskDate}
           onSetStart={setTaskStart}
+          onSetDuration={setTaskDuration}
           onSetNotes={setTaskNotes}
         />
       )}

@@ -6,7 +6,10 @@ import { ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primar
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
-export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate, onSetStart, onSetNotes }) {
+const DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
+const durationLabel = (m) => (m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${(m / 60).toFixed(1)}h`);
+
+export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate, onSetStart, onSetDuration, onSetNotes }) {
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [notesDraft, setNotesDraft] = useState(task.notes || "");
   const [editingDate, setEditingDate] = useState(false);
@@ -36,29 +39,48 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
           {editingDate ? (
             <div
               onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDate(false); }}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <input
-                type="date"
-                autoFocus
-                value={task.date || ""}
-                onChange={(e) => onSetDate(task.id, e.target.value)}
-                {...noTypeDateProps}
-                style={{ ...inputStyle, width: 150, fontSize: 12.5, padding: "5px 8px" }}
-              />
-              {onSetStart && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <input
-                  type="time"
-                  value={decimalToTimeInput(task.start)}
-                  onChange={(e) => onSetStart(task.id, e.target.value ? timeToDecimal(e.target.value) : null)}
-                  title="Optional: a specific time it's due"
-                  style={{ ...inputStyle, width: 110, fontSize: 12.5, padding: "5px 8px" }}
+                  type="date"
+                  autoFocus
+                  value={task.date || ""}
+                  onChange={(e) => onSetDate(task.id, e.target.value)}
+                  {...noTypeDateProps}
+                  style={{ ...inputStyle, width: 150, fontSize: 12.5, padding: "5px 8px" }}
                 />
+                {onSetStart && (
+                  <input
+                    type="time"
+                    value={decimalToTimeInput(task.start)}
+                    onChange={(e) => onSetStart(task.id, e.target.value ? timeToDecimal(e.target.value) : null)}
+                    title="Optional: a specific time it's due"
+                    style={{ ...inputStyle, width: 110, fontSize: 12.5, padding: "5px 8px" }}
+                  />
+                )}
+              </div>
+              {onSetDuration && task.start != null && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
+                  {DURATION_PRESETS.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => onSetDuration(task.id, m)}
+                      style={{
+                        padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                        border: `1px solid ${task.duration === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
+                        background: task.duration === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                        color: task.duration === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
+                      }}
+                    >
+                      {durationLabel(m)}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           ) : task.date ? (
             <div onClick={() => onSetDate && setEditingDate(true)} title={onSetDate ? "Click to change date or time" : undefined} style={{ fontSize: 12.5, color: "#8B95A1", cursor: onSetDate ? "pointer" : "default" }}>
-              {formatShortDate(task.date)}{task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}{task.leadDays ? ` · needs ${task.leadDays} day${task.leadDays === 1 ? "" : "s"}` : ""}
+              {formatShortDate(task.date)}{task.start != null ? ` · ${decimalToTimeLabel(task.start)}` : ""}{task.duration != null ? ` (${durationLabel(task.duration)})` : ""}{task.leadDays ? ` · needs ${task.leadDays} day${task.leadDays === 1 ? "" : "s"}` : ""}
             </div>
           ) : onSetDate ? (
             <button

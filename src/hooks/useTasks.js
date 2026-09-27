@@ -85,11 +85,26 @@ export function useTasks(userId) {
 
   // Setting a specific time is what actually makes a task "due at" that time — it's what
   // moves it from the Due/Tasks strip into a real timed block on the calendar grid, same
-  // as if you'd set it when the task was first created.
+  // as if you'd set it when the task was first created. Clearing the time clears the
+  // block entirely; picking a first time defaults its length to 60, but nudging the time
+  // on a task that already has a real duration (see setTaskDuration) keeps that length
+  // instead of silently resetting it back to 60.
   const setTaskStart = useCallback(async (id, start) => {
-    const duration = start == null ? null : 60;
-    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, start, duration } : t)));
+    let duration = null;
+    setTasks((ts) => ts.map((t) => {
+      if (t.id !== id) return t;
+      duration = start == null ? null : (t.duration ?? 60);
+      return { ...t, start, duration };
+    }));
     await supabase.from("tasks").update({ start, duration }).eq("id", id);
+  }, []);
+
+  // Adjusts just the length of an already-timed task's block — see setTaskStart above
+  // for why the two are kept separate instead of duration always trailing along with
+  // whatever last set the start time.
+  const setTaskDuration = useCallback(async (id, duration) => {
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, duration } : t)));
+    await supabase.from("tasks").update({ duration }).eq("id", id);
   }, []);
 
   // Updates the shared due date/time across every row in a "break it down" group — the
@@ -140,5 +155,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
   }, [userId]);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere, setGroupDueDate };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere, setGroupDueDate };
 }
