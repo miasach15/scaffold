@@ -245,8 +245,21 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             </div>
           </div>
 
-          <div style={{ fontFamily: serifFont, fontSize: 48, color: INK, textAlign: "center", margin: "16px 0 4px", letterSpacing: 0.5 }}>
-            {pad(mm)}:{pad(ss)}
+          <div style={{ position: "relative", width: 148, height: 148, margin: "16px auto 4px" }}>
+            <svg width="148" height="148" viewBox="0 0 148 148" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="74" cy="74" r="64" fill="none" stroke={BORDER} strokeWidth="9" />
+              <circle
+                cx="74" cy="74" r="64" fill="none" stroke={PRIMARY_DARK} strokeWidth="9" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 64}
+                strokeDashoffset={2 * Math.PI * 64 * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
+                style={{ transition: "stroke-dashoffset 1s linear" }}
+              />
+            </svg>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontFamily: serifFont, fontSize: 34, color: INK, letterSpacing: 0.5 }}>
+                {pad(mm)}:{pad(ss)}
+              </div>
+            </div>
           </div>
           {task.notes ? (
             <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.notes}</div>
