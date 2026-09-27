@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronUp, Plus, Sparkles } from "lucide-react";
-import { BORDER, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SUGGESTED_GOALS, SURFACE } from "../../lib/constants";
+import { ChevronUp, Plus } from "lucide-react";
+import { BORDER, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
@@ -31,13 +31,6 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   // textarea/input and one button up front, not four decisions before you can start.
   const [showAiOptions, setShowAiOptions] = useState(false);
   const [showManualOptions, setShowManualOptions] = useState(false);
-  // A fresh handful of goal ideas each visit — picked once on mount rather than the same
-  // 5 every time, so "need an idea?" actually feels like browsing ideas, not a fixed list.
-  const [suggestions] = useState(() => [...SUGGESTED_GOALS].sort(() => Math.random() - 0.5).slice(0, 5));
-  const applySuggestion = (s) => {
-    setOutcome(s);
-    setShowManualOptions(false);
-  };
 
   const addGoal = (t, cat, useDeadline = true) => {
     const tt = (t !== undefined ? t : title).trim();
@@ -105,29 +98,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             rows={2}
             style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff" }}
           />
-          {!outcome.trim() && (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 6 }}>
-                <Sparkles size={12} strokeWidth={2.3} /> Not sure yet? Try one of these
-              </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => applySuggestion(s)}
-                    className="hoverable"
-                    style={{
-                      padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 600,
-                      border: `1px solid ${PRIMARY}`, background: PRIMARY_TINT, color: PRIMARY_DARK, cursor: "pointer",
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
             <button onClick={() => setShowAiOptions((x) => !x)} className="hoverable" style={toggleBtn}>
               {showAiOptions ? <ChevronUp size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
               {showAiOptions ? "Hide options" : "Category or end date"}
@@ -189,13 +160,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState
-          text={
-            goals.length === 0
-              ? "Nothing here yet — pick an idea above or write your own, and Scaffold will turn it into a day-by-day plan."
-              : "No goals yet. Big projects live here — quick errands go on Tasks."
-          }
-        />
+        <EmptyState text="No goals yet. Big projects live here — quick errands go on Tasks." />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((g) => (
