@@ -650,6 +650,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             habits={habits}
             eduItems={eduItems}
             onSetHabitDone={setHabitDone}
+            onToggleDone={setTaskDone}
             setView={setView}
             onSelectDay={setDayView}
             onStartFocus={openFocus}

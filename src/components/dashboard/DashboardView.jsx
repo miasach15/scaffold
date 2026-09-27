@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clock, Flame, GripVertical, Play } from "lucide-react";
+import { Clock, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
-import { ghostBtn, inputStyle } from "../../lib/styles";
+import { ghostBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -18,10 +18,21 @@ import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
 
+// A session's notes can be several comma-joined micro-steps (see groupItemsByDate) —
+// showing the whole pile is overwhelming, and any duplicate/out-of-order/self-titled
+// entries in it just add noise on top of that. Only the next concrete thing to do is
+// worth surfacing here; a step that just repeats the row's own title is dropped too.
+const nextStepLabel = (notes, title) => {
+  if (!notes) return null;
+  const parts = notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
+  return parts.length > 0 ? `Next: ${parts[0]}` : null;
+};
+
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
 // next row, per category color. Figma's dashboard mockup carries this same treatment.
 function TimelineRow({ item, col, isFirst, isLast, isPast }) {
+  const nextStep = nextStepLabel(item.notes, item.title);
   return (
     <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
@@ -32,7 +43,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-        {item.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.notes}</div>}
+        {nextStep && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStep}</div>}
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
     </div>
@@ -46,7 +57,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -167,21 +178,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     ? todaysUntimed[0]
     : [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
 
-  // A focus session always has to be about something real — and specifically the same
-  // "actionable today" set already shown above (timed tasks, then whatever's due,
-  // carried over, or early-surfaced in Anytime Today), not a stricter list of its own.
-  // Sharing that set is what keeps this picker's own default in sync with the
-  // highlighted suggestion's Start button instead of the two aiming at different tasks —
-  // a decision to make right when someone's trying to begin, instead of one obvious
-  // next action.
-  const focusableTasks = useMemo(() => [...todaysTimedTasks, ...todaysUntimed], [todaysTimedTasks, todaysUntimed]);
-  const [focusTaskId, setFocusTaskId] = useState(null);
-  useEffect(() => {
-    if (!focusableTasks.some((t) => t.id === focusTaskId)) {
-      const preferred = suggestedNext && focusableTasks.some((t) => t.id === suggestedNext.id) ? suggestedNext.id : focusableTasks[0]?.id || null;
-      setFocusTaskId(preferred);
-    }
-  }, [focusableTasks, focusTaskId, suggestedNext]);
+  // Finished today, across whatever kind of item it was — its own quiet "wins" list
+  // below Habits, and the count the Scaffolded Steps header shows next to free time.
+  const doneTodayTasks = tasks.filter((t) => t.date === todayISO && t.done);
+  const scaffoldedTotalCount = todaysTimedTasks.length + todaysUntimed.length + doneTodayTasks.length;
   const [showBrainDump, setShowBrainDump] = useState(false);
   // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
   // the second of the two "Up next" steps the onboarding Done screen just promised.
@@ -270,6 +270,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Today's Scaffolded Steps</div>
               <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
+                {scaffoldedTotalCount > 0 && `${doneTodayTasks.length} of ${scaffoldedTotalCount} done · `}
                 {freeHoursLeft > 0 ? `≈${freeHoursLeft % 1 === 0 ? freeHoursLeft : freeHoursLeft.toFixed(1)}h free left today` : "No free time left today"}
               </div>
             </div>
@@ -295,17 +296,25 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           border: `1px solid ${fitsInTime ? PRIMARY : TONE.warn.border}`,
                         }}
                       >
+                        {onToggleDone && (
+                          <Checkbox checked={false} onClick={() => onToggleDone(suggestedNext.id, true)} color={{ border: fitsInTime ? PRIMARY_DARK : TONE.warn.text }} />
+                        )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
                           </div>
-                          {suggestedNext.notes && (
-                            <div style={{ fontSize: 11.5, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{suggestedNext.notes}</div>
+                          {nextStepLabel(suggestedNext.notes, suggestedNext.title) && (
+                            <div style={{ fontSize: 11.5, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStepLabel(suggestedNext.notes, suggestedNext.title)}</div>
                           )}
                         </div>
+                        {suggestedNext.date && suggestedNext.date !== todayISO && (
+                          <div style={{ flexShrink: 0 }}>
+                            <UrgencyBadge iso={suggestedNext.date} done={false} leadDays={suggestedNext.groupId || suggestedNext.eduId ? null : defaultLeadDays(suggestedNext)} />
+                          </div>
+                        )}
                         {onStartFocus && (
                           <button
-                            onClick={() => onStartFocus(suggestedNext.id, suggestedNext.title, suggestedNext.duration || undefined)}
+                            onClick={() => onStartFocus(suggestedNext.id, suggestedNext.title, focusMinutes)}
                             className="hoverable"
                             style={{
                               flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
@@ -344,10 +353,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 <GripVertical size={14} strokeWidth={2} />
                               </div>
                             )}
-                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0, marginTop: t.notes ? 3 : 0, alignSelf: t.notes ? "flex-start" : "center" }} />
+                            {onToggleDone && <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={col} size={16} />}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                              {t.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notes}</div>}
+                              {nextStepLabel(t.notes, t.title) && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextStepLabel(t.notes, t.title)}</div>}
                             </div>
                             {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
                             {t.date && t.date !== todayISO && (
@@ -421,45 +430,20 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 ))}
               </div>
 
-              {focusableTasks.length > 0 ? (
-                <select
-                  value={focusTaskId || ""}
-                  onChange={(e) => setFocusTaskId(e.target.value)}
-                  title="What this session is for"
-                  style={{ ...inputStyle, width: "100%", marginBottom: 5 }}
-                >
-                  {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
-              ) : (
-                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 5 }}>Nothing due today to focus on yet.</div>
-              )}
-
-              <button
-                onClick={() => {
-                  const t = focusableTasks.find((x) => x.id === focusTaskId);
-                  if (t) onStartFocus(t.id, t.title, focusMinutes);
-                }}
-                disabled={!focusTaskId}
-                style={{
-                  width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "9px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
-                  fontSize: 14.5, fontWeight: 500, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
-                }}
-              >
-                <Play size={16} color={PRIMARY_DARK} />
-                Start Session
-              </button>
+              {/* Starting a session is the highlighted suggestion card's job now (its own
+                  Start button reads this exact duration) — this card is just the "how
+                  long" picker, not a second place to press start for the same action. */}
             </div>
           )}
 
-          <div style={{ ...cardStyle, boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Daily rhythm</div>
-                <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Habits Checklist</div>
-              </div>
+          {/* Deliberately the quietest thing in this column — a daily checklist matters,
+              but it's not what the page is actually for, so it shouldn't visually compete
+              with Focus Timer or the Scaffolded Steps for attention. */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: MUTED }}>Habits</div>
               {habits.length > 0 && (
-                <div style={{ fontSize: 12, color: MUTED, flexShrink: 0, paddingTop: 2 }}>
+                <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
                   {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
                 </div>
               )}
@@ -467,17 +451,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
                   return (
                     <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} />
-                      <div style={{ flex: 1, fontSize: 13, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
+                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} size={15} />
+                      <div style={{ flex: 1, fontSize: 12.5, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
                       {streak > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10.5, flexShrink: 0 }}>
-                          <Flame size={10} color={PRIMARY_DARK} fill={PRIMARY_DARK} strokeWidth={0} /> {streak}d
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10, flexShrink: 0 }}>
+                          <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} /> {streak}d
                         </div>
                       )}
                     </div>
@@ -486,6 +470,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             )}
           </div>
+
+          {/* Wins stack up here as they happen — empty (and hidden) first thing in the
+              morning, so there's nothing to scroll past before you've done anything yet. */}
+          {doneTodayTasks.length > 0 && (
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Done today</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {doneTodayTasks.map((t) => (
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Checkbox checked onClick={() => onToggleDone(t.id, false)} color={CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal} size={15} />
+                    <div style={{ flex: 1, fontSize: 12.5, color: MUTED, textDecoration: "line-through", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
