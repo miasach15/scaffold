@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clock, Flame, Play } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, Flame, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
@@ -45,7 +45,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, educationCategory }) {
+export default function DashboardView({ profile, events, tasks, habits, dueChips, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -120,8 +120,30 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
     }),
     ...groupItems,
     ...eduSessionItems,
-  ].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    // Manually moved items (see moveUntimed/onReorderTasks) sort by that order first —
+    // same "indexed items float to the top, everything else falls back to date" rule
+    // goal_actions' own moveAction already uses — anything not yet touched just keeps
+    // sorting by date underneath whatever's been deliberately placed.
+  ].sort((a, b) => {
+    if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
+    if (a.orderIndex != null) return -1;
+    if (b.orderIndex != null) return 1;
+    return (a.date || "").localeCompare(b.date || "");
+  });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
+
+  // Swaps an "Anytime today" item with its neighbor and persists the WHOLE visible
+  // list's new order (not just the swapped pair) — matches moveAction's own
+  // reindex-everything behavior, so a partial reorder never leaves some items floating
+  // on manual order and others still on date order in a way that's hard to predict.
+  const moveUntimed = (taskId, direction) => {
+    const ids = todaysUntimed.map((t) => t.id);
+    const i = ids.indexOf(taskId);
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (i === -1 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    onReorderTasks?.(ids);
+  };
 
   // Just real due dates here — goal deadlines/milestones/actions aren't included; those
   // live on the Goals page. Within tasks: only a standalone one-time task or a "break it
@@ -220,10 +242,30 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {todaysUntimed.map((t) => {
+                      {todaysUntimed.map((t, i) => {
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         return (
                           <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+                            {onReorderTasks && (
+                              <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+                                <button
+                                  onClick={() => moveUntimed(t.id, "up")}
+                                  disabled={i === 0}
+                                  title="Move up"
+                                  style={{ background: "none", border: "none", cursor: i === 0 ? "default" : "pointer", padding: 0, color: i === 0 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
+                                >
+                                  <ChevronUp size={12} strokeWidth={2.5} />
+                                </button>
+                                <button
+                                  onClick={() => moveUntimed(t.id, "down")}
+                                  disabled={i === todaysUntimed.length - 1}
+                                  title="Move down"
+                                  style={{ background: "none", border: "none", cursor: i === todaysUntimed.length - 1 ? "default" : "pointer", padding: 0, color: i === todaysUntimed.length - 1 ? "#D1D5DB" : MUTED, display: "flex", lineHeight: 0 }}
+                                >
+                                  <ChevronDown size={12} strokeWidth={2.5} />
+                                </button>
+                              </div>
+                            )}
                             <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0 }} />
                             <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
                             {t.date && t.date !== todayISO && (

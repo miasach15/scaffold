@@ -17,6 +17,7 @@ const fromRow = (row) => ({
   groupDueStart: row.group_due_start == null ? null : Number(row.group_due_start),
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
+  orderIndex: row.order_index == null ? null : Number(row.order_index),
 });
 
 export function useTasks(userId) {
@@ -130,6 +131,19 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ notes: trimmed }).eq("id", id);
   }, []);
 
+  // Persists a manual order for whatever set of tasks is currently on screen (e.g.
+  // Dashboard's "Anytime today" list) — same order_index pattern goal_actions already
+  // uses. Takes the FULL list of ids in their new order (not a single move + direction)
+  // since the "scope" to reorder within is computed client-side (today's visible tasks),
+  // not a stored grouping like a milestone_id — simplest to just write sequential indexes
+  // for the whole visible set on every move, same as moveAction's own reindex-everything
+  // behavior after a single swap.
+  const reorderTasks = useCallback(async (orderedIds) => {
+    const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
+    setTasks((ts) => ts.map((t) => (orderMap.has(t.id) ? { ...t, orderIndex: orderMap.get(t.id) } : t)));
+    await Promise.all(orderedIds.map((id, i) => supabase.from("tasks").update({ order_index: i }).eq("id", id)));
+  }, []);
+
   const removeTask = useCallback(async (id) => {
     setTasks((ts) => ts.filter((t) => t.id !== id));
     await supabase.from("tasks").delete().eq("id", id);
@@ -155,5 +169,5 @@ export function useTasks(userId) {
     await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
   }, [userId]);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, renameCategoryEverywhere, setGroupDueDate };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };
 }
