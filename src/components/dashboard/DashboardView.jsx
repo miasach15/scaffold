@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Clock, Flame, Play } from "lucide-react";
+import { Clock, Flame, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
@@ -154,9 +154,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           <button
             onClick={() => setShowBrainDump(true)}
             className="hoverable"
-            style={{ ...ghostBtn, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+            style={{ ...ghostBtn, flexShrink: 0 }}
           >
-            <Brain size={14} strokeWidth={2.2} /> Brain dump
+            Brain dump
           </button>
         </div>
       </div>
