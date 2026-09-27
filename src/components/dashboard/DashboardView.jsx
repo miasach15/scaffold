@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Brain, Clock, Flame, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, cardStyle, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
@@ -297,9 +297,9 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               Dashboard unmounts this slot, which is exactly what lets the timer reappear
               as the normal floating bottom-right card everywhere else. */}
           {hasActiveFocusSession ? (
-            <div ref={focusSlotRef} style={{ ...dividedSection, flexShrink: 0 }} />
+            <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
-            <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+            <div style={{ ...cardStyle, padding: 20, flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
                 <div style={{ fontFamily: serifFont, fontSize: 21, color: INK }}>Focus Timer</div>
                 <div style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>

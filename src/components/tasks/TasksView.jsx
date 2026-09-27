@@ -23,6 +23,9 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [time, setTime] = useState("");
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
+  // The quick-add row stays collapsed behind a single "+ New Task" button until you
+  // actually want to add one, instead of always taking up space at the top of the list.
+  const [showAddForm, setShowAddForm] = useState(false);
   const [useAI, setUseAI] = useState(false); // "Break it into steps" — for a task that's really a multi-day project
   const [scheduleMode, setScheduleMode] = useState("every"); // "every" = use the whole window, "pick" = cap it to N free days
   const [pickDaysCount, setPickDaysCount] = useState(""); // how many days, not which — see distributeDatesByLoad's maxDays
@@ -47,7 +50,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   };
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setStartFrom("today"); setShowMore(false);
+    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setStartFrom("today"); setShowMore(false); setShowAddForm(false);
   };
 
   const breakDownTask = async () => {
@@ -281,32 +284,47 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       />
 
       <div data-tour="tasks-add">
-        <AddRow>
-          <input
-            autoFocus
-            placeholder="Write a task and hit Enter..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            style={{ ...inputStyle, flex: 1 }}
-          />
-          <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
-            {useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
+        {!showAddForm ? (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="btn-primary hoverable"
+            style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}
+          >
+            <Plus size={14} strokeWidth={2.5} /> New Task
           </button>
-        </AddRow>
-        <button
-          onClick={() => setShowMore((x) => !x)}
-          className="hoverable"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
-            border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "6px 12px 6px 9px",
-            fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
-            marginBottom: showMore ? 10 : 16,
-          }}
-        >
-          {showMore ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
-          {showMore ? "Hide options" : "Due date, category, or break it down for a bigger task"}
-        </button>
+        ) : (
+          <>
+            <AddRow>
+              <input
+                autoFocus
+                placeholder="Write a task and hit Enter..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && add()}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
+                {useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : "Add"}
+              </button>
+              <button onClick={resetForm} title="Cancel" style={{ background: "none", border: "none", color: "#C2C9D1", fontSize: 20, cursor: "pointer", padding: "0 4px" }}>
+                ×
+              </button>
+            </AddRow>
+            <button
+              onClick={() => setShowMore((x) => !x)}
+              className="hoverable"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+                border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "6px 12px 6px 9px",
+                fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
+                marginBottom: showMore ? 10 : 16,
+              }}
+            >
+              {showMore ? <ChevronUp size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
+              {showMore ? "Hide options" : "Due date, category, or break it down for a bigger task"}
+            </button>
+          </>
+        )}
       </div>
 
       {showMore && (

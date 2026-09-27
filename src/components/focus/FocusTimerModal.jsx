@@ -220,7 +220,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // in-flow card — same single component instance either way, so the running timer's
     // state never resets when `portalTarget` flips (see App.jsx's dashboardFocusSlot).
     const card = (
-      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "none" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
+      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
