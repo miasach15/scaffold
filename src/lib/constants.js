@@ -173,11 +173,11 @@ export const TONE = {
   // you — hence the brand color instead of an alarm color.
   carried: { bg: "#E0E2EB", border: "#A1A9CE", text: "#4A5BA8" },
 };
-// Display/headline accent — Instrument Serif (from the Figma identity kit). Every
-// screen that already reads this constant (Journal, TodaySection, MonthView,
-// CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
-// HabitHistoryModal, SettingsModal, Goals, Habits) picks up the font automatically.
-export const serifFont = "'Instrument Serif', Georgia, serif";
+// Display/headline accent — Playfair Display. Every screen that already reads this
+// constant (Journal, TodaySection, MonthView, CalendarView, WhatNowModal, Misc.jsx empty
+// states, WeeklyReviewModal, HabitHistoryModal, SettingsModal, Goals, Habits) picks up
+// the font automatically.
+export const serifFont = "'Playfair Display', Georgia, serif";
 export const cardStyle = {
   background: SURFACE,
   border: `1px solid ${BORDER}`,
