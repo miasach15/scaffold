@@ -32,7 +32,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
       const c = chip.kind === "edu" ? eduCol : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
       return { bg: c.border, border: c.border, text: "#fff" };
     }
-    // "goal" (small actions): colored outline only — a work day, not a deadline.
+    // Fallback for anything neither an event nor a deadline — colored outline only.
     const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     return { ...c, bg: "#fff" };
   };
@@ -44,8 +44,10 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // step you work through. A due chip with a specific time (an Education deadline) gets
   // the same treatment a timed event already gets — it moves into the hourly grid at
   // that time instead of sitting in a flat, dateless-looking strip row.
+  // Goal actions (the small day-to-day steps under a milestone) deliberately don't
+  // render on Calendar at all — same "deadlines, not day-to-day to-dos" narrowing as
+  // plain tasks above. They still show on Tasks and Dashboard.
   const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment")));
-  const taskChipsOnly = dueChips.filter((c) => c.kind === "goal");
   const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment" && c.start == null);
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
@@ -127,7 +129,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 the deadline-vs-work distinction, so splitting them into separate rows was
                 mostly redundant with that. */}
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Due" days={days} chips={[...dueChipsOnly, ...taskChipsOnly]} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
+              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>

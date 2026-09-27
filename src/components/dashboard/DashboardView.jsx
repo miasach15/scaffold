@@ -135,7 +135,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
     () =>
       dueChips
         .filter((c) => !c.done && c.date >= todayISO)
-        .filter((c) => (c.kind === "task" && !c.groupId && !c.eduId) || c.kind === "task-group-due" || c.kind === "edu")
+        .filter((c) => (c.kind === "task" && !c.groupId && !c.eduId) || c.kind === "task-group-due" || c.kind === "edu" || c.kind === "goal")
         .sort((a, b) => a.date.localeCompare(b.date))
         .slice(0, 4),
     [dueChips, todayISO]
@@ -335,7 +335,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {upcoming.map((c) => (
-                  <ComingUpRow key={c.id} chip={c} col={CATEGORY_COLORS[c.kind === "edu" ? educationCategory : c.category] || CATEGORY_COLORS.Personal} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} />
+                  <ComingUpRow key={c.id} chip={c} col={CATEGORY_COLORS[c.kind === "edu" ? educationCategory : c.category] || CATEGORY_COLORS.Personal} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} onGoToGoals={() => setView("goals")} />
                 ))}
               </div>
             )}
@@ -376,9 +376,13 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
 // kind since a plain task, a "break it down" group's overall due date, and an
 // Education deadline each save through a different function (the last two also
 // reflow their not-done steps/sessions to the new window).
-function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline }) {
+function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, onUpdateEduDeadline, onGoToGoals }) {
   const [editing, setEditing] = useState(false);
   const label = chip.subject || chip.category;
+  // A goal action's date lives on the Goals page, not the tasks table — there's no
+  // setter here that could safely edit it inline, so clicking opens Goals instead of
+  // the date/time editor every other kind gets.
+  const isGoalAction = chip.kind === "goal";
   const onSave = chip.kind === "task-group-due" ? onUpdateGroupDueDate : chip.kind === "edu" ? onUpdateEduDeadline : null;
   const handleDateChange = (date) => {
     if (!date) return;
@@ -396,7 +400,11 @@ function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, o
         {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chip.title}</div>
       </div>
-      {editing ? (
+      {isGoalAction ? (
+        <button onClick={onGoToGoals} title="Open in Goals" style={{ background: "none", border: "none", padding: 0, flexShrink: 0, cursor: "pointer", display: "inline-flex" }}>
+          <UrgencyBadge iso={chip.date} done={chip.done} leadDays={2} />
+        </button>
+      ) : editing ? (
         <div
           onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditing(false); }}
           style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
