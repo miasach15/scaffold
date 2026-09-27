@@ -219,8 +219,15 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // except Dashboard), or portaled into Dashboard's own focus-timer slot as a plain
     // in-flow card — same single component instance either way, so the running timer's
     // state never resets when `portalTarget` flips (see App.jsx's dashboardFocusSlot).
+    // Embedded (portalTarget) uses tighter sizing throughout — this card replaces
+    // Dashboard's own compact idle picker the instant a session starts, so without this
+    // it visibly balloons in that same slot right when you press Start.
+    const compact = !!portalTarget;
+    const ringSize = compact ? 92 : 148;
+    const ringRadius = compact ? 39 : 64;
+    const ringStroke = compact ? 7 : 9;
     const card = (
-      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
+      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -239,51 +246,51 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-            <div style={{ fontFamily: serifFont, fontSize: 19, color: INK, lineHeight: 1.2, minWidth: 0 }}>{task.title}</div>
+            <div style={{ fontFamily: serifFont, fontSize: compact ? 17 : 19, color: INK, lineHeight: 1.2, minWidth: 0 }}>{task.title}</div>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, background: catColor.bg, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
               {task.category}
             </div>
           </div>
 
-          <div style={{ position: "relative", width: 148, height: 148, margin: "16px auto 4px" }}>
-            <svg width="148" height="148" viewBox="0 0 148 148" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="74" cy="74" r="64" fill="none" stroke={BORDER} strokeWidth="9" />
+          <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
+            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
               <circle
-                cx="74" cy="74" r="64" fill="none" stroke={PRIMARY_DARK} strokeWidth="9" strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 64}
-                strokeDashoffset={2 * Math.PI * 64 * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
+                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={PRIMARY_DARK} strokeWidth={ringStroke} strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * ringRadius}
+                strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
                 style={{ transition: "stroke-dashoffset 1s linear" }}
               />
             </svg>
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontFamily: serifFont, fontSize: 34, color: INK, letterSpacing: 0.5 }}>
+              <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
                 {pad(mm)}:{pad(ss)}
               </div>
             </div>
           </div>
-          {task.notes ? (
+          {!compact && (task.notes ? (
             <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.notes}</div>
           ) : (
             <div style={{ marginBottom: 14 }} />
-          )}
+          ))}
 
           {finished ? (
-            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginBottom: 14 }}>Time's up. Nice focus session.</div>
+            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>Time's up. Nice focus session.</div>
           ) : (
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
               {[15, 25, 50].map((m) => (
                 <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}>{m}m</button>
               ))}
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 12 }}>
             <button
               onClick={toggleRunning}
               disabled={finished}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "13px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
                 fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
               }}
             >
@@ -300,17 +307,17 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
 
           {task.id && (
-            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: "0 0 12px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>
+            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: compact ? "0 0 8px" : "0 0 12px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>
               Mark complete
             </button>
           )}
 
-          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: compact ? 8 : 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 12, color: MUTED }}>Completed today: {completedTodayCount}</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>{investedMin}m this session</div>
           </div>
 
-          {steps.length > 0 && (
+          {!compact && steps.length > 0 && (
             <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", marginTop: 12, paddingTop: 12 }}>
               <div style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
                 Whole breakdown
