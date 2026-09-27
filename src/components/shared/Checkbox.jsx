@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 // `size` defaults to the standard 18px list-row checkbox everywhere; a tighter spot
 // (a calendar block, barely taller than that) can pass a smaller value and still get
 // the same rounded-square/pop-on-complete language instead of a bespoke toggle.
-export default function Checkbox({ checked, onClick, color, size = 18 }) {
+export default function Checkbox({ checked, onClick, color, size = 18, title }) {
   const [pop, setPop] = useState(false);
   const wasChecked = useRef(checked);
   const iconSize = Math.round(size * 0.67);
@@ -26,6 +26,7 @@ export default function Checkbox({ checked, onClick, color, size = 18 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       style={{
         width: size, height: size, borderRadius: radius, border: `1.5px solid ${checked ? color.border : "#D1D5DB"}`,
         background: checked ? color.border : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",

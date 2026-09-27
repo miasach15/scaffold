@@ -10,23 +10,27 @@ import Checkbox from "../shared/Checkbox";
 // deadline's own due date/time is editable too (click it) — moving the date reflows
 // every not-done session onto the new window (see App.jsx's updateEduDeadline). `col` is
 // your actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onRenameSession, onRemoveSession, onAddSession, onUpdateDeadline, onBreakDown, breakingDown, breakdownError }) {
+export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
   const [showAI, setShowAI] = useState(false);
   const [details, setDetails] = useState("");
   const [editingDeadline, setEditingDeadline] = useState(false);
-  // Local text per session so typing doesn't fire a save on every keystroke — committed
-  // on blur/Enter instead.
+  // Every session already shares one uniform title (see App.jsx's addEduItem) — what's
+  // actually worth editing per session is its notes: the specific step(s) that session
+  // covers, e.g. "problem 7.13, chapter 7" — so this edits notes, not the title. Local
+  // text per session so typing doesn't fire a save on every keystroke — committed on
+  // blur/Enter instead.
   const [drafts, setDrafts] = useState({});
   useEffect(() => {
-    setDrafts(Object.fromEntries(sessions.map((s) => [s.id, s.title])));
+    setDrafts(Object.fromEntries(sessions.map((s) => [s.id, s.notes || ""])));
   }, [sessions]);
 
-  const commitRename = (id) => {
-    const next = (drafts[id] || "").trim();
-    if (next && next !== sessions.find((s) => s.id === id)?.title) onRenameSession(id, next);
+  const commitNotes = (id) => {
+    const next = drafts[id] ?? "";
+    const current = sessions.find((s) => s.id === id)?.notes || "";
+    if (next.trim() !== current) onSetSessionNotes(id, next.trim());
   };
 
   const sorted = sessions.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -72,16 +76,17 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
             {sorted.map((s) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
-                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} />
+              <div key={s.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
+                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} title="Marks this session done — not the whole assignment" />
+                <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
                 <input
-                  value={drafts[s.id] ?? s.title}
+                  value={drafts[s.id] ?? ""}
                   onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
-                  onBlur={() => commitRename(s.id)}
+                  onBlur={() => commitNotes(s.id)}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                  placeholder="What's this session for? (optional)"
                   style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1 }}
                 />
-                <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
                 <button onClick={() => onRemoveSession(s.id)} className="btn-delete" style={deleteBtn}>×</button>
               </div>
             ))}

@@ -25,7 +25,7 @@ export default function EducationView({
   onRemoveEduItem,
   onAddSession,
   onRemoveSession,
-  onRenameSession,
+  onSetSessionNotes,
   onSetSessionDone,
   onUpdateDeadline,
   onOpenFocus,
@@ -215,6 +215,13 @@ export default function EducationView({
   const eduHasFollowing = (item) =>
     eduItems.some((e) => e.id !== item.id && e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate);
 
+  // Session counts for the small progress bar on each deadline row — every session ever
+  // scheduled for it, done or not, not just the ones still showing elsewhere.
+  const sessionCounts = (eduId) => {
+    const all = tasks.filter((t) => t.eduId === eduId);
+    return { done: all.filter((t) => t.done).length, total: all.length };
+  };
+
   const bySubject = (e) => subjectFilter === "All" || e.subject === subjectFilter;
   const todayISOlocal = toISO(new Date());
   // Everything only shows in Today once it's actually due today — a homework due
@@ -253,7 +260,7 @@ export default function EducationView({
     // (the parent's own title, which the now-uniform title already says anyway).
     return {
       id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null,
-      done: t.done, date: t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
+      done: t.done, date: t.date, dueDate: parent?.dueDate || t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
       col: eduCol, eduId: t.eduId,
       onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
@@ -263,7 +270,7 @@ export default function EducationView({
   // here so it doesn't show up a second time.
   const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e) && !todayIds.has(e.id)).map((e) => ({
     id: e.id, key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
-    done: e.done, date: e.dueDate, timeLabel: null,
+    done: e.done, date: e.dueDate, dueDate: e.dueDate, timeLabel: null,
     col: eduCol,
     onToggleDone: () => { if (!e.done) markJustDone(e.id); onSetEduDone(e.id, !e.done); }, onFocus: null,
     hasFollowing: eduHasFollowing(e),
@@ -289,7 +296,10 @@ export default function EducationView({
     return due.length > 0 ? [due[due.length - 1]] : [];
   });
   const leftTodayHomeworkItems = homeworkRows.filter((i) => (!i.done || justDone.has(i.id)) && i.date === todayISOlocal);
-  const leftTodayItems = [...leftTodaySessionItems, ...leftTodayHomeworkItems];
+  // Sorted by the actual assignment/test deadline, not by the work day that happens to
+  // land today for each — same ordering Dashboard and Tasks' Today use, so "what's most
+  // urgent" reads the same no matter which page you're looking at.
+  const leftTodayItems = [...leftTodaySessionItems, ...leftTodayHomeworkItems].sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
 
   return (
     <div>
@@ -376,6 +386,7 @@ export default function EducationView({
                   />
                 )}
                 {type === "Assessment" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the assessment</span>}
+                {type !== "Assessment" && workMode === "days" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days to spread it across</span>}
               </div>
               {workMode === "everyday" && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
@@ -427,7 +438,7 @@ export default function EducationView({
       ) : (
         <div style={{ marginBottom: 4 }}>
           {today_.map((e) => (
-            <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleTodayToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+            <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleTodayToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} sessionsDone={sessionCounts(e.id).done} sessionsTotal={sessionCounts(e.id).total} />
           ))}
           {leftTodayItems.map((it) => <WorkItemRow key={it.key} item={it} />)}
         </div>
@@ -463,7 +474,7 @@ export default function EducationView({
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>{label}</div>
                   <div>
                     {items.map((e) => (
-                      <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} />
+                      <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} sessionsDone={sessionCounts(e.id).done} sessionsTotal={sessionCounts(e.id).total} />
                     ))}
                   </div>
                 </div>
@@ -493,7 +504,7 @@ export default function EducationView({
             sessions={tasks.filter((t) => t.eduId === editingEduId)}
             onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
             onToggleSession={onSetSessionDone}
-            onRenameSession={onRenameSession}
+            onSetSessionNotes={onSetSessionNotes}
             onRemoveSession={onRemoveSession}
             onAddSession={quickAddSession}
             onUpdateDeadline={onUpdateDeadline}

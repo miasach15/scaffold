@@ -183,7 +183,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // commits the previous one immediately rather than juggling multiple toasts.
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState(null);
   const taskDeleteUndo = useUndoableDelete();
-  const visibleTasks = pendingDeleteTaskId ? tasks.filter((t) => t.id !== pendingDeleteTaskId) : tasks;
   const requestRemoveTask = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
@@ -196,6 +195,33 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const undoTaskDelete = () => {
     if (taskDeleteUndo.undo()) setPendingDeleteTaskId(null);
   };
+
+  // Same undoable-delete treatment for an Education deadline — it's a heavier delete
+  // than a plain task (removing "following" occurrences of a repeating item wipes
+  // several at once), so the safety net matters even more here.
+  const [pendingDeleteEduIds, setPendingDeleteEduIds] = useState([]);
+  const eduDeleteUndo = useUndoableDelete();
+  const visibleEduItems = pendingDeleteEduIds.length > 0 ? eduItems.filter((e) => !pendingDeleteEduIds.includes(e.id)) : eduItems;
+  const requestRemoveEduItem = (id, mode = "one") => {
+    const item = eduItems.find((e) => e.id === id);
+    if (!item) return;
+    const ids = mode === "following"
+      ? eduItems.filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate).map((e) => e.id)
+      : [id];
+    setPendingDeleteEduIds(ids);
+    const label = ids.length > 1 ? `"${item.title}" and ${ids.length - 1} more deleted` : `"${item.title}" deleted`;
+    eduDeleteUndo.requestDelete(label, () => {
+      ids.forEach((eid) => removeEduItem(eid, "one"));
+      setPendingDeleteEduIds((cur) => (cur === ids ? [] : cur));
+    });
+  };
+  const undoEduDelete = () => {
+    if (eduDeleteUndo.undo()) setPendingDeleteEduIds([]);
+  };
+  // A pending-deleted assignment's own sessions shouldn't keep showing elsewhere for the
+  // few seconds before the delete actually commits — the deadline would already be gone
+  // while "Study: X" still sat in Today with nothing to point back to.
+  const visibleTasks = tasks.filter((t) => t.id !== pendingDeleteTaskId && !(t.eduId && pendingDeleteEduIds.includes(t.eduId)));
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
   // down" breakdown) so the Focus Timer can show the whole checklist alongside it —
@@ -566,6 +592,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         .btn-ghost:hover:not(:disabled) { background: #F5F5F5 !important; border-color: #D1D5DB !important; }
         .btn-delete { border-radius: 999px !important; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-delete:hover:not(:disabled) { background: #FBEAEA !important; color: #B03A3A !important; }
+        /* A full-strength × on every single row makes an accidental delete easy — dimmed
+           at rest, full opacity once you're actually looking at that row (hover, or
+           keyboard focus so it's still reachable without a mouse). Left at 0.35 rather
+           than fully hidden so it stays visible/tappable on touch, which has no hover
+           state to reveal it with. */
+        .hoverable .btn-delete { opacity: 0.35; transition: opacity .15s ease; }
+        .hoverable:hover .btn-delete, .hoverable:focus-within .btn-delete { opacity: 1; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
         /* Sidebar nav is a column (mobile top bar, then page content) below 861px, and a
@@ -713,16 +746,16 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         )}
         {view === "education" && (
           <EducationView
-            eduItems={eduItems}
-            tasks={tasks}
+            eduItems={visibleEduItems}
+            tasks={visibleTasks}
             events={events}
             onAddEduItem={addEduItem}
             onSetEduDone={setEduDone}
-            onRemoveEduItem={removeEduItem}
+            onRemoveEduItem={requestRemoveEduItem}
             onUpdateDeadline={updateEduDeadline}
             onAddSession={addEduSession}
-            onRemoveSession={removeTask}
-            onRenameSession={renameTask}
+            onRemoveSession={requestRemoveTask}
+            onSetSessionNotes={setTaskNotes}
             onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
             inboxItems={eduInboxItems}
@@ -867,6 +900,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       <StickyNoteCorner onCapture={handleQuickCapture} />
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
+      {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
 
       {showSearch && (
         <SearchModal

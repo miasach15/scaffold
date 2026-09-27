@@ -9,17 +9,28 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 // with AI) — see EduSessionsModal. No quick-add row here anymore; one clear way in.
 // `col` is your actual School category color (see EducationView) — no separate swatch
 // dot needed since the checkbox, the type badge, and the border already carry that color.
-export default function EduItemRow({ item, col, onToggleDone, onRemove, onOpen, tag, hasFollowing }) {
+export default function EduItemRow({ item, col, onToggleDone, onRemove, onOpen, tag, hasFollowing, sessionsDone, sessionsTotal }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Only worth a progress bar once there's more than one session to actually make
+  // progress across — a single-session Homework item has nothing to fill up yet.
+  const showProgress = sessionsTotal > 1;
 
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
       <button onClick={onOpen} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
-        <div style={{ display: "flex", gap: 5, marginTop: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
           <div style={{ fontSize: 10, color: col.text, background: col.bg, display: "inline-block", padding: "1px 6px", borderRadius: 5, fontWeight: 600 }}>{item.type}</div>
           {item.subject && <div style={{ fontSize: 10, color: "#93A0AD" }}>{item.subject}</div>}
+          {showProgress && (
+            <>
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: "#EDEDED", overflow: "hidden" }}>
+                <div style={{ width: `${Math.round((sessionsDone / sessionsTotal) * 100)}%`, height: "100%", background: col.accent || col.border, borderRadius: 2 }} />
+              </div>
+              <div style={{ fontSize: 10, color: "#93A0AD" }}>{sessionsDone}/{sessionsTotal}</div>
+            </>
+          )}
         </div>
       </button>
       {tag ? <div style={{ fontSize: 11, color: "#93A0AD", fontWeight: 600 }}>{tag}</div> : <UrgencyBadge iso={item.dueDate} done={item.done} leadDays={2} />}

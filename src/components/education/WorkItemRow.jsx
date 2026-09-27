@@ -6,20 +6,35 @@ import Checkbox from "../shared/Checkbox";
 // your School category color (item.col, set by EducationView), not whatever category
 // the underlying task happens to carry. Only ever shown inside "Today," so there's no
 // date or "Due today" badge to repeat — just what it is, and a time if it has one.
+// A session's notes can be several AI-generated micro-steps joined into one comma
+// list (see groupItemsByDate) when more than one landed on the same work day — reading
+// all of them at once is exactly the "five things to start" overwhelm that makes
+// starting harder. Only the first one shows plainly; the rest collapse into a count.
+const formatSteps = (subtitle) => {
+  const parts = subtitle.split(",").map((s) => s.trim()).filter(Boolean);
+  if (parts.length <= 1) return subtitle;
+  return `Next: ${parts[0]} (+${parts.length - 1} more)`;
+};
+
 export default function WorkItemRow({ item }) {
   const col = item.col;
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, marginBottom: 10, background: "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
-      <Checkbox checked={item.done} onClick={item.onToggleDone} color={col} />
+      <Checkbox
+        checked={item.done}
+        onClick={item.onToggleDone}
+        color={col}
+        title={item.onFocus ? "Marks today's session done — not the whole assignment" : undefined}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (
           <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: "#000000" }}>{item.title}</button>
         ) : (
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
         )}
-        {item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>}
+        {item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{formatSteps(item.subtitle)}</div>}
       </div>
       {item.timeLabel && <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.timeLabel}</div>}
       {confirmDelete ? (

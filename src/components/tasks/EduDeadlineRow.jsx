@@ -42,7 +42,14 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
             {item.title}
           </span>
         </button>
-        {expandable && <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap", flexShrink: 0 }}>{doneCount}/{total} steps</div>}
+        {expandable && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#EDEDED", overflow: "hidden" }}>
+              <div style={{ width: `${Math.round((doneCount / total) * 100)}%`, height: "100%", background: col.accent || col.border, borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{doneCount}/{total}</div>
+          </div>
+        )}
         {onUpdateDeadline && editingDue ? (
           <div
             onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDue(false); }}

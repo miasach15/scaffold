@@ -126,7 +126,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     // urgent the real deadline is.
     const parentEdu = (eduItems || []).find((e) => e.id === next.eduId);
     return [{
-      id: next.id, title: next.title, date: parentEdu?.dueDate || next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done, duration: next.duration,
+      id: next.id, title: next.title, date: parentEdu?.dueDate || next.date, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
@@ -342,7 +342,12 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
             const showPlainDue = !it.done && !tagLabel && !waitingOnWindow && it.date && it.date !== todayISO;
             return (
               <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: it.done ? 0.5 : active ? 1 : 0.65 }}>
-                <Checkbox checked={!!it.done} onClick={it.onToggle} color={it.col} />
+                <Checkbox
+                  checked={!!it.done}
+                  onClick={it.onToggle}
+                  color={it.col}
+                  title={it.isEduSession ? "Marks today's session done — not the whole assignment" : undefined}
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button
                     onClick={it.onOpen}
