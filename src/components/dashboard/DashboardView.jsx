@@ -282,13 +282,8 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                           border: `1px solid ${fitsInTime ? PRIMARY : TONE.warn.border}`,
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>
-                            {fitsInTime ? "You've got time today — start with" : "Tight today — quick win first"}
-                          </div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
-                          </div>
+                        <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
                         </div>
                         {onStartFocus && (
                           <button
@@ -335,6 +330,19 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                             <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
                             {t.date && t.date !== todayISO && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
+                            )}
+                            {onStartFocus && (
+                              <button
+                                onClick={() => onStartFocus(t.id, t.title, t.duration || undefined)}
+                                className="hoverable"
+                                title="Start focus session"
+                                style={{
+                                  flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26,
+                                  borderRadius: "50%", border: `1px solid ${PRIMARY}`, cursor: "pointer", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                                }}
+                              >
+                                <Play size={11} fill="currentColor" strokeWidth={0} />
+                              </button>
                             )}
                           </div>
                         );
