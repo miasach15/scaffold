@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Clock, Flame, GripVertical, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, cardStyle, INK, MUTED, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
@@ -151,6 +151,33 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
     onReorderTasks?.(ids);
   };
 
+  // "Do you have enough time today?" — free time left in your usual active window (the
+  // same start/end hours "What now?" reminders already use, defaulting to 9am–9pm if
+  // that's never been set) minus whatever's still ahead on today's schedule, compared
+  // against how long the rest of "Anytime today" will actually take. No separate
+  // difficulty rating exists (or needs to) — a task's own picked duration already stands
+  // in for how big a lift it is.
+  const now = new Date();
+  const nowDecimal = now.getHours() + now.getMinutes() / 60;
+  const dayStart = profile?.whatnowWindowStart ?? 9;
+  const dayEnd = profile?.whatnowWindowEnd ?? 21;
+  const windowHoursLeft = Math.max(0, dayEnd - Math.max(nowDecimal, dayStart));
+  const committedMin = [...todaysTimedTasks, ...todaysEvents]
+    .filter((item) => item.start >= nowDecimal)
+    .reduce((sum, item) => sum + (item.duration || 60), 0);
+  const freeHoursLeft = Math.max(0, windowHoursLeft - committedMin / 60);
+  // A task with no picked duration still needs an estimate to be part of this math —
+  // 30 min is a reasonable "quick thing" default, same ballpark as the shortest preset
+  // in the duration picker.
+  const untimedNeededMin = todaysUntimed.reduce((sum, t) => sum + (t.duration ?? 30), 0);
+  const fitsInTime = untimedNeededMin / 60 <= freeHoursLeft;
+  // Plenty of time: just point at whatever's already first (manual order, or date).
+  // Tight: lead with the quickest thing first — an actual win banked now beats staring
+  // at the biggest task while the clock runs out.
+  const suggestedNext = fitsInTime
+    ? todaysUntimed[0]
+    : [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
+
   // Just real due dates here — goal deadlines/milestones/actions aren't included; those
   // live on the Goals page. Within tasks: only a standalone one-time task or a "break it
   // down" project's own overall due date, never one of its individual steps — those are
@@ -247,6 +274,36 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 {todaysUntimed.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
+                    {suggestedNext && (
+                      <div
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, marginBottom: 8,
+                          background: fitsInTime ? PRIMARY_TINT : TONE.warn.bg,
+                          border: `1px solid ${fitsInTime ? PRIMARY : TONE.warn.border}`,
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>
+                            {fitsInTime ? "You've got time today — start with" : "Tight today — quick win first"}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
+                          </div>
+                        </div>
+                        {onStartFocus && (
+                          <button
+                            onClick={() => onStartFocus(suggestedNext.id, suggestedNext.title, suggestedNext.duration || undefined)}
+                            className="hoverable"
+                            style={{
+                              flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+                              background: "#fff", color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, fontSize: 12, fontWeight: 700,
+                            }}
+                          >
+                            Start
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {todaysUntimed.map((t) => {
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
