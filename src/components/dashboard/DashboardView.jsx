@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Clock, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
+import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
@@ -318,21 +318,24 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
                     {suggestedNext && (
+                      // Always the same calm primary tint, whether or not today's list
+                      // fits in the time left — "tight today" already changes WHICH task
+                      // gets suggested (the quickest one, not just the first), so the
+                      // color doesn't also need to sound an alarm on top of that.
                       <div
                         style={{
                           display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, marginBottom: 8,
-                          background: fitsInTime ? PRIMARY_TINT : TONE.warn.bg,
-                          border: `1px solid ${fitsInTime ? PRIMARY : TONE.warn.border}`,
+                          background: PRIMARY_TINT, border: `1px solid ${PRIMARY}`,
                         }}
                       >
                         {onToggleDone && (
-                          <Checkbox checked={false} onClick={() => onToggleDone(suggestedNext.id, true)} color={{ border: fitsInTime ? PRIMARY_DARK : TONE.warn.text }} />
+                          <Checkbox checked={false} onClick={() => onToggleDone(suggestedNext.id, true)} color={{ border: PRIMARY_DARK }} />
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
                           </div>
-                          <StepNotes notes={suggestedNext.notes} title={suggestedNext.title} color={fitsInTime ? PRIMARY_DARK : TONE.warn.text} />
+                          <StepNotes notes={suggestedNext.notes} title={suggestedNext.title} color={PRIMARY_DARK} />
                         </div>
                         {suggestedNext.date && suggestedNext.date !== todayISO && (
                           <div style={{ flexShrink: 0 }}>
@@ -345,7 +348,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             className="hoverable"
                             style={{
                               flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-                              background: "#fff", color: fitsInTime ? PRIMARY_DARK : TONE.warn.text, fontSize: 12, fontWeight: 700,
+                              background: "#fff", color: PRIMARY_DARK, fontSize: 12, fontWeight: 700,
                             }}
                           >
                             Start

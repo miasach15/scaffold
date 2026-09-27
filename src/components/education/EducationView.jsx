@@ -63,6 +63,10 @@ export default function EducationView({
   const [pendingPlan, setPendingPlan] = useState(null); // { schedule, repeatValue, items } — reviewed before anything is added
   const [addError, setAddError] = useState(null); // shown right under the add row when title/due date is missing — Add otherwise silently does nothing
   const [subjectFilter, setSubjectFilter] = useState("All");
+  // The add form stays collapsed behind "+ Add schoolwork" until you actually want to add
+  // something, same as Tasks' own "+ New Task" — instead of always taking up the top of
+  // the page.
+  const [showAddForm, setShowAddForm] = useState(false);
   // Checking something off in Today shouldn't yank it out of the list mid-glance — it
   // stays put, just visibly crossed off, same as Tasks' Today does. Session-local: once
   // you leave and come back, done items fall out of Today as usual.
@@ -84,7 +88,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null);
+    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -303,7 +307,21 @@ export default function EducationView({
 
   return (
     <div>
-      <SectionHeader title="Education" subtitle="Assignments, tests, and homework in one place." />
+      <SectionHeader
+        title="Education"
+        subtitle="Assignments, tests, and homework in one place."
+        right={
+          !showAddForm && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary hoverable"
+              style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <Plus size={14} strokeWidth={2.5} /> Add schoolwork
+            </button>
+          )
+        }
+      />
 
       {inboxItems && inboxItems.length > 0 && (
         <div style={{ marginBottom: 16 }}>
@@ -322,6 +340,8 @@ export default function EducationView({
         </div>
       )}
 
+      {showAddForm && (
+      <>
       <div data-tour="education-add">
         <AddRow>
           <input placeholder="Title..." value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
@@ -348,6 +368,9 @@ export default function EducationView({
           <DatePickerButton value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} placeholder="Due date" style={{ border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
+          </button>
+          <button onClick={resetAddForm} title="Cancel" style={{ background: "none", border: "none", color: "#C2C9D1", fontSize: 20, cursor: "pointer", padding: "0 4px" }}>
+            ×
           </button>
         </AddRow>
         {addError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: -2, marginBottom: 8 }}>{addError}</div>}
@@ -431,6 +454,8 @@ export default function EducationView({
             </div>
           )}
       </div>
+      </>
+      )}
 
       <SubHeader>Today</SubHeader>
       {today_.length === 0 && leftTodayItems.length === 0 ? (
