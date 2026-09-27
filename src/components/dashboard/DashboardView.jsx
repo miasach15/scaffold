@@ -250,69 +250,41 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           </div>
         </div>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 6 }}>Coming Up</div>
-            {upcoming.length === 0 ? (
-              <EmptyState text="Nothing due soon." />
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {upcoming.map((c) => (
-                  <ComingUpRow key={c.id} chip={c} col={CATEGORY_COLORS[c.kind === "edu" ? educationCategory : c.category] || CATEGORY_COLORS.Personal} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ ...dividedSection, padding: "12px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 6 }}>Habits Checklist</div>
-            {habits.length === 0 ? (
-              <EmptyState text="No habits yet." />
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {habits.map((h) => {
-                  const done = h.doneDates.includes(todayISO);
-                  const streak = habitStreak(h.doneDates);
-                  return (
-                    <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} />
-                      <div style={{ flex: 1, fontSize: 13, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
-                      {streak > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10.5, flexShrink: 0 }}>
-                          <Flame size={10} color={PRIMARY_DARK} fill={PRIMARY_DARK} strokeWidth={0} /> {streak}d
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Sits at the bottom of the right column — that's "the corner" for Dashboard's
-              own copy of the focus timer. When a session is already running, this becomes
-              an empty slot: App.jsx portals the SAME floating-timer component (see
-              FocusTimerModal's portalTarget) into it instead of leaving the idle picker
-              showing underneath, so there's never two timers visible at once. Leaving
-              Dashboard unmounts this slot, which is exactly what lets the timer reappear
-              as the normal floating bottom-right card everywhere else. */}
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {/* Sits FIRST in the right column now, ahead of Coming Up/Habits — that's "the
+              corner" for Dashboard's own copy of the focus timer. When a session is
+              already running, this becomes an empty slot: App.jsx portals the SAME
+              floating-timer component (see FocusTimerModal's portalTarget) into it
+              instead of leaving the idle picker showing underneath, so there's never two
+              timers visible at once. Leaving Dashboard unmounts this slot, which is
+              exactly what lets the timer reappear as the normal floating bottom-right
+              card everywhere else. */}
           {hasActiveFocusSession ? (
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
-            <div style={{ ...cardStyle, padding: "14px 16px", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 19, color: INK }}>Focus Timer</div>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
-                  <Clock size={13} />
+            <div style={{ ...cardStyle, padding: "12px 14px", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
+                  <Clock size={12} />
                 </div>
               </div>
 
-              <div style={{ textAlign: "center", margin: "0 0 10px" }}>
-                <div style={{ fontFamily: serifFont, fontSize: 34, color: INK, letterSpacing: 0.5 }}>{pad(focusMinutes)}:00</div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginTop: 2 }}>{focusMinutes} min focus</div>
+              <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 8px" }}>
+                <svg width="92" height="92" viewBox="0 0 92 92" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="46" cy="46" r="39" fill="none" stroke={BORDER} strokeWidth="7" />
+                  <circle
+                    cx="46" cy="46" r="39" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 39 * 0.94} ${2 * Math.PI * 39 * 0.06}`}
+                  />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  <div style={{ fontSize: 8.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 1 }}>{focusMinutes} min</div>
+                </div>
               </div>
 
-              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 6 }}>
                 {FOCUS_PRESETS.map((m) => (
                   <button
                     key={m}
@@ -334,12 +306,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   value={focusTaskId || ""}
                   onChange={(e) => setFocusTaskId(e.target.value)}
                   title="What this session is for"
-                  style={{ ...inputStyle, width: "100%", marginBottom: 6 }}
+                  style={{ ...inputStyle, width: "100%", marginBottom: 5 }}
                 >
                   {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
               ) : (
-                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 6 }}>Nothing due today to focus on yet.</div>
+                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 5 }}>Nothing due today to focus on yet.</div>
               )}
 
               <button
@@ -350,7 +322,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 disabled={!focusTaskId}
                 style={{
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "10px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                  padding: "9px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
                   fontSize: 14.5, fontWeight: 500, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
                 }}
               >
@@ -359,6 +331,44 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               </button>
             </div>
           )}
+
+          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>Coming Up</div>
+            {upcoming.length === 0 ? (
+              <EmptyState text="Nothing due soon." />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {upcoming.map((c) => (
+                  <ComingUpRow key={c.id} chip={c} col={CATEGORY_COLORS[c.kind === "edu" ? educationCategory : c.category] || CATEGORY_COLORS.Personal} onSetDate={onSetDate} onSetStart={onSetStart} onUpdateGroupDueDate={onUpdateGroupDueDate} onUpdateEduDeadline={onUpdateEduDeadline} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>Habits Checklist</div>
+            {habits.length === 0 ? (
+              <EmptyState text="No habits yet." />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {habits.map((h) => {
+                  const done = h.doneDates.includes(todayISO);
+                  const streak = habitStreak(h.doneDates);
+                  return (
+                    <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} />
+                      <div style={{ flex: 1, fontSize: 13, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
+                      {streak > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10.5, flexShrink: 0 }}>
+                          <Flame size={10} color={PRIMARY_DARK} fill={PRIMARY_DARK} strokeWidth={0} /> {streak}d
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -385,7 +395,7 @@ function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, o
     else onSetStart(chip.id, start);
   };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 13px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
       <div style={{ width: 8, height: 8, borderRadius: 4, background: col?.accent || PRIMARY_DARK, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
