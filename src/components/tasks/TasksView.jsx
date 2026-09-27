@@ -267,7 +267,21 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
 
   return (
     <div>
-      <SectionHeader title="Tasks" subtitle="Everything you need to get done." />
+      <SectionHeader
+        title="Tasks"
+        subtitle="Everything you need to get done."
+        right={
+          !showAddForm && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="btn-primary hoverable"
+              style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <Plus size={14} strokeWidth={2.5} /> New Task
+            </button>
+          )
+        }
+      />
 
       <TodaySection
         tasks={tasks}
@@ -284,15 +298,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       />
 
       <div data-tour="tasks-add">
-        {!showAddForm ? (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary hoverable"
-            style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}
-          >
-            <Plus size={14} strokeWidth={2.5} /> New Task
-          </button>
-        ) : (
+        {showAddForm && (
           <>
             <AddRow>
               <input
