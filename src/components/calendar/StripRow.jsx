@@ -40,10 +40,16 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
               const col = chipStyle(c);
               const overdue = c.kind !== "event" && c.kind !== "task" && !c.done && c.date < todayISO;
               const content = <>{chipLabel(c)}</>;
+              // A done chip goes fully neutral gray instead of just fading its own
+              // category color — a faded-but-still-saturated pill still reads as heavy
+              // as an active one at a glance; plain gray + strikethrough reads as "over
+              // and done with" immediately.
               const style = {
                 fontSize: emphasis ? 11.5 : 10.5, textAlign: "left", padding: emphasis ? "4px 8px" : "2px 6px", borderRadius: 6,
-                background: col.bg, border: `${emphasis ? 1.5 : 1}px solid ${overdue ? TONE.carried.border : col.border}`, color: col.text,
-                textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.55 : 1, fontWeight: 700,
+                background: c.done ? "#F1F2F4" : col.bg,
+                border: `${emphasis ? 1.5 : 1}px solid ${c.done ? "#E5E7EB" : overdue ? TONE.carried.border : col.border}`,
+                color: c.done ? "#9CA3AF" : col.text,
+                textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.8 : 1, fontWeight: c.done ? 500 : 700,
                 cursor: c.kind === "task" || c.kind === "event" ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
               };

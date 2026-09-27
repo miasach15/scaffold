@@ -82,7 +82,14 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // once to auto-open Brain Dump the first time it's reached, then clears it, so it
   // never pops open again on later visits.
   const [autoOpenBrainDump, setAutoOpenBrainDump] = useState(false);
-  const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
+  // On a Sunday, the current Mon-Sun week is basically over — landing on it by default
+  // shows six days already in the past and hides tomorrow's fresh Monday entirely. Jump
+  // straight to next week's Monday instead; any other day still opens on its own normal
+  // current week.
+  const [weekStart, setWeekStart] = useState(() => {
+    const d = new Date();
+    return d.getDay() === 0 ? startOfWeek(addDays(d, 1)) : startOfWeek(d);
+  });
   // ISO date string, or null for week view. A cramped 7-column week grid is hard to use
   // on a phone-width screen, so start narrow screens on today's single-day view instead
   // — still just a starting point, switching to week view from there works the same as ever.
@@ -322,10 +329,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     if (!rows || rows.length === 0) return;
 
     if (type === "Homework") {
-      // A homework item gets a single reminder task the day before it's due.
+      // A homework item gets a single reminder task the day before it's due — "Finish:"
+      // rather than "Work on:" since there's only the one day given for it, not a
+      // multi-day window like an Assignment/Assessment gets.
       for (const row of rows) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
-        addTask({ title: `Work on: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
+        addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: null, eduId: row.id, category: profile.educationCategory });
       }
     } else if ((type === "Assignment" || type === "Assessment") && workDays) {
       const workVerb = type === "Assessment" ? "Study" : "Work on";
@@ -606,6 +615,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             events={events}
             tasks={visibleTasks}
             habits={habits}
+            eduItems={eduItems}
             onSetHabitDone={setHabitDone}
             setView={setView}
             onSelectDay={setDayView}

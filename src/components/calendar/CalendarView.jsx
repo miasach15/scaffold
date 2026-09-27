@@ -10,14 +10,19 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const onDropItem = (kind, id, iso) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, null));
-  const scrollRef = useRef(null);
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 6 * ROW_H;
-  }, []);
-
   const todayISO = toISO(new Date());
   const now = new Date();
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    // A little above "now" instead of pinned right at the top edge — leaves the last
+    // hour or so of context visible above the current-time line instead of it sitting
+    // flush against the grid's edge.
+    if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, (nowDecimal - 1.5) * ROW_H);
+    // Intentionally once on mount only — this is the initial scroll position, not
+    // something that should yank the view back to "now" every time the clock ticks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Calendar shows deadlines, not day-to-day to-dos: Education due dates (homework,
   // assignments, tests) and goal deadlines/milestones. Plain tasks, "break it down"
@@ -36,10 +41,10 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
     return { ...c, bg: "#fff" };
   };
-  const chipLabel = (chip) => {
-    if (isDueKind(chip)) return `Due: ${chip.title}`;
-    return chip.title;
-  };
+  // No "Due: " prefix — the strip's own row label ("Due"/"All day") already says that;
+  // repeating it on every chip just eats into the space for the actual subject/title
+  // ("calc quiz", "bio test") that's the useful part to read at a glance.
+  const chipLabel = (chip) => chip.title;
   // Assessments sit in "All day" instead — a test is the whole day it happens, not a
   // step you work through. A due chip with a specific time (an Education deadline) gets
   // the same treatment a timed event already gets — it moves into the hourly grid at

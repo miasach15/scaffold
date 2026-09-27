@@ -16,25 +16,33 @@ import TaskRow from "./TaskRow";
 // sessions (see App.jsx's updateEduDeadline). "Open in Education" stays as a plain link
 // for the things that only make sense over there: renaming the deadline itself, AI
 // re-planning, deleting it.
-export default function EduDeadlineRow({ item, col, sessions, onToggleItemDone, onToggleDone, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onUpdateDeadline, onAddSession, onOpen }) {
+export default function EduDeadlineRow({ item, col, sessions, doneCount, total, onToggleItemDone, onToggleDone, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onUpdateDeadline, onAddSession, onOpen }) {
   const [expanded, setExpanded] = useState(false);
   const [editingDue, setEditingDue] = useState(false);
+  // More than one session actually means there's something to expand into — a plain
+  // Homework item only ever gets the one, so a chevron there would just re-reveal the
+  // same row the header already shows.
+  const expandable = total > 1;
 
   return (
     <div>
       <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
         <Checkbox checked={item.done} onClick={() => onToggleItemDone(item.id, !item.done)} color={col} />
-        <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>{item.type}</div>
+        {/* The subject ("Chemistry", "Calc") is more useful at a glance than the
+            Homework/Assignment/Assessment type — falls back to type only for the rare
+            item with no subject set. */}
+        <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>{item.subject || item.type}</div>
         <button
-          onClick={() => setExpanded((x) => !x)}
+          onClick={() => expandable && setExpanded((x) => !x)}
           className="expand-toggle"
-          style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: expandable ? "pointer" : "default" }}
         >
-          {sessions.length > 0 && (expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />)}
+          {expandable && (expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />)}
           <span style={{ minWidth: 0, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {item.title}{item.subject ? ` (${item.subject})` : ""}
+            {item.title}
           </span>
         </button>
+        {expandable && <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap", flexShrink: 0 }}>{doneCount}/{total} steps</div>}
         {onUpdateDeadline && editingDue ? (
           <div
             onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDue(false); }}

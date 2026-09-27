@@ -221,12 +221,15 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     }
     if (item.type === "edu") {
       const sessions = tasks.filter((t) => t.eduId === item.edu.id && (!t.done || justDone.has(t.id))).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const allSessions = tasks.filter((t) => t.eduId === item.edu.id);
       return (
         <EduDeadlineRow
           key={`edu-${item.edu.id}`}
           item={item.edu}
           col={CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal}
           sessions={sessions}
+          doneCount={allSessions.filter((t) => t.done).length}
+          total={allSessions.length}
           onToggleItemDone={handleSetEduDone}
           onToggleDone={handleToggleDone}
           onSetCategory={onSetCategory}
@@ -273,7 +276,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     <div>
       <SectionHeader
         title="Tasks"
-        subtitle="Everything you need to get done."
         right={
           !showAddForm && (
             <button

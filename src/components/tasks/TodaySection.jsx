@@ -5,6 +5,7 @@ import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
+import UrgencyBadge from "../shared/UrgencyBadge";
 import WhatNowModal from "./WhatNowModal";
 
 // How many overdue plain tasks show before collapsing behind "+N more" — a glance at
@@ -81,7 +82,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   const taskItems = tasks
     .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && !isOverdueTask(t, todayISO) && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
-      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done,
+      id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done, duration: t.duration,
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
@@ -119,8 +120,19 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     const due = sessions.filter((t) => t.date && t.date <= todayISO).sort((a, b) => a.date.localeCompare(b.date));
     const next = due[due.length - 1];
     if (!next) return [];
+    // Sorts by the session's own scheduled day (correctly puts a session happening
+    // today ahead of something merely due tomorrow) — but that means the row itself
+    // never shows how far off the REAL deadline actually is. dueDate carries that
+    // separately, just for the badge below, so e.g. a test 3 days out still reads as
+    // "3 days out" even though its prep session is rightly sorted as today's work.
+    const parentEdu = (eduItems || []).find((e) => e.id === next.eduId);
     return [{
-      id: next.id, title: next.title, date: next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done,
+      id: next.id, title: next.title, date: next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done, duration: next.duration,
+      dueDate: parentEdu?.dueDate || null,
+      // Checking this off only completes TODAY'S session, not the assignment/test
+      // itself — that's a separate checkbox on its own deadline row. Easy to
+      // second-guess without this, especially when today's session is the last one.
+      subLabel: "This session only — not the whole assignment",
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
@@ -151,7 +163,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       const groupTitle = allSteps.find((s) => s.groupTitle)?.groupTitle || next.title;
       const groupDueDate = allSteps.find((s) => s.groupDueDate)?.groupDueDate || null;
       return {
-        id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone,
+        id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone, duration: next.duration,
         subLabel: allDone ? "All steps done" : `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
         category: next.category || "Personal",
         col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
@@ -345,13 +357,19 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                   >
                     {it.title}
                   </button>
-                  {it.isGroup && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
+                  {it.subLabel && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>
+                {!it.done && it.duration != null && (
+                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>~{it.duration}m</div>
+                )}
                 {!it.done && tagLabel && (
                   <div style={{ fontSize: 11, color: overdue ? TONE.carried.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>
                 )}
                 {!it.done && waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>
+                )}
+                {!it.done && it.dueDate && it.dueDate !== todayISO && (
+                  <div style={{ flexShrink: 0 }}><UrgencyBadge iso={it.dueDate} done={false} leadDays={null} /></div>
                 )}
               </div>
             );

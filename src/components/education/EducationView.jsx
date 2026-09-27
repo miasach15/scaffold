@@ -178,7 +178,7 @@ export default function EducationView({
   const quickAddSession = (eduId, date) => {
     const item = eduItems.find((e) => e.id === eduId);
     if (!item || !date) return;
-    const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : `Work on: ${item.title}`;
+    const sessionTitle = item.type === "Assessment" ? `Study: ${item.title}` : item.type === "Homework" ? `Finish: ${item.title}` : `Work on: ${item.title}`;
     onAddSession(eduId, sessionTitle, date, "17:00", 60, true);
   };
 

@@ -46,7 +46,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -343,9 +343,18 @@ export default function DashboardView({ profile, events, tasks, habits, onSetHab
                               {t.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notes}</div>}
                             </div>
                             {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
-                            {t.date && t.date !== todayISO && (
-                              <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
-                            )}
+                            {(() => {
+                              // An Education work session sorts/shows by its own scheduled
+                              // work day, which is often today or earlier — showing a
+                              // badge off THAT date would stay hidden (or say "Carried
+                              // over") even when the real deadline is still days away.
+                              // The badge should reflect the actual due date, not the day
+                              // the session itself happens to land on.
+                              const badgeIso = t.eduId ? (eduItems || []).find((e) => e.id === t.eduId)?.dueDate : t.date;
+                              return badgeIso && badgeIso !== todayISO && (
+                                <div style={{ flexShrink: 0 }}><UrgencyBadge iso={badgeIso} done={t.done} leadDays={t.eduId ? null : defaultLeadDays(t)} /></div>
+                              );
+                            })()}
                           </div>
                         );
                       })}
