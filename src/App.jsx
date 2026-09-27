@@ -59,7 +59,7 @@ export default function App() {
 
 function FullScreenMessage({ text }) {
   return (
-    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: PAPER_BG, color: "#93A0AD", fontFamily: "'Geist', -apple-system, sans-serif" }}>
       {text}
     </div>
   );
@@ -526,7 +526,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         "--primary": theme.primary,
         "--primary-dark": theme.primaryDark,
         "--primary-tint": theme.primaryTint,
-        fontFamily: "'Inter', -apple-system, sans-serif", background: PAPER_BG, height: "100dvh", color: INK,
+        fontFamily: "'Geist', -apple-system, sans-serif", background: PAPER_BG, height: "100dvh", color: INK,
         display: "flex", overflow: "hidden",
         // Keeps content clear of a notch/Dynamic Island and the home-indicator bar on
         // iPhone (both in the installed PWA and the native app) — a no-op everywhere else.
@@ -535,7 +535,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
         button:active:not(:disabled) { transform: scale(0.97); }
