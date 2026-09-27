@@ -77,6 +77,14 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   // at that point.
   const audioCtxRef = useRef(null);
   const prevRemainingRef = useRef(initial);
+  // The wall-clock moment the countdown should hit 0 — set whenever running starts (or
+  // resumes). Background/inactive tabs get their setInterval throttled by the browser
+  // (sometimes down to once a minute or less), so counting down by decrementing once per
+  // tick would drift or stall while the tab isn't in front. Deriving `remaining` from
+  // real elapsed time against this fixed timestamp means whatever tick DOES get through
+  // — even a late one — snaps the displayed time (and the end-of-session chime/
+  // notification below, which fires off `remaining` reaching 0) back to correct.
+  const endTimeRef = useRef(null);
 
   const ensureAudioCtx = () => {
     if (!audioCtxRef.current) {
@@ -93,18 +101,29 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   useEffect(() => () => audioCtxRef.current?.close?.(), []);
 
   useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setRemaining((r) => {
-          if (r <= 1) {
-            setRunning(false);
-            return 0;
-          }
-          return r - 1;
-        });
-      }, 1000);
-    }
+    if (!running) return;
+    const tick = () => {
+      const secsLeft = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+      setRemaining(secsLeft);
+      if (secsLeft <= 0) setRunning(false);
+    };
+    tick(); // correct immediately on start/resume rather than waiting a full second
+    intervalRef.current = setInterval(tick, 1000);
     return () => clearInterval(intervalRef.current);
+  }, [running]);
+
+  // A throttled background tab's setInterval can go quiet for a while — catching up the
+  // instant the tab (or window) becomes visible again means the countdown and the
+  // end-of-session chime/notification are never stuck waiting on the next lucky tick.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !running || endTimeRef.current == null) return;
+      const secsLeft = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+      setRemaining(secsLeft);
+      if (secsLeft <= 0) setRunning(false);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [running]);
 
   useEffect(() => {
@@ -147,7 +166,10 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const playSuccessChime = () => playNotes([{ freq: 523.25, start: 0 }, { freq: 659.25, start: 0.1 }, { freq: 783.99, start: 0.2 }]);
 
   const toggleRunning = () => {
-    if (!running) ensureAudioCtx();
+    if (!running) {
+      ensureAudioCtx();
+      endTimeRef.current = Date.now() + remaining * 1000;
+    }
     setRunning((r) => !r);
   };
 
@@ -156,8 +178,14 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     setTotalSeconds(mins * 60);
     setRemaining(mins * 60);
     prevRemainingRef.current = mins * 60;
+    endTimeRef.current = null;
   };
-  const reset = () => { setRunning(false); setRemaining(totalSeconds); prevRemainingRef.current = totalSeconds; };
+  const reset = () => {
+    setRunning(false);
+    setRemaining(totalSeconds);
+    prevRemainingRef.current = totalSeconds;
+    endTimeRef.current = null;
+  };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const finished = remaining === 0;
@@ -186,6 +214,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     setTotalSeconds(300);
     setRemaining(300);
     prevRemainingRef.current = 300;
+    endTimeRef.current = Date.now() + 300 * 1000;
     setRunning(true);
   };
 
