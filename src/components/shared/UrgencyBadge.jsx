@@ -12,7 +12,10 @@ export default function UrgencyBadge({ iso, done, leadDays }) {
   // not just this badge's color.
   const displayTone = u.tone === "danger" ? "neutral" : u.tone;
   const t = TONE[displayTone];
-  const plain = displayTone === "neutral";
+  // "soon" (In 1-3 days) gets the same plain treatment as "neutral" ("In N days" beyond
+  // that) — a bordered pill next to the plain-text urgent/neutral badges reads as its own,
+  // inconsistent level of alarm rather than just a slightly nearer date.
+  const plain = displayTone === "neutral" || displayTone === "soon";
   return (
     <div style={{ fontSize: 11, fontWeight: plain ? 400 : 700, color: t.text, background: plain ? "transparent" : t.bg, border: plain ? "none" : `1px solid ${t.border}`, padding: plain ? 0 : "2px 7px", borderRadius: 999, whiteSpace: "nowrap" }}>
       {u.label}

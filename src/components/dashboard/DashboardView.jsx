@@ -331,19 +331,6 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                             {t.date && t.date !== todayISO && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={defaultLeadDays(t)} /></div>
                             )}
-                            {onStartFocus && (
-                              <button
-                                onClick={() => onStartFocus(t.id, t.title, t.duration || undefined)}
-                                className="hoverable"
-                                title="Start focus session"
-                                style={{
-                                  flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26,
-                                  borderRadius: "50%", border: `1px solid ${PRIMARY}`, cursor: "pointer", background: PRIMARY_TINT, color: PRIMARY_DARK,
-                                }}
-                              >
-                                <Play size={11} fill="currentColor" strokeWidth={0} />
-                              </button>
-                            )}
                           </div>
                         );
                       })}
