@@ -469,7 +469,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {/* Deliberately the quietest thing in this column — a daily checklist matters,
               but it's not what the page is actually for, so it shouldn't visually compete
               with Focus Timer or the Scaffolded Steps for attention. */}
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: MUTED }}>Habits</div>
               {habits.length > 0 && (
@@ -504,7 +504,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {/* Wins stack up here as they happen — empty (and hidden) first thing in the
               morning, so there's nothing to scroll past before you've done anything yet. */}
           {doneTodayTasks.length > 0 && (
-            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+            <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Done today</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {doneTodayTasks.map((t) => (
