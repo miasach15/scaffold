@@ -120,19 +120,13 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     const due = sessions.filter((t) => t.date && t.date <= todayISO).sort((a, b) => a.date.localeCompare(b.date));
     const next = due[due.length - 1];
     if (!next) return [];
-    // Sorts by the session's own scheduled day (correctly puts a session happening
-    // today ahead of something merely due tomorrow) — but that means the row itself
-    // never shows how far off the REAL deadline actually is. dueDate carries that
-    // separately, just for the badge below, so e.g. a test 3 days out still reads as
-    // "3 days out" even though its prep session is rightly sorted as today's work.
+    // Which SESSION is "next" is still picked by its own scheduled work day (due or
+    // overdue) — but the row itself sorts and shows a badge for the actual assignment's
+    // due date, not that work day, so it lands and reads next to everything else by how
+    // urgent the real deadline is.
     const parentEdu = (eduItems || []).find((e) => e.id === next.eduId);
     return [{
-      id: next.id, title: next.title, date: next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done, duration: next.duration,
-      dueDate: parentEdu?.dueDate || null,
-      // Checking this off only completes TODAY'S session, not the assignment/test
-      // itself — that's a separate checkbox on its own deadline row. Easy to
-      // second-guess without this, especially when today's session is the last one.
-      subLabel: "This session only — not the whole assignment",
+      id: next.id, title: next.title, date: parentEdu?.dueDate || next.date, leadDays: null, isGroup: false, focusId: next.id, done: next.done, duration: next.duration,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
@@ -341,6 +335,11 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
             const waitingOnWindow = !it.isGroup && it.date && it.leadDays && !overdue && !dueToday && !urgent; // has a date+leadDays but the window hasn't opened yet
             const active = it.isGroup || overdue || dueToday || urgent; // full-priority state
             const tagLabel = overdue || urgent ? info.label : null;
+            // Group/edu-session/deadline/goal rows don't carry a leadDays of their own
+            // (see above), so tagLabel/waitingOnWindow stay silent for them outside the
+            // overdue case — this fills that gap with a plain "due tomorrow"/"in N days"
+            // read on the real date, whenever nothing else already said something about it.
+            const showPlainDue = !it.done && !tagLabel && !waitingOnWindow && it.date && it.date !== todayISO;
             return (
               <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: it.done ? 0.5 : active ? 1 : 0.65 }}>
                 <Checkbox checked={!!it.done} onClick={it.onToggle} color={it.col} />
@@ -368,8 +367,8 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                 {!it.done && waitingOnWindow && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>due {formatShortDate(it.date)}</div>
                 )}
-                {!it.done && it.dueDate && it.dueDate !== todayISO && (
-                  <div style={{ flexShrink: 0 }}><UrgencyBadge iso={it.dueDate} done={false} leadDays={null} /></div>
+                {showPlainDue && (
+                  <div style={{ flexShrink: 0 }}><UrgencyBadge iso={it.date} done={false} leadDays={null} /></div>
                 )}
               </div>
             );

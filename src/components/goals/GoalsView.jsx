@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronUp, Plus } from "lucide-react";
-import { BORDER, INK, MUTED, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, MUTED, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
@@ -12,21 +12,6 @@ const toggleBtn = {
   border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "5px 11px 5px 8px",
   fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
 };
-
-// Shown in place of the textarea's own empty gray line — a concrete, already-broken-down
-// goal so the reward for using "Break it down for me" is visible before typing anything,
-// instead of only being explained in a subtitle. Purely illustrative: dates are just
-// reasonable stand-ins spread up to the example's own "Nov 1", not tied to today's date.
-const SAMPLE_GOAL_TITLE = "Learn to sew";
-const SAMPLE_GOAL_DEADLINE = "Nov 1";
-const SAMPLE_GOAL_STEPS = [
-  { title: "Buy a beginner sewing machine", date: "Sep 5" },
-  { title: "Watch 3 tutorial videos", date: "Sep 10" },
-  { title: "Practice basic stitches on scrap fabric", date: "Sep 18" },
-  { title: "Sew a simple tote bag", date: "Oct 2" },
-  { title: "Try a beginner clothing pattern", date: "Oct 20" },
-  { title: "Finish and wear your first project", date: "Nov 1" },
-];
 
 export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -100,9 +85,6 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   // rather than surfacing a "you've hit your limit" message.
   const atGoalLimit = goals.length >= 5;
   const canAct = outcome.trim().length > 0 && !planning;
-  // The sample breakdown is a first-time teaser only — it disappears the moment there's
-  // a real goal to look at, or the moment someone starts typing their own.
-  const showSample = outcome.trim().length === 0 && goals.length === 0;
 
   return (
     <div>
@@ -121,25 +103,6 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             rows={2}
             style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff" }}
           />
-
-          {showSample && (
-            <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 10, border: `1px dashed ${BORDER}`, opacity: 0.55 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: MUTED, marginBottom: 6 }}>
-                Example
-              </div>
-              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 8 }}>
-                {SAMPLE_GOAL_TITLE} — by {SAMPLE_GOAL_DEADLINE}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {SAMPLE_GOAL_STEPS.map((s, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, color: MUTED }}>
-                    <span>{s.title}</span>
-                    <span style={{ whiteSpace: "nowrap" }}>{s.date}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
             <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={toggleBtn}>
@@ -194,7 +157,9 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         </div>
       )}
 
-      {goals.length > 0 && (
+      {goals.length === 0 ? (
+        <EmptyState text="No goals yet." />
+      ) : (
         filtered.length === 0 ? (
           <EmptyState text={`No ${filter} goals yet.`} />
         ) : (

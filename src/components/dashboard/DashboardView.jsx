@@ -73,7 +73,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   });
   const groupItems = Object.values(activeGroupSteps)
     .map((steps) => steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0])
-    .filter((next) => next && next.date && next.date <= todayISO);
+    .filter((next) => next && next.date && next.date <= todayISO)
+    // Which STEP is next is picked by its own work day (just above) — but the row
+    // itself sorts/shows a badge for the project's overall due date instead, same as
+    // eduSessionItems below, so both land by how urgent the real deadline actually is.
+    .map((next) => ({ ...next, date: next.groupDueDate || next.date }));
   // Same idea for Education work sessions ("Work on X"/"Study X") — only the most
   // recent due-or-overdue, still-undone session per assignment shows, never a pile of
   // rows with the same title for every day that slipped by.
@@ -85,7 +89,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const eduSessionItems = Object.values(activeEduSessions)
     .map((sessions) => sessions.filter((t) => t.date && t.date <= todayISO).sort((a, b) => a.date.localeCompare(b.date)))
     .map((due) => due[due.length - 1])
-    .filter(Boolean);
+    .filter(Boolean)
+    // Same swap as groupItems above — the session's own work day picked it, but the
+    // assignment/test's real due date is what the row sorts and shows a badge by.
+    .map((t) => ({ ...t, date: (eduItems || []).find((e) => e.id === t.eduId)?.dueDate || t.date }));
   // A plain due-dated task (no breakdown, not from Education, not recurring) shouldn't
   // just sit invisible until the exact day it's due — same "shows up early, dimmed,
   // until it's close" rule TodaySection already gives it on the Tasks page. And once its
@@ -343,18 +350,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               {t.notes && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.notes}</div>}
                             </div>
                             {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
-                            {(() => {
-                              // An Education work session sorts/shows by its own scheduled
-                              // work day, which is often today or earlier — showing a
-                              // badge off THAT date would stay hidden (or say "Carried
-                              // over") even when the real deadline is still days away.
-                              // The badge should reflect the actual due date, not the day
-                              // the session itself happens to land on.
-                              const badgeIso = t.eduId ? (eduItems || []).find((e) => e.id === t.eduId)?.dueDate : t.date;
-                              return badgeIso && badgeIso !== todayISO && (
-                                <div style={{ flexShrink: 0 }}><UrgencyBadge iso={badgeIso} done={t.done} leadDays={t.eduId ? null : defaultLeadDays(t)} /></div>
-                              );
-                            })()}
+                            {t.date && t.date !== todayISO && (
+                              <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
+                            )}
                           </div>
                         );
                       })}
@@ -388,7 +386,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {hasActiveFocusSession ? (
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
-            <div style={{ ...cardStyle, padding: "12px 14px", flexShrink: 0 }}>
+            <div style={{ ...cardStyle, boxShadow: "none", padding: "12px 14px", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                 <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
                 <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
@@ -454,7 +452,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           )}
 
-          <div style={{ ...cardStyle, padding: "14px 16px", flexShrink: 0 }}>
+          <div style={{ ...cardStyle, boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
               <div>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Daily rhythm</div>
