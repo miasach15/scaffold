@@ -173,11 +173,12 @@ export const TONE = {
   // you — hence the brand color instead of an alarm color.
   carried: { bg: "#E0E2EB", border: "#A1A9CE", text: "#4A5BA8" },
 };
-// Display/headline accent — Playfair Display. Every screen that already reads this
-// constant (Journal, TodaySection, MonthView, CalendarView, WhatNowModal, Misc.jsx empty
-// states, WeeklyReviewModal, HabitHistoryModal, SettingsModal, Goals, Habits) picks up
-// the font automatically.
-export const serifFont = "'Playfair Display', Georgia, serif";
+// Display/headline accent — Adamina. Every screen that already reads this constant
+// (Journal, TodaySection, MonthView, CalendarView, WhatNowModal, Misc.jsx empty states,
+// WeeklyReviewModal, HabitHistoryModal, SettingsModal, Goals, Habits) picks up the font
+// automatically. Adamina only ships one weight/style (400 normal) — no italic, no bold —
+// so a fontWeight set alongside serifFont has no real face to switch to.
+export const serifFont = "'Adamina', Georgia, serif";
 export const cardStyle = {
   background: SURFACE,
   border: `1px solid ${BORDER}`,

@@ -70,7 +70,7 @@ export default function AuthScreen() {
     <div style={{ fontFamily: "'Geist', -apple-system, sans-serif", background: PAPER_BG, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       {showIntro && <IntroSplash onDone={() => setShowIntro(false)} />}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Geist:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Adamina&family=Geist:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
