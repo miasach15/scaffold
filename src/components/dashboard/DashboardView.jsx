@@ -454,12 +454,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           )}
 
-          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>Habits Checklist</div>
+          <div style={{ ...cardStyle, padding: "14px 16px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 }}>Daily rhythm</div>
+                <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Habits Checklist</div>
+              </div>
+              {habits.length > 0 && (
+                <div style={{ fontSize: 12, color: MUTED, flexShrink: 0, paddingTop: 2 }}>
+                  {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
+                </div>
+              )}
+            </div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
