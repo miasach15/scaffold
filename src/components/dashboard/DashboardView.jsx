@@ -271,12 +271,8 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
               </div>
 
               <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 8px" }}>
-                <svg width="92" height="92" viewBox="0 0 92 92" style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx="46" cy="46" r="39" fill="none" stroke={BORDER} strokeWidth="7" />
-                  <circle
-                    cx="46" cy="46" r="39" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 39 * 0.94} ${2 * Math.PI * 39 * 0.06}`}
-                  />
+                <svg width="92" height="92" viewBox="0 0 92 92">
+                  <circle cx="46" cy="46" r="39" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
