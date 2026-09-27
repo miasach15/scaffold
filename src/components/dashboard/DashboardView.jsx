@@ -23,7 +23,7 @@ import BrainDumpModal from "./BrainDumpModal";
 // next row, per category color. Figma's dashboard mockup carries this same treatment.
 function TimelineRow({ item, col, isFirst, isLast }) {
   return (
-    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 18 }}>
+    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
         <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isFirst ? col.accent : col.bg, border: isFirst ? "none" : `1.5px solid ${col.border}` }} />
@@ -143,7 +143,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
 
   return (
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ ...flatSection, padding: "14px 24px 24px", marginBottom: 28, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+      <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today's plan</div>
           <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
@@ -163,7 +163,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 36, flex: 1, minHeight: 0 }} className="dashboard-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`
           @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr !important; flex: none !important; min-height: 0 !important; }
@@ -176,7 +176,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           }
         `}</style>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 30, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
@@ -203,12 +203,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             </div>
           </div>
 
-          <div style={{ ...dividedSection, padding: "24px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 16 }}>Today's Scaffolded Steps</div>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 12 }}>Today's Scaffolded Steps</div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               <EmptyState text="Nothing scheduled for today yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {todaysTimedTasks.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {todaysTimedTasks.map((item, i) => (
@@ -217,13 +217,13 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   </div>
                 )}
                 {todaysUntimed.length > 0 && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 14 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 10 }}>Anytime today</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {todaysUntimed.map((t) => {
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         return (
-                          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 15px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
+                          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
                             <div style={{ width: 8, height: 8, borderRadius: 4, background: col.accent, flexShrink: 0 }} />
                             <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: INK, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
                             {t.date && t.date !== todayISO && (
@@ -236,8 +236,8 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   </div>
                 )}
                 {todaysEvents.length > 0 && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 8 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 10 }}>Today's events</div>
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
                         <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} />
@@ -250,7 +250,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           </div>
         </div>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           {/* Sits FIRST in the right column now, ahead of Coming Up/Habits — that's "the
               corner" for Dashboard's own copy of the focus timer. When a session is
               already running, this becomes an empty slot: App.jsx portals the SAME
@@ -262,29 +262,29 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
           {hasActiveFocusSession ? (
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
-            <div style={{ ...cardStyle, padding: "18px 20px", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 19, color: INK }}>Focus Timer</div>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
-                  <Clock size={13} />
+            <div style={{ ...cardStyle, padding: "12px 14px", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
+                  <Clock size={12} />
                 </div>
               </div>
 
-              <div style={{ position: "relative", width: 100, height: 100, margin: "0 auto 14px" }}>
-                <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx="50" cy="50" r="42" fill="none" stroke={BORDER} strokeWidth="7" />
+              <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 8px" }}>
+                <svg width="92" height="92" viewBox="0 0 92 92" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="46" cy="46" r="39" fill="none" stroke={BORDER} strokeWidth="7" />
                   <circle
-                    cx="50" cy="50" r="42" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 42 * 0.94} ${2 * Math.PI * 42 * 0.06}`}
+                    cx="46" cy="46" r="39" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 39 * 0.94} ${2 * Math.PI * 39 * 0.06}`}
                   />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontFamily: serifFont, fontSize: 21, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 1 }}>{focusMinutes} min</div>
+                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  <div style={{ fontSize: 8.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 1 }}>{focusMinutes} min</div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 6 }}>
                 {FOCUS_PRESETS.map((m) => (
                   <button
                     key={m}
@@ -306,12 +306,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                   value={focusTaskId || ""}
                   onChange={(e) => setFocusTaskId(e.target.value)}
                   title="What this session is for"
-                  style={{ ...inputStyle, width: "100%", marginBottom: 10 }}
+                  style={{ ...inputStyle, width: "100%", marginBottom: 5 }}
                 >
                   {focusableTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
               ) : (
-                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 10 }}>Nothing due today to focus on yet.</div>
+                <div style={{ fontSize: 12, color: MUTED, textAlign: "center", marginBottom: 5 }}>Nothing due today to focus on yet.</div>
               )}
 
               <button
@@ -322,7 +322,7 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
                 disabled={!focusTaskId}
                 style={{
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "12px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                  padding: "9px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
                   fontSize: 14.5, fontWeight: 500, opacity: focusTaskId ? 1 : 0.4, cursor: focusTaskId ? "pointer" : "default",
                 }}
               >
@@ -332,8 +332,8 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             </div>
           )}
 
-          <div style={{ ...dividedSection, padding: "18px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10 }}>Coming Up</div>
+          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 8 }}>Coming Up</div>
             {upcoming.length === 0 ? (
               <EmptyState text="Nothing due soon." />
             ) : (
@@ -345,12 +345,12 @@ export default function DashboardView({ profile, events, tasks, habits, dueChips
             )}
           </div>
 
-          <div style={{ ...dividedSection, padding: "18px 20px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 10 }}>Habits Checklist</div>
+          <div style={{ ...dividedSection, padding: "10px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 5 }}>Habits Checklist</div>
             {habits.length === 0 ? (
               <EmptyState text="No habits yet." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {habits.map((h) => {
                   const done = h.doneDates.includes(todayISO);
                   const streak = habitStreak(h.doneDates);
@@ -395,8 +395,7 @@ function ComingUpRow({ chip, col, onSetDate, onSetStart, onUpdateGroupDueDate, o
     else onSetStart(chip.id, start);
   };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff" }}>
-      <div style={{ width: 8, height: 8, borderRadius: 4, background: col?.accent || PRIMARY_DARK, flexShrink: 0 }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "2px 0" }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         {label && <div style={{ fontSize: 10, fontWeight: 700, color: col?.accent || PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>{label}</div>}
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chip.title}</div>
