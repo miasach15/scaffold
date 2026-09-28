@@ -26,7 +26,19 @@ function ColorWheelIcon({ size = 16 }) {
   );
 }
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+const PACE_OPTIONS = [
+  { value: 0.85, label: "Faster than average" },
+  { value: 1, label: "About average" },
+  { value: 1.25, label: "Takes me longer" },
+  { value: 1.5, label: "Significantly longer (extended time)" },
+];
+const BUFFER_OPTIONS = [
+  { value: 0, label: "Off" },
+  { value: 30, label: "30 min" },
+  { value: 60, label: "60 min" },
+];
+
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -268,6 +280,36 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 </select>
               </div>
             )}
+          </div>
+        )}
+
+        {onUpdateProfile && (
+          <div style={{ marginTop: 22 }}>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
+              Pace &amp; capacity: three empty calendar hours aren't automatically three productive ones — this is how Scaffold accounts for the rest.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#5A6472", minWidth: 130 }}>How long things take you</span>
+                <select
+                  value={paceMultiplier ?? 1}
+                  onChange={(e) => onUpdateProfile({ paceMultiplier: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px", flex: 1, minWidth: 160 }}
+                >
+                  {PACE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#5A6472", minWidth: 130 }}>After-school buffer</span>
+                <select
+                  value={afterSchoolBufferMinutes ?? 0}
+                  onChange={(e) => onUpdateProfile({ afterSchoolBufferMinutes: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px", flex: 1, minWidth: 160 }}
+                >
+                  {BUFFER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
         )}
 

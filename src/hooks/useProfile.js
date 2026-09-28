@@ -18,6 +18,15 @@ const fromRow = (row) => ({
   whatnowIntervalMinutes: row.whatnow_interval_minutes ?? 60,
   whatnowWindowStart: row.whatnow_window_start ?? 8,
   whatnowWindowEnd: row.whatnow_window_end ?? 21,
+  // Covers both "I personally take longer to read/write" and formal extended-time
+  // accommodations with one honest setting, rather than asking a student to untangle
+  // which of the two applies — applied to a new session's own estimated duration and to
+  // how much room the scheduler thinks a day actually has (see distributeDatesByLoad).
+  paceMultiplier: Number(row.pace_multiplier ?? 1),
+  // Energy dip + commute/transition time right when the day's active window opens —
+  // shifts the effective start of scheduling later by this many minutes instead of
+  // assuming the window opens at full capacity the moment it starts.
+  afterSchoolBufferMinutes: row.after_school_buffer_minutes ?? 0,
   // Whichever of the user's own categories currently plays the "this is Education-linked
   // stuff" role — starts as "School" but tracks a rename (see App.jsx's renameCategory),
   // so the Education/Grades pages and Today's priority sort keep working no matter what
@@ -66,6 +75,8 @@ export function useProfile(userId) {
       if ("whatnowIntervalMinutes" in patch) dbPatch.whatnow_interval_minutes = patch.whatnowIntervalMinutes;
       if ("whatnowWindowStart" in patch) dbPatch.whatnow_window_start = patch.whatnowWindowStart;
       if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
+      if ("paceMultiplier" in patch) dbPatch.pace_multiplier = patch.paceMultiplier;
+      if ("afterSchoolBufferMinutes" in patch) dbPatch.after_school_buffer_minutes = patch.afterSchoolBufferMinutes;
       if ("educationCategory" in patch) dbPatch.education_category = patch.educationCategory;
       if ("phoneNumber" in patch) dbPatch.phone_number = patch.phoneNumber || null;
       if ("smsRemindersEnabled" in patch) dbPatch.sms_reminders_enabled = patch.smsRemindersEnabled;

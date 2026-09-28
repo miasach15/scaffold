@@ -234,14 +234,19 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
   const end = new Date(endISO + "T00:00:00");
   const totalDays = Math.max(0, Math.round((end - start) / 86400000));
 
+  // Load is minutes, not a raw item count — a day with one 90-minute task is busier than
+  // a day with three 10-minute ones, and counting items alone missed that entirely. Falls
+  // back to the same "quick thing"/default-event-length assumptions used elsewhere
+  // (Dashboard's untimedNeededMin, event rows without their own duration) for anything
+  // that doesn't carry its own estimate.
   const loadByDate = {};
   (existingTasks || []).forEach((t) => {
     if (!t.date) return;
-    loadByDate[t.date] = (loadByDate[t.date] || 0) + 1;
+    loadByDate[t.date] = (loadByDate[t.date] || 0) + (t.duration ?? 30);
   });
   (existingEvents || []).forEach((e) => {
     if (!e.date) return;
-    loadByDate[e.date] = (loadByDate[e.date] || 0) + 1;
+    loadByDate[e.date] = (loadByDate[e.date] || 0) + (e.duration ?? 60);
   });
   const loadOf = (offset) => loadByDate[toISO(addDays(start, offset))] || 0;
 

@@ -180,8 +180,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     .map((due) => due[due.length - 1])
     .filter(Boolean)
     // Same swap as groupItems above — the session's own work day picked it, but the
-    // assignment/test's real due date is what the row sorts and shows a badge by.
-    .map((t) => ({ ...t, date: (eduItems || []).find((e) => e.id === t.eduId)?.dueDate || t.date }));
+    // assignment/test's real due date is what the row sorts and shows a badge by. A
+    // flexible deadline (see Education's "This deadline can move if it needs to") sorts
+    // as if it were a day later than it really is, so it doesn't outrank an equally-close
+    // fixed deadline — sortDate is separate from date so the badge itself still shows the
+    // real due date, not the nudged one.
+    .map((t) => {
+      const parent = (eduItems || []).find((e) => e.id === t.eduId);
+      const dueDate = parent?.dueDate || t.date;
+      const sortDate = parent?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate;
+      return { ...t, date: dueDate, sortDate };
+    });
   // A plain due-dated task (no breakdown, not from Education, not recurring) shouldn't
   // just sit invisible until the exact day it's due — same "shows up early, dimmed,
   // until it's close" rule TodaySection already gives it on the Tasks page. And once its
@@ -203,8 +212,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     // in a separate panel. Manual drag order (see moveUntimed/onReorderTasks) only
     // breaks ties between steps that are equally due, the same day.
   ].sort((a, b) => {
-    const ad = a.date || "9999-99-99";
-    const bd = b.date || "9999-99-99";
+    const ad = a.sortDate || a.date || "9999-99-99";
+    const bd = b.sortDate || b.date || "9999-99-99";
     if (ad !== bd) return ad.localeCompare(bd);
     if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
     if (a.orderIndex != null) return -1;
@@ -223,15 +232,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
   const dayStart = profile?.whatnowWindowStart ?? 9;
   const dayEnd = profile?.whatnowWindowEnd ?? 21;
-  const windowHoursLeft = Math.max(0, dayEnd - Math.max(nowDecimal, dayStart));
+  // Three empty calendar hours aren't automatically three productive ones — the after-
+  // school buffer (Settings > Pace & capacity) is a flat tax on the day's usable window,
+  // covering the energy dip/commute time that's never really available for schoolwork,
+  // no matter what time it is when this is checked.
+  const bufferHours = (profile?.afterSchoolBufferMinutes ?? 0) / 60;
+  const windowHoursLeft = Math.max(0, dayEnd - Math.max(nowDecimal, dayStart) - bufferHours);
   const committedMin = [...todaysTimedTasks, ...todaysEvents]
     .filter((item) => item.start >= nowDecimal)
     .reduce((sum, item) => sum + (item.duration || 60), 0);
   const freeHoursLeft = Math.max(0, windowHoursLeft - committedMin / 60);
-  // A task with no picked duration still needs an estimate to be part of this math —
-  // 30 min is a reasonable "quick thing" default, same ballpark as the shortest preset
-  // in the duration picker.
-  const untimedNeededMin = todaysUntimed.reduce((sum, t) => sum + (t.duration ?? 30), 0);
+  // A task with no picked duration still needs an estimate to be part of this math — 30
+  // min is a reasonable "quick thing" default, same ballpark as the shortest preset in
+  // the duration picker, scaled by the student's own pace setting like every other
+  // estimate this default feeds into.
+  const defaultTaskMin = Math.round(30 * (profile?.paceMultiplier ?? 1));
+  const untimedNeededMin = todaysUntimed.reduce((sum, t) => sum + (t.duration ?? defaultTaskMin), 0);
   const fitsInTime = untimedNeededMin / 60 <= freeHoursLeft;
   // Plenty of time: just point at whatever's already first (manual order, or date).
   // Tight: lead with the quickest thing first — an actual win banked now beats staring

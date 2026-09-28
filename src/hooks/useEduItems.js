@@ -13,6 +13,10 @@ const fromRow = (row) => ({
   scoreEarned: row.score_earned == null ? null : Number(row.score_earned),
   scorePossible: row.score_possible == null ? null : Number(row.score_possible),
   gradeCategoryId: row.grade_category_id,
+  // "This deadline can move if it needs to" — softens this item's own urgency once it's
+  // close/overdue instead of spiking it the same way a fixed deadline does (see
+  // inLeadWindow/urgency sort in DashboardView and EducationView).
+  flexible: !!row.flexible,
 });
 
 export function useEduItems(userId) {
@@ -38,7 +42,7 @@ export function useEduItems(userId) {
   // these ids would hit a foreign-key error and silently lose those too, on top of the
   // item itself vanishing the moment the page next reloads from the database.
   const addEduItems = useCallback(
-    async ({ title, type, subject, occurrences, dueStart = null }) => {
+    async ({ title, type, subject, occurrences, dueStart = null, flexible = false }) => {
       if (!userId || !title.trim() || occurrences.length === 0) return [];
       const rows = occurrences.map((d) => ({
         id: uid(),
@@ -49,6 +53,7 @@ export function useEduItems(userId) {
         due_date: d,
         due_start: dueStart,
         done: false,
+        flexible,
       }));
       setEduItems((e) => [...e, ...rows.map(fromRow)]);
       const { error } = await supabase.from("edu_items").insert(rows);
@@ -101,5 +106,10 @@ export function useEduItems(userId) {
     await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setDeadline };
+  const setFlexible = useCallback(async (id, flexible) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, flexible } : x)));
+    await supabase.from("edu_items").update({ flexible }).eq("id", id);
+  }, []);
+
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setDeadline, setFlexible };
 }

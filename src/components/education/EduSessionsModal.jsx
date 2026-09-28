@@ -11,7 +11,7 @@ import ModalPortal from "../shared/ModalPortal";
 // deadline's own due date/time is editable too (click it) — moving the date reflows
 // every not-done session onto the new window (see App.jsx's updateEduDeadline). `col` is
 // your actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onBreakDown, breakingDown, breakdownError }) {
+export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onSetFlexible, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
@@ -65,6 +65,13 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
           >
             Due {formatShortDate(item.dueDate)}{item.dueStart != null ? ` · ${decimalToTimeLabel(item.dueStart)}` : ""}{item.subject ? ` · ${item.subject}` : ""}
           </button>
+        )}
+
+        {onSetFlexible && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#4A5568", cursor: "pointer", marginBottom: 16 }}>
+            <input type="checkbox" checked={!!item.flexible} onChange={(e) => onSetFlexible(item.id, e.target.checked)} aria-label="This deadline can move if it needs to" />
+            This deadline can move if it needs to
+          </label>
         )}
 
         <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>

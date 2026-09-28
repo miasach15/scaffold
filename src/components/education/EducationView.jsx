@@ -28,6 +28,7 @@ export default function EducationView({
   onSetSessionNotes,
   onSetSessionDone,
   onUpdateDeadline,
+  onSetFlexible,
   onOpenFocus,
   inboxItems,
   onDiscardInbox,
@@ -53,6 +54,7 @@ export default function EducationView({
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [flexible, setFlexible] = useState(false); // "this deadline can move if it needs to" — softens its urgency instead of a fixed one's
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
   const [startFrom, setStartFrom] = useState("today"); // "today" or "tomorrow" — only matters in "every day" mode
@@ -88,7 +90,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false);
+    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false); setFlexible(false);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -162,7 +164,7 @@ export default function EducationView({
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
-    onAddEduItem(title.trim(), type, subject, dueDate, null, "None", null);
+    onAddEduItem(title.trim(), type, subject, dueDate, null, "None", null, flexible);
     resetAddForm();
   };
 
@@ -171,7 +173,7 @@ export default function EducationView({
     // previewItems carries whatever the user edited/removed in the modal — used exactly
     // as-is for the first occurrence; if this assignment repeats, later occurrences fall
     // back to auto-computing their own schedule from `schedule` since we only preview one.
-    onAddEduItem(title.trim(), type, subject, dueDate, null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items });
+    onAddEduItem(title.trim(), type, subject, dueDate, null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items }, flexible);
     setPendingPlan(null);
     resetAddForm();
   };
@@ -262,9 +264,14 @@ export default function EducationView({
     // step's title distinct (an AI-generated step description, or a preview edit) lives
     // in notes now, so that's what the subtitle line shows instead of the old fallback
     // (the parent's own title, which the now-uniform title already says anyway).
+    const dueDate = parent?.dueDate || t.date;
     return {
       id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null, duration: t.duration,
-      done: t.done, date: t.date, dueDate: parent?.dueDate || t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
+      done: t.done, date: t.date, dueDate, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
+      // A flexible deadline (see the "This deadline can move if it needs to" checkbox
+      // above) sorts as if it were a day later — it shouldn't outrank an equally-close
+      // fixed one, same treatment Dashboard's own Today list gives it.
+      sortDate: parent?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate,
       col: eduCol, eduId: t.eduId,
       onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
@@ -275,6 +282,7 @@ export default function EducationView({
   const homeworkRows = eduItems.filter((e) => e.type === "Homework" && bySubject(e) && !todayIds.has(e.id)).map((e) => ({
     id: e.id, key: `h-${e.id}`, title: e.title, subtitle: e.subject || "Homework",
     done: e.done, date: e.dueDate, dueDate: e.dueDate, timeLabel: null,
+    sortDate: e.flexible ? toISO(addDays(new Date(e.dueDate + "T00:00:00"), 1)) : e.dueDate,
     col: eduCol,
     onToggleDone: () => { if (!e.done) markJustDone(e.id); onSetEduDone(e.id, !e.done); }, onFocus: null,
     hasFollowing: eduHasFollowing(e),
@@ -303,7 +311,7 @@ export default function EducationView({
   // Sorted by the actual assignment/test deadline, not by the work day that happens to
   // land today for each — same ordering Dashboard and Tasks' Today use, so "what's most
   // urgent" reads the same no matter which page you're looking at.
-  const leftTodayItems = [...leftTodaySessionItems, ...leftTodayHomeworkItems].sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+  const leftTodayItems = [...leftTodaySessionItems, ...leftTodayHomeworkItems].sort((a, b) => (a.sortDate || a.dueDate || "").localeCompare(b.sortDate || b.dueDate || ""));
 
   return (
     <div>
@@ -453,6 +461,11 @@ export default function EducationView({
               )}
             </div>
           )}
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "#4A5568", cursor: "pointer" }}>
+            <input type="checkbox" checked={flexible} onChange={(e) => setFlexible(e.target.checked)} aria-label="This deadline can move if it needs to" />
+            This deadline can move if it needs to
+          </label>
       </div>
       </>
       )}
@@ -533,6 +546,7 @@ export default function EducationView({
             onRemoveSession={onRemoveSession}
             onAddSession={quickAddSession}
             onUpdateDeadline={onUpdateDeadline}
+            onSetFlexible={onSetFlexible}
             onBreakDown={(details) => breakDownExisting(editingItem, details)}
             breakingDown={sessionBreakingDown}
             breakdownError={sessionBreakdownError}
