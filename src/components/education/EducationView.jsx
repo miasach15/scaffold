@@ -283,6 +283,10 @@ export default function EducationView({
       col: eduCol, eduId: t.eduId,
       onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
+      // The deadline row (where steps were previously edited) no longer shows once an
+      // assignment has sessions — this is the only remaining way to reach the same
+      // editor (rename/reorder/remove steps, re-run AI breakdown) for it.
+      onEditSteps: () => setEditingEduId(t.eduId),
     };
   }).filter(Boolean);
   // Homework due today already gets its own row above (via today_/EduItemRow) — skip it

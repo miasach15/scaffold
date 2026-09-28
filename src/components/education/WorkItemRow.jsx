@@ -1,46 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WorkTitle from "../shared/WorkTitle";
-
-// A session's notes can be several AI-generated micro-steps joined into one comma
-// list (see groupItemsByDate) when more than one landed on the same work day — reading
-// all of them at once is exactly the "five things to start" overwhelm that makes
-// starting harder, and one that just repeats the row's own title adds nothing at all.
-// Only the next concrete thing shows by default — the rest are a click away instead of
-// gone outright.
-const stepParts = (subtitle, title) => {
-  if (!subtitle) return [];
-  return subtitle.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
-};
-
-function StepNotes({ subtitle, title, duration }) {
-  const [expanded, setExpanded] = useState(false);
-  const parts = stepParts(subtitle, title);
-  if (parts.length === 0) return null;
-  if (parts.length === 1) return <div style={{ fontSize: 10.5, color: "#93A0AD" }}>Next: {parts[0]}</div>;
-  // Splitting the session's own duration evenly across its steps gives a real estimate
-  // for just the next one ("Next: problem 4 · 15m") instead of one lump number for the
-  // whole session.
-  const perStepMin = duration != null ? Math.max(1, Math.round(duration / parts.length)) : null;
-  return (
-    <div>
-      <button
-        onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
-        style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 10.5, color: "#93A0AD", maxWidth: "100%" }}
-      >
-        {expanded ? <ChevronDown size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}{perStepMin ? ` · ${perStepMin}m` : ""}</span>
-      </button>
-      {expanded && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 14 }}>
-          {parts.slice(1).map((p, i) => <div key={i} style={{ fontSize: 10, color: "#93A0AD" }}>{p}{perStepMin ? ` · ${perStepMin}m` : ""}</div>)}
-        </div>
-      )}
-    </div>
-  );
-}
+import StepNotes from "../shared/StepNotes";
 
 export default function WorkItemRow({ item }) {
   const col = item.col;
@@ -61,7 +24,7 @@ export default function WorkItemRow({ item }) {
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></div>
         )}
         {item.onFocus ? (
-          <StepNotes subtitle={item.subtitle} title={item.title} duration={item.duration} />
+          <StepNotes notes={item.subtitle} title={item.title} duration={item.duration} color="#93A0AD" fontSize={10.5} />
         ) : (
           item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>
         )}
@@ -81,7 +44,18 @@ export default function WorkItemRow({ item }) {
           <button onClick={() => setConfirmDelete(false)} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
         </div>
       ) : (
-        <button onClick={() => (item.hasFollowing ? setConfirmDelete(true) : item.onRemove("one"))} className="btn-delete" style={deleteBtn}>×</button>
+        <>
+          {item.onEditSteps && (
+            <button
+              onClick={item.onEditSteps}
+              title="Edit this assignment's steps"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#B4BCC5", padding: 4, display: "flex", flexShrink: 0 }}
+            >
+              <Pencil size={13} strokeWidth={2.2} />
+            </button>
+          )}
+          <button onClick={() => (item.hasFollowing ? setConfirmDelete(true) : item.onRemove("one"))} className="btn-delete" style={deleteBtn}>×</button>
+        </>
       )}
     </div>
   );

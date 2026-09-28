@@ -7,6 +7,7 @@ import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
 import ModalPortal from "../shared/ModalPortal";
+import StepNotes from "../shared/StepNotes";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
 // celebration screen's quote below already uses) — the ring, selected duration, and
@@ -299,7 +300,9 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             </div>
           </div>
           {!compact && (task.notes ? (
-            <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.notes}</div>
+            <div style={{ marginBottom: 14 }}>
+              <StepNotes notes={task.notes} title={task.title} duration={task.duration} color={MUTED} fontSize={12.5} align="center" />
+            </div>
           ) : (
             <div style={{ marginBottom: 14 }} />
           ))}

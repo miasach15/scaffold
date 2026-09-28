@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -20,50 +20,7 @@ import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
 import WorkTitle from "../shared/WorkTitle";
-
-// A session's notes can be several comma-joined micro-steps (see groupItemsByDate) — a
-// step that just repeats the row's own title is dropped outright (adds nothing), and
-// showing every remaining one at once is overwhelming. Only the next concrete thing to
-// do shows by default; the rest are still there, just a click away instead of gone.
-const stepParts = (notes, title) => {
-  if (!notes) return [];
-  return notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
-};
-
-function StepNotes({ notes, title, color, duration }) {
-  const [expanded, setExpanded] = useState(false);
-  const parts = stepParts(notes, title);
-  if (parts.length === 0) return null;
-  // A single multi-minute session covering several steps doesn't say how long just the
-  // NEXT one will take — splitting its own duration evenly across its steps gives a real
-  // estimate ("Read pages 1-10 · 25m") instead of one lump number for the whole thing.
-  const perStepMin = parts.length > 1 && duration != null ? Math.max(1, Math.round(duration / parts.length)) : null;
-  return (
-    <div style={{ marginTop: 1 }}>
-      {parts.length > 1 ? (
-        <button
-          onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", padding: 0, cursor: "pointer",
-            fontSize: 11.5, color: color || MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%",
-          }}
-        >
-          {expanded ? <ChevronDown size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}{perStepMin ? ` · ${perStepMin}m` : ""}</span>
-        </button>
-      ) : (
-        <div style={{ fontSize: 11.5, color: color || MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</div>
-      )}
-      {expanded && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 15 }}>
-          {parts.slice(1).map((p, i) => (
-            <div key={i} style={{ fontSize: 11, color: MUTED }}>{p}{perStepMin ? ` · ${perStepMin}m` : ""}</div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+import StepNotes from "../shared/StepNotes";
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
