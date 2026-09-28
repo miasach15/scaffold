@@ -112,7 +112,7 @@ export function ProgressBar({ done, total, color, track }) {
   return (
     <div>
       <div style={{ height: 5, borderRadius: 3, background: track || "rgba(0,0,0,0.06)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: color.text, borderRadius: 3, transition: "width .2s" }} />
+        <div style={{ height: "100%", width: "100%", background: color.text, borderRadius: 3, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform .2s" }} />
       </div>
       <div style={{ fontSize: 10.5, color: color.text, opacity: 0.8, marginTop: 3, fontWeight: 600 }}>{done} of {total} done</div>
     </div>
