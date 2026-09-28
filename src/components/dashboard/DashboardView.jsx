@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Flame, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
@@ -8,10 +8,6 @@ const FOCUS_PRESETS = [15, 25, 50];
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
-// A plain hairline between sections — no fill, so it reads as a divider on the same flat
-// background rather than a boxed-off panel. Applied to every section after the first one
-// in each column.
-const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -262,8 +258,18 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       onAutoOpenBrainDumpHandled?.();
     }
   }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
-  const weekStart = startOfWeek(new Date());
+  // Browsing which week this widget shows is local to Dashboard — it's just a peek, not
+  // the same "which day is selected" state Calendar owns; jumping back to this week is
+  // just clicking the range label once you've moved off it.
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekStart = startOfWeek(addDays(new Date(), weekOffset * 7));
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const weekRangeLabel = (() => {
+    const start = weekDays[0], end = weekDays[6];
+    const startMonth = start.toLocaleDateString(undefined, { month: "long" });
+    const endMonth = end.toLocaleDateString(undefined, { month: "long" });
+    return startMonth === endMonth ? `${startMonth} ${start.getDate()}–${end.getDate()}` : `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}`;
+  })();
   const firstName = (profile?.name || "").trim().split(" ")[0];
   // "This week" strip's per-day load dots — how many tasks/events actually land on
   // that day, capped at 3 dots so a heavy day doesn't sprawl sideways.
@@ -305,9 +311,27 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         `}</style>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ ...flatSection, padding: "0 20px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <button
+                  onClick={() => setWeekOffset(0)}
+                  disabled={weekOffset === 0}
+                  title={weekOffset === 0 ? undefined : "Back to this week"}
+                  style={{ background: "none", border: "none", padding: 0, fontSize: 11.5, color: MUTED, cursor: weekOffset === 0 ? "default" : "pointer", textDecoration: weekOffset === 0 ? "none" : "underline" }}
+                >
+                  {weekRangeLabel}
+                </button>
+                <div style={{ display: "flex", gap: 2 }}>
+                  <button onClick={() => setWeekOffset((o) => o - 1)} title="Previous week" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: MUTED, display: "flex" }}>
+                    <ChevronLeft size={14} strokeWidth={2.3} />
+                  </button>
+                  <button onClick={() => setWeekOffset((o) => o + 1)} title="Next week" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: MUTED, display: "flex" }}>
+                    <ChevronRight size={14} strokeWidth={2.3} />
+                  </button>
+                </div>
+              </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
               {weekDays.map((d) => {
@@ -337,9 +361,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           </div>
 
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Today's Scaffolded Steps</div>
+          <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "18px 20px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10 }}>
+              <div style={{ fontFamily: serifFont, fontSize: 19, color: INK }}>Today's Scaffolded Steps</div>
               <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
                 {scaffoldedTotalCount > 0 && `${doneTodayTasks.length} of ${scaffoldedTotalCount} done · `}
                 {freeHoursLeft > 0 ? `≈${freeHoursLeft % 1 === 0 ? freeHoursLeft : freeHoursLeft.toFixed(1)}h free left today` : "No free time left today"}
