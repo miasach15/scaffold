@@ -81,7 +81,7 @@ export default function StickyNoteCorner({ onCapture }) {
         placeholder="Jot something down..."
         style={{
           flex: 1, width: "100%", resize: "none", border: "none", outline: "none", background: "transparent",
-          fontFamily: "'Geist', sans-serif", fontSize: 13.5, lineHeight: 1.5, color: "#6B5A1F",
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13.5, lineHeight: 1.5, color: "#6B5A1F",
         }}
       />
       </div>

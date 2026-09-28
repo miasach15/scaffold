@@ -173,12 +173,14 @@ export const TONE = {
   // you — hence the brand color instead of an alarm color.
   carried: { bg: "#E0E2EB", border: "#A1A9CE", text: "#4A5BA8" },
 };
-// Display/headline accent — Adamina. Every screen that already reads this constant
-// (Journal, TodaySection, MonthView, CalendarView, WhatNowModal, Misc.jsx empty states,
-// WeeklyReviewModal, HabitHistoryModal, SettingsModal, Goals, Habits) picks up the font
-// automatically. Adamina only ships one weight/style (400 normal) — no italic, no bold —
-// so a fontWeight set alongside serifFont has no real face to switch to.
-export const serifFont = "'Adamina', Georgia, serif";
+// Display/headline accent — DM Sans, per the brand kit's typography update (was
+// Adamina). Every screen that already reads this constant (Journal, TodaySection,
+// MonthView, CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
+// HabitHistoryModal, SettingsModal, Goals, Habits) picks up the change automatically.
+// Unlike Adamina, DM Sans actually ships the weights it's loaded at (400/500/600/700/800
+// + italic 400/700 — see the @import in App.jsx/AuthScreen.jsx/OnboardingQuiz.jsx), so a
+// fontWeight set alongside serifFont now has a real face to switch to.
+export const serifFont = "'DM Sans', -apple-system, sans-serif";
 export const cardStyle = {
   background: SURFACE,
   border: `1px solid ${BORDER}`,
