@@ -472,9 +472,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
               <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 10 }}>Focus Timer</div>
 
-              <div style={{ position: "relative", width: 116, height: 116, margin: "0 auto 10px" }}>
-                <svg width="116" height="116" viewBox="0 0 116 116">
-                  <circle cx="58" cy="58" r="45" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="9" />
+              <div style={{ position: "relative", width: 132, height: 132, margin: "0 auto 10px" }}>
+                <svg width="132" height="132" viewBox="0 0 132 132">
+                  <circle cx="66" cy="66" r="52" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="8" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>

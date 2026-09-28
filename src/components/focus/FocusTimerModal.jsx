@@ -252,9 +252,9 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // Dashboard's own compact idle picker the instant a session starts, so without this
     // it visibly balloons in that same slot right when you press Start.
     const compact = !!portalTarget;
-    const ringSize = compact ? 92 : 148;
-    const ringRadius = compact ? 39 : 64;
-    const ringStroke = compact ? 7 : 9;
+    const ringSize = compact ? 106 : 148;
+    const ringRadius = compact ? 44 : 64;
+    const ringStroke = compact ? 6 : 9;
     const card = (
       <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
