@@ -36,7 +36,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700 }}>{monthLabel(monthDate)}</div>
+        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500 }}>{monthLabel(monthDate)}</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <button onClick={onExitMonth} className="btn-ghost" style={ghostBtn}>Week</button>
           <button onClick={() => setMonthDate(new Date())} className="btn-ghost" style={ghostBtn}>Today</button>

@@ -127,7 +127,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                     if (e.key === "Escape") cancelTitle();
                   }}
                   className="goal-card-title"
-                  style={{ ...inputStyle, fontFamily: serifFont, fontSize: 32, fontWeight: 500, padding: "4px 8px", flex: 1, minWidth: 0 }}
+                  style={{ ...inputStyle, fontFamily: serifFont, fontSize: 32, fontWeight: 400, padding: "4px 8px", flex: 1, minWidth: 0 }}
                 />
                 <button onClick={saveTitle} title="Save" style={{ background: "none", border: "none", cursor: "pointer", color: INK, padding: 4, display: "flex" }}><Check size={16} strokeWidth={2.5} /></button>
                 <button onClick={cancelTitle} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 4, display: "flex" }}><X size={16} strokeWidth={2.5} /></button>

@@ -30,7 +30,7 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
 
         {!item ? (
           <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
-            <div style={{ fontFamily: serifFont, fontSize: 20, fontWeight: 600, marginBottom: 6 }}>That's everything.</div>
+            <div style={{ fontFamily: serifFont, fontSize: 20, fontWeight: 500, marginBottom: 6 }}>That's everything.</div>
             <div style={{ fontSize: 13.5, color: "#8FCBA3", marginBottom: 20 }}>Nothing left on your plate right now.</div>
             <button onClick={onClose} style={{ ...primaryBtn, width: "100%" }}>Close</button>
           </div>
@@ -42,7 +42,7 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
               <Checkbox checked={false} onClick={item.onToggle} color={item.col} />
             </div>
-            <div style={{ fontFamily: serifFont, fontSize: 21, fontWeight: 600, textAlign: "center", lineHeight: 1.3, marginBottom: item.subLabel ? 4 : 24 }}>
+            <div style={{ fontFamily: serifFont, fontSize: 21, fontWeight: 500, textAlign: "center", lineHeight: 1.3, marginBottom: item.subLabel ? 4 : 24 }}>
               {item.title}
             </div>
             {item.subLabel && <div style={{ fontSize: 12.5, color: "#93A0AD", textAlign: "center", marginBottom: 24 }}>{item.subLabel}</div>}

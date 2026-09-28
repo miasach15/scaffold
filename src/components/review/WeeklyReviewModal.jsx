@@ -81,7 +81,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
     <div style={overlayStyle} onClick={onClose}>
       {isSunday && <Confetti />}
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
+        <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
         <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 16 }}>{weekStart} to {weekEnd}</div>
 
         {totalWins === 0 && habitStats.length === 0 && entriesThisWeek.length === 0 ? (

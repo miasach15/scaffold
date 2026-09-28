@@ -18,7 +18,7 @@ export default function HabitHistoryModal({ habit, onSetDone, onClose }) {
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 380 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
-          <div style={{ fontFamily: serifFont, fontSize: 19, fontWeight: 700 }}>{habit.title}</div>
+          <div style={{ fontFamily: serifFont, fontSize: 19, fontWeight: 500 }}>{habit.title}</div>
           <button onClick={onClose} style={{ background: "none", border: "none", padding: 4, color: "#9CA3AF" }}><X size={17} /></button>
         </div>
         <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 16 }}>{habit.doneDates.length} day{habit.doneDates.length === 1 ? "" : "s"} total. Click any day to toggle it.</div>

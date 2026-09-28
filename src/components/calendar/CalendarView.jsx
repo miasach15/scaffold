@@ -79,7 +79,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700 }}>{monthLabel(days[0])}</div>
+        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500 }}>{monthLabel(days[0])}</div>
         <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 4 }}>
             <button onClick={() => onSetDayView(null)} className="btn-ghost" style={modeBtnStyle(!isDay)}>Week</button>

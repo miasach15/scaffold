@@ -84,7 +84,7 @@ export function SectionHeader({ title, subtitle, right }) {
   return (
     <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
       <div>
-        <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 500, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
+        <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 400, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
         <div style={{ fontSize: 13.5, color: "#8B95A1", marginTop: 4 }}>{subtitle}</div>
       </div>
       {right && <div style={{ flexShrink: 0 }}>{right}</div>}
