@@ -30,7 +30,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
     <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isPast ? "transparent" : isFirst ? col.accent : col.bg, border: isPast ? `1.5px solid ${BORDER}` : isFirst ? "none" : `1.5px solid ${col.border}` }} />
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isPast ? "transparent" : isFirst ? col.accent : "#fff", border: isPast ? `1.5px solid ${BORDER}` : isFirst ? "none" : `1.5px solid ${col.border}` }} />
         {!isLast && <div style={{ flex: 1, width: 1.5, background: col.border, marginTop: 2 }} />}
       </div>
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
@@ -171,19 +171,19 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     }),
     ...groupItems,
     ...eduSessionItems,
-    // How close a step's own due date is comes first — overdue/carried-over items
-    // lead, then today's, then whatever's shown early because it's coming up soon —
-    // so the list itself shows what's actually urgent instead of urgency living only
-    // in a separate panel. Manual drag order (see moveUntimed/onReorderTasks) only
-    // breaks ties between steps that are equally due, the same day.
+    // A manually dragged order wins outright, regardless of which of these is due
+    // sooner — dragging is how you say "I want to do this one first," not just a way
+    // to break ties between two things due the same day. Due date only decides the
+    // order for whatever hasn't been touched by a drag yet (no orderIndex saved),
+    // with overdue/carried-over items leading, then today's, then anything shown
+    // early because it's coming up soon.
   ].sort((a, b) => {
-    const ad = a.sortDate || a.date || "9999-99-99";
-    const bd = b.sortDate || b.date || "9999-99-99";
-    if (ad !== bd) return ad.localeCompare(bd);
     if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
     if (a.orderIndex != null) return -1;
     if (b.orderIndex != null) return 1;
-    return 0;
+    const ad = a.sortDate || a.date || "9999-99-99";
+    const bd = b.sortDate || b.date || "9999-99-99";
+    return ad.localeCompare(bd);
   });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
