@@ -475,8 +475,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
                               display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
-                              background: isTop ? PRIMARY_TINT : "#fff",
-                              border: isTop ? `1px solid ${PRIMARY}` : "none",
+                              background: "#fff",
+                              border: isTop ? `1.5px solid ${PRIMARY}` : "none",
                               opacity: draggingId === t.id ? 0.4 : 1,
                             }}
                           >
