@@ -796,7 +796,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onAddCategory={addCategory}
           onRemoveCategory={removeCategory}
           protectedCategory={profile.educationCategory}
-          onReplayTour={() => { setShowSettings(false); setView("calendar"); setTourOpen(true); }}
+          onReplayTour={() => { setShowSettings(false); setView("dashboard"); setTourOpen(true); }}
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}
           userId={userId}
@@ -918,8 +918,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {tourOpen && (
         <TourOverlay
           setView={setView}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenWeeklyReview={() => setShowWeeklyReview(true)}
           onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); }}
           onFinish={finishTour}
         />

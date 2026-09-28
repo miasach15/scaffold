@@ -3,31 +3,37 @@ import { GripHorizontal } from "lucide-react";
 import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
-// Short on purpose — one line per step, nothing to hold in your head at once. Ordered to
-// match the sidebar's own nav order, ending on Settings.
+// Four steps, each explaining what Scaffold actually DOES for you rather than walking
+// through pages one by one (the old 11-step version was a page-by-page tour and read
+// like a feature list, not the reason the app exists).
 const STEPS = [
-  { type: "view", view: "dashboard", title: "Dashboard", bullets: ["Today's plan, top goal, habits, and what's due soon, in one place."] },
-  { type: "view", view: "calendar", title: "Calendar", bullets: ["Click a day to add something. Drag a task to move it."] },
-  { type: "view", view: "calendar", title: "Sticky Note", bullets: ["Jot anything in the corner note. It lands in your Tasks Inbox to sort later."] },
-  { type: "view", view: "tasks", title: "Tasks", bullets: ["Today's list is just today. Stuck? \"What should I do right now?\" picks for you."] },
-  { type: "view", view: "education", title: "Education", bullets: ["Add homework or a test with a due date. It'll split the work into sessions."] },
-  { type: "view", view: "goals", title: "Goals", bullets: ["For bigger projects. Give it an end date and it builds the steps."] },
-  { type: "view", view: "habits", title: "Habits", bullets: ["Add one, check it off each day. Missing a day doesn't reset anything."] },
-  { type: "view", view: "grades", title: "Grades", bullets: ["Track scores per class — total points or your own weighted categories."] },
-  { type: "view", view: "journal", title: "Journal", bullets: ["Pick a prompt or free write, whichever's easier that day."] },
-  { type: "modal", modal: "weeklyReview", title: "Weekly Review", bullets: ["A look back at what you finished this week."] },
-  { type: "modal", modal: "settings", title: "Settings", bullets: ["Accent color, category colors, reminders, and this tour again — all here."] },
+  {
+    view: "dashboard", title: "Capture everything",
+    bullets: ["Brain dump or the sticky note catches whatever's on your mind — a task, a test, an errand — the moment you think of it. Sort it out later, not right now."],
+  },
+  {
+    view: "education", title: "Scaffold breaks it down",
+    bullets: ["Add an assignment with a due date, and it splits into work sessions leading up to it — no more staring down one big deadline."],
+  },
+  {
+    view: "calendar", title: "Your workload is placed realistically",
+    bullets: ["Every session lands on a day based on how busy you already are — nothing crammed on top of what's already there."],
+  },
+  {
+    view: "tasks", title: "Ask \"What should I do now?\"",
+    bullets: ["Don't know where to start? One button picks the next thing for you, every time."],
+  },
 ];
 
-export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyReview, onCloseModals, onFinish }) {
+export default function TourOverlay({ setView, onCloseModals, onFinish }) {
   const steps = STEPS;
   const [i, setI] = useState(0);
   const step = steps[i];
   const isLast = i === steps.length - 1;
 
-  // Drag support — the box defaults to bottom-center, which can sit over whatever modal
-  // a step opens (e.g. Settings). Dragging it by the grip moves it out of the way; once
-  // moved, it stays put for the rest of the tour instead of snapping back each step.
+  // Drag support — the box defaults to bottom-center, which can sit over page content on
+  // a small screen. Dragging it by the grip moves it out of the way; once moved, it stays
+  // put for the rest of the tour instead of snapping back each step.
   const [dragPos, setDragPos] = useState(null); // null = default bottom-center position
   const boxRef = useRef(null);
   const startDrag = (e) => {
@@ -51,25 +57,14 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
 
   useEffect(() => {
     onCloseModals();
-    if (step.type === "modal") {
-      if (step.modal === "settings") onOpenSettings();
-      else if (step.modal === "weeklyReview") onOpenWeeklyReview();
-    } else {
-      setView(step.view);
-    }
+    setView(step.view);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i]);
 
   const finish = () => {
     onCloseModals();
     onFinish();
   };
-
-  // The Settings step opens a centered modal full of color pickers — the tooltip's usual
-  // bottom-center spot sits right on top of it. Docking to the side instead keeps the
-  // modal clear on any normal desktop width; below 900px there's no room beside a
-  // (near-)full-width modal, so it falls back to the same bottom-anchored spot every
-  // other step uses.
-  const isSettingsStep = step.type === "modal" && step.modal === "settings";
 
   return (
     <>
@@ -79,21 +74,13 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
         @media (max-width: 860px) {
           .tour-box-mobile-lift { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
         }
-        @media (max-width: 900px) {
-          .tour-box-side-dock {
-            top: auto !important; right: auto !important; transform: translateX(-50%) !important;
-            left: 50% !important; bottom: calc(84px + env(safe-area-inset-bottom)) !important;
-          }
-        }
       `}</style>
       <div
       ref={boxRef}
-      className={dragPos ? undefined : isSettingsStep ? "tour-box-side-dock" : "tour-box-mobile-lift"}
+      className={dragPos ? undefined : "tour-box-mobile-lift"}
       style={
         dragPos
           ? { position: "fixed", top: dragPos.top, left: dragPos.left, zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
-          : isSettingsStep
-          ? { position: "fixed", top: "50%", right: 24, transform: "translateY(-50%)", zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 300, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
           : { position: "fixed", bottom: "calc(28px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
       }
     >
@@ -109,7 +96,7 @@ export default function TourOverlay({ setView, onOpenSettings, onOpenWeeklyRevie
         <button onClick={finish} style={{ background: "none", border: "none", fontSize: 12.5, color: "#9CA3AF", cursor: "pointer" }}>Skip tour</button>
       </div>
       {/* A bar reads as "almost there" at a glance, without having to do the math on
-          "8 of 12" — a small thing, but one less thing to process. */}
+          "3 of 4" — a small thing, but one less thing to process. */}
       <div style={{ height: 4, borderRadius: 2, background: "#EEF0F4", marginBottom: 14, overflow: "hidden" }}>
         <div
           style={{
