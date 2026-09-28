@@ -466,15 +466,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
             <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "12px 14px", flexShrink: 0 }}>
-              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 6 }}>Focus Timer</div>
+              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 10 }}>Focus Timer</div>
 
-              <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 8px" }}>
-                <svg width="92" height="92" viewBox="0 0 92 92">
-                  <circle cx="46" cy="46" r="39" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" />
+              <div style={{ position: "relative", width: 116, height: 116, margin: "0 auto 10px" }}>
+                <svg width="116" height="116" viewBox="0 0 116 116">
+                  <circle cx="58" cy="58" r="45" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="9" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
-                  <div style={{ fontSize: 8.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 1 }}>{focusMinutes} min</div>
+                  <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  <div style={{ fontSize: 11, color: MUTED, marginTop: 1 }}>ready</div>
                 </div>
               </div>
 
