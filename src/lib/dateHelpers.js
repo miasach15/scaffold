@@ -72,8 +72,12 @@ export const timeToDecimal = (t) => {
   return h + m / 60;
 };
 export const decimalToTimeLabel = (dec) => {
-  const h = Math.floor(dec);
-  const m = Math.round((dec - h) * 60);
+  // Wrapped to a single 24h clock first — a caller estimating "done around" by stacking
+  // remaining work past midnight (e.g. now=22.8 + 1.5h left = 24.3) would otherwise show
+  // "12:xx PM" instead of the correct "12:xx AM".
+  const wrapped = ((dec % 24) + 24) % 24;
+  const h = Math.floor(wrapped);
+  const m = Math.round((wrapped - h) * 60);
   const ampm = h < 12 ? "AM" : "PM";
   let disp = h % 12;
   if (disp === 0) disp = 12;

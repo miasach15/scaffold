@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
-// A plain hairline between sections — no fill, so it reads as a divider on the same flat
-// background rather than a boxed-off panel. Restored for "Today's Scaffolded Steps"
-// specifically, after the card treatment there got reverted.
-const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
+// The one warm, lifted surface on the page — "Today's steps" is the reason Dashboard
+// exists, so it's the only section that gets a tinted background + shadow. Everything
+// else (This week, Focus Timer, Habits, Done today) stays flat/bordered-once at most,
+// so the hierarchy reads at a glance instead of every section competing as its own box.
+const HERO_BG = "#FFF7EC";
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -250,9 +251,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   };
 
   // Finished today, across whatever kind of item it was — its own quiet "wins" list
-  // below Habits, and the count the Scaffolded Steps header shows next to free time.
+  // below Habits, and the count "Today's steps" shows next to the finish-time estimate.
   const doneTodayTasks = tasks.filter((t) => t.date === todayISO && t.done);
-  const scaffoldedTotalCount = todaysTimedTasks.length + todaysUntimed.length + doneTodayTasks.length;
+  const remainingStepCount = todaysTimedTasks.length + todaysUntimed.length;
+  const scaffoldedTotalCount = remainingStepCount + doneTodayTasks.length;
+  // "No free time left today" reads like the app assigning you a full evening of work —
+  // same numbers, but framed as when you'll be DONE (stacking whatever's still ahead,
+  // fixed commitments and open steps alike, back to back from now) reads as Scaffold
+  // helping you get through today rather than filling it up.
+  const estimatedFinishDecimal = nowDecimal + (committedMin + untimedNeededMin) / 60;
   const [showBrainDump, setShowBrainDump] = useState(false);
   // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
   // the second of the two "Up next" steps the onboarding Done screen just promised.
@@ -314,10 +321,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           }
         `}</style>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+          <div style={{ ...flatSection, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>This week</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>This week</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                 <button
                   onClick={() => setWeekOffset(0)}
@@ -365,12 +372,16 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           </div>
 
-          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Today's Scaffolded Steps</div>
-              <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
-                {scaffoldedTotalCount > 0 && `${doneTodayTasks.length} of ${scaffoldedTotalCount} done · `}
-                {freeHoursLeft > 0 ? `≈${freeHoursLeft % 1 === 0 ? freeHoursLeft : freeHoursLeft.toFixed(1)}h free left today` : "No free time left today"}
+          <div style={{ background: HERO_BG, border: `1px solid ${PRIMARY_TINT}`, borderRadius: 18, boxShadow: "0 8px 28px rgba(140,153,219,0.12)", padding: "22px 22px 20px", flexShrink: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today</div>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+              <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Today's steps</div>
+              <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
+                {scaffoldedTotalCount > 0 && (
+                  remainingStepCount > 0
+                    ? `${remainingStepCount} step${remainingStepCount === 1 ? "" : "s"} left · done around ${decimalToTimeLabel(estimatedFinishDecimal)}`
+                    : "All done for today"
+                )}
               </div>
             </div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
@@ -398,7 +409,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             style={{
                               display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
                               background: isTop ? PRIMARY_TINT : "#fff",
-                              border: `1px solid ${isTop ? PRIMARY : BORDER}`,
+                              border: isTop ? `1px solid ${PRIMARY}` : "none",
                               opacity: draggingId === t.id ? 0.4 : 1,
                             }}
                           >
@@ -429,8 +440,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
                                 className="hoverable"
                                 style={{
-                                  flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-                                  background: "#fff", color: PRIMARY_DARK, fontSize: 12, fontWeight: 700,
+                                  flexShrink: 0, padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                                  background: PRIMARY_DARK, color: "#fff", fontSize: 12, fontWeight: 700,
                                 }}
                               >
                                 Start
@@ -458,103 +469,107 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         </div>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          {/* Sits FIRST in the right column now, ahead of Coming Up/Habits — that's "the
-              corner" for Dashboard's own copy of the focus timer. When a session is
-              already running, this becomes an empty slot: App.jsx portals the SAME
+          {/* Sits FIRST in the right column now, ahead of Habits — that's "the corner"
+              for Dashboard's own copy of the focus timer. When a session is already
+              running, this becomes an empty slot: App.jsx portals the SAME
               floating-timer component (see FocusTimerModal's portalTarget) into it
               instead of leaving the idle picker showing underneath, so there's never two
               timers visible at once. Leaving Dashboard unmounts this slot, which is
               exactly what lets the timer reappear as the normal floating bottom-right
               card everywhere else. */}
-          {hasActiveFocusSession ? (
-            <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
-          ) : (
-            <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
-              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 10 }}>Focus Timer</div>
+          {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
-              <div style={{ position: "relative", width: 132, height: 132, margin: "0 auto 10px" }}>
-                <svg width="132" height="132" viewBox="0 0 132 132">
-                  <circle cx="66" cy="66" r="52" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="8" />
-                </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
-                  <div style={{ fontSize: 11, color: MUTED, marginTop: 1 }}>ready</div>
+          {/* Focus Timer/Habits/Done today are the quiet, secondary things on this page —
+              "Today's steps" is what Dashboard is actually for, so this whole group
+              shares ONE flat panel with hairline dividers between its parts instead of
+              each getting its own card, border, and shadow to compete with the hero for
+              attention. */}
+          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16, flexShrink: 0 }}>
+            {!hasActiveFocusSession && (
+              <div style={{ padding: "16px 16px 14px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Focus timer</div>
+
+                <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
+                  <svg width="112" height="112" viewBox="0 0 112 112">
+                    <circle cx="56" cy="56" r="44" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="7" />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                    <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>ready</div>
+                  </div>
                 </div>
+
+                <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                  {FOCUS_PRESETS.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setFocusMinutes(m)}
+                      style={{
+                        ...ghostBtn, padding: "5px 14px", background: "#fff",
+                        borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
+                        color: focusMinutes === m ? PRIMARY_DARK : MUTED,
+                        fontWeight: focusMinutes === m ? 700 : 600,
+                      }}
+                    >
+                      {m}m
+                    </button>
+                  ))}
+                </div>
+
+                {/* Starting a session is the highlighted suggestion card's job now (its own
+                    Start button reads this exact duration) — this is just the "how long"
+                    picker, not a second place to press start for the same action. */}
               </div>
+            )}
 
-              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 6 }}>
-                {FOCUS_PRESETS.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setFocusMinutes(m)}
-                    style={{
-                      ...ghostBtn, padding: "5px 14px", background: "#fff",
-                      borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
-                      color: focusMinutes === m ? PRIMARY_DARK : MUTED,
-                      fontWeight: focusMinutes === m ? 700 : 600,
-                    }}
-                  >
-                    {m}m
-                  </button>
-                ))}
+            <div style={{ padding: "14px 16px", borderTop: hasActiveFocusSession ? "none" : `1px solid ${BORDER}` }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>Habits</div>
+                {habits.length > 0 && (
+                  <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
+                    {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
+                  </div>
+                )}
               </div>
-
-              {/* Starting a session is the highlighted suggestion card's job now (its own
-                  Start button reads this exact duration) — this card is just the "how
-                  long" picker, not a second place to press start for the same action. */}
-            </div>
-          )}
-
-          {/* Deliberately the quietest thing in this column — a daily checklist matters,
-              but it's not what the page is actually for, so it shouldn't visually compete
-              with Focus Timer or the Scaffolded Steps for attention. */}
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 16px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: MUTED }}>Habits</div>
-              {habits.length > 0 && (
-                <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
-                  {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
+              {habits.length === 0 ? (
+                <EmptyState text="No habits yet." />
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {habits.map((h) => {
+                    const done = h.doneDates.includes(todayISO);
+                    const streak = habitStreak(h.doneDates);
+                    return (
+                      <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} size={15} />
+                        <div style={{ flex: 1, fontSize: 12.5, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
+                        {streak > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10, flexShrink: 0 }}>
+                            <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} /> {streak}d
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
-            {habits.length === 0 ? (
-              <EmptyState text="No habits yet." />
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {habits.map((h) => {
-                  const done = h.doneDates.includes(todayISO);
-                  const streak = habitStreak(h.doneDates);
-                  return (
-                    <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} size={15} />
-                      <div style={{ flex: 1, fontSize: 12.5, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
-                      {streak > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10, flexShrink: 0 }}>
-                          <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} /> {streak}d
-                        </div>
-                      )}
+
+            {/* Wins stack up here as they happen — empty (and hidden) first thing in the
+                morning, so there's nothing to scroll past before you've done anything yet. */}
+            {doneTodayTasks.length > 0 && (
+              <div style={{ padding: "14px 16px", borderTop: `1px solid ${BORDER}` }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Done today</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {doneTodayTasks.map((t) => (
+                    <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Checkbox checked onClick={() => onToggleDone(t.id, false)} color={CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal} size={15} />
+                      <div style={{ flex: 1, fontSize: 12.5, color: MUTED, textDecoration: "line-through", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
           </div>
-
-          {/* Wins stack up here as they happen — empty (and hidden) first thing in the
-              morning, so there's nothing to scroll past before you've done anything yet. */}
-          {doneTodayTasks.length > 0 && (
-            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 16px", flexShrink: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Done today</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {doneTodayTasks.map((t) => (
-                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Checkbox checked onClick={() => onToggleDone(t.id, false)} color={CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal} size={15} />
-                    <div style={{ flex: 1, fontSize: 12.5, color: MUTED, textDecoration: "line-through", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
