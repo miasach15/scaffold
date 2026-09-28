@@ -178,10 +178,16 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     })
     .filter(Boolean);
 
+  // An assignment with its own "Work on:"/"Study:"/"Finish:" sessions already has a row
+  // above (eduSessionItems) — showing the deadline itself too is the same real-world
+  // thing twice. Only an edu item with no linked session at all (shouldn't normally
+  // happen, but covers it if one's sessions were ever removed) falls back to this row.
+  const eduIdsWithSessions = new Set(tasks.filter((t) => t.eduId).map((t) => t.eduId));
+
   // Education deadlines and goal actions aren't real Tasks rows, so there's no Focus
   // Timer target for them (focusId stays null — no Start button shows for these).
   const eduDeadlineItems = (eduItems || [])
-    .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO)
+    .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO && !eduIdsWithSessions.has(e.id))
     .map((e) => ({
       id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, done: e.done,
       category: educationCategory, col: CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal,
