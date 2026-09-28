@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
-import { ghostBtn } from "../../lib/styles";
+import { ghostBtn, primaryBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -261,6 +261,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // fixed commitments and open steps alike, back to back from now) reads as Scaffold
   // helping you get through today rather than filling it up.
   const estimatedFinishDecimal = nowDecimal + (committedMin + untimedNeededMin) / 60;
+  // A brand-new account, not just a light day — nothing in Tasks, Education, Habits, or
+  // Calendar yet at all. The empty "Today's steps" card otherwise just reads as
+  // unfinished; a guided first action gives it somewhere to go instead.
+  const isFirstUse = tasks.length === 0 && eduItems.length === 0 && habits.length === 0 && events.length === 0;
   const [showBrainDump, setShowBrainDump] = useState(false);
   // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
   // the second of the two "Up next" steps the onboarding Done screen just promised.
@@ -386,7 +390,21 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             </div>
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
-              <EmptyState text="Nothing scheduled for today yet." />
+              isFirstUse ? (
+                <div style={{ padding: "6px 0 4px" }}>
+                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet — start with whatever's actually on your mind.</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
+                      Add something that's stressing you out
+                    </button>
+                    <button onClick={() => setView("education")} style={ghostBtn}>
+                      Plan my first assignment
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState text="Nothing scheduled for today yet." />
+              )
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {todaysTimedTasks.length > 0 && (
