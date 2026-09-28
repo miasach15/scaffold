@@ -232,9 +232,17 @@ export default function EducationView({
   const todayISOlocal = toISO(new Date());
   // Everything only shows in Today once it's actually due today — a homework due
   // tomorrow belongs in Upcoming Homework, not here, same as a test or assignment due
-  // tomorrow already only shows in Upcoming.
-  const today_ = eduItems.filter((e) => e.dueDate === todayISOlocal && (!e.done || justDone.has(e.id)) && bySubject(e));
-  const todayIds = new Set(today_.map((e) => e.id));
+  // tomorrow already only shows in Upcoming. todayIds keeps this broader "due today"
+  // meaning (still used below to keep Upcoming/homeworkRows from also listing it) even
+  // though today_ itself — the rows actually rendered as a deadline — is narrower.
+  const dueToday = eduItems.filter((e) => e.dueDate === todayISOlocal && (!e.done || justDone.has(e.id)) && bySubject(e));
+  const todayIds = new Set(dueToday.map((e) => e.id));
+  // An assignment with its own "Work on:"/"Study:"/"Finish:" sessions already gets a row
+  // below (WorkItemRow) — showing the deadline itself too is the same real-world thing
+  // twice. Only an edu item with no linked session at all renders its own row here (same
+  // exclusion TodaySection.jsx's Tasks page already uses).
+  const eduIdsWithSessions = new Set(tasks.filter((t) => t.eduId).map((t) => t.eduId));
+  const today_ = dueToday.filter((e) => !eduIdsWithSessions.has(e.id));
   const handleTodayToggle = (id, done) => {
     if (done) markJustDone(id);
     onSetEduDone(id, done);
