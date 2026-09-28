@@ -398,7 +398,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           </div>
 
           <div style={{ background: HERO_BG, border: `1px solid ${PRIMARY_TINT}`, borderRadius: 18, boxShadow: "0 8px 28px rgba(140,153,219,0.12)", padding: "22px 22px 20px", flexShrink: 0 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today</div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
               <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Today's steps</div>
               <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
