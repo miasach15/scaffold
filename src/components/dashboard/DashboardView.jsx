@@ -8,11 +8,12 @@ const FOCUS_PRESETS = [15, 25, 50];
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
-// The one warm, lifted surface on the page — "Today's steps" is the reason Dashboard
-// exists, so it's the only section that gets a tinted background + shadow. Everything
-// else (This week, Focus Timer, Habits, Done today) stays flat/bordered-once at most,
-// so the hierarchy reads at a glance instead of every section competing as its own box.
-const HERO_BG = "#FFF7EC";
+// The one lifted surface on the page — "Today's steps" is the reason Dashboard exists,
+// so it's the only section that gets a border + shadow. Everything else (This week,
+// Focus Timer, Habits, Done today) stays flat/bordered-once at most, so the hierarchy
+// reads at a glance instead of every section competing as its own box. Plain white, not
+// a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
+const HERO_BG = "#fff";
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
