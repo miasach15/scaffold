@@ -426,7 +426,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           </div>
 
-          <div style={{ background: HERO_BG, border: `1px solid ${PRIMARY_TINT}`, borderRadius: 18, boxShadow: "0 8px 28px rgba(140,153,219,0.12)", padding: "22px 22px 20px", flexShrink: 0 }}>
+          <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "22px 22px 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
               <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Today's steps</div>
               <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
@@ -476,7 +476,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             style={{
                               display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
                               background: "#fff",
-                              border: isTop ? `1.5px solid ${PRIMARY}` : "none",
+                              border: "none",
                               opacity: draggingId === t.id ? 0.4 : 1,
                             }}
                           >
