@@ -51,7 +51,7 @@ export default function GradesView({
 
       <AddRow>
         <input
-          placeholder="Add a class (e.g. AP Bio)..." value={newClassName}
+          placeholder="Add a class (e.g. AP Bio)..." aria-label="New class name" value={newClassName}
           onChange={(e) => setNewClassName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addClass()}
           style={{ ...inputStyle, flex: 1, maxWidth: 280 }}

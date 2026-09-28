@@ -56,7 +56,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
       <div data-tour="habits-add">
         <AddRow>
-          <input placeholder="Add a custom habit..." value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addHabit()} />
+          <input placeholder="Add a custom habit..." aria-label="New habit" value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, flex: 1 }} onKeyDown={(e) => e.key === "Enter" && addHabit()} />
           <button onClick={() => addHabit()} className="btn-primary" style={primaryBtn}>Add</button>
         </AddRow>
       </div>

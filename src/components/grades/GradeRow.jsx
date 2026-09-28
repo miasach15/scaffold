@@ -54,6 +54,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
             value={item.gradeCategoryId || ""}
             onChange={(e) => onSetCategory(item.id, e.target.value || null)}
             title="Which category this counts toward"
+            aria-label="Grade category"
             style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 118, color: uncategorized ? "#B03A3A" : undefined }}
           >
             <option value="">No category</option>
@@ -64,13 +65,13 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
         {editing ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <input
-              type="number" placeholder="earned" value={earned}
+              type="number" placeholder="earned" aria-label="Points earned" value={earned}
               onChange={(e) => setEarned(e.target.value)}
               style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
             />
             <span style={{ fontSize: 12, color: "#93A0AD" }}>/</span>
             <input
-              type="number" placeholder="of" value={possible}
+              type="number" placeholder="of" aria-label="Points possible" value={possible}
               onChange={(e) => setPossible(e.target.value)}
               style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
             />

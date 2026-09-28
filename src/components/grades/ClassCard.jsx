@@ -138,11 +138,13 @@ export default function ClassCard({
                       <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <input
                           value={cat.name}
+                          aria-label="Category name"
                           onChange={(e) => onRenameCategory(cls.id, cat.id, e.target.value)}
                           style={{ ...inputStyle, flex: 1, fontSize: 12.5, padding: "5px 8px" }}
                         />
                         <input
                           type="number" min={0} max={100} value={cat.weight}
+                          aria-label={`${cat.name} weight percent`}
                           onChange={(e) => onSetCategoryWeight(cls.id, cat.id, e.target.value)}
                           style={{ ...inputStyle, width: 56, fontSize: 12.5, padding: "5px 8px" }}
                         />
@@ -161,13 +163,13 @@ export default function ClassCard({
               )}
               <div style={{ display: "flex", gap: 6 }}>
                 <input
-                  placeholder="Category name..." value={newCatName}
+                  placeholder="Category name..." aria-label="New category name" value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
                   style={{ ...inputStyle, flex: 1, fontSize: 12.5 }}
                 />
                 <input
-                  type="number" min={0} max={100} placeholder="weight %" value={newCatWeight}
+                  type="number" min={0} max={100} placeholder="weight %" aria-label="New category weight percent" value={newCatWeight}
                   onChange={(e) => setNewCatWeight(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
                   style={{ ...inputStyle, width: 90, fontSize: 12.5 }}
@@ -203,21 +205,21 @@ export default function ClassCard({
           {addingGrade ? (
             <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
               <input
-                placeholder="What was it? (e.g. Ch. 4 quiz)" value={gradeTitle}
+                placeholder="What was it? (e.g. Ch. 4 quiz)" aria-label="Assignment or test name" value={gradeTitle}
                 onChange={(e) => setGradeTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
                 style={{ ...inputStyle, flex: "1 1 160px", fontSize: 12.5 }}
                 autoFocus
               />
               <input
-                type="number" placeholder="Score" value={gradeEarned}
+                type="number" placeholder="Score" aria-label="Points earned" value={gradeEarned}
                 onChange={(e) => setGradeEarned(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
                 style={{ ...inputStyle, width: 70, fontSize: 12.5 }}
               />
               <span style={{ alignSelf: "center", fontSize: 12.5, color: "#93A0AD" }}>out of</span>
               <input
-                type="number" placeholder="Total" value={gradePossible}
+                type="number" placeholder="Total" aria-label="Points possible" value={gradePossible}
                 onChange={(e) => setGradePossible(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
                 style={{ ...inputStyle, width: 70, fontSize: 12.5 }}

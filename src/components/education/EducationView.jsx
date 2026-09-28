@@ -344,8 +344,8 @@ export default function EducationView({
       <>
       <div data-tour="education-add">
         <AddRow>
-          <input placeholder="Title..." value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
-          <div style={{ display: "flex", gap: 6 }}>
+          <input placeholder="Title..." aria-label="Title" value={title} onChange={(e) => { setTitle(e.target.value); setAddError(null); }} onKeyDown={(e) => e.key === "Enter" && add()} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
+          <div role="group" aria-label="Type" style={{ display: "flex", gap: 6 }}>
             {["Assignment", "Assessment", "Homework"].map((t) => (
               <button
                 key={t}
@@ -361,7 +361,7 @@ export default function EducationView({
               </button>
             ))}
           </div>
-          <input list="subjects-datalist" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 130 }} />
+          <input list="subjects-datalist" placeholder="Subject" aria-label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 130 }} />
           <datalist id="subjects-datalist">
             {knownSubjects.map((s) => <option key={s} value={s} />)}
           </datalist>
