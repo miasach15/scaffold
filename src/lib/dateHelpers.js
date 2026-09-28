@@ -114,8 +114,12 @@ export const urgencyInfo = (iso, done, leadDays) => {
   }
   if (d === 0) return { label: "Due today", tone: "warn" };
   if (d === 1) return { label: "Due tomorrow", tone: "warn" };
-  if (d <= 3) return { label: `In ${d} days`, tone: "soon" };
-  return { label: `In ${d} days`, tone: "neutral" };
+  // "In N days" is ambiguous — due in N days, or scheduled N days from now? A real day
+  // name says exactly which. Within the coming week that's unambiguous on its own
+  // ("Due Wed"); further out it repeats within a month, so it needs the month/day too.
+  const dateObj = new Date(iso + "T00:00:00");
+  const dueLabel = d <= 6 ? dayLabel(dateObj) : dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return { label: `Due ${dueLabel}`, tone: d <= 3 ? "soon" : "neutral" };
 };
 // True once a task with a due date + "days needed" has entered its work window (today is
 // within leadDays of the due date) but isn't yet actually due — the "show it every day,

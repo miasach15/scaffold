@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
+import WorkTitle from "../shared/WorkTitle";
 
 // A session's notes can be several AI-generated micro-steps joined into one comma
 // list (see groupItemsByDate) when more than one landed on the same work day — reading
@@ -55,9 +56,9 @@ export default function WorkItemRow({ item }) {
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (
-          <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: "#000000" }}>{item.title}</button>
+          <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: "#000000" }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></button>
         ) : (
-          <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
+          <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></div>
         )}
         {item.onFocus ? (
           <StepNotes subtitle={item.subtitle} title={item.title} duration={item.duration} />

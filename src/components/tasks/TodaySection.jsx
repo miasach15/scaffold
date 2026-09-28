@@ -7,6 +7,7 @@ import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import WhatNowModal from "./WhatNowModal";
+import WorkTitle from "../shared/WorkTitle";
 
 // How many overdue plain tasks show before collapsing behind "+N more" — a glance at
 // what's oldest, not the whole backlog at once. Collapses again every fresh load; this
@@ -112,9 +113,14 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // by undone, only the most recent one shows. The earlier missed ones just drop out of
   // view rather than piling up as separate rows with the same title; the deadline itself
   // (below) already covers what's actually due regardless of how many sessions slipped.
+  // A session whose assignment is already done (marked complete directly, or every
+  // session finishing auto-completes it — see App.jsx's setTaskDone) shouldn't keep
+  // showing as something to do just because that one particular session never got
+  // individually checked off.
+  const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
   const bySessionEdu = {};
   tasks.forEach((t) => {
-    if (!t.eduId || t.groupId || (t.done && !justDone.has(t.id))) return;
+    if (!t.eduId || t.groupId || doneEduIds.has(t.eduId) || (t.done && !justDone.has(t.id))) return;
     (bySessionEdu[t.eduId] ||= []).push(t);
   });
   const eduSessionItems = Object.values(bySessionEdu).flatMap((sessions) => {
@@ -344,7 +350,9 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
             const urgent = !overdue && !dueToday && info?.tone === "danger";
             const waitingOnWindow = !it.isGroup && it.date && it.leadDays && !overdue && !dueToday && !urgent; // has a date+leadDays but the window hasn't opened yet
             const active = it.isGroup || overdue || dueToday || urgent; // full-priority state
-            const tagLabel = overdue || urgent ? info.label : null;
+            // A due-today row used to show nothing here at all, while every other date
+            // showed something — inconsistent enough to look broken. Now it always says so.
+            const tagLabel = overdue || urgent || dueToday ? info.label : null;
             // Group/edu-session/deadline/goal rows don't carry a leadDays of their own
             // (see above), so tagLabel/waitingOnWindow stay silent for them outside the
             // overdue case — this fills that gap with a plain "due tomorrow"/"in N days"
@@ -369,7 +377,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}
                   >
-                    {it.title}
+                    <WorkTitle title={it.title} mutedColor="#B4BCC5" />
                   </button>
                   {it.subLabel && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>

@@ -19,6 +19,7 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
+import WorkTitle from "../shared/WorkTitle";
 
 // A session's notes can be several comma-joined micro-steps (see groupItemsByDate) — a
 // step that just repeats the row's own title is dropped outright (adds nothing), and
@@ -77,7 +78,9 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
       </div>
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <WorkTitle title={item.title} mutedColor={MUTED} />
+        </div>
         <StepNotes notes={item.notes} title={item.title} duration={item.duration} />
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
@@ -170,9 +173,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // Same idea for Education work sessions ("Work on X"/"Study X") — only the most
   // recent due-or-overdue, still-undone session per assignment shows, never a pile of
   // rows with the same title for every day that slipped by.
+  // A session whose assignment is already done (marked complete directly, or every
+  // session finishing auto-completes it — see App.jsx's setTaskDone) shouldn't keep
+  // showing as something to do just because that one particular session row never got
+  // individually checked off.
+  const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
   const activeEduSessions = {};
   tasks.forEach((t) => {
-    if (!t.eduId || t.groupId || t.done) return;
+    if (!t.eduId || t.groupId || t.done || doneEduIds.has(t.eduId)) return;
     (activeEduSessions[t.eduId] ||= []).push(t);
   });
   const eduSessionItems = Object.values(activeEduSessions)
@@ -277,10 +285,33 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const remainingStepCount = todaysTimedTasks.length + todaysUntimed.length;
   const scaffoldedTotalCount = remainingStepCount + doneTodayTasks.length;
   // "No free time left today" reads like the app assigning you a full evening of work —
-  // same numbers, but framed as when you'll be DONE (stacking whatever's still ahead,
-  // fixed commitments and open steps alike, back to back from now) reads as Scaffold
-  // helping you get through today rather than filling it up.
-  const estimatedFinishDecimal = nowDecimal + (committedMin + untimedNeededMin) / 60;
+  // same numbers, but framed as when you'll be DONE reads as Scaffold helping you get
+  // through today rather than filling it up. Just summing durations (flexible work +
+  // fixed commitments) silently assumes they compress together with no gaps — a fixed
+  // commitment starts at its own clock time regardless of whether flexible work is done
+  // by then, so a gap before it (e.g. free until 7:30, tutoring not until 8) still passes
+  // for real and has to be counted. This walks the clock forward instead: flexible work
+  // fills the gap before each upcoming fixed slot, and a slot always starts on time even
+  // if there's dead air first.
+  const fixedSlotsToday = [...todaysTimedTasks, ...todaysEvents]
+    .filter((item) => item.start >= nowDecimal)
+    .map((item) => ({ start: item.start, end: item.start + (item.duration || 60) / 60 }))
+    .sort((a, b) => a.start - b.start);
+  const estimatedFinishDecimal = (() => {
+    let cursor = nowDecimal;
+    let remaining = untimedNeededMin / 60; // hours of flexible work still to place
+    // Every fixed slot has to be walked past, whether or not flexible work is still
+    // left to place — a slot fully absorbing the remaining work doesn't mean the day's
+    // done, it just means the NEXT obligation (the fixed slot itself) hasn't happened yet.
+    for (const slot of fixedSlotsToday) {
+      const gap = Math.max(0, slot.start - cursor);
+      const used = Math.min(remaining, gap);
+      cursor += used;
+      remaining -= used;
+      cursor = Math.max(cursor, slot.end); // the commitment happens regardless of what's left
+    }
+    return cursor + remaining;
+  })();
   // A brand-new account, not just a light day — nothing in Tasks, Education, Habits, or
   // Calendar yet at all. The empty "Today's steps" card otherwise just reads as
   // unfinished; a guided first action gives it somewhere to go instead.
@@ -315,7 +346,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <div style={{ ...flatSection, padding: "14px 24px 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Today's plan</div>
           <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
@@ -349,16 +379,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div style={{ ...flatSection, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>This week</div>
+              <button
+                onClick={() => setWeekOffset(0)}
+                disabled={weekOffset === 0}
+                title={weekOffset === 0 ? undefined : "Back to this week"}
+                style={{ background: "none", border: "none", padding: 0, fontSize: 13, fontWeight: 700, color: INK, cursor: weekOffset === 0 ? "default" : "pointer", textDecoration: weekOffset === 0 ? "none" : "underline" }}
+              >
+                {weekRangeLabel}
+              </button>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                <button
-                  onClick={() => setWeekOffset(0)}
-                  disabled={weekOffset === 0}
-                  title={weekOffset === 0 ? undefined : "Back to this week"}
-                  style={{ background: "none", border: "none", padding: 0, fontSize: 11.5, color: MUTED, cursor: weekOffset === 0 ? "default" : "pointer", textDecoration: weekOffset === 0 ? "none" : "underline" }}
-                >
-                  {weekRangeLabel}
-                </button>
                 <div style={{ display: "flex", gap: 2 }}>
                   <button onClick={() => setWeekOffset((o) => o - 1)} title="Previous week" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: MUTED, display: "flex" }}>
                     <ChevronLeft size={14} strokeWidth={2.3} />
@@ -465,12 +494,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {t.title}{isTop && t.duration != null ? ` · ${t.duration}m` : ""}
+                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${t.duration}m` : ""}
                               </div>
                               <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} duration={t.duration} />
                             </div>
                             {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
-                            {t.date && t.date !== todayISO && (
+                            {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                             )}
                             {isTop && onStartFocus && (
@@ -525,8 +554,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16, flexShrink: 0 }}>
             {!hasActiveFocusSession && (
               <div style={{ padding: "16px 16px 14px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Focus timer</div>
-
                 <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
                   <svg width="112" height="112" viewBox="0 0 112 112">
                     <circle cx="56" cy="56" r="44" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="7" />

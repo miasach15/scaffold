@@ -68,13 +68,29 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, loading: tasksLoading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
+  const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
+
+  // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
+  // assignment itself, too — without this, the sessions disappear (see EducationView's
+  // "only the latest undone one shows") but the deadline row stays open forever unless
+  // separately checked off by hand, which reads as the SAME thing needing two different
+  // "done" actions. Symmetric the other way too: unchecking a session un-finishes the
+  // assignment if it had auto-completed this way.
+  const setTaskDone = (id, done) => {
+    setTaskDoneRaw(id, done);
+    const t = tasks.find((x) => x.id === id);
+    if (!t?.eduId) return;
+    const linked = tasks.filter((x) => x.eduId === t.eduId);
+    const allDoneAfter = linked.every((x) => (x.id === id ? done : x.done));
+    const eduItem = eduItems.find((e) => e.id === t.eduId);
+    if (eduItem && eduItem.done !== allDoneAfter) setEduDone(t.eduId, allDoneAfter);
+  };
 
   const [view, setView] = useState("dashboard");
   useUsageTracking(userId, view);

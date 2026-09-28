@@ -300,7 +300,12 @@ export default function EducationView({
   // due-or-overdue one shows, so a skipped day rolls into the next one as a single row
   // instead of either disappearing or piling up as several separately-dated rows for the
   // same assignment.
-  const notDoneSessionRows = sessionRows.filter((i) => !i.done || justDone.has(i.id));
+  // A session whose assignment is already done (marked complete directly, or every
+  // session finishing auto-completes it — see App.jsx's setTaskDone) shouldn't keep
+  // showing as something to do just because that one particular session never got
+  // individually checked off.
+  const doneEduIds = new Set(eduItems.filter((e) => e.done).map((e) => e.id));
+  const notDoneSessionRows = sessionRows.filter((i) => (!i.done && !doneEduIds.has(i.eduId)) || justDone.has(i.id));
   const sessionsByEdu = {};
   notDoneSessionRows.forEach((row) => { (sessionsByEdu[row.eduId] ||= []).push(row); });
   const leftTodaySessionItems = Object.values(sessionsByEdu).flatMap((sessions) => {
