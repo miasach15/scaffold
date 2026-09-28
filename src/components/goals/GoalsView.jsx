@@ -88,23 +88,25 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
   return (
     <div>
-      <SectionHeader title="Goals" subtitle="Big projects, broken into a clear, day-by-day path." />
+      <div style={{ marginBottom: 10 }}>
+        <SectionHeader title="Goals" subtitle="Big projects, broken into a clear, day-by-day path." />
+      </div>
 
       {!atGoalLimit && (
-        <div data-tour="goals-add" style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 4 }}>What's your goal?</div>
-          <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>
+        <div data-tour="goals-add" style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 26px", marginBottom: 20 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 700, marginBottom: 6 }}>What's your goal?</div>
+          <div style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>
             Big projects live here — quick errands go on Tasks.
           </div>
           <textarea
             value={outcome}
             onChange={(e) => setOutcome(e.target.value)}
             placeholder="e.g. Launch a small tutoring business by the end of the school year"
-            rows={2}
-            style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff" }}
+            rows={3}
+            style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff", padding: "12px 14px" }}
           />
 
-          <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 16, alignItems: "center", flexWrap: "wrap" }}>
             <button onClick={() => setShowOptions((x) => !x)} className="hoverable" style={toggleBtn}>
               {showOptions ? <ChevronUp size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
               {showOptions ? "Hide options" : "Category or deadline"}
@@ -163,7 +165,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         filtered.length === 0 ? (
           <EmptyState text={`No ${filter} goals yet.`} />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {filtered.map((g) => (
               <GoalCard
                 key={g.id}

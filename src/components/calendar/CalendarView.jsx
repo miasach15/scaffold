@@ -32,7 +32,12 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // render on Calendar; see the Tasks page for the day-to-day list.
   const isDueKind = (chip) => chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
   const chipStyle = (chip) => {
-    if (chip.kind === "event") return CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+    // Solid, not a pale category-tint wash — same treatment "Due" chips below already
+    // use, so an all-day event reads as a deliberate colored chip instead of a faint tint.
+    if (chip.kind === "event") {
+      const c = CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal;
+      return { bg: c.border, border: c.border, text: "#fff" };
+    }
     if (isDueKind(chip)) {
       const c = chip.kind === "edu" ? eduCol : (CATEGORY_COLORS[chip.category] || CATEGORY_COLORS.Personal);
       return { bg: c.border, border: c.border, text: "#fff" };

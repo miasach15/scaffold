@@ -409,7 +409,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     onClick={() => { onSelectDay(iso); setView("calendar"); }}
                     style={{
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "6px 2px",
-                      borderRadius: 10, background: isToday ? "#DDE1EE" : "transparent", border: `1px solid ${isToday ? "#B1BBDD" : "transparent"}`,
+                      borderRadius: 10, background: "transparent", border: `1.5px solid ${isToday ? PRIMARY : "transparent"}`,
                       cursor: "pointer",
                     }}
                   >
