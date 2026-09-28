@@ -83,6 +83,17 @@ export const decimalToTimeLabel = (dec) => {
   if (disp === 0) disp = 12;
   return `${disp}:${pad(m)} ${ampm}`;
 };
+// Raw minutes reads fine for a short task ("30m") but falls apart for anything that
+// spans hours ("405m" for an 8:15-3:00 school day) — nobody thinks in triple-digit
+// minutes. Switches to "Xh" / "Xh Ym" past the hour mark; under an hour is unchanged.
+export const formatDuration = (min) => {
+  if (min == null) return "";
+  const rounded = Math.round(min);
+  if (rounded < 60) return `${rounded}m`;
+  const h = Math.floor(rounded / 60);
+  const m = rounded % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+};
 // The reverse of timeToDecimal, for pre-filling an <input type="time"> from a stored
 // decimal-hours value.
 export const decimalToTimeInput = (dec) => {

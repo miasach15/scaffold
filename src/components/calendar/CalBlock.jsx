@@ -1,5 +1,5 @@
 import { ROW_H } from "../../lib/constants";
-import { decimalToTimeLabel } from "../../lib/dateHelpers";
+import { decimalToTimeLabel, formatDuration } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
 export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent }) {
@@ -28,7 +28,7 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
       {height > 30 && item.start != null && (
         <div style={{ fontSize: 10, color: "#6B7280", marginTop: 1 }}>
           {decimalToTimeLabel(item.start)}
-          {item.duration != null ? ` · ${Math.round(item.duration)}m${item.category ? ` · ${item.category}` : ""}` : ""}
+          {item.duration != null ? ` · ${formatDuration(item.duration)}${item.category ? ` · ${item.category}` : ""}` : ""}
         </div>
       )}
     </div>

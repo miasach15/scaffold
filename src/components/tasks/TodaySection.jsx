@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BatteryLow } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
-import { defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
+import { defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -280,7 +280,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
         <div style={{ marginBottom: 20 }}>
           {/* The muted label is the only signal these are overdue — same row styling as
               anything else, no badge, no count, no "late"/"overdue" word on the row itself. */}
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>From earlier</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>From earlier</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {visibleOverdue.map((it) => (
               <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", rowGap: 8 }}>
@@ -388,7 +388,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                   {it.subLabel && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                 </div>
                 {!it.done && it.duration != null && (
-                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>~{it.duration}m</div>
+                  <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>~{formatDuration(it.duration)}</div>
                 )}
                 {!it.done && tagLabel && (
                   <div style={{ fontSize: 11, color: overdue ? TONE.carried.text : TONE.warn.text, whiteSpace: "nowrap", fontWeight: 700, flexShrink: 0 }}>{tagLabel}</div>

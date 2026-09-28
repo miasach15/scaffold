@@ -25,7 +25,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>Task</div>
+        <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 10 }}>Task</div>
         <textarea
           autoFocus
           value={titleDraft}

@@ -260,7 +260,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     const card = (
       <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 11, color: PRIMARY, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Focus Session</div>
+            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>Focus Session</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               {task.id && onOpenDetail && (
                 <button
@@ -352,7 +352,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
 
           {!compact && steps.length > 0 && (
             <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", marginTop: 12, paddingTop: 12 }}>
-              <div style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: MUTED, fontWeight: 700, marginBottom: 8 }}>
                 Whole breakdown
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -400,8 +400,8 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_TINT, border: `2px solid ${PRIMARY}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
               <Check size={28} color={PRIMARY_DARK} strokeWidth={2.5} />
             </div>
-            <div style={{ display: "inline-block", background: PRIMARY_TINT, color: PRIMARY_DARK, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, padding: "5px 12px", borderRadius: 20, marginBottom: 16 }}>
-              Task Completed!
+            <div style={{ color: PRIMARY_DARK, fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+              Task completed
             </div>
             <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, marginBottom: 6, lineHeight: 1.15 }}>
               Fantastic effort{firstName ? `, ${firstName}` : ""}
@@ -418,12 +418,12 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               <div style={{ fontSize: 15, fontWeight: 600, color: INK, marginBottom: 12 }}>{task.title}</div>
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 10, display: "flex", gap: 28 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", marginBottom: 2 }}>Time invested</div>
+                  <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 2 }}>Time invested</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>{investedMin > 0 ? `${investedMin} minute${investedMin === 1 ? "" : "s"}` : "Under a minute"}</div>
                 </div>
                 {stepsDoneInfo && (
                   <div>
-                    <div style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", marginBottom: 2 }}>Scaffold blocks</div>
+                    <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 2 }}>Steps done</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>{stepsDoneInfo.done}/{stepsDoneInfo.total} steps done</div>
                   </div>
                 )}
@@ -433,7 +433,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             {nextTask && (
               <div style={{ textAlign: "left", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: PRIMARY_DARK, textTransform: "uppercase", marginBottom: 3 }}>Up next to focus on</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 3 }}>Up next</div>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTask.title}</div>
                 </div>
                 {nextTask.duration != null && (

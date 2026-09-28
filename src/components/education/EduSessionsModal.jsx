@@ -74,7 +74,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
           </label>
         )}
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>
           {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
         </div>
         {item.type === "Homework" && (

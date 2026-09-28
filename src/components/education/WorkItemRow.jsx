@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import { formatDuration } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WorkTitle from "../shared/WorkTitle";
@@ -35,7 +36,7 @@ export default function WorkItemRow({ item }) {
         // These sessions are all-day (no timeLabel ever), so this slot was otherwise
         // always empty — the one place a single-step session's own duration can actually
         // show, now that sessions carry a real one (see App.jsx's addEduItem).
-        <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{item.duration}m</div>
+        <div style={{ fontSize: 10.5, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatDuration(item.duration)}</div>
       ) : null}
       {confirmDelete ? (
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>

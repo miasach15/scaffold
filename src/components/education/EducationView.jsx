@@ -526,7 +526,7 @@ export default function EducationView({
                 ["Homework", upcomingHomework],
               ].map(([label, items]) => items.length > 0 && (
                 <div key={label} style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>{label}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>{label}</div>
                   <div>
                     {items.map((e) => (
                       <EduItemRow key={e.id} item={e} col={eduCol} onToggleDone={handleUpcomingToggle} onRemove={onRemoveEduItem} onOpen={() => setEditingEduId(e.id)} hasFollowing={eduHasFollowing(e)} sessionsDone={sessionCounts(e.id).done} sessionsTotal={sessionCounts(e.id).total} />

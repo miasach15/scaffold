@@ -89,7 +89,7 @@ export default function TourOverlay({ setView, onCloseModals, onFinish }) {
         title="Drag to move this out of the way"
         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, cursor: "grab" }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: PRIMARY }}>
           <GripHorizontal size={13} strokeWidth={2.3} color="#B4BCC5" />
           {i + 1} of {steps.length}
         </div>

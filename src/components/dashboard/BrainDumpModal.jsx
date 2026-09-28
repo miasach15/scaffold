@@ -108,7 +108,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 460, maxHeight: "82vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4, flexShrink: 0 }}>Brain dump</div>
+        <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 4, flexShrink: 0 }}>Brain dump</div>
 
         {drafts === null ? (
           <>

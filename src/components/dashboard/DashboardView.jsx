@@ -14,7 +14,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -40,7 +40,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
         </div>
         <StepNotes notes={item.notes} title={item.title} duration={item.duration} />
       </div>
-      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
+      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{formatDuration(item.duration)}</div>}
     </div>
   );
 }
@@ -421,7 +421,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 )}
                 {displayUntimed.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {displayUntimed.map((t, i) => {
                         const isTop = i === 0;
@@ -451,11 +451,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${t.duration}m` : ""}
+                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${formatDuration(t.duration)}` : ""}
                               </div>
                               <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} duration={t.duration} />
                             </div>
-                            {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
+                            {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                             {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                             )}
@@ -479,7 +479,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 )}
                 {todaysEvents.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 6 }}>Today's events</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
                         <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
@@ -504,94 +504,91 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
           {/* Focus Timer/Habits/Done today are the quiet, secondary things on this page —
-              "Today's steps" is what Dashboard is actually for, so this whole group
-              shares ONE flat panel with hairline dividers between its parts instead of
-              each getting its own card, border, and shadow to compete with the hero for
-              attention. */}
-          <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16, flexShrink: 0 }}>
-            {!hasActiveFocusSession && (
-              <div style={{ padding: "16px 16px 14px" }}>
-                <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
-                  <svg width="112" height="112" viewBox="0 0 112 112">
-                    <circle cx="56" cy="56" r="44" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="7" />
-                  </svg>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
-                    <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>ready</div>
-                  </div>
+              "Today's steps" is what Dashboard is actually for. No wrapping card here —
+              a hairline + spacing marks each new section instead of another rounded box,
+              so this column doesn't read as a box full of smaller boxes. */}
+          {!hasActiveFocusSession && (
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
+                <svg width="112" height="112" viewBox="0 0 112 112">
+                  <circle cx="56" cy="56" r="44" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="7" />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>ready</div>
                 </div>
-
-                <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                  {FOCUS_PRESETS.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setFocusMinutes(m)}
-                      style={{
-                        ...ghostBtn, padding: "5px 14px", background: "#fff",
-                        borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
-                        color: focusMinutes === m ? PRIMARY_DARK : MUTED,
-                        fontWeight: focusMinutes === m ? 700 : 600,
-                      }}
-                    >
-                      {m}m
-                    </button>
-                  ))}
-                </div>
-
-                {/* Starting a session is the highlighted suggestion card's job now (its own
-                    Start button reads this exact duration) — this is just the "how long"
-                    picker, not a second place to press start for the same action. */}
               </div>
-            )}
 
-            <div style={{ padding: "14px 16px", borderTop: hasActiveFocusSession ? "none" : `1px solid ${BORDER}` }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>Habits</div>
-                {habits.length > 0 && (
-                  <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
-                    {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
-                  </div>
-                )}
+              <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                {FOCUS_PRESETS.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setFocusMinutes(m)}
+                    style={{
+                      ...ghostBtn, padding: "5px 14px", background: "#fff",
+                      borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
+                      color: focusMinutes === m ? PRIMARY_DARK : MUTED,
+                      fontWeight: focusMinutes === m ? 700 : 600,
+                    }}
+                  >
+                    {m}m
+                  </button>
+                ))}
               </div>
-              {habits.length === 0 ? (
-                <EmptyState text="No habits yet." />
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {habits.map((h) => {
-                    const done = h.doneDates.includes(todayISO);
-                    const streak = habitStreak(h.doneDates);
-                    return (
-                      <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} size={15} />
-                        <div style={{ flex: 1, fontSize: 12.5, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
-                        {streak > 0 && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10, flexShrink: 0 }}>
-                            <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} /> {streak}d
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+
+              {/* Starting a session is the highlighted suggestion card's job now (its own
+                  Start button reads this exact duration) — this is just the "how long"
+                  picker, not a second place to press start for the same action. */}
+            </div>
+          )}
+
+          <div style={{ borderTop: hasActiveFocusSession ? "none" : `1px solid ${BORDER}`, paddingTop: hasActiveFocusSession ? 0 : 16, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Habits</div>
+              {habits.length > 0 && (
+                <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
+                  {habits.filter((h) => h.doneDates.includes(todayISO)).length} of {habits.length}
                 </div>
               )}
             </div>
-
-            {/* Wins stack up here as they happen — empty (and hidden) first thing in the
-                morning, so there's nothing to scroll past before you've done anything yet. */}
-            {doneTodayTasks.length > 0 && (
-              <div style={{ padding: "14px 16px", borderTop: `1px solid ${BORDER}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Done today</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {doneTodayTasks.map((t) => (
-                    <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Checkbox checked onClick={() => onToggleDone(t.id, false)} color={CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal} size={15} />
-                      <div style={{ flex: 1, fontSize: 12.5, color: MUTED, textDecoration: "line-through", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+            {habits.length === 0 ? (
+              <EmptyState text="No habits yet." />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {habits.map((h) => {
+                  const done = h.doneDates.includes(todayISO);
+                  const streak = habitStreak(h.doneDates);
+                  return (
+                    <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Checkbox checked={done} onClick={() => onSetHabitDone(h.id, todayISO, !done)} color={{ border: PRIMARY_DARK }} size={15} />
+                      <div style={{ flex: 1, fontSize: 12.5, color: done ? MUTED : INK, textDecoration: done ? "line-through" : "none" }}>{h.title}</div>
+                      {streak > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: MUTED, fontSize: 10, flexShrink: 0 }}>
+                          <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} /> {streak}d
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
           </div>
+
+          {/* Wins stack up here as they happen — empty (and hidden) first thing in the
+              morning, so there's nothing to scroll past before you've done anything yet. */}
+          {doneTodayTasks.length > 0 && (
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, flexShrink: 0 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Done today</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {doneTodayTasks.map((t) => (
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Checkbox checked onClick={() => onToggleDone(t.id, false)} color={CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal} size={15} />
+                    <div style={{ flex: 1, fontSize: 12.5, color: MUTED, textDecoration: "line-through", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -345,7 +345,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
 
         {onDeleteAccount && (
           <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${TONE.danger.border}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TONE.danger.text, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 8 }}>Danger zone</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TONE.danger.text, marginBottom: 8 }}>Danger zone</div>
             {!showDeleteConfirm ? (
               <button
                 onClick={() => setShowDeleteConfirm(true)}

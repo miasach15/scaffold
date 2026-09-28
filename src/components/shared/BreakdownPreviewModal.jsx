@@ -18,7 +18,7 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
     <ModalPortal>
     <div style={overlayStyle} onClick={onCancel}>
       <div style={{ ...modalStyle, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>Here's the plan</div>
+        <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 4 }}>Here's the plan</div>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{heading}</div>
         <div style={{ fontSize: 11.5, color: "#B4BCC5", marginBottom: 12 }}>Edit or remove anything before it's added: one task per day.</div>
 

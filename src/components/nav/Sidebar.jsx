@@ -109,7 +109,11 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
             </button>
           </div>
 
-          <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {/* Text, not an icon per row — eight short, distinct words don't need a picture
+              each to stay scannable, and a plain icon-plus-label list in a rounded active
+              pill is the one nav treatment nearly every generated dashboard reaches for.
+              A rule on the left marks the current page instead of a filled box around it. */}
+          <nav style={{ display: "flex", flexDirection: "column" }}>
             {NAV_ITEMS.map((item) => {
               const active = view === item.key;
               return (
@@ -117,14 +121,13 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
                   key={item.key}
                   onClick={() => go(item.key)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 10,
-                    border: active ? `1px solid rgba(74,91,168,0.2)` : "1px solid transparent",
-                    background: active ? "rgba(74,91,168,0.08)" : "transparent",
-                    color: active ? PRIMARY_DARK : MUTED, opacity: active ? 1 : 0.85,
-                    fontSize: 14, fontWeight: active ? 700 : 500, textAlign: "left", width: "100%",
+                    display: "flex", alignItems: "center", padding: "9px 14px", marginLeft: -14,
+                    background: "none", borderTop: "none", borderRight: "none", borderBottom: "none",
+                    borderLeft: `2px solid ${active ? PRIMARY_DARK : "transparent"}`,
+                    color: active ? INK : MUTED,
+                    fontSize: 14.5, fontWeight: active ? 700 : 500, textAlign: "left", width: "calc(100% + 14px)",
                   }}
                 >
-                  <item.icon size={18} strokeWidth={2} />
                   {item.label}
                 </button>
               );

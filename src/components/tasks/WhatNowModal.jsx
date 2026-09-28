@@ -36,7 +36,7 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", textTransform: "uppercase", letterSpacing: 0.5, textAlign: "center", marginTop: -4, marginBottom: 16 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", textAlign: "center", marginTop: -4, marginBottom: 16 }}>
               Do this next
             </div>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>

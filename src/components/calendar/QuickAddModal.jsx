@@ -43,7 +43,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 12 }}>{isEdit ? "Edit event" : "Add event"}</div>
+        <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 12 }}>{isEdit ? "Edit event" : "Add event"}</div>
         <label style={labelStyle}>Title</label>
         <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chem lecture" style={inputStyle} />
         <label style={{ ...labelStyle, marginTop: 10 }}>Category</label>

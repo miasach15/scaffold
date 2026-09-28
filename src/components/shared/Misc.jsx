@@ -91,8 +91,12 @@ export function SectionHeader({ title, subtitle, right }) {
     </div>
   );
 }
+// A plain, normal-case label with a hairline underneath — a section break made of type
+// and a line, not an uppercase-tracked pill. The pill read as a stock template signature
+// repeated on every page; a rule under the text does the same "here's a new group" job
+// without looking manufactured.
 export function SubHeader({ children }) {
-  return <div style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", letterSpacing: 0.5, textTransform: "uppercase", margin: "18px 0 8px", background: "#EFEFEF", display: "inline-block", padding: "5px 12px", borderRadius: 999 }}>{children}</div>;
+  return <div style={{ fontSize: 13.5, fontWeight: 700, color: "#4A5568", margin: "20px 0 10px", paddingBottom: 6, borderBottom: "1px solid #EDEDED" }}>{children}</div>;
 }
 export function AddRow({ children }) {
   return <div style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>{children}</div>;
