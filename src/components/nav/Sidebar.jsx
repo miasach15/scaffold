@@ -50,6 +50,7 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
       <style>{`
         .sb-bottom-tabbar { display: none; }
         .sb-backdrop { display: none; }
+        .sb-icon-btn:hover { background: #F0F1F4 !important; color: ${INK} !important; }
         @media (max-width: 860px) {
           .sb-rail {
             position: fixed; top: 0; bottom: 0; left: 0; z-index: 200; width: 250px;
@@ -135,21 +136,19 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
           </nav>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="btn-ghost" style={iconBtnStyle}>
-              <Search size={15} />
-            </button>
-            <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="btn-ghost" style={iconBtnStyle}>
-              <Settings size={15} />
-            </button>
-            <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="btn-ghost" style={iconBtnStyle}>
-              <ListChecks size={15} />
-            </button>
-            <button onClick={onSignOut} title="Sign out" className="btn-ghost" style={iconBtnStyle}>
-              <LogOut size={15} />
-            </button>
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
+          <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
+            <Search size={16} />
+          </button>
+          <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="sb-icon-btn" style={iconBtnStyle}>
+            <Settings size={16} />
+          </button>
+          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
+            <ListChecks size={16} />
+          </button>
+          <button onClick={onSignOut} title="Sign out" className="sb-icon-btn" style={iconBtnStyle}>
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
 
@@ -179,5 +178,5 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
 
 const iconBtnStyle = {
   width: 32, height: 32, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
-  borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff", color: MUTED,
+  borderRadius: 8, border: "none", background: "transparent", color: MUTED,
 };
