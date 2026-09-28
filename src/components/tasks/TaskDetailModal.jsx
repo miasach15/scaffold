@@ -70,7 +70,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
                       style={{
                         padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
                         border: `1px solid ${task.duration === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                        background: task.duration === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                        background: "#fff",
                         color: task.duration === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                       }}
                     >

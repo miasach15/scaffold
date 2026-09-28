@@ -110,10 +110,10 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "12px 8px", borderRadius: 12, border: `1.5px solid ${active ? theme.primary : "#E5E7EB"}`,
-                  background: active ? theme.primaryTint : "#fff",
+                  background: "#fff",
                 }}
               >
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: theme.primaryDark, boxShadow: active ? `0 0 0 3px ${theme.primaryTint}` : "none" }} />
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: theme.primaryDark }} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: active ? theme.primaryDark : "#4A5568" }}>{theme.label}</span>
               </button>
             );
@@ -130,14 +130,13 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "12px 8px", borderRadius: 12, border: `1.5px solid ${isCustom ? customHex : "#E5E7EB"}`,
-                  background: isCustom ? `${customHex}1F` : "#fff", cursor: "pointer",
+                  background: "#fff", cursor: "pointer",
                 }}
               >
                 <div
                   style={{
                     width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                     background: isCustom ? customHex : "#F3F4F6",
-                    boxShadow: isCustom ? `0 0 0 3px ${customHex}1F` : "none",
                   }}
                 >
                   {!isCustom && <ColorWheelIcon size={16} />}

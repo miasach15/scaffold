@@ -186,7 +186,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                           style={{
                             padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
                             border: `1px solid ${d.breakdown ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                            background: d.breakdown ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                            background: "#fff",
                             color: d.breakdown ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             marginLeft: "auto",
                           }}
@@ -204,7 +204,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                             style={{
                               padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
                               border: `1px solid ${d.scheduleMode === "every" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                              background: d.scheduleMode === "every" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              background: "#fff",
                               color: d.scheduleMode === "every" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             }}
                             title="Steps can land on any day between now and the due date"
@@ -216,7 +216,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                             style={{
                               padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
                               border: `1px solid ${d.scheduleMode === "pick" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                              background: d.scheduleMode === "pick" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              background: "#fff",
                               color: d.scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             }}
                             title="Only use a set number of your least-busy days — this figures out which ones"

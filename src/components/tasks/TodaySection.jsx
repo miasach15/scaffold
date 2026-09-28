@@ -253,7 +253,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
             title="Hides multi-step projects. Just the quick, one-shot stuff for a day when even small things feel big"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "7px 12px 7px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-              background: lowEnergy ? "var(--primary-tint, #E7E3FC)" : "#fff",
+              background: "#fff",
               border: `1.5px solid ${lowEnergy ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
               color: lowEnergy ? "var(--primary-dark, #5849C4)" : "#93A0AD",
             }}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
@@ -511,7 +511,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             <div style={{ flexShrink: 0 }}>
               <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
                 <svg width="112" height="112" viewBox="0 0 112 112">
-                  <circle cx="56" cy="56" r="44" fill={PRIMARY_TINT} stroke={PRIMARY_DARK} strokeWidth="7" />
+                  <circle cx="56" cy="56" r="44" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>

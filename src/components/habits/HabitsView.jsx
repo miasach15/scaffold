@@ -6,8 +6,6 @@ import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import HabitHistoryModal from "./HabitHistoryModal";
 
-const STREAK_BG = "#DDE1EE";
-const DONE_BG = "rgba(74,91,168,0.1)";
 const SUGGESTIONS_CAP = 8; // the full list is 30+ — a wall of chips isn't a suggestion, it's a chore
 
 const navBtnStyle = {
@@ -86,16 +84,9 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 const iso = toISO(d);
                 const isToday = iso === todayISO;
                 return (
-                  <div
-                    key={iso}
-                    style={{
-                      textAlign: "center", padding: "6px 2px", borderRadius: 10,
-                      background: isToday ? "rgba(26,26,46,0.08)" : "transparent",
-                      border: `1px solid ${isToday ? "rgba(26,26,46,0.25)" : "transparent"}`,
-                    }}
-                  >
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
-                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{d.getDate()}</div>
+                  <div key={iso} style={{ textAlign: "center", padding: "6px 2px" }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: isToday ? PRIMARY_DARK : MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
+                    <div style={{ fontFamily: serifFont, fontSize: 20, color: isToday ? PRIMARY_DARK : INK }}>{d.getDate()}</div>
                   </div>
                 );
               })}
@@ -121,9 +112,9 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                   >
                     <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{h.title}</div>
                     {streak > 0 && (
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: STREAK_BG, borderRadius: 20, padding: "2px 8px", width: "fit-content" }}>
-                        <Flame size={10} color={INK} fill={INK} strokeWidth={0} />
-                        <span style={{ fontSize: 10, fontWeight: 800, color: INK }}>{streak} day streak</span>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, width: "fit-content" }}>
+                        <Flame size={10} color={MUTED} fill={MUTED} strokeWidth={0} />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{streak} day streak</span>
                       </div>
                     )}
                   </button>
@@ -138,7 +129,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                           title={iso}
                           style={{
                             height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                            background: done ? DONE_BG : "transparent",
+                            background: "#fff",
                             border: done ? `2px solid ${PRIMARY_DARK}` : `1.5px solid ${BORDER}`,
                           }}
                         >

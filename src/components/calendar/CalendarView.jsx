@@ -71,7 +71,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const goToday = () => (isDay ? onSetDayView(todayISO) : setWeekStart(startOfWeek(new Date())));
   const modeBtnStyle = (active) => ({
     ...ghostBtn, padding: "5px 10px", fontSize: 12,
-    background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
+    background: "#fff",
     borderColor: active ? "var(--primary, #7B6EF0)" : ghostBtn.border,
     color: active ? "var(--primary-dark, #5849C4)" : ghostBtn.color,
   });

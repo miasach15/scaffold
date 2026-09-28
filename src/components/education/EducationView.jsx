@@ -378,7 +378,7 @@ export default function EducationView({
                 style={{
                   padding: "8px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
                   border: `1px solid ${type === t ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                  background: type === t ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                  background: "#fff",
                   color: type === t ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                 }}
               >
@@ -418,7 +418,7 @@ export default function EducationView({
                     style={{
                       padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                       border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                      background: workMode === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                      background: "#fff",
                       color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                     }}
                   >
@@ -446,7 +446,7 @@ export default function EducationView({
                       style={{
                         padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
                         border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                        background: startFrom === f ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                        background: "#fff",
                         color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                       }}
                     >

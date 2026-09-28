@@ -362,7 +362,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                     style={{
                       padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                       border: `1px solid ${duration === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                      background: duration === m ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                      background: "#fff",
                       color: duration === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                     }}
                   >
@@ -418,7 +418,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                     <div
                       style={{
                         padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                        border: "1px solid var(--primary, #7B6EF0)", background: "var(--primary-tint, #E7E3FC)", color: "var(--primary-dark, #5849C4)",
+                        border: "1px solid var(--primary, #7B6EF0)", background: "#fff", color: "var(--primary-dark, #5849C4)",
                       }}
                       title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
                     >
@@ -440,7 +440,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                         style={{
                           padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                           border: `1px solid ${scheduleMode === "every" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                          background: scheduleMode === "every" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                          background: "#fff",
                           color: scheduleMode === "every" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
                         title="Steps can land on any day between now and the due date"
@@ -452,7 +452,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                         style={{
                           padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                           border: `1px solid ${scheduleMode === "pick" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                          background: scheduleMode === "pick" ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                          background: "#fff",
                           color: scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
                         title="Only use a set number of your least-busy days — this figures out which ones"
@@ -485,7 +485,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                             style={{
                               padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
                               border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                              background: startFrom === f ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                              background: "#fff",
                               color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             }}
                           >

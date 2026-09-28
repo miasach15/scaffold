@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
-import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { pad, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
@@ -323,11 +323,11 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               disabled={finished}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_DARK, color: "#fff",
                 fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
               }}
             >
-              {running ? <Pause size={16} color={PRIMARY_DARK} /> : <Play size={16} color={PRIMARY_DARK} />}
+              {running ? <Pause size={16} color="#fff" /> : <Play size={16} color="#fff" />}
               {running ? "Pause Session" : "Start Session"}
             </button>
             <button
@@ -397,8 +397,8 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 440, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
         <div>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_TINT, border: `2px solid ${PRIMARY}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-              <Check size={28} color={PRIMARY_DARK} strokeWidth={2.5} />
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_DARK, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+              <Check size={28} color="#fff" strokeWidth={2.5} />
             </div>
             <div style={{ color: PRIMARY_DARK, fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
               Task completed
@@ -437,7 +437,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTask.title}</div>
                 </div>
                 {nextTask.duration != null && (
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: PRIMARY_DARK, background: PRIMARY_TINT, padding: "4px 10px", borderRadius: 6, flexShrink: 0, whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: PRIMARY_DARK, border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 6, flexShrink: 0, whiteSpace: "nowrap" }}>
                     Est. {Math.round(nextTask.duration)}m
                   </div>
                 )}

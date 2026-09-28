@@ -109,7 +109,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
                   style={{
                     width: 40, padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 700,
                     border: `1.5px solid ${active ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                    background: active ? "var(--primary-tint, #E7E3FC)" : "#fff",
+                    background: "#fff",
                     color: active ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                   }}
                 >
