@@ -263,7 +263,7 @@ export default function EducationView({
     // in notes now, so that's what the subtitle line shows instead of the old fallback
     // (the parent's own title, which the now-uniform title already says anyway).
     return {
-      id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null,
+      id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null, duration: t.duration,
       done: t.done, date: t.date, dueDate: parent?.dueDate || t.date, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
       col: eduCol, eduId: t.eduId,
       onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),

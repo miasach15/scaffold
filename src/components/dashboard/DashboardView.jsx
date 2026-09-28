@@ -29,10 +29,14 @@ const stepParts = (notes, title) => {
   return notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
 };
 
-function StepNotes({ notes, title, color }) {
+function StepNotes({ notes, title, color, duration }) {
   const [expanded, setExpanded] = useState(false);
   const parts = stepParts(notes, title);
   if (parts.length === 0) return null;
+  // A single multi-minute session covering several steps doesn't say how long just the
+  // NEXT one will take — splitting its own duration evenly across its steps gives a real
+  // estimate ("Read pages 1-10 · 25m") instead of one lump number for the whole thing.
+  const perStepMin = parts.length > 1 && duration != null ? Math.max(1, Math.round(duration / parts.length)) : null;
   return (
     <div style={{ marginTop: 1 }}>
       {parts.length > 1 ? (
@@ -44,7 +48,7 @@ function StepNotes({ notes, title, color }) {
           }}
         >
           {expanded ? <ChevronDown size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}{perStepMin ? ` · ${perStepMin}m` : ""}</span>
         </button>
       ) : (
         <div style={{ fontSize: 11.5, color: color || MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</div>
@@ -52,7 +56,7 @@ function StepNotes({ notes, title, color }) {
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 15 }}>
           {parts.slice(1).map((p, i) => (
-            <div key={i} style={{ fontSize: 11, color: MUTED }}>{p}</div>
+            <div key={i} style={{ fontSize: 11, color: MUTED }}>{p}{perStepMin ? ` · ${perStepMin}m` : ""}</div>
           ))}
         </div>
       )}
@@ -74,7 +78,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
       <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-        <StepNotes notes={item.notes} title={item.title} />
+        <StepNotes notes={item.notes} title={item.title} duration={item.duration} />
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{Math.round(item.duration)}m</div>}
     </div>
@@ -448,7 +452,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {t.title}{isTop && t.duration != null ? ` · ${t.duration}m` : ""}
                               </div>
-                              <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} />
+                              <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} duration={t.duration} />
                             </div>
                             {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
                             {t.date && t.date !== todayISO && (

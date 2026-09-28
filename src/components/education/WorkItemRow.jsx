@@ -14,11 +14,15 @@ const stepParts = (subtitle, title) => {
   return subtitle.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
 };
 
-function StepNotes({ subtitle, title }) {
+function StepNotes({ subtitle, title, duration }) {
   const [expanded, setExpanded] = useState(false);
   const parts = stepParts(subtitle, title);
   if (parts.length === 0) return null;
   if (parts.length === 1) return <div style={{ fontSize: 10.5, color: "#93A0AD" }}>Next: {parts[0]}</div>;
+  // Splitting the session's own duration evenly across its steps gives a real estimate
+  // for just the next one ("Next: problem 4 · 15m") instead of one lump number for the
+  // whole session.
+  const perStepMin = duration != null ? Math.max(1, Math.round(duration / parts.length)) : null;
   return (
     <div>
       <button
@@ -26,11 +30,11 @@ function StepNotes({ subtitle, title }) {
         style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 10.5, color: "#93A0AD", maxWidth: "100%" }}
       >
         {expanded ? <ChevronDown size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}{perStepMin ? ` · ${perStepMin}m` : ""}</span>
       </button>
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: 14 }}>
-          {parts.slice(1).map((p, i) => <div key={i} style={{ fontSize: 10, color: "#93A0AD" }}>{p}</div>)}
+          {parts.slice(1).map((p, i) => <div key={i} style={{ fontSize: 10, color: "#93A0AD" }}>{p}{perStepMin ? ` · ${perStepMin}m` : ""}</div>)}
         </div>
       )}
     </div>
@@ -56,7 +60,7 @@ export default function WorkItemRow({ item }) {
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
         )}
         {item.onFocus ? (
-          <StepNotes subtitle={item.subtitle} title={item.title} />
+          <StepNotes subtitle={item.subtitle} title={item.title} duration={item.duration} />
         ) : (
           item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>
         )}
