@@ -136,7 +136,7 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
           </nav>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 18, borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
           <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
             <Search size={16} />
           </button>
