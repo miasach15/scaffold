@@ -8,6 +8,10 @@ const FOCUS_PRESETS = [15, 25, 50];
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
+// A plain hairline between sections — no fill, so it reads as a divider on the same flat
+// background rather than a boxed-off panel. Restored for "Today's Scaffolded Steps"
+// specifically, after the card treatment there got reverted.
+const dividedSection = { ...flatSection, borderTop: `1px solid ${BORDER}`, paddingTop: 20 };
 import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -361,9 +365,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           </div>
 
-          <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "18px 20px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10 }}>
-              <div style={{ fontFamily: serifFont, fontSize: 19, color: INK }}>Today's Scaffolded Steps</div>
+          <div style={{ ...dividedSection, padding: "20px 20px 0", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>Today's Scaffolded Steps</div>
               <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>
                 {scaffoldedTotalCount > 0 && `${doneTodayTasks.length} of ${scaffoldedTotalCount} done · `}
                 {freeHoursLeft > 0 ? `≈${freeHoursLeft % 1 === 0 ? freeHoursLeft : freeHoursLeft.toFixed(1)}h free left today` : "No free time left today"}
@@ -383,7 +387,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 {displayUntimed.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {displayUntimed.map((t, i) => {
                         const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
@@ -453,7 +457,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           </div>
         </div>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 9, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           {/* Sits FIRST in the right column now, ahead of Coming Up/Habits — that's "the
               corner" for Dashboard's own copy of the focus timer. When a session is
               already running, this becomes an empty slot: App.jsx portals the SAME
@@ -465,7 +469,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {hasActiveFocusSession ? (
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
-            <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "12px 14px", flexShrink: 0 }}>
+            <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "14px 16px", flexShrink: 0 }}>
               <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 10 }}>Focus Timer</div>
 
               <div style={{ position: "relative", width: 116, height: 116, margin: "0 auto 10px" }}>
@@ -504,7 +508,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {/* Deliberately the quietest thing in this column — a daily checklist matters,
               but it's not what the page is actually for, so it shouldn't visually compete
               with Focus Timer or the Scaffolded Steps for attention. */}
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 16px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: MUTED }}>Habits</div>
               {habits.length > 0 && (
@@ -539,7 +543,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           {/* Wins stack up here as they happen — empty (and hidden) first thing in the
               morning, so there's nothing to scroll past before you've done anything yet. */}
           {doneTodayTasks.length > 0 && (
-            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "10px 14px", flexShrink: 0 }}>
+            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 16px", flexShrink: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Done today</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {doneTodayTasks.map((t) => (
