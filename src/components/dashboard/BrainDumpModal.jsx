@@ -6,6 +6,7 @@ import { DatePickerButton } from "../shared/Misc";
 import { uid } from "../../lib/id";
 import { dayBefore, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
+import ModalPortal from "../shared/ModalPortal";
 
 // A raw brain-dump line is spoken, not written — "i have to like buy school supplies" —
 // so every line gets cleaned up into an actual task title: drop the "i have to"/"i need
@@ -104,6 +105,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
   };
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 460, maxHeight: "82vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4, flexShrink: 0 }}>Brain dump</div>
@@ -261,5 +263,6 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
         )}
       </div>
     </div>
+    </ModalPortal>
   );
 }

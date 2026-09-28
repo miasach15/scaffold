@@ -6,6 +6,7 @@ import { pad, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
+import ModalPortal from "../shared/ModalPortal";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
 // celebration screen's quote below already uses) — the ring, selected duration, and
@@ -389,6 +390,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   }
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 440, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
         <div>
@@ -446,5 +448,6 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

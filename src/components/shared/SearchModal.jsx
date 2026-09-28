@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { overlayStyle } from "../../lib/styles";
+import ModalPortal from "./ModalPortal";
 
 const TYPE_LABEL = { task: "Task", edu: "Education", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", journal: "Journal", event: "Calendar" };
 
@@ -50,6 +51,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
   }, [q, tasks, eduItems, goals, habits, journalEntries, events, onGoTo, onOpenTask, onClose]);
 
   return (
+    <ModalPortal>
     <div style={{ ...overlayStyle, alignItems: "flex-start", paddingTop: "12vh" }} onClick={onClose}>
       <div
         style={{ background: "#fff", borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68vh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
@@ -63,6 +65,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && onClose()}
             placeholder="Search tasks, goals, education, habits, journal, calendar..."
+            aria-label="Search everything in Scaffold"
             style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", background: "transparent" }}
           />
           <button onClick={onClose} title="Close (Esc)" style={{ background: "none", border: "none", cursor: "pointer", color: "#B4BCC5", display: "flex" }}>
@@ -93,5 +96,6 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

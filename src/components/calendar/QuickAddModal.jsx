@@ -4,6 +4,7 @@ import { TONE } from "../../lib/constants";
 import { pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { DatePickerButton } from "../shared/Misc";
+import ModalPortal from "../shared/ModalPortal";
 
 export default function QuickAddModal({ initial, event, hasFollowing, onClose, onSave, onUpdate, onDelete }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -39,6 +40,7 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
   };
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 12 }}>{isEdit ? "Edit event" : "Add event"}</div>
@@ -152,5 +154,6 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
         )}
       </div>
     </div>
+    </ModalPortal>
   );
 }

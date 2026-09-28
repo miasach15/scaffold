@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { TONE } from "../../lib/constants";
 import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
+import ModalPortal from "../shared/ModalPortal";
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
@@ -21,6 +22,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
   };
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>Task</div>
@@ -122,5 +124,6 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

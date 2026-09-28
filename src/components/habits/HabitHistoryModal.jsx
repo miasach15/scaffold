@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { HABIT_COLOR, serifFont } from "../../lib/constants";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { addDays, addMonths, dayLabel, monthLabel, monthMatrix, startOfWeek, toISO } from "../../lib/dateHelpers";
+import ModalPortal from "../shared/ModalPortal";
 
 export default function HabitHistoryModal({ habit, onSetDone, onClose }) {
   const [month, setMonth] = useState(new Date());
@@ -13,6 +14,7 @@ export default function HabitHistoryModal({ habit, onSetDone, onClose }) {
   const weekdayLabels = Array.from({ length: 7 }, (_, i) => dayLabel(addDays(weekStart, i)));
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 380 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
@@ -59,5 +61,6 @@ export default function HabitHistoryModal({ habit, onSetDone, onClose }) {
         <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 18 }}>Done</button>
       </div>
     </div>
+    </ModalPortal>
   );
 }

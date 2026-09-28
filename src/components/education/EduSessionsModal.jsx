@@ -4,6 +4,7 @@ import { dateRangeISO, decimalToTimeLabel, formatShortDate, toISO } from "../../
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import Checkbox from "../shared/Checkbox";
+import ModalPortal from "../shared/ModalPortal";
 
 // Opened by clicking a deadline row on Education — see which sessions are done, rename
 // or remove any of them, add another, or hand the whole thing to AI to re-plan. The
@@ -37,6 +38,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
   const actionLabel = item.type === "Assessment" ? "session" : "sub-task";
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 420, maxHeight: "82vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 10.5, color: col.text, background: col.bg, display: "inline-block", padding: "2px 7px", borderRadius: 5, fontWeight: 700, marginBottom: 6 }}>{item.type}</div>
@@ -142,5 +144,6 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
         <button onClick={onClose} style={{ ...ghostBtn, width: "100%" }}>Done</button>
       </div>
     </div>
+    </ModalPortal>
   );
 }

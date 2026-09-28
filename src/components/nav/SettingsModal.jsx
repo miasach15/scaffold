@@ -7,6 +7,7 @@ import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import CategoryEditor from "../shared/CategoryEditor";
+import ModalPortal from "../shared/ModalPortal";
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
 
@@ -79,6 +80,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
   };
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 440, maxHeight: "85vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
@@ -346,5 +348,6 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 8 }}>Done</button>
       </div>
     </div>
+    </ModalPortal>
   );
 }

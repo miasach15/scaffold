@@ -3,6 +3,7 @@ import { Play, SkipForward, X } from "lucide-react";
 import { serifFont } from "../../lib/constants";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
+import ModalPortal from "../shared/ModalPortal";
 
 // Picks the single most pressing thing from an already-sorted queue and shows just
 // that — nothing else on screen. Even a capped 5-item list is still a decision; this
@@ -15,6 +16,7 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
   const item = queue[0];
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div
         style={{ ...modalStyle, padding: "24px 26px 26px", width: 380 }}
@@ -70,5 +72,6 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
         )}
       </div>
     </div>
+    </ModalPortal>
   );
 }

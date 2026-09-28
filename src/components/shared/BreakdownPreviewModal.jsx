@@ -1,5 +1,6 @@
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import ModalPortal from "./ModalPortal";
 
 // Shows the tasks a breakdown is about to create — with the dates they've been
 // scheduled on — before anything actually lands in the Tasks list. You can rename or
@@ -14,6 +15,7 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
   const removeItem = (i) => onChangeItems(items.filter((_, idx) => idx !== i));
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onCancel}>
       <div style={{ ...modalStyle, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 11.5, color: "#93A0AD", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>Here's the plan</div>
@@ -54,5 +56,6 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

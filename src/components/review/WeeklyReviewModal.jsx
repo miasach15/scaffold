@@ -4,6 +4,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
+import ModalPortal from "../shared/ModalPortal";
 
 const CONFETTI_COLORS = ["#7B6EF0", "#F0923B", "#34A870", "#E8608F", "#2CAFA0", "#3E7BFA"];
 
@@ -76,6 +77,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
   const isSunday = new Date().getDay() === 0;
 
   return (
+    <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       {isSunday && <Confetti />}
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
@@ -104,5 +106,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
         <button onClick={onClose} style={{ ...ghostBtn, width: "100%", marginTop: 12 }}>Close</button>
       </div>
     </div>
+    </ModalPortal>
   );
 }
