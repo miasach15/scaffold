@@ -83,6 +83,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && !isOverdueTask(t, todayISO) && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done, duration: t.duration,
+      orderIndex: t.orderIndex,
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
@@ -127,6 +128,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     const parentEdu = (eduItems || []).find((e) => e.id === next.eduId);
     return [{
       id: next.id, title: next.title, date: parentEdu?.dueDate || next.date, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
+      orderIndex: next.orderIndex,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
@@ -158,6 +160,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       const groupDueDate = allSteps.find((s) => s.groupDueDate)?.groupDueDate || null;
       return {
         id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone, duration: next.duration,
+        orderIndex: next.orderIndex,
         subLabel: allDone ? "All steps done" : `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
         category: next.category || "Personal",
         col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
@@ -196,12 +199,19 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     if (it.category === "Personal") return 2;
     return 1;
   };
+  // Same date, plus a manual order set by dragging on Dashboard's "Anytime today" —
+  // that order wins over the category nudge here too, so a manual reorder actually
+  // shows up the same way on both pages instead of only ever being visible on the one
+  // it was dragged on.
   const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
     if (!a.date && !b.date) return categoryRank(a) - categoryRank(b);
     if (!a.date) return 1;
     if (!b.date) return -1;
     const dateDiff = a.date.localeCompare(b.date);
     if (dateDiff !== 0) return dateDiff;
+    if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
+    if (a.orderIndex != null) return -1;
+    if (b.orderIndex != null) return 1;
     return categoryRank(a) - categoryRank(b);
   });
   // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+

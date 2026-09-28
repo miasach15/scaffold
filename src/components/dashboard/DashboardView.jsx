@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Clock, Flame, GripVertical } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Flame, GripVertical } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, cardStyle, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn } from "../../lib/styles";
@@ -91,9 +91,52 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
   );
-  // Drag-to-reorder "Anytime today" — which task is currently being dragged, so the row
-  // it started from can dim itself while it's in flight.
-  const [draggedTaskId, setDraggedTaskId] = useState(null);
+  // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
+  // native drag doesn't work at all on touch in most mobile browsers, and gives no
+  // feedback on where a card will land until you actually release it. This tracks the
+  // dragged row's live position as the pointer moves and reflows the list immediately;
+  // the new order is only persisted (via onReorderTasks) once, on release.
+  const [draggingId, setDraggingId] = useState(null);
+  const [liveOrder, setLiveOrder] = useState(null); // ids in their current on-screen order, only while dragging
+  const dragRef = useRef(null); // mutable { id, order } for the active gesture, so the move/up listeners don't need to resubscribe on every reflow
+  const rowElsRef = useRef({}); // task id -> row DOM node, for hit-testing during drag
+  const onReorderTasksRef = useRef(onReorderTasks);
+  onReorderTasksRef.current = onReorderTasks;
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      const cur = dragRef.current;
+      if (!cur) return;
+      const y = e.clientY;
+      const others = cur.order.filter((id) => id !== cur.id);
+      let insertAt = others.length;
+      for (let i = 0; i < others.length; i++) {
+        const el = rowElsRef.current[others[i]];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (y < rect.top + rect.height / 2) { insertAt = i; break; }
+      }
+      others.splice(insertAt, 0, cur.id);
+      if (others.length !== cur.order.length || !others.every((id, i) => id === cur.order[i])) {
+        cur.order = others;
+        setLiveOrder(others);
+      }
+    };
+    const handleUp = () => {
+      const cur = dragRef.current;
+      dragRef.current = null;
+      setDraggingId(null);
+      setLiveOrder(null);
+      if (cur) onReorderTasksRef.current?.(cur.order);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+  }, []);
+
   const todayISO = toISO(new Date());
 
   // Tasks always come first and are ordered by how urgent they are — a timed task is
@@ -164,22 +207,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
-  // Dragging one "Anytime today" row onto another moves the dragged one to sit right
-  // before the drop target, then persists the WHOLE visible list's new order (not just
-  // the two rows involved) — matches moveAction's own reindex-everything behavior, so a
-  // partial reorder never leaves some items floating on manual order and others still on
-  // date order in a way that's hard to predict.
-  const dropUntimedOn = (targetId) => {
-    if (!draggedTaskId || draggedTaskId === targetId) return;
-    const ids = todaysUntimed.map((t) => t.id);
-    const from = ids.indexOf(draggedTaskId);
-    const to = ids.indexOf(targetId);
-    if (from === -1 || to === -1) return;
-    ids.splice(from, 1);
-    ids.splice(to, 0, draggedTaskId);
-    onReorderTasks?.(ids);
-  };
-
   // "Do you have enough time today?" — free time left in your usual active window (the
   // same start/end hours "What now?" reminders already use, defaulting to 9am–9pm if
   // that's never been set) minus whatever's still ahead on today's schedule, compared
@@ -202,10 +229,25 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const fitsInTime = untimedNeededMin / 60 <= freeHoursLeft;
   // Plenty of time: just point at whatever's already first (manual order, or date).
   // Tight: lead with the quickest thing first — an actual win banked now beats staring
-  // at the biggest task while the clock runs out.
-  const suggestedNext = fitsInTime
-    ? todaysUntimed[0]
-    : [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
+  // at the biggest task while the clock runs out. Either way, row 0 of this list IS "the
+  // suggestion" — highlighted with its own Start button below — so dragging a different
+  // row into that spot is how you change what starts right now.
+  const baseUntimedOrder = fitsInTime
+    ? todaysUntimed
+    : (() => {
+        const quick = [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
+        return quick ? [quick, ...todaysUntimed.filter((t) => t.id !== quick.id)] : todaysUntimed;
+      })();
+  const untimedById = new Map(todaysUntimed.map((t) => [t.id, t]));
+  const displayUntimed = liveOrder ? liveOrder.map((id) => untimedById.get(id)).filter(Boolean) : baseUntimedOrder;
+  const startDrag = (id) => (e) => {
+    if (!onReorderTasks) return;
+    e.preventDefault();
+    const order = baseUntimedOrder.map((t) => t.id);
+    dragRef.current = { id, order };
+    setDraggingId(id);
+    setLiveOrder(order);
+  };
 
   // Finished today, across whatever kind of item it was — its own quiet "wins" list
   // below Habits, and the count the Scaffolded Steps header shows next to free time.
@@ -314,83 +356,57 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     ))}
                   </div>
                 )}
-                {todaysUntimed.length > 0 && (
+                {displayUntimed.length > 0 && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Anytime today</div>
-                    {suggestedNext && (
-                      // Always the same calm primary tint, whether or not today's list
-                      // fits in the time left — "tight today" already changes WHICH task
-                      // gets suggested (the quickest one, not just the first), so the
-                      // color doesn't also need to sound an alarm on top of that.
-                      <div
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, marginBottom: 8,
-                          background: PRIMARY_TINT, border: `1px solid ${PRIMARY}`,
-                        }}
-                      >
-                        {onToggleDone && (
-                          <Checkbox checked={false} onClick={() => onToggleDone(suggestedNext.id, true)} color={{ border: PRIMARY_DARK }} />
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {suggestedNext.title}{suggestedNext.duration != null ? ` · ${suggestedNext.duration}m` : ""}
-                          </div>
-                          <StepNotes notes={suggestedNext.notes} title={suggestedNext.title} color={PRIMARY_DARK} />
-                        </div>
-                        {suggestedNext.date && suggestedNext.date !== todayISO && (
-                          <div style={{ flexShrink: 0 }}>
-                            <UrgencyBadge iso={suggestedNext.date} done={false} leadDays={suggestedNext.groupId || suggestedNext.eduId ? null : defaultLeadDays(suggestedNext)} />
-                          </div>
-                        )}
-                        {onStartFocus && (
-                          <button
-                            onClick={() => onStartFocus(suggestedNext.id, suggestedNext.title, focusMinutes)}
-                            className="hoverable"
-                            style={{
-                              flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
-                              background: "#fff", color: PRIMARY_DARK, fontSize: 12, fontWeight: 700,
-                            }}
-                          >
-                            Start
-                          </button>
-                        )}
-                      </div>
-                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {todaysUntimed.filter((t) => t.id !== suggestedNext?.id).map((t) => {
+                      {displayUntimed.map((t, i) => {
+                        const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
-                        const dragProps = onReorderTasks
-                          ? {
-                              draggable: true,
-                              onDragStart: () => setDraggedTaskId(t.id),
-                              onDragOver: (e) => e.preventDefault(),
-                              onDrop: (e) => { e.preventDefault(); dropUntimedOn(t.id); },
-                              onDragEnd: () => setDraggedTaskId(null),
-                            }
-                          : {};
                         return (
                           <div
                             key={t.id}
-                            {...dragProps}
+                            ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
-                              display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 14,
-                              border: `1px solid ${BORDER}`, background: "#fff",
-                              opacity: draggedTaskId === t.id ? 0.4 : 1,
+                              display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
+                              background: isTop ? PRIMARY_TINT : "#fff",
+                              border: `1px solid ${isTop ? PRIMARY : BORDER}`,
+                              opacity: draggingId === t.id ? 0.4 : 1,
                             }}
                           >
                             {onReorderTasks && (
-                              <div title="Drag to reorder" style={{ display: "flex", flexShrink: 0, color: "#D1D5DB", cursor: "grab" }}>
+                              <div
+                                onPointerDown={startDrag(t.id)}
+                                title="Drag to reorder — the top spot is what Start launches"
+                                style={{ display: "flex", flexShrink: 0, color: isTop ? PRIMARY_DARK : "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
+                              >
                                 <GripVertical size={14} strokeWidth={2} />
                               </div>
                             )}
-                            {onToggleDone && <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={col} size={16} />}
+                            {onToggleDone && (
+                              <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
+                            )}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                              <StepNotes notes={t.notes} title={t.title} />
+                              <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {t.title}{isTop && t.duration != null ? ` · ${t.duration}m` : ""}
+                              </div>
+                              <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} />
                             </div>
-                            {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
+                            {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{t.duration}m</div>}
                             {t.date && t.date !== todayISO && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
+                            )}
+                            {isTop && onStartFocus && (
+                              <button
+                                onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
+                                className="hoverable"
+                                style={{
+                                  flexShrink: 0, padding: "6px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+                                  background: "#fff", color: PRIMARY_DARK, fontSize: 12, fontWeight: 700,
+                                }}
+                              >
+                                Start
+                              </button>
                             )}
                           </div>
                         );
@@ -426,12 +442,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             <div ref={focusSlotRef} style={{ flexShrink: 0 }} />
           ) : (
             <div style={{ ...cardStyle, background: "#fff", boxShadow: "none", padding: "12px 14px", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <div style={{ fontFamily: serifFont, fontSize: 18, color: INK }}>Focus Timer</div>
-                <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0 }}>
-                  <Clock size={12} />
-                </div>
-              </div>
+              <div style={{ fontFamily: serifFont, fontSize: 18, color: INK, marginBottom: 6 }}>Focus Timer</div>
 
               <div style={{ position: "relative", width: 92, height: 92, margin: "0 auto 8px" }}>
                 <svg width="92" height="92" viewBox="0 0 92 92">
