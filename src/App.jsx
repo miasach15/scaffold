@@ -82,8 +82,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // separately checked off by hand, which reads as the SAME thing needing two different
   // "done" actions. Symmetric the other way too: unchecking a session un-finishes the
   // assignment if it had auto-completed this way.
-  const setTaskDone = (id, done) => {
-    setTaskDoneRaw(id, done);
+  const setTaskDone = (id, done, actualMinutes) => {
+    setTaskDoneRaw(id, done, actualMinutes);
     const t = tasks.find((x) => x.id === id);
     if (!t?.eduId) return;
     const linked = tasks.filter((x) => x.eduId === t.eduId);
@@ -887,7 +887,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           setView={setView}
           onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
-          onComplete={() => { if (focusTask.id) setTaskDone(focusTask.id, true); }}
+          onComplete={(investedMin) => { if (focusTask.id) setTaskDone(focusTask.id, true, investedMin); }}
           defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
           onOpenDetail={openTaskDetail}
           portalTarget={view === "dashboard" ? dashboardFocusSlot : null}

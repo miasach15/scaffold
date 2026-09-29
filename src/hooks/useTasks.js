@@ -18,6 +18,7 @@ const fromRow = (row) => ({
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
   orderIndex: row.order_index == null ? null : Number(row.order_index),
+  actualMinutes: row.actual_minutes == null ? null : Number(row.actual_minutes),
 });
 
 export function useTasks(userId) {
@@ -63,9 +64,14 @@ export function useTasks(userId) {
     [userId]
   );
 
-  const setTaskDone = useCallback(async (id, done) => {
-    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done } : t)));
-    await supabase.from("tasks").update({ done }).eq("id", id);
+  // actualMinutes is only ever passed when a focus session finishes a task — it's how
+  // long that session actually ran, not an estimate. Left undefined for every other way
+  // a task gets checked off (nothing real to record), so it's never overwritten with a
+  // guess.
+  const setTaskDone = useCallback(async (id, done, actualMinutes) => {
+    const hasActual = actualMinutes !== undefined;
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done, ...(hasActual ? { actualMinutes } : {}) } : t)));
+    await supabase.from("tasks").update(hasActual ? { done, actual_minutes: actualMinutes } : { done }).eq("id", id);
   }, []);
 
   const setTaskCategory = useCallback(async (id, category) => {

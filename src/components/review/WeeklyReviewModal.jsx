@@ -1,10 +1,28 @@
 import { ListChecks } from "lucide-react";
-import { HABIT_COLOR, PRIMARY, TASK_COLOR, serifFont } from "../../lib/constants";
+import { BORDER, HABIT_COLOR, INK, MUTED, PRIMARY, PRIMARY_DARK, TASK_COLOR, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, formatDuration, getLocalToday, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import ModalPortal from "../shared/ModalPortal";
+
+function StatTile({ value, label }) {
+  return (
+    <div style={{ flex: 1, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
+      <div style={{ fontFamily: serifFont, fontSize: 19, color: INK }}>{value}</div>
+      <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+function InsightCard({ title, body }) {
+  return (
+    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: "10px 12px", marginBottom: 8 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 2 }}>{title}</div>
+      <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>{body}</div>
+    </div>
+  );
+}
 
 const CONFETTI_COLORS = ["#7B6EF0", "#F0923B", "#34A870", "#E8608F", "#2CAFA0", "#3E7BFA"];
 
@@ -76,18 +94,60 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
   const totalWins = tasksDone.length + actionsDone.length;
   const isSunday = new Date().getDay() === 0;
 
+  // Time actually focused this week — only tasks finished through a Focus Session carry
+  // a real actualMinutes (see setTaskDone), so this is real elapsed time, not a guess.
+  const focusedMin = tasksDone.reduce((sum, t) => sum + (t.actualMinutes || 0), 0);
+  const habitCheckIns = habitStats.reduce((sum, h) => sum + h.count, 0);
+
+  // "How close were your estimates" — only over the subset of this week's finished tasks
+  // that actually have both a planned duration AND a real tracked time, so it's never
+  // computed from a guess on either side.
+  const tracked = tasksDone.filter((t) => t.duration > 0 && t.actualMinutes != null);
+  const paceInsight = (() => {
+    if (tracked.length === 0) return null;
+    const avgRatio = tracked.reduce((sum, t) => sum + t.actualMinutes / t.duration, 0) / tracked.length;
+    if (avgRatio >= 0.85 && avgRatio <= 1.15) return "Your estimates were close to how long things actually took this week.";
+    if (avgRatio > 1.15) return `Tracked sessions ran about ${Math.round((avgRatio - 1) * 100)}% longer than planned this week — worth padding your estimates a little.`;
+    return `Tracked sessions wrapped up about ${Math.round((1 - avgRatio) * 100)}% faster than planned this week.`;
+  })();
+
+  // Reassurance, not a guilt count: nothing due this week (or earlier, still unfinished)
+  // just vanishes — it's still sitting in Tasks/Dashboard waiting, same as always.
+  const today = getLocalToday();
+  const stillOpen = tasks.filter((t) => !t.done && (!t.date || t.date <= today)).length;
+
   return (
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       {isSunday && <Confetti />}
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
-        <div style={{ fontSize: 12.5, color: "#93A0AD", marginBottom: 16 }}>{weekStart} to {weekEnd}</div>
+        <div style={{ fontSize: 12.5, color: "#93A0AD" }}>{weekStart} to {weekEnd}</div>
+        <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 16 }}>No streaks, no score — just what actually happened.</div>
 
         {totalWins === 0 && habitStats.length === 0 && entriesThisWeek.length === 0 ? (
           <EmptyState text="Nothing marked done this week yet. Come back once you've checked a few things off." />
         ) : (
           <>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontFamily: serifFont, fontSize: 32, color: INK, lineHeight: 1 }}>{totalWins}</div>
+              <div style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{totalWins === 1 ? "thing" : "things"} finished this week</div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <StatTile value={tasksDone.length} label="tasks done" />
+              <StatTile value={focusedMin > 0 ? formatDuration(focusedMin) : "—"} label="focused" />
+              <StatTile value={habitCheckIns} label="habit check-ins" />
+            </div>
+
+            {paceInsight && <InsightCard title="A plan that learns your pace" body={paceInsight} />}
+            {stillOpen > 0 && (
+              <InsightCard
+                title="Nothing waiting"
+                body={stillOpen === 1 ? "1 open thing still has a place — it'll keep showing up on Dashboard until it's done, nothing's lost." : `${stillOpen} open things still have a place — they'll keep showing up on Dashboard until they're done, nothing's lost.`}
+              />
+            )}
+
             {tasksDone.length > 0 && (
               <ReviewSection title={`Tasks completed (${tasksDone.length})`} items={tasksDone.map((t) => t.title)} color={TASK_COLOR} />
             )}

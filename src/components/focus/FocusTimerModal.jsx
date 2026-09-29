@@ -206,7 +206,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     ensureAudioCtx();
     setRunning(false);
     setCompletedAt(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
-    onComplete();
+    onComplete(Math.round(Math.max(0, totalSeconds - remaining) / 60));
     setCelebrating(true);
   };
 
