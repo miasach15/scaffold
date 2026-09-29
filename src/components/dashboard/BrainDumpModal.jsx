@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Mic, Square } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
+import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { PRIMARY_DARK, SURFACE } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { DatePickerButton } from "../shared/Misc";
@@ -48,38 +49,11 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
   const [drafts, setDrafts] = useState(null); // null = still on the dump step
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef(null);
-  // Chrome/Safari/Edge ship this; Firefox doesn't — the mic button just doesn't render
-  // there rather than showing something that'll error the moment it's clicked.
-  const SpeechRecognitionCtor = typeof window !== "undefined" ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
-
-  useEffect(() => () => recognitionRef.current?.stop(), []);
-
   // Each finalized phrase becomes its own line — talking naturally, pausing between
   // separate things on your mind, lands them exactly like typing one per line would.
-  const toggleListening = () => {
-    if (listening) {
-      recognitionRef.current?.stop();
-      return;
-    }
-    const rec = new SpeechRecognitionCtor();
-    rec.continuous = true;
-    rec.interimResults = false;
-    rec.lang = "en-US";
-    rec.onresult = (e) => {
-      let added = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) added += e.results[i][0].transcript.trim() + "\n";
-      }
-      if (added) setDump((d) => (d && !d.endsWith("\n") ? d + "\n" : d) + added);
-    };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
-    recognitionRef.current = rec;
-    rec.start();
-    setListening(true);
-  };
+  const { supported: speechSupported, listening, toggle: toggleListening } = useSpeechToText((phrase) => {
+    setDump((d) => (d && !d.endsWith("\n") ? d + "\n" : d) + phrase + "\n");
+  });
 
   const organize = () => {
     const lines = dump.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -160,9 +134,9 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                 }}
                 placeholder={"Finish lab report\nCall the dentist\nBuy mom a gift\n..."}
                 rows={8}
-                style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "inherit", paddingRight: SpeechRecognitionCtor ? 40 : undefined }}
+                style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "inherit", paddingRight: speechSupported ? 40 : undefined }}
               />
-              {SpeechRecognitionCtor && (
+              {speechSupported && (
                 <button
                   onClick={toggleListening}
                   title={listening ? "Stop listening" : "Talk it out instead of typing"}

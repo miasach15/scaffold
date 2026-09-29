@@ -19,8 +19,11 @@ import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import BrainDumpModal from "./BrainDumpModal";
+import CheckinModal from "./CheckinModal";
 import WorkTitle from "../shared/WorkTitle";
 import StepNotes from "../shared/StepNotes";
+
+const CHECKIN_INTERVAL_MS = 60 * 60 * 1000;
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
@@ -282,6 +285,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       onAutoOpenBrainDumpHandled?.();
     }
   }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
+
+  // A schedule nobody's checked in on since this morning is just a guess by afternoon —
+  // this is what keeps "done around X" honest instead of quietly going stale. Fires on
+  // its own every hour Dashboard's actually open; the header button next to it covers
+  // checking in early instead of waiting the full hour out.
+  const [showCheckin, setShowCheckin] = useState(false);
+  const openTodayItems = [...todaysTimedTasks, ...todaysUntimed].filter((t) => t.id);
+  useEffect(() => {
+    const timer = setInterval(() => setShowCheckin(true), CHECKIN_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, []);
   // Browsing which week this widget shows is local to Dashboard — it's just a peek, not
   // the same "which day is selected" state Calendar owns; jumping back to this week is
   // just clicking the range label once you've moved off it.
@@ -307,7 +321,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "flex-end", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+          {openTodayItems.length > 0 && (
+            <button
+              onClick={() => setShowCheckin(true)}
+              className="hoverable"
+              style={{ ...ghostBtn, flexShrink: 0 }}
+              title="Say what you got done — updates the rest of today's plan to match"
+            >
+              Check in
+            </button>
+          )}
           <button
             onClick={() => setShowBrainDump(true)}
             className="hoverable"
@@ -319,6 +343,13 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       </div>
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
+      {showCheckin && (
+        <CheckinModal
+          openItems={openTodayItems}
+          onClose={() => setShowCheckin(false)}
+          onMarkDone={(ids) => ids.forEach((id) => onToggleDone(id, true))}
+        />
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`
