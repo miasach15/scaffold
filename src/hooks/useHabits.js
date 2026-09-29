@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { toISO } from "../lib/dateHelpers";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -36,7 +37,8 @@ export function useHabits(userId) {
       if (habits.some((h) => h.title.toLowerCase() === tt.toLowerCase())) return;
       const row = { id: uid(), user_id: userId, title: tt };
       setHabits((hs) => [...hs, { ...row, doneDates: [] }]);
-      await supabase.from("habits").insert(row);
+      const { error } = await supabase.from("habits").insert(row);
+      if (error) reportSaveError();
     },
     [userId, habits]
   );
@@ -46,14 +48,16 @@ export function useHabits(userId) {
       if (!userId || titles.length === 0) return;
       const rows = titles.map((t) => ({ id: uid(), user_id: userId, title: t }));
       setHabits((hs) => [...hs, ...rows.map((r) => ({ ...r, doneDates: [] }))]);
-      await supabase.from("habits").insert(rows);
+      const { error } = await supabase.from("habits").insert(rows);
+      if (error) reportSaveError();
     },
     [userId]
   );
 
   const removeHabit = useCallback(async (id) => {
     setHabits((hs) => hs.filter((h) => h.id !== id));
-    await supabase.from("habits").delete().eq("id", id);
+    const { error } = await supabase.from("habits").delete().eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const setDone = useCallback(
@@ -67,9 +71,11 @@ export function useHabits(userId) {
         return { ...h, doneDates };
       }));
       if (done) {
-        await supabase.from("habit_done_dates").upsert({ id: uid(), user_id: userId, habit_id: id, date: dateISO }, { onConflict: "habit_id,date" });
+        const { error } = await supabase.from("habit_done_dates").upsert({ id: uid(), user_id: userId, habit_id: id, date: dateISO }, { onConflict: "habit_id,date" });
+        if (error) reportSaveError();
       } else {
-        await supabase.from("habit_done_dates").delete().eq("habit_id", id).eq("date", dateISO);
+        const { error } = await supabase.from("habit_done_dates").delete().eq("habit_id", id).eq("date", dateISO);
+        if (error) reportSaveError();
       }
     },
     [userId]

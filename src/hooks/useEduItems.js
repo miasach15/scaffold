@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -59,6 +60,7 @@ export function useEduItems(userId) {
       const { error } = await supabase.from("edu_items").insert(rows);
       if (error) {
         console.error("Failed to save edu item(s) — reverting:", error);
+        reportSaveError();
         setEduItems((e) => e.filter((x) => !rows.some((r) => r.id === x.id)));
         return [];
       }
@@ -77,38 +79,46 @@ export function useEduItems(userId) {
       return { ...x, dueDate, dueStart };
     }));
     const { error } = await supabase.from("edu_items").update({ due_date: dueDate, due_start: dueStart }).eq("id", id);
-    if (error && prevItem) {
-      console.error("Failed to save deadline change — reverting:", error);
-      setEduItems((e) => e.map((x) => (x.id === id ? prevItem : x)));
+    if (error) {
+      reportSaveError();
+      if (prevItem) {
+        console.error("Failed to save deadline change — reverting:", error);
+        setEduItems((e) => e.map((x) => (x.id === id ? prevItem : x)));
+      }
     }
   }, []);
 
   const setDone = useCallback(async (id, done) => {
     setEduItems((e) => e.map((x) => (x.id === id ? { ...x, done } : x)));
-    await supabase.from("edu_items").update({ done }).eq("id", id);
+    const { error } = await supabase.from("edu_items").update({ done }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const removeItem = useCallback(async (id) => {
     setEduItems((e) => e.filter((x) => x.id !== id));
-    await supabase.from("edu_items").delete().eq("id", id); // cascades to linked tasks server-side
+    const { error } = await supabase.from("edu_items").delete().eq("id", id); // cascades to linked tasks server-side
+    if (error) reportSaveError();
   }, []);
 
   // Either value can be null to clear it — e.g. entering just "18" out of nothing yet,
   // or clearing a mis-entered score back to blank.
   const setScore = useCallback(async (id, scoreEarned, scorePossible) => {
     setEduItems((e) => e.map((x) => (x.id === id ? { ...x, scoreEarned, scorePossible } : x)));
-    await supabase.from("edu_items").update({ score_earned: scoreEarned, score_possible: scorePossible }).eq("id", id);
+    const { error } = await supabase.from("edu_items").update({ score_earned: scoreEarned, score_possible: scorePossible }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // categoryId null = "no category" (excluded from a weighted class's percent until assigned)
   const setGradeCategory = useCallback(async (id, categoryId) => {
     setEduItems((e) => e.map((x) => (x.id === id ? { ...x, gradeCategoryId: categoryId } : x)));
-    await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
+    const { error } = await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const setFlexible = useCallback(async (id, flexible) => {
     setEduItems((e) => e.map((x) => (x.id === id ? { ...x, flexible } : x)));
-    await supabase.from("edu_items").update({ flexible }).eq("id", id);
+    const { error } = await supabase.from("edu_items").update({ flexible }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setDeadline, setFlexible };

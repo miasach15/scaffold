@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({ id: row.id, text: row.text, category: row.category || "Personal", createdAt: row.created_at });
 
@@ -27,21 +28,24 @@ export function useInbox(userId) {
       if (!userId || !text.trim()) return;
       const row = { id: uid(), user_id: userId, text: text.trim(), category };
       setItems((its) => [...its, fromRow(row)]);
-      await supabase.from("inbox_items").insert(row);
+      const { error } = await supabase.from("inbox_items").insert(row);
+      if (error) reportSaveError();
     },
     [userId]
   );
 
   const removeItem = useCallback(async (id) => {
     setItems((its) => its.filter((it) => it.id !== id));
-    await supabase.from("inbox_items").delete().eq("id", id);
+    const { error } = await supabase.from("inbox_items").delete().eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // See useTasks' renameCategoryEverywhere — carries every inbox item already tagged
   // with the old category name over to the new one.
   const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
     setItems((its) => its.map((it) => (it.category === oldKey ? { ...it, category: newKey } : it)));
-    await supabase.from("inbox_items").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    const { error } = await supabase.from("inbox_items").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    if (error) reportSaveError();
   }, [userId]);
 
   return { items, loading, addItem, removeItem, renameCategoryEverywhere };

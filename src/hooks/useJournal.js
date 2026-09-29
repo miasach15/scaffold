@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { toISO } from "../lib/dateHelpers";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -37,14 +38,16 @@ export function useJournal(userId) {
       const nowIso = new Date().toISOString();
       const row = { id: uid(), user_id: userId, date: toISO(new Date()), created_at: nowIso, prompt: prompt || null, text: text.trim() };
       setEntries((es) => [fromRow(row), ...es]);
-      await supabase.from("journal_entries").insert(row);
+      const { error } = await supabase.from("journal_entries").insert(row);
+      if (error) reportSaveError();
     },
     [userId]
   );
 
   const removeEntry = useCallback(async (id) => {
     setEntries((es) => es.filter((e) => e.id !== id));
-    await supabase.from("journal_entries").delete().eq("id", id);
+    const { error } = await supabase.from("journal_entries").delete().eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   return { entries, loading, addEntry, removeEntry };

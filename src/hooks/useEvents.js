@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -41,7 +42,8 @@ export function useEvents(userId) {
         category: o.category || "Personal",
       }));
       setEvents((es) => [...es, ...rows.map(fromRow)]);
-      await supabase.from("events").insert(rows);
+      const { error } = await supabase.from("events").insert(rows);
+      if (error) reportSaveError();
     },
     [userId]
   );
@@ -54,19 +56,22 @@ export function useEvents(userId) {
     if ("start" in patch) dbPatch.start = patch.start;
     if ("duration" in patch) dbPatch.duration = patch.duration;
     if ("category" in patch) dbPatch.category = patch.category;
-    await supabase.from("events").update(dbPatch).eq("id", id);
+    const { error } = await supabase.from("events").update(dbPatch).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const removeEvent = useCallback(async (id) => {
     setEvents((es) => es.filter((e) => e.id !== id));
-    await supabase.from("events").delete().eq("id", id);
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // See useTasks' renameCategoryEverywhere — same idea, carries every event already
   // tagged with the old category name over to the new one instead of orphaning it.
   const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
     setEvents((es) => es.map((e) => (e.category === oldKey ? { ...e, category: newKey } : e)));
-    await supabase.from("events").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    const { error } = await supabase.from("events").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    if (error) reportSaveError();
   }, [userId]);
 
   return { events, loading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere };

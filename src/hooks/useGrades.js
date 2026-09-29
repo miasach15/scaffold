@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { reportSaveError } from "../lib/saveErrors";
 
 const categoryFromRow = (row) => ({ id: row.id, name: row.name, weight: Number(row.weight) || 0, orderIndex: row.order_index });
 const classFromRow = (row) => ({
@@ -46,7 +47,8 @@ export function useGrades(userId) {
       const row = { id: uid(), user_id: userId, subject, grading_mode: "points" };
       const created = { id: row.id, subject, gradingMode: "points", categories: [] };
       setClasses((cs) => [...cs, created]);
-      await supabase.from("grade_classes").insert(row);
+      const { error } = await supabase.from("grade_classes").insert(row);
+      if (error) reportSaveError();
       return created;
     },
     [userId, classes]
@@ -56,7 +58,8 @@ export function useGrades(userId) {
     async (subject, mode) => {
       const cls = await ensureClass(subject);
       setClasses((cs) => cs.map((c) => (c.id === cls.id ? { ...c, gradingMode: mode } : c)));
-      await supabase.from("grade_classes").update({ grading_mode: mode }).eq("id", cls.id);
+      const { error } = await supabase.from("grade_classes").update({ grading_mode: mode }).eq("id", cls.id);
+      if (error) reportSaveError();
     },
     [ensureClass]
   );
@@ -67,7 +70,8 @@ export function useGrades(userId) {
       const cls = await ensureClass(subject);
       const row = { id: uid(), user_id: userId, class_id: cls.id, name: name.trim(), weight: Number(weight) || 0, order_index: cls.categories.length };
       setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, categories: [...c.categories, categoryFromRow(row)] })));
-      await supabase.from("grade_categories").insert(row);
+      const { error } = await supabase.from("grade_categories").insert(row);
+      if (error) reportSaveError();
     },
     [userId, ensureClass]
   );
@@ -75,18 +79,21 @@ export function useGrades(userId) {
   const renameCategory = useCallback(async (classId, categoryId, name) => {
     if (!name.trim()) return;
     setClasses((cs) => cs.map((c) => (c.id !== classId ? c : { ...c, categories: c.categories.map((cat) => (cat.id === categoryId ? { ...cat, name: name.trim() } : cat)) })));
-    await supabase.from("grade_categories").update({ name: name.trim() }).eq("id", categoryId);
+    const { error } = await supabase.from("grade_categories").update({ name: name.trim() }).eq("id", categoryId);
+    if (error) reportSaveError();
   }, []);
 
   const setCategoryWeight = useCallback(async (classId, categoryId, weight) => {
     const w = Number(weight) || 0;
     setClasses((cs) => cs.map((c) => (c.id !== classId ? c : { ...c, categories: c.categories.map((cat) => (cat.id === categoryId ? { ...cat, weight: w } : cat)) })));
-    await supabase.from("grade_categories").update({ weight: w }).eq("id", categoryId);
+    const { error } = await supabase.from("grade_categories").update({ weight: w }).eq("id", categoryId);
+    if (error) reportSaveError();
   }, []);
 
   const removeCategory = useCallback(async (classId, categoryId) => {
     setClasses((cs) => cs.map((c) => (c.id !== classId ? c : { ...c, categories: c.categories.filter((cat) => cat.id !== categoryId) })));
-    await supabase.from("grade_categories").delete().eq("id", categoryId); // edu_items.grade_category_id nulls out server-side
+    const { error } = await supabase.from("grade_categories").delete().eq("id", categoryId); // edu_items.grade_category_id nulls out server-side
+    if (error) reportSaveError();
   }, []);
 
   // Removes a class's grading setup (mode + categories) — not its graded items, which
@@ -95,7 +102,8 @@ export function useGrades(userId) {
   // just gone, since there was nothing else to derive it from.
   const removeClass = useCallback(async (classId) => {
     setClasses((cs) => cs.filter((c) => c.id !== classId));
-    await supabase.from("grade_classes").delete().eq("id", classId); // cascades grade_categories, nulls edu_items.grade_category_id
+    const { error } = await supabase.from("grade_classes").delete().eq("id", classId); // cascades grade_categories, nulls edu_items.grade_category_id
+    if (error) reportSaveError();
   }, []);
 
   return { classes, loading, ensureClass, setGradingMode, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };

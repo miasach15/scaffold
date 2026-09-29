@@ -25,6 +25,7 @@ import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import UndoToast from "./components/shared/UndoToast";
+import SaveErrorToast from "./components/shared/SaveErrorToast";
 import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import { useDarkMode } from "./hooks/useDarkMode";
@@ -923,6 +924,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
       {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
+      <SaveErrorToast />
 
       {showSearch && (
         <SearchModal

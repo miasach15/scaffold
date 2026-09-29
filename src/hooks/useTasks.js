@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -58,7 +59,8 @@ export function useTasks(userId) {
         notes,
       };
       setTasks((ts) => [...ts, fromRow(row)]);
-      await supabase.from("tasks").insert(row);
+      const { error } = await supabase.from("tasks").insert(row);
+      if (error) reportSaveError();
       return row.id;
     },
     [userId]
@@ -71,23 +73,27 @@ export function useTasks(userId) {
   const setTaskDone = useCallback(async (id, done, actualMinutes) => {
     const hasActual = actualMinutes !== undefined;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done, ...(hasActual ? { actualMinutes } : {}) } : t)));
-    await supabase.from("tasks").update(hasActual ? { done, actual_minutes: actualMinutes } : { done }).eq("id", id);
+    const { error } = await supabase.from("tasks").update(hasActual ? { done, actual_minutes: actualMinutes } : { done }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const setTaskCategory = useCallback(async (id, category) => {
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, category } : t)));
-    await supabase.from("tasks").update({ category }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ category }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const renameTask = useCallback(async (id, title) => {
     if (!title.trim()) return;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, title: title.trim() } : t)));
-    await supabase.from("tasks").update({ title: title.trim() }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ title: title.trim() }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const setTaskDate = useCallback(async (id, date) => {
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, date: date || null } : t)));
-    await supabase.from("tasks").update({ date: date || null }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ date: date || null }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // Setting a specific time is what actually makes a task "due at" that time — it's what
@@ -103,7 +109,8 @@ export function useTasks(userId) {
       duration = start == null ? null : (t.duration ?? 60);
       return { ...t, start, duration };
     }));
-    await supabase.from("tasks").update({ start, duration }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ start, duration }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // Adjusts just the length of an already-timed task's block — see setTaskStart above
@@ -111,7 +118,8 @@ export function useTasks(userId) {
   // whatever last set the start time.
   const setTaskDuration = useCallback(async (id, duration) => {
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, duration } : t)));
-    await supabase.from("tasks").update({ duration }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ duration }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // Updates the shared due date/time across every row in a "break it down" group — the
@@ -125,16 +133,20 @@ export function useTasks(userId) {
       return { ...t, groupDueDate: date, groupDueStart: start };
     }));
     const { error } = await supabase.from("tasks").update({ group_due_date: date, group_due_start: start }).eq("group_id", groupId);
-    if (error && previous) {
-      console.error("Failed to save group due date — reverting:", error);
-      setTasks((ts) => ts.map((t) => (t.groupId === groupId ? { ...t, ...previous } : t)));
+    if (error) {
+      reportSaveError();
+      if (previous) {
+        console.error("Failed to save group due date — reverting:", error);
+        setTasks((ts) => ts.map((t) => (t.groupId === groupId ? { ...t, ...previous } : t)));
+      }
     }
   }, []);
 
   const setTaskNotes = useCallback(async (id, notes) => {
     const trimmed = notes && notes.trim() ? notes.trim() : null;
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, notes: trimmed } : t)));
-    await supabase.from("tasks").update({ notes: trimmed }).eq("id", id);
+    const { error } = await supabase.from("tasks").update({ notes: trimmed }).eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   // Persists a manual order for whatever set of tasks is currently on screen (e.g.
@@ -147,12 +159,14 @@ export function useTasks(userId) {
   const reorderTasks = useCallback(async (orderedIds) => {
     const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
     setTasks((ts) => ts.map((t) => (orderMap.has(t.id) ? { ...t, orderIndex: orderMap.get(t.id) } : t)));
-    await Promise.all(orderedIds.map((id, i) => supabase.from("tasks").update({ order_index: i }).eq("id", id)));
+    const results = await Promise.all(orderedIds.map((id, i) => supabase.from("tasks").update({ order_index: i }).eq("id", id)));
+    if (results.some((r) => r.error)) reportSaveError();
   }, []);
 
   const removeTask = useCallback(async (id) => {
     setTasks((ts) => ts.filter((t) => t.id !== id));
-    await supabase.from("tasks").delete().eq("id", id);
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+    if (error) reportSaveError();
   }, []);
 
   const removeTasksByEduId = useCallback(async (eduId) => {
@@ -163,7 +177,8 @@ export function useTasks(userId) {
   const rescheduleTask = useCallback(async (taskId, dateISO, hour) => {
     const start = hour == null ? null : hour;
     setTasks((ts) => ts.map((t) => (t.id === taskId ? { ...t, date: dateISO, start } : t)));
-    await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
+    const { error } = await supabase.from("tasks").update({ date: dateISO, start }).eq("id", taskId);
+    if (error) reportSaveError();
   }, []);
 
   // Renaming a category (see App.jsx's renameCategory) only touched the category list
@@ -172,7 +187,8 @@ export function useTasks(userId) {
   // rename. This carries every matching task over to the new name.
   const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
     setTasks((ts) => ts.map((t) => (t.category === oldKey ? { ...t, category: newKey } : t)));
-    await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    const { error } = await supabase.from("tasks").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
+    if (error) reportSaveError();
   }, [userId]);
 
   return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };

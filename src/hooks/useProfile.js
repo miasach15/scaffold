@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_CATEGORY_KEYS, DEFAULT_THEME } from "../lib/constants";
+import { reportSaveError } from "../lib/saveErrors";
 
 const fromRow = (row) => ({
   name: row.name || "",
@@ -81,7 +82,10 @@ export function useProfile(userId) {
       if ("phoneNumber" in patch) dbPatch.phone_number = patch.phoneNumber || null;
       if ("smsRemindersEnabled" in patch) dbPatch.sms_reminders_enabled = patch.smsRemindersEnabled;
       const { error } = await supabase.from("profiles").update(dbPatch).eq("id", userId);
-      if (error) console.error("updateProfile failed:", error.message);
+      if (error) {
+        console.error("updateProfile failed:", error.message);
+        reportSaveError();
+      }
     },
     [userId]
   );
