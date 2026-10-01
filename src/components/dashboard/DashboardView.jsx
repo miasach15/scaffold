@@ -326,11 +326,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             onClick={() => setShowBrainDump(true)}
             className="hoverable"
             style={{
-              display: "flex", alignItems: "center", gap: 7, flexShrink: 0, border: "none", cursor: "pointer",
-              background: INK, color: "#fff", borderRadius: 999, padding: "9px 16px 9px 13px", fontSize: 13, fontWeight: 600,
+              display: "flex", alignItems: "center", gap: 7, flexShrink: 0, border: `1px solid ${BORDER}`, cursor: "pointer",
+              background: "#fff", color: INK, borderRadius: 999, padding: "8px 15px 8px 12px", fontSize: 13, fontWeight: 500,
             }}
           >
-            <NotebookPen size={15} strokeWidth={2} /> Brain dump
+            <NotebookPen size={15} strokeWidth={1.8} color={MUTED} /> Brain dump
           </button>
           {openTodayItems.length > 0 && (
             <button
