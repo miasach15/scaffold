@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flame, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, NotebookPen } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -321,24 +321,27 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
+          <button
+            onClick={() => setShowBrainDump(true)}
+            className="hoverable"
+            style={{
+              display: "flex", alignItems: "center", gap: 7, flexShrink: 0, border: "none", cursor: "pointer",
+              background: INK, color: "#fff", borderRadius: 999, padding: "9px 16px 9px 13px", fontSize: 13, fontWeight: 600,
+            }}
+          >
+            <NotebookPen size={15} strokeWidth={2} /> Brain dump
+          </button>
           {openTodayItems.length > 0 && (
             <button
               onClick={() => setShowCheckin(true)}
               className="hoverable"
-              style={{ ...ghostBtn, flexShrink: 0 }}
+              style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, border: "none", background: "none", cursor: "pointer", color: INK, fontSize: 13.5, fontWeight: 500, padding: 0 }}
               title="Say what you got done — updates the rest of today's plan to match"
             >
-              Check in
+              <MessageCircle size={16} strokeWidth={1.8} /> Check in
             </button>
           )}
-          <button
-            onClick={() => setShowBrainDump(true)}
-            className="hoverable"
-            style={{ ...ghostBtn, flexShrink: 0 }}
-          >
-            Brain dump
-          </button>
         </div>
       </div>
 
