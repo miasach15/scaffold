@@ -174,8 +174,8 @@ export const TONE = {
   carried: { bg: "#E0E2EB", border: "#A1A9CE", text: "#4A5BA8" },
 };
 // Display/headline accent — DM Sans, per the brand kit's typography update (was
-// Adamina). Every screen that already reads this constant (Journal, TodaySection,
-// MonthView, CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
+// Adamina). Every screen that already reads this constant (TodaySection, MonthView,
+// CalendarView, WhatNowModal, Misc.jsx empty states, WeeklyReviewModal,
 // HabitHistoryModal, SettingsModal, Goals, Habits) picks up the change automatically.
 // Unlike Adamina, DM Sans actually ships the weights it's loaded at (400/500/600/700/800
 // + italic 400/700 — see the @import in App.jsx/AuthScreen.jsx/OnboardingQuiz.jsx), so a
@@ -256,39 +256,4 @@ export const SUGGESTED_HABITS = [
   "Pack lunch", "Declutter one thing", "Get sunlight", "Stretch before bed", "No sugar today",
   "Move your body", "Save a little money", "Say something kind", "Unplug for an hour",
 ];
-export const JOURNAL_PROMPTS = {
-  Confidence: [
-    "What's something you did today that you're proud of?",
-    "What's a compliment you'd give yourself right now?",
-    "When did you last do something that scared you a little?",
-    "What would you tell your past self about what you're capable of?",
-    "What's something people misjudge about you, and why are they wrong?",
-    "If your inner critic had to write you a permission slip today, what would it say?",
-    "Describe yourself as if you were a legendary creature. What's your power?",
-    "If today were a chapter title in your autobiography, what would it be?",
-    "What's a compliment you got once that you still think about?",
-    "What's a hard thing you made look easy?",
-    "What's an opinion you hold that you'd defend in front of anyone?",
-  ],
-  Gratitude: [
-    "What's one small thing that made today better?",
-    "Who is someone you're grateful for right now, and why?",
-    "What's something about today you'd want to remember?",
-    "What's something in your daily routine you'd miss if it were gone?",
-    "What's a place that makes you feel calm?",
-    "What's a tiny miracle of modern life you take for granted?",
-    "What's something your younger self would be amazed you have now?",
-    "What part of today would a time traveler from 100 years ago be most amazed by?",
-  ],
-  Fun: [
-    "What's something you're looking forward to?",
-    "If you could teleport anywhere right now, where would you go?",
-    "What's a weird combination of foods you secretly love?",
-    "What fictional world would you want to live in for a day?",
-    "You wake up with a random superpower tomorrow, what is it and what do you do first?",
-    "If your life had a laugh track, what moment today would trigger it?",
-    "Describe your ideal \"do nothing\" day in exhausting detail.",
-  ],
-};
-
 export const ROW_H = 44; // px per hour

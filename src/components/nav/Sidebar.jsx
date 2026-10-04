@@ -1,13 +1,13 @@
 import { useState } from "react";
 import {
-  Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat, BookOpen,
+  Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat,
   Search, ListChecks, Settings, LogOut, Menu, X,
 } from "lucide-react";
 import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 
 // Education sits right under Tasks (the "what am I working on" cluster), Grades right
-// under Habits, Journal last.
+// under Habits.
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
@@ -16,22 +16,21 @@ const NAV_ITEMS = [
   { key: "goals", label: "Goals", icon: Target },
   { key: "habits", label: "Habits", icon: Repeat },
   { key: "grades", label: "Grades", icon: Percent },
-  { key: "journal", label: "Journal", icon: BookOpen },
 ];
 
 // On a phone, these four get a persistent one-tap bottom tab (matched to the Figma
 // iPhone mockups' bottom nav pattern) instead of living inside the hamburger drawer —
-// they're the pages people jump into constantly. Everything else (Goals/Habits/Grades/
-// Journal) plus search/settings/weekly review/log out stays in the "More" drawer, which
-// is the exact same slide-in panel the old hamburger button opened — tapping the bottom
-// bar's own Menu icon just reuses it instead of introducing a separate mobile UI.
+// they're the pages people jump into constantly. Everything else (Goals/Habits/Grades)
+// plus search/settings/weekly review/log out stays in the "More" drawer, which is the
+// exact same slide-in panel the old hamburger button opened — tapping the bottom bar's
+// own Menu icon just reuses it instead of introducing a separate mobile UI.
 const TAB_BAR_ITEMS = [
   { key: "dashboard", label: "Home", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
   { key: "education", label: "Education", icon: GraduationCap },
 ];
-const MORE_DRAWER_VIEWS = ["goals", "habits", "grades", "journal"];
+const MORE_DRAWER_VIEWS = ["goals", "habits", "grades"];
 
 export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
   const [open, setOpen] = useState(false);

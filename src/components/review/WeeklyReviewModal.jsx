@@ -73,7 +73,7 @@ function ReviewSection({ title, items, color }) {
   );
 }
 
-export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries, onClose }) {
+export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
   const CATEGORY_COLORS = useCategoryColors();
   const weekStart = toISO(startOfWeek(new Date()));
   const weekEnd = toISO(addDays(startOfWeek(new Date()), 6));
@@ -89,7 +89,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
     if (a.done && inWeek(a.dueDate)) actionsDone.push({ goal: g.title, title: a.title });
   })));
   const habitStats = habits.map((h) => ({ title: h.title, count: h.doneDates.filter((d) => inWeek(d)).length })).filter((h) => h.count > 0);
-  const entriesThisWeek = journalEntries.filter((e) => inWeek(e.date));
 
   const totalWins = tasksDone.length + actionsDone.length;
   const isSunday = new Date().getDay() === 0;
@@ -125,7 +124,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
         <div style={{ fontSize: 12.5, color: "#93A0AD" }}>{weekStart} to {weekEnd}</div>
         <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 16 }}>No streaks, no score — just what actually happened.</div>
 
-        {totalWins === 0 && habitStats.length === 0 && entriesThisWeek.length === 0 ? (
+        {totalWins === 0 && habitStats.length === 0 ? (
           <EmptyState text="Nothing marked done this week yet. Come back once you've checked a few things off." />
         ) : (
           <>
@@ -156,9 +155,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, journalEntries
             )}
             {habitStats.length > 0 && (
               <ReviewSection title="Habits kept up" items={habitStats.map((h) => `${h.title} · ${h.count}x this week`)} color={HABIT_COLOR} />
-            )}
-            {entriesThisWeek.length > 0 && (
-              <div style={{ fontSize: 13, color: "#5A6472", marginBottom: 6 }}>{entriesThisWeek.length} journal {entriesThisWeek.length === 1 ? "entry" : "entries"} written this week.</div>
             )}
           </>
         )}

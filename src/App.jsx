@@ -5,7 +5,6 @@ import { useEvents } from "./hooks/useEvents";
 import { useTasks } from "./hooks/useTasks";
 import { useGoals } from "./hooks/useGoals";
 import { useHabits } from "./hooks/useHabits";
-import { useJournal } from "./hooks/useJournal";
 import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
@@ -39,7 +38,6 @@ import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
 // they're where the app actually starts.
 const GoalsView = lazy(() => import("./components/goals/GoalsView"));
 const HabitsView = lazy(() => import("./components/habits/HabitsView"));
-const JournalView = lazy(() => import("./components/journal/JournalView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
@@ -72,7 +70,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
-  const { entries: journalEntries, addEntry: addJournalEntry, removeEntry: removeJournalEntry } = useJournal(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
@@ -763,9 +760,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         {view === "habits" && (
           <HabitsView habits={habits} onAddHabit={addHabit} onRemoveHabit={removeHabit} onSetDone={setHabitDone} />
         )}
-        {view === "journal" && (
-          <JournalView entries={journalEntries} onAddEntry={addJournalEntry} onRemoveEntry={removeJournalEntry} />
-        )}
         {view === "education" && (
           <EducationView
             eduItems={visibleEduItems}
@@ -915,7 +909,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           tasks={tasks}
           goals={goals}
           habits={habits}
-          journalEntries={journalEntries}
           onClose={() => setShowWeeklyReview(false)}
         />
       )}
@@ -932,7 +925,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           eduItems={eduItems}
           goals={goals}
           habits={habits}
-          journalEntries={journalEntries}
           events={events}
           onClose={() => setShowSearch(false)}
           onGoTo={setView}

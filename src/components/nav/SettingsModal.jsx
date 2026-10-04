@@ -355,7 +355,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
             ) : (
               <div style={{ background: TONE.danger.bg, border: `1px solid ${TONE.danger.border}`, borderRadius: 10, padding: 12 }}>
                 <div style={{ fontSize: 12.5, color: TONE.danger.text, lineHeight: 1.5, marginBottom: 10 }}>
-                  This permanently deletes your account and everything in it — every task, event, goal, habit, journal entry, class, grade, all of it. This can't be undone. Download a backup above first if you want to keep a copy.
+                  This permanently deletes your account and everything in it — every task, event, goal, habit, class, grade, all of it. This can't be undone. Download a backup above first if you want to keep a copy.
                 </div>
                 <div style={{ fontSize: 11.5, color: TONE.danger.text, marginBottom: 6 }}>Type DELETE to confirm:</div>
                 <input

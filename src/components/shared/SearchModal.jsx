@@ -3,14 +3,14 @@ import { Search, X } from "lucide-react";
 import { overlayStyle } from "../../lib/styles";
 import ModalPortal from "./ModalPortal";
 
-const TYPE_LABEL = { task: "Task", edu: "Education", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", journal: "Journal", event: "Calendar" };
+const TYPE_LABEL = { task: "Task", edu: "Education", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", event: "Calendar" };
 
 // A single client-side search across everything already loaded into the app — tasks,
-// Education items, goals/milestones/actions, habits, journal entries, and calendar
-// events. Nothing new is fetched; this just filters what's already in memory, so it's
-// instant. Picking a result jumps to the page it lives on (and, for tasks, opens the
-// detail modal directly since that's a click away either way).
-export default function SearchModal({ tasks, eduItems, goals, habits, journalEntries, events, onClose, onGoTo, onOpenTask }) {
+// Education items, goals/milestones/actions, habits, and calendar events. Nothing new
+// is fetched; this just filters what's already in memory, so it's instant. Picking a
+// result jumps to the page it lives on (and, for tasks, opens the detail modal directly
+// since that's a click away either way).
+export default function SearchModal({ tasks, eduItems, goals, habits, events, onClose, onGoTo, onOpenTask }) {
   const [q, setQ] = useState("");
   const inputRef = useRef(null);
 
@@ -40,15 +40,11 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
     (habits || []).forEach((h) => {
       if (h.title.toLowerCase().includes(query)) out.push({ type: "habit", id: h.id, title: h.title, sub: "Habit", onClick: () => { onGoTo("habits"); onClose(); } });
     });
-    (journalEntries || []).forEach((j) => {
-      const haystack = `${j.prompt || ""} ${j.text || ""}`.toLowerCase();
-      if (haystack.includes(query)) out.push({ type: "journal", id: j.id, title: (j.text || j.prompt || "Journal entry").slice(0, 70), sub: j.date, onClick: () => { onGoTo("journal"); onClose(); } });
-    });
     (events || []).forEach((e) => {
       if (e.title.toLowerCase().includes(query)) out.push({ type: "event", id: e.id, title: e.title, sub: e.date, onClick: () => { onGoTo("calendar"); onClose(); } });
     });
     return out.slice(0, 40);
-  }, [q, tasks, eduItems, goals, habits, journalEntries, events, onGoTo, onOpenTask, onClose]);
+  }, [q, tasks, eduItems, goals, habits, events, onGoTo, onOpenTask, onClose]);
 
   return (
     <ModalPortal>
@@ -64,7 +60,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, journalEnt
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && onClose()}
-            placeholder="Search tasks, goals, education, habits, journal, calendar..."
+            placeholder="Search tasks, goals, education, habits, calendar..."
             aria-label="Search everything in Scaffold"
             style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", background: "transparent" }}
           />
