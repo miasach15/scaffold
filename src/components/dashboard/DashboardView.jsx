@@ -55,7 +55,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -176,14 +176,18 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     ...eduSessionItems,
     // A manually dragged order wins outright, regardless of which of these is due
     // sooner — dragging is how you say "I want to do this one first," not just a way
-    // to break ties between two things due the same day. Due date only decides the
-    // order for whatever hasn't been touched by a drag yet (no orderIndex saved),
-    // with overdue/carried-over items leading, then today's, then anything shown
-    // early because it's coming up soon.
+    // to break ties between two things due the same day. But that override only holds
+    // for TODAY's own drag (orderSetDate === todayISO) — otherwise a single drag from a
+    // week ago would keep outranking everything by due date forever, including a
+    // brand-new task that's due today and has never been touched. Due date decides the
+    // order for anything not freshly dragged, with overdue/carried-over items leading,
+    // then today's, then anything shown early because it's coming up soon.
   ].sort((a, b) => {
-    if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
-    if (a.orderIndex != null) return -1;
-    if (b.orderIndex != null) return 1;
+    const aFresh = a.orderIndex != null && a.orderSetDate === todayISO;
+    const bFresh = b.orderIndex != null && b.orderSetDate === todayISO;
+    if (aFresh && bFresh) return a.orderIndex - b.orderIndex;
+    if (aFresh) return -1;
+    if (bFresh) return 1;
     const ad = a.sortDate || a.date || "9999-99-99";
     const bd = b.sortDate || b.date || "9999-99-99";
     return ad.localeCompare(bd);
@@ -207,7 +211,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const bufferHours = (profile?.afterSchoolBufferMinutes ?? 0) / 60;
   const windowHoursLeft = Math.max(0, dayEnd - Math.max(nowDecimal, dayStart) - bufferHours);
   const committedMin = [...todaysTimedTasks, ...todaysEvents]
-    .filter((item) => item.start >= nowDecimal)
+    .filter((item) => item.start + (item.duration || 60) / 60 > nowDecimal)
     .reduce((sum, item) => sum + (item.duration || 60), 0);
   const freeHoursLeft = Math.max(0, windowHoursLeft - committedMin / 60);
   // A task with no picked duration still needs an estimate to be part of this math — 30
@@ -254,7 +258,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // fills the gap before each upcoming fixed slot, and a slot always starts on time even
   // if there's dead air first.
   const fixedSlotsToday = [...todaysTimedTasks, ...todaysEvents]
-    .filter((item) => item.start >= nowDecimal)
+    .filter((item) => item.start + (item.duration || 60) / 60 > nowDecimal)
     .map((item) => ({ start: item.start, end: item.start + (item.duration || 60) / 60 }))
     .sort((a, b) => a.start - b.start);
   const estimatedFinishDecimal = (() => {
@@ -292,8 +296,19 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // checking in early instead of waiting the full hour out.
   const [showCheckin, setShowCheckin] = useState(false);
   const openTodayItems = [...todaysTimedTasks, ...todaysUntimed].filter((t) => t.id);
+  // Refs so the interval (set up once) always reads the CURRENT values instead of
+  // whatever they were on the render that first mounted it — otherwise an hour from now
+  // it'd still be checking against an empty "today" list from this exact moment, or
+  // popping up on top of a modal that happened to open later.
+  const openTodayItemsRef = useRef(openTodayItems);
+  openTodayItemsRef.current = openTodayItems;
+  const suppressCheckinRef = useRef(suppressCheckin);
+  suppressCheckinRef.current = suppressCheckin;
   useEffect(() => {
-    const timer = setInterval(() => setShowCheckin(true), CHECKIN_INTERVAL_MS);
+    const timer = setInterval(() => {
+      if (openTodayItemsRef.current.length === 0 || suppressCheckinRef.current) return;
+      setShowCheckin(true);
+    }, CHECKIN_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
   // Browsing which week this widget shows is local to Dashboard — it's just a peek, not

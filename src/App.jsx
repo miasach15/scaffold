@@ -87,7 +87,18 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     const linked = tasks.filter((x) => x.eduId === t.eduId);
     const allDoneAfter = linked.every((x) => (x.id === id ? done : x.done));
     const eduItem = eduItems.find((e) => e.id === t.eduId);
-    if (eduItem && eduItem.done !== allDoneAfter) setEduDone(t.eduId, allDoneAfter);
+    if (!eduItem) return;
+    // Finishing the last open session always completes the assignment. Un-checking a
+    // session re-opens it too — but only ever in that direction. Completing one session
+    // while a sibling is still open must never flip an assignment that was ALREADY marked
+    // done some other way (the deadline row's own checkbox, or the Upcoming list) back to
+    // not-done — that would silently undo a "this is already turned in" the student set
+    // independently of its sessions.
+    if (done) {
+      if (allDoneAfter && !eduItem.done) setEduDone(t.eduId, true);
+    } else if (eduItem.done) {
+      setEduDone(t.eduId, false);
+    }
   };
 
   const [view, setView] = useState("dashboard");
@@ -244,7 +255,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // no more taskless "Focus Session" option.
   const openFocus = (id, title, minutes) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, minutes });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, category: full?.category || null, duration: full?.duration ?? null, minutes });
   };
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
@@ -678,6 +689,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
             focusSlotRef={setDashboardFocusSlot}
+            suppressCheckin={!!focusTask || !!editingTask || showWeeklyReview || showSettings || tourOpen || showSearch}
           />
         )}
         {view === "calendar" && monthView && (

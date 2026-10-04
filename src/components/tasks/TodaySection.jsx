@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BatteryLow } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
-import { defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst } from "../../lib/dateHelpers";
+import { addDays, defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -84,7 +84,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     .filter((t) => (!t.done || justDone.has(t.id)) && !t.groupId && !t.eduId && !isOverdueTask(t, todayISO) && (!t.date || defaultLeadDays(t) || t.date <= todayISO))
     .map((t) => ({
       id: t.id, title: t.title, date: t.date, leadDays: defaultLeadDays(t), isGroup: false, focusId: t.id, done: t.done, duration: t.duration,
-      orderIndex: t.orderIndex,
+      orderIndex: t.orderIndex, orderSetDate: t.orderSetDate,
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
@@ -130,11 +130,17 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     // Which SESSION is "next" is still picked by its own scheduled work day (due or
     // overdue) — but the row itself sorts and shows a badge for the actual assignment's
     // due date, not that work day, so it lands and reads next to everything else by how
-    // urgent the real deadline is.
+    // urgent the real deadline is. A flexible deadline (see Education's "This deadline
+    // can move if it needs to") sorts as if it were a day later than it really is, so it
+    // doesn't outrank an equally-close fixed deadline — same nudge Dashboard's own
+    // "Anytime today" list already gives it, so the two pages agree on the order instead
+    // of only Dashboard getting it right.
     const parentEdu = (eduItems || []).find((e) => e.id === next.eduId);
+    const dueDate = parentEdu?.dueDate || next.date;
+    const sortDate = parentEdu?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate;
     return [{
-      id: next.id, title: next.title, date: parentEdu?.dueDate || next.date, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
-      orderIndex: next.orderIndex,
+      id: next.id, title: next.title, date: dueDate, sortDate, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
+      orderIndex: next.orderIndex, orderSetDate: next.orderSetDate,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
@@ -166,7 +172,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       const groupDueDate = allSteps.find((s) => s.groupDueDate)?.groupDueDate || null;
       return {
         id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone, duration: next.duration,
-        orderIndex: next.orderIndex,
+        orderIndex: next.orderIndex, orderSetDate: next.orderSetDate,
         subLabel: allDone ? "All steps done" : `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
         category: next.category || "Personal",
         col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
@@ -214,16 +220,22 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // Same date, plus a manual order set by dragging on Dashboard's "Anytime today" —
   // that order wins over the category nudge here too, so a manual reorder actually
   // shows up the same way on both pages instead of only ever being visible on the one
-  // it was dragged on.
+  // it was dragged on. Only trusts TODAY's own drag (same freshness check Dashboard's
+  // own sort uses) — a stale order_index from a previous day falls back to the category
+  // nudge instead of permanently pinning a same-day tie.
   const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
-    if (!a.date && !b.date) return categoryRank(a) - categoryRank(b);
-    if (!a.date) return 1;
-    if (!b.date) return -1;
-    const dateDiff = a.date.localeCompare(b.date);
+    const ad = a.sortDate || a.date;
+    const bd = b.sortDate || b.date;
+    if (!ad && !bd) return categoryRank(a) - categoryRank(b);
+    if (!ad) return 1;
+    if (!bd) return -1;
+    const dateDiff = ad.localeCompare(bd);
     if (dateDiff !== 0) return dateDiff;
-    if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
-    if (a.orderIndex != null) return -1;
-    if (b.orderIndex != null) return 1;
+    const aFresh = a.orderIndex != null && a.orderSetDate === todayISO;
+    const bFresh = b.orderIndex != null && b.orderSetDate === todayISO;
+    if (aFresh && bFresh) return a.orderIndex - b.orderIndex;
+    if (aFresh) return -1;
+    if (bFresh) return 1;
     return categoryRank(a) - categoryRank(b);
   });
   // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { toISO } from "../lib/dateHelpers";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -19,6 +20,7 @@ const fromRow = (row) => ({
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
   orderIndex: row.order_index == null ? null : Number(row.order_index),
+  orderSetDate: row.order_set_date || null,
   actualMinutes: row.actual_minutes == null ? null : Number(row.actual_minutes),
 });
 
@@ -157,9 +159,10 @@ export function useTasks(userId) {
   // for the whole visible set on every move, same as moveAction's own reindex-everything
   // behavior after a single swap.
   const reorderTasks = useCallback(async (orderedIds) => {
+    const today = toISO(new Date());
     const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
-    setTasks((ts) => ts.map((t) => (orderMap.has(t.id) ? { ...t, orderIndex: orderMap.get(t.id) } : t)));
-    const results = await Promise.all(orderedIds.map((id, i) => supabase.from("tasks").update({ order_index: i }).eq("id", id)));
+    setTasks((ts) => ts.map((t) => (orderMap.has(t.id) ? { ...t, orderIndex: orderMap.get(t.id), orderSetDate: today } : t)));
+    const results = await Promise.all(orderedIds.map((id, i) => supabase.from("tasks").update({ order_index: i, order_set_date: today }).eq("id", id)));
     if (results.some((r) => r.error)) reportSaveError();
   }, []);
 
