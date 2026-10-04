@@ -684,6 +684,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onSelectDay={setDayView}
             onStartFocus={openFocus}
             onAddTask={addTask}
+            onSetDate={setTaskDate}
             onReorderTasks={reorderTasks}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}

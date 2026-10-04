@@ -55,7 +55,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onSetDate, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -366,6 +366,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           openItems={openTodayItems}
           onClose={() => setShowCheckin(false)}
           onMarkDone={(ids) => ids.forEach((id) => onToggleDone(id, true))}
+          onChangeDates={(changes) => changes.forEach(({ id, newDate }) => onSetDate(id, newDate))}
+          onAddTasks={(newTasks) => newTasks.forEach((t) => onAddTask({ title: t.title, date: t.date || null, duration: t.duration ?? null, category: t.category || "Personal" }))}
         />
       )}
 

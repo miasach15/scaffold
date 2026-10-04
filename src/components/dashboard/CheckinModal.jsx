@@ -2,20 +2,24 @@ import { useState } from "react";
 import { Mic, Square } from "lucide-react";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { MUTED, PRIMARY_DARK } from "../../lib/constants";
+import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { supabase } from "../../lib/supabase";
 import ModalPortal from "../shared/ModalPortal";
 
-// A periodic "what did you actually get done" prompt (see DashboardView's hourly timer,
-// plus a manual trigger for whenever you want it) — the point isn't a status report for
-// its own sake, it's that marking things done here is what lets the rest of the day's
-// plan (the remaining-time math, "done around X") reflect what's REALLY left instead of
-// a schedule that's quietly gone stale since this morning.
-export default function CheckinModal({ openItems, onClose, onMarkDone }) {
+// A periodic "what's going on with today" prompt (see DashboardView's hourly timer,
+// plus a manual trigger for whenever you want it) — not just a progress report. Marking
+// things done here is what lets the rest of the day's plan (the remaining-time math,
+// "done around X") reflect what's REALLY left instead of a schedule that's quietly gone
+// stale since this morning — but the same sentence can also add something new that came
+// up, or push a deadline back, without digging through the normal add-task/edit-date UI
+// for it. Three narrow, additive actions on purpose (mark done, add, move a date) —
+// never deletes or renames anything, so a misheard word is a correction, not a loss.
+export default function CheckinModal({ openItems, onClose, onMarkDone, onChangeDates, onAddTasks }) {
   const [report, setReport] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [result, setResult] = useState(null); // { doneIds, summary } once submitted
+  const [result, setResult] = useState(null); // { doneIds, dateChanges, newTasks, summary } once submitted
   const { supported: speechSupported, listening, toggle: toggleListening } = useSpeechToText((phrase) => {
     setReport((r) => (r && !/[\s.]$/.test(r) ? r + " " : r) + phrase);
   });
@@ -26,11 +30,17 @@ export default function CheckinModal({ openItems, onClose, onMarkDone }) {
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("parse-progress-checkin", {
-        body: { report: report.trim(), items: openItems.map((t) => ({ id: t.id, title: t.title })) },
+        body: {
+          report: report.trim(),
+          today: toISO(new Date()),
+          items: openItems.map((t) => ({ id: t.id, title: t.title, date: t.date || null })),
+        },
       });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       if (data.doneIds?.length) onMarkDone(data.doneIds);
+      if (data.dateChanges?.length) onChangeDates(data.dateChanges);
+      if (data.newTasks?.length) onAddTasks(data.newTasks);
       setResult(data);
     } catch (e) {
       setError(e.message || "Couldn't check that in. Try again.");
@@ -53,8 +63,8 @@ export default function CheckinModal({ openItems, onClose, onMarkDone }) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What got done?</div>
-              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Say or type it — finished stuff gets checked off, your day updates to match.</div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What's going on?</div>
+              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Mark things done, add something new, push a deadline back — just say it.</div>
               <div style={{ position: "relative" }}>
                 <textarea
                   autoFocus
@@ -63,7 +73,7 @@ export default function CheckinModal({ openItems, onClose, onMarkDone }) {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
                   }}
-                  placeholder="Finished the lab writeup, still working on the reading..."
+                  placeholder="Finished the lab writeup, push the essay to Friday, and add picking up groceries..."
                   rows={4}
                   style={{ ...inputStyle, width: "100%", resize: "vertical", fontFamily: "inherit", paddingRight: speechSupported ? 40 : undefined }}
                 />
