@@ -53,8 +53,8 @@ export default function CheckinModal({ openItems, onClose, onMarkDone }) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What did you get done?</div>
-              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Say or type it in your own words — whatever's actually finished gets checked off, and the rest of today's plan updates to match.</div>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What got done?</div>
+              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Say or type it — finished stuff gets checked off, your day updates to match.</div>
               <div style={{ position: "relative" }}>
                 <textarea
                   autoFocus
