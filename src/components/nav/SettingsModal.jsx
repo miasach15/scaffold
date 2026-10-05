@@ -37,8 +37,15 @@ const BUFFER_OPTIONS = [
   { value: 30, label: "30 min" },
   { value: 60, label: "60 min" },
 ];
+const TRANSITION_BUFFER_OPTIONS = [
+  { value: 0, label: "Off" },
+  { value: 5, label: "5 min" },
+  { value: 10, label: "10 min" },
+  { value: 15, label: "15 min" },
+  { value: 20, label: "20 min" },
+];
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -306,6 +313,17 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                   style={{ ...inputStyle, fontSize: 12, padding: "5px 7px", flex: 1, minWidth: 160 }}
                 >
                   {BUFFER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: "#5A6472", minWidth: 130 }}>Buffer around each thing</span>
+                <select
+                  value={transitionBufferMinutes ?? 0}
+                  onChange={(e) => onUpdateProfile({ transitionBufferMinutes: Number(e.target.value) })}
+                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px", flex: 1, minWidth: 160 }}
+                  title="Padding before and after every fixed task/event — travel time, prep, decompressing — factored into 'done around' and free-time math"
+                >
+                  {TRANSITION_BUFFER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
             </div>

@@ -28,6 +28,14 @@ const fromRow = (row) => ({
   // shifts the effective start of scheduling later by this many minutes instead of
   // assuming the window opens at full capacity the moment it starts.
   afterSchoolBufferMinutes: row.after_school_buffer_minutes ?? 0,
+  // A different, smaller buffer — not once at the start of the day, but around EVERY
+  // fixed commitment: padding tacked onto the end of one thing and the start of the
+  // next, so "done around X"/free-time math never assumes you can walk straight out of
+  // one commitment and directly into flexible work (or the next one) with zero
+  // transition. Separate from afterSchoolBufferMinutes on purpose — that one models a
+  // single big energy dip at the start of the window, this one's the small gap every
+  // single event/task actually needs around it.
+  transitionBufferMinutes: row.transition_buffer_minutes ?? 0,
   // Whichever of the user's own categories currently plays the "this is Education-linked
   // stuff" role — starts as "School" but tracks a rename (see App.jsx's renameCategory),
   // so the Education/Grades pages and Today's priority sort keep working no matter what
@@ -78,6 +86,7 @@ export function useProfile(userId) {
       if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
       if ("paceMultiplier" in patch) dbPatch.pace_multiplier = patch.paceMultiplier;
       if ("afterSchoolBufferMinutes" in patch) dbPatch.after_school_buffer_minutes = patch.afterSchoolBufferMinutes;
+      if ("transitionBufferMinutes" in patch) dbPatch.transition_buffer_minutes = patch.transitionBufferMinutes;
       if ("educationCategory" in patch) dbPatch.education_category = patch.educationCategory;
       if ("phoneNumber" in patch) dbPatch.phone_number = patch.phoneNumber || null;
       if ("smsRemindersEnabled" in patch) dbPatch.sms_reminders_enabled = patch.smsRemindersEnabled;

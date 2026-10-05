@@ -210,9 +210,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // no matter what time it is when this is checked.
   const bufferHours = (profile?.afterSchoolBufferMinutes ?? 0) / 60;
   const windowHoursLeft = Math.max(0, dayEnd - Math.max(nowDecimal, dayStart) - bufferHours);
+  // A different buffer from the one above — not once at the start of the day, but
+  // around EVERY fixed commitment still ahead: walking out of one thing and into the
+  // next isn't instant, so each remaining task/event "costs" its own length plus this
+  // padding before and after, not just its bare duration.
+  const transitionBufferMin = profile?.transitionBufferMinutes ?? 0;
   const committedMin = [...todaysTimedTasks, ...todaysEvents]
     .filter((item) => item.start + (item.duration || 60) / 60 > nowDecimal)
-    .reduce((sum, item) => sum + (item.duration || 60), 0);
+    .reduce((sum, item) => sum + (item.duration || 60) + transitionBufferMin * 2, 0);
   const freeHoursLeft = Math.max(0, windowHoursLeft - committedMin / 60);
   // A task with no picked duration still needs an estimate to be part of this math — 30
   // min is a reasonable "quick thing" default, same ballpark as the shortest preset in
@@ -257,9 +262,16 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // for real and has to be counted. This walks the clock forward instead: flexible work
   // fills the gap before each upcoming fixed slot, and a slot always starts on time even
   // if there's dead air first.
+  // Same transitionBufferMinutes as the free-time check above, but applied precisely
+  // here instead of as a flat per-item tax: pad the slot itself — start earlier (prep
+  // time flexible work can't eat into) and end later (decompression before the next
+  // gap starts counting) — so the walk-forward naturally leaves room on both sides of
+  // every commitment instead of assuming you can work right up to the door and start
+  // the next thing the instant one ends.
+  const transitionBufferHours = transitionBufferMin / 60;
   const fixedSlotsToday = [...todaysTimedTasks, ...todaysEvents]
     .filter((item) => item.start + (item.duration || 60) / 60 > nowDecimal)
-    .map((item) => ({ start: item.start, end: item.start + (item.duration || 60) / 60 }))
+    .map((item) => ({ start: item.start - transitionBufferHours, end: item.start + (item.duration || 60) / 60 + transitionBufferHours }))
     .sort((a, b) => a.start - b.start);
   const estimatedFinishDecimal = (() => {
     let cursor = nowDecimal;

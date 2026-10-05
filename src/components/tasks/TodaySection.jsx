@@ -36,7 +36,7 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //      slipped by undone, only the most recent shows — never a pile of identically-
 //      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDate, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDate, onRescheduleTask, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
@@ -101,8 +101,17 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { markJustDone(t.id); onToggleDone(t.id, true); },
       onOpen: () => onOpenFocus(t.id, t.title),
-      onSetDate: onSetDate ? (date) => onSetDate(t.id, date) : null,
-      onMoveToToday: onSetDate ? () => onSetDate(t.id, todayISO) : null,
+      // Carrying an overdue task forward clears any stale time it had — a 2pm slot from
+      // the day it was supposed to happen doesn't mean anything on a new day, and leaving
+      // it would silently re-pin the task to that same clock time, undoing the whole
+      // point of "just move it forward, don't make me also go fix the time." Falls back
+      // to a plain date-only move if rescheduleTask isn't wired in for some reason.
+      onSetDate: onRescheduleTask
+        ? (date) => onRescheduleTask(t.id, date, null)
+        : onSetDate ? (date) => onSetDate(t.id, date) : null,
+      onMoveToToday: onRescheduleTask
+        ? () => onRescheduleTask(t.id, todayISO, null)
+        : onSetDate ? () => onSetDate(t.id, todayISO) : null,
     }));
   const visibleOverdue = showAllOverdue ? overdueTaskItems : overdueTaskItems.slice(0, OVERDUE_VISIBLE_CAP);
   const hiddenOverdueCount = overdueTaskItems.length - visibleOverdue.length;

@@ -732,6 +732,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}
             onSetDate={setTaskDate}
+            onRescheduleTask={rescheduleTask}
             onSetStart={setTaskStart}
             onUpdateGroupDueDate={updateGroupDueDate}
             onOpenFocus={openFocus}
@@ -835,6 +836,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           whatnowWindowEnd={profile.whatnowWindowEnd}
           paceMultiplier={profile.paceMultiplier}
           afterSchoolBufferMinutes={profile.afterSchoolBufferMinutes}
+          transitionBufferMinutes={profile.transitionBufferMinutes}
           onUpdateProfile={updateProfile}
           onSignOut={onSignOut}
           onDeleteAccount={deleteAccount}

@@ -15,7 +15,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onSetStart, onUpdateGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -294,6 +294,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         onToggleDone={handleToggleDone}
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
+        onRescheduleTask={onRescheduleTask}
         eduItems={eduItems}
         onSetEduDone={handleSetEduDone}
         onGoToEducation={onGoToEducation}
