@@ -1,13 +1,16 @@
 // Supabase Edge Function: takes a free-text (or dictated) check-in — what got done, what
 // to add, what to push back — plus today's still-open items, and figures out which of
-// three narrow, additive actions it actually describes:
+// up to three narrow, additive actions it actually describes:
 //   1. mark an existing item DONE (matched by meaning, not exact wording — "wrapped up
 //      the lab report" matches an item titled "Chem lab writeup")
 //   2. move an existing item's date (e.g. "push the essay to Friday")
-//   3. add something new that wasn't on the list at all
-// Deliberately never deletes or renames anything that already exists — the worst a
-// misheard word can do is add or reschedule something wrong, both a one-tap undo away
-// in the normal UI, not lose data outright.
+//   3. something NEW that wasn't on the list — classified as a flexible task or a
+//      fixed-time calendar event ("I have a dentist appointment Tuesday at 3" is an
+//      event, not a task)
+// Deliberately never deletes or renames anything that already exists, and never adds a
+// new item directly — newItems always go through the client's own review-before-confirm
+// step (same one Brain Dump uses), so a misheard word is something you catch and fix on
+// the review screen, not something that silently lands wrong.
 //
 // Deploy with:  supabase functions deploy parse-progress-checkin
 // Requires an ANTHROPIC_API_KEY secret (same one used by the other planners):
@@ -34,22 +37,24 @@ const RESULT_SCHEMA = {
         additionalProperties: false,
       },
     },
-    newTasks: {
+    newItems: {
       type: "array",
       items: {
         type: "object",
         properties: {
           title: { type: "string" },
-          date: { type: ["string", "null"], description: "YYYY-MM-DD, or null for no due date" },
+          type: { type: "string", enum: ["task", "event"] },
+          date: { type: ["string", "null"], description: "YYYY-MM-DD, or null for no due date (tasks only — an event should always get a date if at all possible)" },
+          start: { type: ["number", "null"], description: "decimal hour 0-23.99 (e.g. 14.5 = 2:30pm) ONLY for an event with a clear time mentioned, otherwise null" },
           duration: { type: ["number", "null"], description: "minutes, or null if not mentioned" },
         },
-        required: ["title", "date", "duration"],
+        required: ["title", "type", "date", "start", "duration"],
         additionalProperties: false,
       },
     },
     summary: { type: "string" },
   },
-  required: ["doneIds", "dateChanges", "newTasks", "summary"],
+  required: ["doneIds", "dateChanges", "newItems", "summary"],
   additionalProperties: false,
 };
 
@@ -91,11 +96,16 @@ Figure out, from what they said, which of up to three things apply. Do all that 
 
 2. MOVE A DATE — are they asking to push back, reschedule, or extend the deadline of one of the LISTED items? Only ever for an item that's actually in the list above (never invent an id). Resolve whatever they said ("Friday", "in two days", "next week") into an actual YYYY-MM-DD date using ${todayISO} as today. If they don't give enough to resolve a real date, don't include it.
 
-3. ADD SOMETHING NEW — are they mentioning something to do that is NOT already one of the listed items? Give it a short, clear title (same style as the existing ones — lead with a verb-ish or noun phrase, no filler), resolve any date they gave the same way as above (YYYY-MM-DD, or null if they gave no date), and a duration in minutes only if they actually said how long it'd take (otherwise null — never invent a number).
+3. SOMETHING NEW — are they mentioning something that is NOT already one of the listed items? For each one:
+   - Classify it as "event" if it's a fixed-time happening — an appointment, a meeting, something at a specific clock time ("dentist at 3", "practice from 4 to 5:30"). Classify it as "task" if it's flexible work with no inherent fixed time ("pick up groceries", "finish the essay").
+   - Give it a short, clear title (same style as the existing ones — lead with a verb-ish or noun phrase, no filler).
+   - Resolve any date they gave into YYYY-MM-DD using ${todayISO} as today, or null if they gave none (a task can have no date; an event should get one whenever the day is inferable at all, even just "today").
+   - For an EVENT only: if they gave a clock time, resolve it to a decimal hour (e.g. "2:30pm" → 14.5); otherwise null.
+   - duration in minutes only if they actually said or clearly implied how long it runs (e.g. "4 to 5:30" → 90 minutes) — otherwise null, never invent a number.
 
-Be conservative: when in doubt about whether something is a NEW task versus referring to an EXISTING one, prefer matching it to the existing item (duplicate items are worse than a missed add). Never touch an id that isn't in the list.
+Be conservative: when in doubt about whether something is NEW versus referring to an EXISTING listed item, prefer matching it to the existing item (duplicates are worse than a missed add). Never touch an id that isn't in the list.
 
-Also write a short, factual, second-person summary of everything you actually did (e.g. "Marked Chem lab writeup done, pushed the essay to Friday, and added picking up groceries." or "Didn't find anything in there to act on."). No cheerleading, just what happened.`;
+Also write a short, factual, second-person summary of everything you actually did (e.g. "Marked Chem lab writeup done, pushed the essay to Friday, and found one new thing to add." or "Didn't find anything in there to act on."). If there's anything new, mention there's something to review, but don't describe it in detail — the review screen does that. No cheerleading, just what happened.`;
 
     let res: Response | null = null;
     let lastErrText = "";
@@ -109,7 +119,7 @@ Also write a short, factual, second-person summary of everything you actually di
         },
         body: JSON.stringify({
           model: "claude-opus-5",
-          max_tokens: 1200,
+          max_tokens: 1500,
           output_config: {
             effort: "medium",
             format: { type: "json_schema", schema: RESULT_SCHEMA },
@@ -147,19 +157,21 @@ Also write a short, factual, second-person summary of everything you actually di
     const result = JSON.parse(textBlock.text);
 
     // Belt-and-suspenders: only ever act on ids that were actually in the input list, and
-    // only ever accept dates that are genuinely YYYY-MM-DD — in case the model echoes
-    // something malformed or (despite the prompt) invents an id.
+    // only ever accept dates/types that are genuinely well-formed — in case the model
+    // echoes something malformed or (despite the prompt) invents an id.
     const validIds = new Set(items.map((it: { id: string }) => it.id));
     result.doneIds = (result.doneIds || []).filter((id: string) => validIds.has(id));
     result.dateChanges = (result.dateChanges || []).filter(
       (c: { id: string; newDate: string }) => validIds.has(c.id) && ISO_DATE_RE.test(c.newDate)
     );
-    result.newTasks = (result.newTasks || [])
-      .filter((t: { title: string }) => t.title && t.title.trim())
-      .map((t: { title: string; date: string | null; duration: number | null }) => ({
-        title: t.title.trim(),
-        date: t.date && ISO_DATE_RE.test(t.date) ? t.date : null,
-        duration: typeof t.duration === "number" && t.duration > 0 ? Math.round(t.duration) : null,
+    result.newItems = (result.newItems || [])
+      .filter((it: { title: string }) => it.title && it.title.trim())
+      .map((it: { title: string; type: string; date: string | null; start: number | null; duration: number | null }) => ({
+        title: it.title.trim(),
+        type: it.type === "event" ? "event" : "task",
+        date: it.date && ISO_DATE_RE.test(it.date) ? it.date : null,
+        start: typeof it.start === "number" && it.start >= 0 && it.start < 24 ? it.start : null,
+        duration: typeof it.duration === "number" && it.duration > 0 ? Math.round(it.duration) : null,
       }));
 
     return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "content-type": "application/json" } });
