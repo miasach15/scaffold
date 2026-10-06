@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Flame } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
@@ -12,6 +12,13 @@ const navBtnStyle = {
   width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
   display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0,
 };
+
+// A warm paper-and-ink ledger instead of the app's usual lavender/white cards — filled
+// vs. hollow dots in thin-ruled rows, like a printed habit tracker. Scoped to this one
+// table (cream background, a warmer neutral border) rather than changing the shared
+// BORDER/SURFACE tokens everywhere else.
+const PAPER = "#FBF7EE";
+const INK_BORDER = "#DED5C2";
 
 export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDone }) {
   const [title, setTitle] = useState("");
@@ -76,49 +83,60 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
         <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." />
       ) : (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <button onClick={() => setWeekStart((w) => addDays(w, -7))} title="Previous week" style={navBtnStyle}><ChevronLeft size={14} /></button>
-            <div style={{ flex: "1 1 200px" }} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, flex: "3 1 320px" }}>
-              {weekDays.map((d) => {
-                const iso = toISO(d);
-                const isToday = iso === todayISO;
-                return (
-                  <div key={iso} style={{ textAlign: "center", padding: "6px 2px" }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: isToday ? PRIMARY_DARK : MUTED }}>{dayLabel(d).slice(0, 3).toUpperCase()}</div>
-                    <div style={{ fontFamily: serifFont, fontSize: 20, color: isToday ? PRIMARY_DARK : INK }}>{d.getDate()}</div>
-                  </div>
-                );
-              })}
+            <div style={{ fontSize: 12, color: MUTED, fontStyle: "italic", fontFamily: serifFont }}>
+              Week of {weekDays[0].toLocaleDateString(undefined, { month: "long", day: "numeric" })}
             </div>
             <button onClick={() => setWeekStart((w) => addDays(w, 7))} title="Next week" style={navBtnStyle}><ChevronRight size={14} /></button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {habits.map((h) => {
-              const streak = currentStreak(h.doneDates);
-              return (
-                <div
-                  key={h.id}
-                  className="hoverable"
-                  style={{
-                    border: `1px solid ${BORDER}`, borderRadius: 14, background: "#fff", padding: "14px 16px",
-                    display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-                  }}
-                >
-                  <button
-                    onClick={() => setHistoryHabitId(h.id)}
-                    title="View history"
-                    style={{ flex: "1 1 200px", textAlign: "left", background: "none", border: "none", padding: 0, display: "flex", flexDirection: "column", gap: 5, cursor: "pointer" }}
+
+          <div style={{ overflowX: "auto" }}>
+            <div style={{ background: PAPER, border: `1px solid ${INK_BORDER}`, borderRadius: 3, minWidth: 560 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr repeat(7, 52px)", borderBottom: `1px solid ${INK_BORDER}` }}>
+                <div style={{ padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
+                {weekDays.map((d) => {
+                  const iso = toISO(d);
+                  const isToday = iso === todayISO;
+                  return (
+                    <div key={iso} style={{ textAlign: "center", padding: "10px 4px", borderLeft: `1px solid ${INK_BORDER}` }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: 0.4, color: isToday ? INK : MUTED, textTransform: "uppercase" }}>{dayLabel(d).slice(0, 2)}</div>
+                      <div style={{ fontFamily: serifFont, fontSize: 14, color: isToday ? INK : MUTED, marginTop: 1 }}>{d.getDate()}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {habits.map((h, i) => {
+                const streak = currentStreak(h.doneDates);
+                return (
+                  <div
+                    key={h.id}
+                    className="habit-row"
+                    style={{ display: "grid", gridTemplateColumns: "1fr repeat(7, 52px)", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${INK_BORDER}` }}
                   >
-                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>{h.title}</div>
-                    {streak > 0 && (
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, width: "fit-content" }}>
-                        <Flame size={10} color={MUTED} fill={MUTED} strokeWidth={0} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{streak} day streak</span>
-                      </div>
-                    )}
-                  </button>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, flex: "3 1 320px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
+                      <button
+                        onClick={() => setHistoryHabitId(h.id)}
+                        title="View history"
+                        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "baseline", gap: 7 }}
+                      >
+                        <span style={{ fontFamily: serifFont, fontSize: 15, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</span>
+                        {streak > 0 && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                            <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} />
+                            <span style={{ fontSize: 10, fontStyle: "italic", color: MUTED, fontFamily: serifFont }}>{streak}d</span>
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => onRemoveHabit(h.id)}
+                        className="habit-row-delete"
+                        style={{ ...deleteBtn, flexShrink: 0, opacity: 0, transition: "opacity .15s" }}
+                      >
+                        ×
+                      </button>
+                    </div>
                     {weekDays.map((d) => {
                       const iso = toISO(d);
                       const done = h.doneDates.includes(iso);
@@ -128,21 +146,28 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                           onClick={() => onSetDone(h.id, iso, !done)}
                           title={iso}
                           style={{
-                            height: 44, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                            background: "#fff",
-                            border: done ? `2px solid ${PRIMARY_DARK}` : `1.5px solid ${BORDER}`,
+                            borderLeft: `1px solid ${INK_BORDER}`, background: "none", border: "none", borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: INK_BORDER,
+                            display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0", cursor: "pointer",
                           }}
                         >
-                          {done ? <Check size={14} color={PRIMARY_DARK} strokeWidth={3} /> : <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />}
+                          <span
+                            style={{
+                              width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+                              border: `1.5px solid ${INK}`,
+                              background: done ? INK : "transparent",
+                            }}
+                          />
                         </button>
                       );
                     })}
                   </div>
-                  <button onClick={() => onRemoveHabit(h.id)} className="btn-delete" style={deleteBtn}>×</button>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
+          <style>{`
+            .habit-row:hover .habit-row-delete { opacity: 1 !important; }
+          `}</style>
         </>
       )}
 
