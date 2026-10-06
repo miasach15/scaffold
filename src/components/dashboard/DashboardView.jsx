@@ -611,23 +611,23 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             return (
               <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 }}>Focus session</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ position: "relative", width: 42, height: 42, flexShrink: 0 }}>
-                    <svg width="42" height="42" viewBox="0 0 42 42">
-                      <circle cx="21" cy="21" r="17" fill="none" stroke={accent} strokeWidth="3" opacity={0.85} />
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ position: "relative", width: 50, height: 50, flexShrink: 0 }}>
+                    <svg width="50" height="50" viewBox="0 0 50 50">
+                      <circle cx="25" cy="25" r="20" fill="none" stroke={accent} strokeWidth="3.5" opacity={0.85} />
                     </svg>
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ fontFamily: serifFont, fontSize: 9, color: INK }}>{pad(focusMinutes)}:00</div>
+                      <div style={{ fontFamily: serifFont, fontSize: 10.5, color: INK }}>{pad(focusMinutes)}:00</div>
                     </div>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {heroTask ? (
                       <>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
                       </>
                     ) : (
-                      <div style={{ fontSize: 12, color: MUTED }}>Nothing to start yet.</div>
+                      <div style={{ fontSize: 13, color: MUTED }}>Nothing to start yet.</div>
                     )}
                   </div>
                 </div>
