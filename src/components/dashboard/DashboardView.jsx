@@ -461,10 +461,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 {scaffoldedTotalCount > 0 && (
                   remainingStepCount > 0
                     ? `${remainingStepCount} step${remainingStepCount === 1 ? "" : "s"} left · done around ${decimalToTimeLabel(estimatedFinishDecimal)}`
-                    // An event (tutoring, practice) still ahead isn't "all done" just because the tasks are.
+                    // An event (tutoring, practice) still ahead isn't "all done" just because the tasks
+                    // are — "Next:" (not "Then {title}") so a plain one-word event title like "school"
+                    // reads as a schedule entry, not as a sentence fragment ("then school").
                     : (() => {
                         const upcomingEvent = todaysEvents.find((e) => e.start + (e.duration || 60) / 60 > nowDecimal);
-                        return upcomingEvent ? `Then ${upcomingEvent.title} at ${decimalToTimeLabel(upcomingEvent.start)}` : "All done for today";
+                        return upcomingEvent ? `Next: ${upcomingEvent.title} at ${decimalToTimeLabel(upcomingEvent.start)}` : "All done for today";
                       })()
                 )}
               </div>
