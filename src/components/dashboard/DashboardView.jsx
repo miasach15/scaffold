@@ -456,7 +456,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
 
           <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "22px 22px 20px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: serifFont, fontSize: 22, color: INK, letterSpacing: -0.2 }}>Today's steps</div>
+              <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Today's steps</div>
               <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
                 {scaffoldedTotalCount > 0 && (
                   remainingStepCount > 0
@@ -580,55 +580,53 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               card everywhere else. */}
           {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
-          {/* Same soft-glow/pill-button treatment as the real Focus Timer (FocusTimerModal)
-              — tied to the same top-priority task the list below highlights, so this reads
-              as "the one thing to start," not a separate taskless timer with its own look.
-              Pressing it calls the exact same onStartFocus the row's own Start button does;
-              this is just a second, friendlier way into the same action. */}
+          {/* Quiet on purpose — "Today's steps" is the reason this page exists, not this.
+              Flat white, no glow, no filled color blocks: the one color this card uses at
+              all is the bound task's own category color (not the app's theme purple),
+              used consistently in exactly three places — the ring, the picked duration,
+              and the button's outline — so it actually means something instead of being
+              an arbitrary accent. Tied to the same top-priority task the list below
+              highlights; pressing it calls the exact same onStartFocus the row's own
+              Start button does — this is just a second way into the same action. */}
           {!hasActiveFocusSession && (() => {
             const heroTask = displayUntimed[0] || null;
             const col = heroTask ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal : null;
-            const glow = col ? `${col.accent}40` : null;
+            const accent = col ? col.accent : MUTED;
             return (
-              <div style={{
-                flexShrink: 0, position: "relative", overflow: "hidden",
-                background: col ? `radial-gradient(130% 90% at 50% -10%, ${col.bg} 0%, #fff 60%)` : "#fff",
-                border: `1px solid ${BORDER}`, borderRadius: 20, padding: "16px 16px 14px",
-              }}>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: col ? col.text : MUTED, textTransform: "uppercase", letterSpacing: 0.3 }}>
+              <div style={{ flexShrink: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px 12px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3 }}>
                   Focus Session
                 </div>
                 {heroTask && (
-                  <div style={{ textAlign: "center", margin: "4px 0 2px" }}>
-                    <div style={{ fontFamily: serifFont, fontSize: 15, color: INK, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ textAlign: "center", margin: "3px 0 0" }}>
+                    <div style={{ fontFamily: serifFont, fontSize: 13.5, color: INK, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {heroTask.title}
                     </div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 2 }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 1 }}>
                       {heroTask.category}
                     </div>
                   </div>
                 )}
 
-                <div style={{ position: "relative", width: 112, height: 112, margin: "8px auto 12px" }}>
-                  {col && <div style={{ position: "absolute", inset: -16, borderRadius: "50%", background: `radial-gradient(circle, ${glow} 0%, transparent 72%)`, pointerEvents: "none" }} />}
-                  <svg width="112" height="112" viewBox="0 0 112 112" style={{ position: "relative" }}>
-                    <circle cx="56" cy="56" r="44" fill="none" stroke={col ? col.accent : PRIMARY_DARK} strokeWidth="7" />
+                <div style={{ position: "relative", width: 88, height: 88, margin: "8px auto 10px" }}>
+                  <svg width="88" height="88" viewBox="0 0 88 88">
+                    <circle cx="44" cy="44" r="37" fill="none" stroke={accent} strokeWidth="5" />
                   </svg>
                   <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                    <div style={{ fontFamily: serifFont, fontSize: 16, color: INK, letterSpacing: 0.2 }}>{pad(focusMinutes)}:00</div>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+                <div style={{ display: "flex", gap: 5, justifyContent: "center", marginBottom: 10 }}>
                   {FOCUS_PRESETS.map((m) => (
                     <button
                       key={m}
                       onClick={() => setFocusMinutes(m)}
                       style={{
-                        padding: "5px 12px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                        border: `1.5px solid ${focusMinutes === m ? (col ? col.accent : PRIMARY_DARK) : BORDER}`,
-                        background: focusMinutes === m && col ? col.bg : "#fff",
-                        color: focusMinutes === m ? (col ? col.text : PRIMARY_DARK) : MUTED,
+                        padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                        border: `1px solid ${focusMinutes === m ? accent : BORDER}`,
+                        background: "#fff",
+                        color: focusMinutes === m ? accent : MUTED,
                       }}
                     >
                       {m}m
@@ -641,12 +639,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
                     className="hoverable"
                     style={{
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
-                      padding: "11px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
-                      fontSize: 13.5, fontWeight: 700, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%",
+                      padding: "9px", borderRadius: 999, border: `1.5px solid ${accent}`, background: "#fff", color: accent,
+                      fontSize: 12.5, fontWeight: 700, cursor: "pointer",
                     }}
                   >
-                    <Play size={14} color="#fff" /> Start to Focus
+                    <Play size={12} color={accent} /> Start to Focus
                   </button>
                 ) : (
                   <div style={{ textAlign: "center", fontSize: 11.5, color: MUTED }}>Nothing to start yet.</div>
