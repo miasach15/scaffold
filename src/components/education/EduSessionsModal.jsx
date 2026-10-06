@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { dateRangeISO, decimalToTimeLabel, formatShortDate, toISO } from "../../lib/dateHelpers";
+import { dateRangeISO, decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import Checkbox from "../shared/Checkbox";
@@ -55,6 +55,13 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
               onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
               {...noTypeDateProps}
               style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
+            />
+            <input
+              type="time"
+              value={decimalToTimeInput(item.dueStart)}
+              onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
+              title="Optional: a specific time it's due — shows timed on Calendar instead of in the all-day row"
+              style={{ ...inputStyle, width: 104, fontSize: 12, padding: "3px 6px" }}
             />
           </div>
         ) : (

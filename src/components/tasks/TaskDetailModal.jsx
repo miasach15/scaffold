@@ -61,7 +61,11 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
                   />
                 )}
               </div>
-              {onSetDuration && task.start != null && (
+              {/* Hidden for a breakdown step (groupId/eduId) — each one can run a
+                  different length night to night, so there's no single number to edit
+                  here. Available for a plain task regardless of whether it has a time,
+                  same as the add form. */}
+              {onSetDuration && !task.groupId && !task.eduId && (
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
                   {DURATION_PRESETS.map((m) => (
                     <button

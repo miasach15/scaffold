@@ -41,8 +41,9 @@ const HabitsView = lazy(() => import("./components/habits/HabitsView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
-import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
+import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
 
 export default function App() {
@@ -66,7 +67,7 @@ function FullScreenMessage({ text }) {
 
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
-  const { events, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
+  const { events, loading: eventsLoading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
   const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
@@ -177,6 +178,35 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     scheduleMidnightRun();
     return () => clearTimeout(timeoutId);
   }, [tasksLoading, eduItemsLoading, runOverdueSessionReflow]);
+
+  // Automatic overload rebalancing (see src/lib/overloadRebalance.js) — unlike the
+  // reflow above, this isn't just a once-a-day check: something new can overload a day
+  // at any point in a session (a new event, a new assignment's sessions landing on top
+  // of what was already a busy day), so this re-plans every time tasks/events/edu items
+  // actually change, not just at midnight. Capacity is the same usable-window math
+  // "What now?"/Dashboard already use (profile's start/end hours minus the after-school
+  // buffer), converted to minutes. Silent by design, same as the reflow — it only ever
+  // moves a FLEXIBLE work/study session (never a fixed-time task or a one-off with its
+  // own real due date), and only when a genuinely lighter day actually exists to move it
+  // to, so it never just shuffles the problem around.
+  const eventsRef = useRef(events);
+  useEffect(() => { eventsRef.current = events; }, [events]);
+  const runOverloadRebalance = useCallback(async () => {
+    if (!profile) return;
+    const dayHours = Math.max(0, (profile.whatnowWindowEnd ?? 21) - (profile.whatnowWindowStart ?? 9));
+    const capacityMinutes = Math.max(0, dayHours * 60 - (profile.afterSchoolBufferMinutes ?? 0));
+    const ops = planOverloadRebalance(tasksRef.current, eventsRef.current, eduItemsRef.current, capacityMinutes, toISO(new Date()));
+    if (ops.length === 0) return;
+    await applyOverloadRebalance(ops, setTaskDate);
+  }, [profile, setTaskDate]);
+  useEffect(() => {
+    if (tasksLoading || eduItemsLoading || eventsLoading || !profile) return;
+    runOverloadRebalance();
+    // tasks/events/eduItems deliberately included so this re-plans on every real change —
+    // applying a move itself changes `tasks`, which re-triggers this and converges once
+    // nothing's left over capacity (planOverloadRebalance returns no ops at that point).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, events, eduItems, tasksLoading, eduItemsLoading, eventsLoading, profile, runOverloadRebalance]);
 
   // Cmd/Ctrl+K opens search from anywhere; "/" does too, as long as you're not already
   // typing into something. Each modal still handles its own Escape-to-close.
@@ -378,9 +408,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const addEduItem = async (title, type, subject, dueDate, dueStart, repeat, workDays, flexible = false) => {
     const rows = await addEduItems({ title, type, subject, occurrences: repeatDates(dueDate, repeat), dueStart, flexible });
     if (!rows || rows.length === 0) return;
-    // A session's default estimate scales with the student's own pace setting (see
+    // A session's BASE estimate scales with the student's own pace setting (see
     // Settings' "Pace & capacity") — extended time/slower-than-average shows up as a
-    // bigger, more honest number right on the step instead of a one-size-fits-all 30.
+    // bigger, more honest number. sessionMinutesByLoad then spreads that base around per
+    // day based on how loaded each day already is — a quiet night gets more than a
+    // packed one instead of every session getting the exact same flat length regardless
+    // of what else is going on that day.
     const sessionMinutes = Math.round(30 * (profile.paceMultiplier || 1));
 
     if (type === "Homework") {
@@ -389,7 +422,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       // multi-day window like an Assignment/Assessment gets.
       for (const row of rows) {
         const workDate = toISO(addDays(new Date(row.dueDate + "T00:00:00"), -1));
-        addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: sessionMinutes, eduId: row.id, category: profile.educationCategory });
+        const [workMinutes] = sessionMinutesByLoad([workDate], tasks, events, sessionMinutes);
+        addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutes, eduId: row.id, category: profile.educationCategory });
       }
     } else if ((type === "Assignment" || type === "Assessment") && workDays) {
       const workVerb = type === "Assessment" ? "Study" : "Work on";
@@ -403,8 +437,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const isAiSteps = typeof effectiveSchedule === "object" && Array.isArray(effectiveSchedule.steps) && effectiveSchedule.steps.length > 0;
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
-          previewItems.forEach((it) => {
-            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: sessionMinutes, eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
+          const previewMinutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, sessionMinutes);
+          previewItems.forEach((it, i) => {
+            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: previewMinutes[i], eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
           });
           return;
         }
@@ -415,8 +450,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
         if (isAiSteps) {
           const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks, events);
+          const minutes = sessionMinutesByLoad(dates, tasks, events, sessionMinutes);
           effectiveSchedule.steps.forEach((stepTitle, i) => {
-            addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: sessionMinutes, eduId: row.id, category: profile.educationCategory, notes: stepTitle });
+            addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: stepTitle });
           });
         } else {
           // An assessment crams into the days right before it, not spread thin across
@@ -424,9 +460,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           const dates = type === "Assessment"
             ? daysBeforeDue(row.dueDate, effectiveSchedule)
             : effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
-          for (const d of dates) {
-            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: sessionMinutes, eduId: row.id, category: profile.educationCategory });
-          }
+          const minutes = sessionMinutesByLoad(dates, tasks, events, sessionMinutes);
+          dates.forEach((d, i) => {
+            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory });
+          });
         }
       });
     }

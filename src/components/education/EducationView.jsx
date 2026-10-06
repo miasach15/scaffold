@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, toISO } from "../../lib/dateHelpers";
+import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
@@ -55,6 +55,7 @@ export default function EducationView({
   const [type, setType] = useState("Assignment");
   const [subject, setSubject] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState(""); // optional — a test or assignment due at a specific time shows timed on Calendar instead of in the all-day row
   const [flexible, setFlexible] = useState(false); // "this deadline can move if it needs to" — softens its urgency instead of a fixed one's
   const [workMode, setWorkMode] = useState("days"); // "days" (pick a count) or "everyday"
   const [workDays, setWorkDays] = useState(3);
@@ -101,7 +102,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false); setFlexible(false); setAddingNewSubject(false);
+    setTitle(""); setDueDate(""); setDueTime(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false); setFlexible(false); setAddingNewSubject(false);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -175,7 +176,7 @@ export default function EducationView({
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
       return;
     }
-    onAddEduItem(title.trim(), type, subject, dueDate, null, "None", null, flexible);
+    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, "None", null, flexible);
     resetAddForm();
   };
 
@@ -184,7 +185,7 @@ export default function EducationView({
     // previewItems carries whatever the user edited/removed in the modal — used exactly
     // as-is for the first occurrence; if this assignment repeats, later occurrences fall
     // back to auto-computing their own schedule from `schedule` since we only preview one.
-    onAddEduItem(title.trim(), type, subject, dueDate, null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items }, flexible);
+    onAddEduItem(title.trim(), type, subject, dueDate, dueTime ? timeToDecimal(dueTime) : null, pendingPlan.repeatValue, { schedule: pendingPlan.schedule, previewItems: pendingPlan.items }, flexible);
     setPendingPlan(null);
     resetAddForm();
   };
@@ -423,6 +424,15 @@ export default function EducationView({
             </select>
           )}
           <DatePickerButton value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} placeholder="Due date" style={{ border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
+          {dueDate && (
+            <input
+              type="time"
+              value={dueTime}
+              onChange={(e) => setDueTime(e.target.value)}
+              title="Optional: a specific time it's due (e.g. a test at a set period) — shows timed on Calendar instead of in the all-day row"
+              style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }}
+            />
+          )}
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}
           </button>

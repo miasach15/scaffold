@@ -323,6 +323,37 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
 
   return offsets.slice().sort((a, b) => a - b).map((o) => toISO(addDays(start, o)));
 };
+// How long each of a breakdown's sessions should run — same "load" accounting as
+// distributeDatesByLoad above (minutes, counting both tasks and events, falling back to
+// the same default-length assumptions for anything with no estimate of its own), but
+// applied to LENGTH instead of to WHICH dates get picked. A day that's already loaded up
+// gets a shorter session on it; a quiet day gets a longer one — a flat default means
+// "study for 30 minutes" every single night regardless of whether that night is wide open
+// or already packed with practice and three other things, which is the thing this fixes.
+// Scales relative to the OTHER sessions in this same breakdown (not the whole calendar's
+// average), so a generally-busy week still gets a sensible spread rather than every
+// session bottoming out at the floor.
+export const sessionMinutesByLoad = (dates, existingTasks, existingEvents, baseMinutes, { min = 15, max = 90 } = {}) => {
+  if (!dates || dates.length === 0) return [];
+  const loadByDate = {};
+  (existingTasks || []).forEach((t) => {
+    if (!t.date || t.done) return;
+    loadByDate[t.date] = (loadByDate[t.date] || 0) + (t.duration ?? 30);
+  });
+  (existingEvents || []).forEach((e) => {
+    if (!e.date) return;
+    loadByDate[e.date] = (loadByDate[e.date] || 0) + (e.duration ?? 60);
+  });
+  const loads = dates.map((d) => loadByDate[d] || 0);
+  const avgLoad = loads.reduce((sum, l) => sum + l, 0) / loads.length;
+  // Half the gap between this day's load and the breakdown's own average, added onto (or
+  // subtracted from) the base length — a day well below average gets meaningfully longer,
+  // a day well above it gets meaningfully shorter, clamped to a sane floor/ceiling either way.
+  return loads.map((load) => {
+    const scaled = baseMinutes + (avgLoad - load) * 0.5;
+    return Math.round(Math.min(max, Math.max(min, scaled)) / 5) * 5;
+  });
+};
 // Collapses a {title, date}[] list down to at most one entry per date — used after
 // distributing a breakdown's steps, so if two ever land on the same day (e.g. more
 // steps than available days) they show up as one task covering both instead of two

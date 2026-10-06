@@ -141,7 +141,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       title: title.trim(),
       date: date || null,
       start: hasTime ? timeToDecimal(time) : null,
-      duration: hasTime ? duration : null,
+      // How long it'll take is its own, separate choice from when it's due — a quick
+      // errand with no deadline still has a length. This branch only ever runs for a
+      // plain (non-breakdown) task, since useAI already returned above.
+      duration,
       category,
     });
     resetForm();
@@ -352,7 +355,11 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
             </div>
           </div>
 
-          {date && time && (
+          {/* How long it'll take is independent of whether/when it's due — always
+              pickable for a plain task. Hidden only once "break it into steps" is on:
+              each night's session can take a different amount of time, so one fixed
+              length for the whole thing up front doesn't apply there. */}
+          {!useAI && (
             <div>
               <div style={fieldLabelStyle}>How long will it take?</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
