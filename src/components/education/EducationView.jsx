@@ -33,6 +33,7 @@ export default function EducationView({
   inboxItems,
   onDiscardInbox,
   educationCategory,
+  gradeClasses,
 }) {
   // One color for everything on this page — whatever you've actually set your School
   // category color to in Settings, not a fixed built-in tint.
@@ -75,7 +76,17 @@ export default function EducationView({
   const [justDone, setJustDone] = useState(() => new Set());
   const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
 
-  const knownSubjects = useMemo(() => Array.from(new Set(eduItems.map((e) => e.subject).filter(Boolean))), [eduItems]);
+  // Every class you've ever touched, from either side of the app — an assignment/homework
+  // item tagged with it, or a class you've set grading up for — so a class you just created
+  // in Grades (with nothing due yet) still shows up here, and vice versa.
+  const knownSubjects = useMemo(
+    () =>
+      Array.from(new Set([...eduItems.map((e) => e.subject), ...(gradeClasses || []).map((c) => c.subject)].filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    [eduItems, gradeClasses]
+  );
+  const [addingNewSubject, setAddingNewSubject] = useState(false);
 
   // How many work days the currently-picked schedule implies — used only as a soft hint
   // for the AI so its step count roughly lines up with "every day" vs a chosen day count.
@@ -90,7 +101,7 @@ export default function EducationView({
   };
 
   const resetAddForm = () => {
-    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false); setFlexible(false);
+    setTitle(""); setDueDate(""); setAssignmentDetails(""); setAddError(null); setShowAddForm(false); setFlexible(false); setAddingNewSubject(false);
   };
 
   const schedulable = type === "Assignment" || type === "Assessment";
@@ -386,10 +397,31 @@ export default function EducationView({
               </button>
             ))}
           </div>
-          <input list="subjects-datalist" placeholder="Subject" aria-label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle, width: 130 }} />
-          <datalist id="subjects-datalist">
-            {knownSubjects.map((s) => <option key={s} value={s} />)}
-          </datalist>
+          {addingNewSubject ? (
+            <input
+              placeholder="New class name"
+              aria-label="New class name"
+              value={subject}
+              autoFocus
+              onChange={(e) => setSubject(e.target.value)}
+              onBlur={() => { if (!subject.trim()) setAddingNewSubject(false); }}
+              style={{ ...inputStyle, width: 130 }}
+            />
+          ) : (
+            <select
+              aria-label="Subject"
+              value={subject}
+              onChange={(e) => {
+                if (e.target.value === "__new__") { setAddingNewSubject(true); setSubject(""); }
+                else setSubject(e.target.value);
+              }}
+              style={{ ...inputStyle, width: 130 }}
+            >
+              <option value="">No subject</option>
+              {knownSubjects.map((s) => <option key={s} value={s}>{s}</option>)}
+              <option value="__new__">+ New class…</option>
+            </select>
+          )}
           <DatePickerButton value={dueDate} onChange={(e) => { setDueDate(e.target.value); setAddError(null); }} placeholder="Due date" style={{ border: addError === "Add a due date first." ? "1.5px solid #B03A3A" : undefined }} />
           <button onClick={add} disabled={breakingDown} className="btn-primary" style={{ ...primaryBtn, opacity: breakingDown ? 0.6 : 1 }}>
             {type === "Assignment" && useAI ? (breakingDown ? "Breaking it down..." : "Break it down for me") : schedulable ? "Review plan" : "Add"}

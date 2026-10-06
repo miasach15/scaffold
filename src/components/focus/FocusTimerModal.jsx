@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
-import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { pad, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
@@ -254,104 +254,126 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     // Dashboard's own compact idle picker the instant a session starts, so without this
     // it visibly balloons in that same slot right when you press Start.
     const compact = !!portalTarget;
-    const ringSize = compact ? 106 : 148;
-    const ringRadius = compact ? 44 : 64;
-    const ringStroke = compact ? 6 : 9;
+    const ringSize = compact ? 116 : 172;
+    const ringRadius = compact ? 48 : 76;
+    const ringStroke = compact ? 6 : 8;
+    const glow = `${catColor.accent}40`; // soft wash of the task's own color, standing in for the reference's horizon glow — no actual darkness
     const card = (
-      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>Focus Session</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <div style={{
+        position: "relative", overflow: "hidden",
+        background: `radial-gradient(130% 90% at 50% -10%, ${catColor.bg} 0%, #fff 60%)`,
+        borderRadius: 24, border: `1px solid ${BORDER}`,
+        boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)",
+        padding: compact ? "16px 18px" : "22px 24px",
+        height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box",
+      }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" }}>
+            <div style={{ fontSize: 11.5, color: catColor.text, fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase" }}>Focus Session</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
               {task.id && onOpenDetail && (
                 <button
                   onClick={() => { onOpenDetail(task.id); onClose(); }}
                   title="Edit this task"
-                  style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}
+                  style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 5, display: "flex", borderRadius: 999 }}
                 >
                   <Pencil size={13} strokeWidth={2.2} />
                 </button>
               )}
-              <button onClick={onClose} title="Close" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}>
+              <button onClick={onClose} title="Close" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 5, display: "flex", borderRadius: 999 }}>
                 <X size={15} strokeWidth={2.2} />
               </button>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-            <div style={{ fontFamily: serifFont, fontSize: compact ? 17 : 19, color: INK, lineHeight: 1.2, minWidth: 0 }}>{task.title}</div>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, background: catColor.bg, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <div style={{ textAlign: "center", marginTop: compact ? 2 : 6 }}>
+            <div style={{ fontFamily: serifFont, fontSize: compact ? 16 : 20, color: INK, lineHeight: 1.25 }}>{task.title}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 3 }}>
               {task.category}
             </div>
           </div>
 
-          <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
-            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
+          <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "14px auto 4px" : "22px auto 6px" }}>
+            {/* A soft ambient glow behind the ring — the calm, atmospheric feel of the reference's horizon light, in the task's own color instead of a night sky */}
+            <div style={{ position: "absolute", inset: compact ? -16 : -24, borderRadius: "50%", background: `radial-gradient(circle, ${glow} 0%, transparent 72%)`, pointerEvents: "none" }} />
+            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)", position: "relative" }}>
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={catColor.bg} strokeWidth={ringStroke} />
               <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={PRIMARY_DARK} strokeWidth={ringStroke} strokeLinecap="round"
+                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={catColor.accent} strokeWidth={ringStroke} strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * ringRadius}
                 strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
                 style={{ transition: "stroke-dashoffset 1s linear" }}
               />
             </svg>
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
+              <div style={{ fontFamily: serifFont, fontSize: compact ? 24 : 40, color: INK, letterSpacing: 0.5 }}>
                 {pad(mm)}:{pad(ss)}
               </div>
             </div>
           </div>
           {!compact && (task.notes ? (
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 16 }}>
               <StepNotes notes={task.notes} title={task.title} duration={task.duration} color={MUTED} fontSize={12.5} align="center" />
             </div>
           ) : (
-            <div style={{ marginBottom: 14 }} />
+            <div style={{ marginBottom: 16 }} />
           ))}
 
           {finished ? (
-            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>Time's up. Nice focus session.</div>
+            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>Time's up. Nice focus session.</div>
           ) : (
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
+            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>
               {[15, 25, 50].map((m) => (
-                <button key={m} onClick={() => setPreset(m)} style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}>{m}m</button>
+                <button
+                  key={m}
+                  onClick={() => setPreset(m)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap", cursor: "pointer",
+                    border: `1.5px solid ${totalSeconds === m * 60 ? catColor.accent : BORDER}`,
+                    background: totalSeconds === m * 60 ? catColor.bg : "#fff",
+                    color: totalSeconds === m * 60 ? catColor.text : MUTED,
+                  }}
+                >
+                  {m}m
+                </button>
               ))}
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 12 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: compact ? 10 : 14 }}>
             <button
               onClick={toggleRunning}
               disabled={finished}
               style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_DARK, color: "#fff",
-                fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
+                padding: compact ? "12px" : "15px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                fontSize: 14.5, fontWeight: 600, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
+                boxShadow: finished ? "none" : `0 8px 20px ${glow}`,
               }}
             >
               {running ? <Pause size={16} color="#fff" /> : <Play size={16} color="#fff" />}
-              {running ? "Pause Session" : "Start Session"}
+              {running ? "Pause Session" : "Start to Focus"}
             </button>
             <button
               onClick={reset}
               title="Reset"
-              style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ width: 48, flexShrink: 0, borderRadius: 999, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
               <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
             </button>
           </div>
 
           {task.id && (
-            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: compact ? "0 0 8px" : "0 0 12px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>
+            <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: compact ? "0 0 10px" : "0 0 14px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>
               Mark complete
             </button>
           )}
 
-          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: compact ? 8 : 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 12, color: MUTED }}>Completed today: {completedTodayCount}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>{investedMin}m this session</div>
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: compact ? 10 : 14, display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 11.5, color: MUTED, background: SURFACE, borderRadius: 999, padding: "5px 12px" }}>Completed today: <span style={{ fontWeight: 700, color: INK }}>{completedTodayCount}</span></div>
+            <div style={{ fontSize: 11.5, color: catColor.text, background: catColor.bg, borderRadius: 999, padding: "5px 12px", fontWeight: 700 }}>{investedMin}m this session</div>
           </div>
 
           {!compact && steps.length > 0 && (
-            <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", marginTop: 12, paddingTop: 12 }}>
+            <div style={{ textAlign: "left", borderTop: "1px solid #F0F0F0", marginTop: 14, paddingTop: 14 }}>
               <div style={{ fontSize: 12, color: MUTED, fontWeight: 700, marginBottom: 8 }}>
                 Whole breakdown
               </div>

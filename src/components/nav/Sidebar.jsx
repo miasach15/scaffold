@@ -32,8 +32,12 @@ const TAB_BAR_ITEMS = [
 ];
 const MORE_DRAWER_VIEWS = ["goals", "habits", "grades"];
 
-export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut }) {
+export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut, profile }) {
   const [open, setOpen] = useState(false);
+  // Settings and sign-out tucked behind the profile avatar instead of two more flat icons
+  // in a row — account actions, not things-to-do-right-now the way Search/Weekly Review are.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const initial = (profile?.name || "").trim().charAt(0).toUpperCase() || "?";
   // The bottom bar's own Menu/"More" tab stands in for whichever page it's covering —
   // active either while the drawer is actually open, or while sitting on one of the
   // pages that only lives inside it.
@@ -50,6 +54,7 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
         .sb-bottom-tabbar { display: none; }
         .sb-backdrop { display: none; }
         .sb-icon-btn:hover { background: #F0F1F4 !important; color: ${INK} !important; }
+        .sb-menu-row:hover { background: #F0F1F4 !important; }
         @media (max-width: 860px) {
           .sb-rail {
             position: fixed; top: 0; bottom: 0; left: 0; z-index: 200; width: 250px;
@@ -135,19 +140,39 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
           </nav>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 18, borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
-          <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
-            <Search size={16} />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
+              <Search size={16} />
+            </button>
+            <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
+              <ListChecks size={16} />
+            </button>
+          </div>
+
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            title={profile?.name || "Account"}
+            aria-label="Account menu"
+            style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: PRIMARY_DARK, color: "#fff", fontSize: 12.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+          >
+            {initial}
           </button>
-          <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="sb-icon-btn" style={iconBtnStyle}>
-            <Settings size={16} />
-          </button>
-          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
-            <ListChecks size={16} />
-          </button>
-          <button onClick={onSignOut} title="Sign out" className="sb-icon-btn" style={iconBtnStyle}>
-            <LogOut size={16} />
-          </button>
+
+          {menuOpen && (
+            <>
+              <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 210 }} />
+              <div style={{ position: "absolute", bottom: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0 10px 30px rgba(26,26,46,0.14)", padding: 6, width: 168, zIndex: 211 }}>
+                <button data-tour="nav-settings" onClick={() => { setMenuOpen(false); onOpenSettings(); }} className="sb-menu-row" style={menuRowStyle}>
+                  <Settings size={15} strokeWidth={1.8} /> Settings
+                </button>
+                <div style={{ borderTop: `1px solid ${BORDER}`, margin: "4px 2px" }} />
+                <button onClick={() => { setMenuOpen(false); onSignOut(); }} className="sb-menu-row" style={menuRowStyle}>
+                  <LogOut size={15} strokeWidth={1.8} /> Sign out
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -178,4 +203,9 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
 const iconBtnStyle = {
   width: 32, height: 32, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
   borderRadius: 8, border: "none", background: "transparent", color: MUTED,
+};
+
+const menuRowStyle = {
+  display: "flex", alignItems: "center", gap: 9, width: "100%", padding: "8px 10px", borderRadius: 8,
+  border: "none", background: "none", textAlign: "left", fontSize: 13, fontWeight: 600, color: INK, cursor: "pointer",
 };

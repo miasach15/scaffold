@@ -659,6 +659,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}
         onSignOut={onSignOut}
+        profile={profile}
       />
 
       <div
@@ -793,6 +794,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             inboxItems={eduInboxItems}
             onDiscardInbox={removeInboxItem}
             educationCategory={profile.educationCategory}
+            gradeClasses={gradeClasses}
           />
         )}
         {view === "grades" && (
