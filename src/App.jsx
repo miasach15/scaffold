@@ -931,6 +931,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
       {focusTask && (
         <FocusTimerModal
+          // Keyed by task id — switching which task this modal is timing (via
+          // onSwitchTask, or starting a new one from elsewhere) should reset the ring/
+          // clock to a fresh state, not keep counting down whatever the previous task
+          // had left. portalTarget changing on its own (Dashboard <-> elsewhere) must
+          // NOT remount it, which is exactly what keying only on task.id gives us.
+          key={focusTask.id}
           task={focusTask}
           tasks={tasks}
           profile={profile}
@@ -938,8 +944,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
           onComplete={(investedMin) => { if (focusTask.id) setTaskDone(focusTask.id, true, investedMin); }}
-          defaultMinutes={focusTask.minutes || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
+          // The task's own estimated length beats a generic pace-based number whenever
+          // it has one — same "the time should mean something" fix as Dashboard's picker.
+          defaultMinutes={focusTask.minutes || focusTask.duration || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
           onOpenDetail={openTaskDetail}
+          onSwitchTask={openFocus}
           portalTarget={view === "dashboard" ? dashboardFocusSlot : null}
         />
       )}

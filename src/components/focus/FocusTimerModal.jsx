@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
-import { pad, toISO } from "../../lib/dateHelpers";
+import { meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
@@ -37,7 +37,7 @@ async function notifySessionDone(title) {
   }
 }
 
-export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, portalTarget }) {
+export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   const initial = (defaultMinutes || 25) * 60;
@@ -79,6 +79,11 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   // at that point.
   const audioCtxRef = useRef(null);
   const prevRemainingRef = useRef(initial);
+  // Seconds already banked from a previous lap(s) of this same session — "Keep going"
+  // past a finished lap starts a fresh countdown rather than just un-zeroing the old
+  // one, so without this the invested-time stat would reset to 0 every time you kept
+  // going instead of accumulating across the whole session.
+  const extraSecondsRef = useRef(0);
   // The wall-clock moment the countdown should hit 0 — set whenever running starts (or
   // resumes). Background/inactive tabs get their setInterval throttled by the browser
   // (sometimes down to once a minute or less), so counting down by decrementing once per
@@ -188,6 +193,16 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     prevRemainingRef.current = totalSeconds;
     endTimeRef.current = null;
   };
+  // Another lap of the same length, picking up where the invested-time count left off —
+  // "Keep going" when a lap finishes but the task isn't actually done yet.
+  const keepGoing = () => {
+    ensureAudioCtx();
+    extraSecondsRef.current += totalSeconds;
+    setRemaining(totalSeconds);
+    prevRemainingRef.current = totalSeconds;
+    endTimeRef.current = Date.now() + totalSeconds * 1000;
+    setRunning(true);
+  };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const finished = remaining === 0;
@@ -196,6 +211,21 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   // shown as a checklist so you can see the whole thing and check off steps without
   // leaving the timer.
   const steps = task.groupId ? (tasks || []).filter((t) => t.groupId === task.groupId).sort((a, b) => (a.date || "").localeCompare(b.date || "")) : [];
+
+  // Which other still-open task to offer switching to once a lap finishes without the
+  // current one being done — same soonest-first pick as the celebration screen's own
+  // "Up next" below, just triggered by running out of time instead of marking complete.
+  const otherTask = useMemo(() => {
+    if (!finished || task.done) return null;
+    return [...(tasks || [])]
+      .filter((t) => !t.done && t.id !== task.id)
+      .sort((a, b) => {
+        const ad = a.date || "9999-99-99", bd = b.date || "9999-99-99";
+        if (ad !== bd) return ad.localeCompare(bd);
+        return (a.start ?? 99) - (b.start ?? 99);
+      })[0] || null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished, task.done, task.id, tasks]);
 
   useEffect(() => {
     if (celebrating) playSuccessChime();
@@ -206,7 +236,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     ensureAudioCtx();
     setRunning(false);
     setCompletedAt(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
-    onComplete(Math.round(Math.max(0, totalSeconds - remaining) / 60));
+    onComplete(investedMin);
     setCelebrating(true);
   };
 
@@ -225,7 +255,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     onClose();
   };
 
-  const investedMin = Math.round(Math.max(0, totalSeconds - remaining) / 60);
+  const investedMin = Math.round(Math.max(0, extraSecondsRef.current + totalSeconds - remaining) / 60);
   const stepsDoneInfo = task.groupId ? { done: steps.filter((s) => s.done).length, total: steps.length } : null;
   // How many tasks you've actually finished today — real data, not a made-up daily quota.
   const todayISO = toISO(new Date());
@@ -317,49 +347,96 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             <div style={{ marginBottom: 16 }} />
           ))}
 
-          {finished ? (
-            <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>Time's up. Nice focus session.</div>
-          ) : (
-            <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>
-              {[15, 25, 50].map((m) => (
+          {finished && !task.done ? (
+            // Ran out the clock without marking it done — rather than a dead end, this
+            // is the one moment it's worth asking outright: keep pushing on the same
+            // thing, or is it actually time to switch to something else.
+            <>
+              <div style={{ textAlign: "center", fontSize: 13, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
+                Time's up on {task.title}.
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
                 <button
-                  key={m}
-                  onClick={() => setPreset(m)}
+                  onClick={keepGoing}
+                  className="hoverable"
                   style={{
-                    padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap", cursor: "pointer",
-                    border: `1.5px solid ${totalSeconds === m * 60 ? catColor.accent : BORDER}`,
-                    background: totalSeconds === m * 60 ? catColor.bg : "#fff",
-                    color: totalSeconds === m * 60 ? catColor.text : MUTED,
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    padding: compact ? "12px" : "15px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                    fontSize: 14.5, fontWeight: 600, cursor: "pointer", boxShadow: `0 8px 20px ${glow}`,
                   }}
                 >
-                  {m}m
+                  <Play size={16} color="#fff" /> Keep Going
                 </button>
-              ))}
-            </div>
-          )}
+                <button
+                  onClick={reset}
+                  title="Restart this lap"
+                  style={{ width: 48, flexShrink: 0, borderRadius: 999, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                >
+                  <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
+                </button>
+              </div>
+              {otherTask && (
+                <button
+                  onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
+                  className="hoverable"
+                  style={{
+                    display: "block", width: "100%", textAlign: "center", marginBottom: compact ? 8 : 10,
+                    padding: compact ? "9px" : "11px", borderRadius: 999, border: `1.5px solid ${catColor.accent}`, background: "#fff", color: catColor.text,
+                    fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  Switch to "{otherTask.title}" instead
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {finished ? (
+                <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>Time's up. Nice focus session.</div>
+              ) : (
+                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 12 : 16 }}>
+                  {meaningfulFocusPresets(task.duration).map((m, i) => (
+                    <button
+                      key={m}
+                      onClick={() => setPreset(m)}
+                      title={task.duration && i === 1 ? `${task.title}'s recommended length` : undefined}
+                      style={{
+                        padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap", cursor: "pointer",
+                        border: `1.5px solid ${totalSeconds === m * 60 ? catColor.accent : BORDER}`,
+                        background: totalSeconds === m * 60 ? catColor.bg : "#fff",
+                        color: totalSeconds === m * 60 ? catColor.text : MUTED,
+                      }}
+                    >
+                      {m}m{task.duration && i === 1 ? " ★" : ""}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-          <div style={{ display: "flex", gap: 8, marginBottom: compact ? 10 : 14 }}>
-            <button
-              onClick={toggleRunning}
-              disabled={finished}
-              style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: compact ? "12px" : "15px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
-                fontSize: 14.5, fontWeight: 600, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
-                boxShadow: finished ? "none" : `0 8px 20px ${glow}`,
-              }}
-            >
-              {running ? <Pause size={16} color="#fff" /> : <Play size={16} color="#fff" />}
-              {running ? "Pause Session" : "Start to Focus"}
-            </button>
-            <button
-              onClick={reset}
-              title="Reset"
-              style={{ width: 48, flexShrink: 0, borderRadius: 999, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
-            </button>
-          </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 10 : 14 }}>
+                <button
+                  onClick={toggleRunning}
+                  disabled={finished}
+                  style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    padding: compact ? "12px" : "15px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                    fontSize: 14.5, fontWeight: 600, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
+                    boxShadow: finished ? "none" : `0 8px 20px ${glow}`,
+                  }}
+                >
+                  {running ? <Pause size={16} color="#fff" /> : <Play size={16} color="#fff" />}
+                  {running ? "Pause Session" : "Start to Focus"}
+                </button>
+                <button
+                  onClick={reset}
+                  title="Reset"
+                  style={{ width: 48, flexShrink: 0, borderRadius: 999, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                >
+                  <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
+                </button>
+              </div>
+            </>
+          )}
 
           {task.id && (
             <button onClick={markComplete} style={{ display: "block", width: "100%", background: "none", border: "none", padding: compact ? "0 0 10px" : "0 0 14px", fontSize: 12.5, fontWeight: 600, color: PRIMARY_DARK, cursor: "pointer" }}>

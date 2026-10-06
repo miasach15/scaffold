@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, Notebook
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
-const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
 // page's own background — one continuous surface instead of white boxes on gray.
@@ -14,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, meaningfulFocusPresets, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -239,6 +238,18 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       })();
   const untimedById = new Map(todaysUntimed.map((t) => [t.id, t]));
   const displayUntimed = liveOrder ? liveOrder.map((id) => untimedById.get(id)).filter(Boolean) : baseUntimedOrder;
+  // The same task the top "Anytime today" row highlights — the Focus Session widget
+  // below is tied to this one task, same as that row's own Start button.
+  const heroTask = displayUntimed[0] || null;
+  // Defaults the picker to THIS task's own recommended length (see
+  // meaningfulFocusPresets) whenever the suggested task changes, instead of always
+  // landing on a generic pace-based number unrelated to what's actually being started.
+  // Only on an actual task change (not every render) so picking a different preset by
+  // hand isn't immediately overwritten.
+  useEffect(() => {
+    if (heroTask?.duration) setFocusMinutes(heroTask.duration);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heroTask?.id]);
   const startDrag = (id) => (e) => {
     if (!onReorderTasks) return;
     e.preventDefault();
@@ -580,32 +591,38 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               card everywhere else. */}
           {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
-          {/* Deliberately NOT a card — "Today's steps" is the one lifted surface on this
-              page (see HERO_BG's own comment); giving this its own bordered box made it
-              read as an equal peer instead of a quiet utility. Flat, small, horizontal —
-              closer to how Habits/Done today sit below. The bound task's own category
-              color is still the one accent used (ring + picked duration + the Start
-              text), not the app's theme purple, so it means something without being loud
-              about it. Pressing Start calls the exact same onStartFocus the row's own
-              Start button does — this is just a second way into the same action. */}
+          {/* A light card (border, no shadow/gradient/glow) — present enough to read as
+              a real control, but deliberately lighter than Today's steps (which has both
+              a border AND a shadow — see HERO_BG above) so it never reads as an equal
+              peer. The bound task's own category color is the one accent used throughout
+              (ring + the picked duration + the Start outline), not the app's theme
+              purple, so it actually means something. The three durations aren't a flat
+              15/25/50 either — they're scaled around THIS task's own estimated length
+              (see meaningfulFocusPresets), with the middle one marked as the recommended
+              one and pre-selected by default. Pressing Start calls the exact same
+              onStartFocus the row's own Start button does — this is just a second way in. */}
           {!hasActiveFocusSession && (() => {
-            const heroTask = displayUntimed[0] || null;
             const col = heroTask ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal : null;
             const accent = col ? col.accent : MUTED;
+            const presets = meaningfulFocusPresets(heroTask?.duration);
+            const recommendedIdx = heroTask?.duration ? 1 : -1;
             return (
-              <div style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Focus session</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ position: "relative", width: 38, height: 38, flexShrink: 0 }}>
-                    <svg width="38" height="38" viewBox="0 0 38 38">
-                      <circle cx="19" cy="19" r="16" fill="none" stroke={accent} strokeWidth="2.5" opacity={0.8} />
+              <div style={{ flexShrink: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px 12px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 }}>Focus session</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
+                    <svg width="56" height="56" viewBox="0 0 56 56">
+                      <circle cx="28" cy="28" r="23" fill="none" stroke={accent} strokeWidth="4" />
                     </svg>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ fontFamily: serifFont, fontSize: 11.5, color: INK }}>{pad(focusMinutes)}:00</div>
+                    </div>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {heroTask ? (
                       <>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
-                        <div style={{ fontSize: 11, color: MUTED }}>{pad(focusMinutes)}:00 focus</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
                       </>
                     ) : (
                       <div style={{ fontSize: 12.5, color: MUTED }}>Nothing to start yet.</div>
@@ -613,34 +630,37 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {FOCUS_PRESETS.map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setFocusMinutes(m)}
-                        style={{
-                          background: "none", border: "none", padding: 0, cursor: "pointer",
-                          fontSize: 11.5, fontWeight: focusMinutes === m ? 700 : 500,
-                          color: focusMinutes === m ? accent : MUTED,
-                        }}
-                      >
-                        {m}m
-                      </button>
-                    ))}
-                  </div>
-                  {heroTask && (
+                <div style={{ display: "flex", gap: 6, marginTop: 10, marginBottom: 10 }}>
+                  {presets.map((m, i) => (
                     <button
-                      onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
+                      key={m}
+                      onClick={() => setFocusMinutes(m)}
+                      title={i === recommendedIdx ? `${heroTask.title}'s recommended length` : undefined}
                       style={{
-                        display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0,
-                        marginLeft: "auto", fontSize: 11.5, fontWeight: 700, color: accent, cursor: "pointer",
+                        flex: 1, padding: "5px 0", borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                        border: `1px solid ${focusMinutes === m ? accent : BORDER}`,
+                        background: focusMinutes === m ? (col ? col.bg : SURFACE) : "#fff",
+                        color: focusMinutes === m ? accent : MUTED,
                       }}
                     >
-                      <Play size={10} color={accent} /> Start
+                      {m}m{i === recommendedIdx ? " ★" : ""}
                     </button>
-                  )}
+                  ))}
                 </div>
+
+                {heroTask && (
+                  <button
+                    onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
+                    className="hoverable"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%",
+                      padding: "8px", borderRadius: 999, border: `1.5px solid ${accent}`, background: "#fff", color: accent,
+                      fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    }}
+                  >
+                    <Play size={11} color={accent} /> Start to Focus
+                  </button>
+                )}
               </div>
             );
           })()}

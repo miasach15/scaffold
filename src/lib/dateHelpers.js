@@ -243,6 +243,24 @@ export const distributeDates = (startISO, endISO, count) => {
 // with this figuring out which N — not "only ever on Mondays." Omitted, 0, or >= the
 // window size all fall back to using every day in the window ("every day" mode — also the
 // original, pre-existing behavior when this param is unused).
+// Three duration choices that actually mean something, instead of a flat 15/25/50 no
+// matter what's being worked on: a bit under, right at, and a bit over the task's own
+// estimated length — so the middle one IS the recommended time for this specific thing,
+// not a generic number. Falls back to the old flat spread when there's no task (or no
+// estimate) to anchor to.
+export const meaningfulFocusPresets = (baseMinutes) => {
+  if (!baseMinutes || baseMinutes <= 0) return [15, 25, 50];
+  const round5 = (n) => Math.max(5, Math.round(n / 5) * 5);
+  const short = round5(baseMinutes * 0.6);
+  const recommended = round5(baseMinutes);
+  const long = round5(baseMinutes * 1.5);
+  const vals = [short, recommended, long];
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i] <= vals[i - 1]) vals[i] = vals[i - 1] + 5;
+  }
+  return vals;
+};
+
 export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, maxDays) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
