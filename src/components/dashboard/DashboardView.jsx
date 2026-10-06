@@ -465,9 +465,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             </div>
           </div>
 
-          <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "22px 22px 20px", flexShrink: 0, boxShadow: "0 6px 24px rgba(26,26,46,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Today's steps</div>
+          <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px", flexShrink: 0, boxShadow: "0 12px 36px rgba(26,26,46,0.10)" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
+              <div style={{ fontFamily: serifFont, fontSize: 29, color: INK, letterSpacing: -0.4 }}>Today's steps</div>
               <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
                 {scaffoldedTotalCount > 0 && (
                   remainingStepCount > 0
@@ -591,55 +591,57 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               card everywhere else. */}
           {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
-          {/* A light card (border, no shadow/gradient/glow) — present enough to read as
-              a real control, but deliberately lighter than Today's steps (which has both
-              a border AND a shadow — see HERO_BG above) so it never reads as an equal
-              peer. The bound task's own category color is the one accent used throughout
-              (ring + the picked duration + the Start outline), not the app's theme
-              purple, so it actually means something. The three durations aren't a flat
-              15/25/50 either — they're scaled around THIS task's own estimated length
-              (see meaningfulFocusPresets), with the middle one marked as the recommended
-              one and pre-selected by default. Pressing Start calls the exact same
-              onStartFocus the row's own Start button does — this is just a second way in. */}
+          {/* No card at all — border+background were still reading as an equal peer to
+              Today's steps no matter how much the content inside shrank, since two
+              same-shaped boxes side by side register as "two cards of comparable
+              importance" regardless of their internal sizing. Sitting flush in the
+              column, same as Habits/Done today below, is what actually settles that:
+              Today's steps is the one real card on this page (see HERO_BG above, now
+              with a bigger title and a stronger shadow on top of that). The bound task's
+              own category color is still the one accent used throughout (ring + picked
+              duration + Start outline), and the three durations are still scaled around
+              THIS task's own estimated length (see meaningfulFocusPresets) rather than a
+              flat 15/25/50. Pressing Start calls the exact same onStartFocus the row's
+              own Start button does — this is just a second way in. */}
           {!hasActiveFocusSession && (() => {
             const col = heroTask ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal : null;
             const accent = col ? col.accent : MUTED;
             const presets = meaningfulFocusPresets(heroTask?.duration);
             const recommendedIdx = heroTask?.duration ? 1 : -1;
             return (
-              <div style={{ flexShrink: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px 12px" }}>
+              <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 }}>Focus session</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
-                    <svg width="56" height="56" viewBox="0 0 56 56">
-                      <circle cx="28" cy="28" r="23" fill="none" stroke={accent} strokeWidth="4" />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ position: "relative", width: 42, height: 42, flexShrink: 0 }}>
+                    <svg width="42" height="42" viewBox="0 0 42 42">
+                      <circle cx="21" cy="21" r="17" fill="none" stroke={accent} strokeWidth="3" opacity={0.85} />
                     </svg>
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ fontFamily: serifFont, fontSize: 11.5, color: INK }}>{pad(focusMinutes)}:00</div>
+                      <div style={{ fontFamily: serifFont, fontSize: 9, color: INK }}>{pad(focusMinutes)}:00</div>
                     </div>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {heroTask ? (
                       <>
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
                       </>
                     ) : (
-                      <div style={{ fontSize: 12.5, color: MUTED }}>Nothing to start yet.</div>
+                      <div style={{ fontSize: 12, color: MUTED }}>Nothing to start yet.</div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 6, marginTop: 10, marginBottom: 10 }}>
+                <div style={{ display: "flex", gap: 5, marginTop: 9, marginBottom: 9 }}>
                   {presets.map((m, i) => (
                     <button
                       key={m}
                       onClick={() => setFocusMinutes(m)}
                       title={i === recommendedIdx ? `${heroTask.title}'s recommended length` : undefined}
                       style={{
-                        flex: 1, padding: "5px 0", borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                        flex: 1, padding: "4px 0", borderRadius: 999, fontSize: 10.5, fontWeight: 700, cursor: "pointer",
                         border: `1px solid ${focusMinutes === m ? accent : BORDER}`,
-                        background: focusMinutes === m ? (col ? col.bg : SURFACE) : "#fff",
+                        background: "#fff",
                         color: focusMinutes === m ? accent : MUTED,
                       }}
                     >
@@ -653,9 +655,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
                     className="hoverable"
                     style={{
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%",
-                      padding: "8px", borderRadius: 999, border: `1.5px solid ${accent}`, background: "#fff", color: accent,
-                      fontSize: 12, fontWeight: 700, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5, width: "100%",
+                      padding: "7px", borderRadius: 999, border: `1px solid ${accent}`, background: "#fff", color: accent,
+                      fontSize: 11.5, fontWeight: 700, cursor: "pointer",
                     }}
                   >
                     <Play size={11} color={accent} /> Start to Focus
