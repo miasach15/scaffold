@@ -21,10 +21,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  // How long the task's own time-block is, once it has a specific time — shown on both
-  // Calendar (as a sized block, same as events) and Dashboard's "Today's Scaffolded
-  // Steps" (as a duration next to the time). 60 matches the old hardcoded default.
-  const [duration, setDuration] = useState(60);
   const [category, setCategory] = useState("Personal");
   const [showMore, setShowMore] = useState(false);
   // The quick-add row stays collapsed behind a single "+ New Task" button until you
@@ -54,7 +50,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   };
 
   const resetForm = () => {
-    setTitle(""); setDate(""); setTime(""); setDuration(60); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setStartFrom("today"); setShowMore(false); setShowAddForm(false);
+    setTitle(""); setDate(""); setTime(""); setDetails(""); setUseAI(false); setScheduleMode("every"); setPickDaysCount(""); setStartFrom("today"); setShowMore(false); setShowAddForm(false);
   };
 
   const breakDownTask = async () => {
@@ -141,10 +137,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       title: title.trim(),
       date: date || null,
       start: hasTime ? timeToDecimal(time) : null,
-      // How long it'll take is its own, separate choice from when it's due — a quick
-      // errand with no deadline still has a length. This branch only ever runs for a
-      // plain (non-breakdown) task, since useAI already returned above.
-      duration,
+      duration: hasTime ? 60 : null,
       category,
     });
     resetForm();
@@ -354,35 +347,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
               )}
             </div>
           </div>
-
-          {/* How long it'll take is independent of whether/when it's due — always
-              pickable for a plain task. Hidden only once "break it into steps" is on:
-              each night's session can take a different amount of time, so one fixed
-              length for the whole thing up front doesn't apply there. */}
-          {!useAI && (
-            <div>
-              <div style={fieldLabelStyle}>How long will it take?</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                {[15, 30, 45, 60, 90, 120].map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setDuration(m)}
-                    style={{
-                      padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                      border: `1px solid ${duration === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                      background: "#fff",
-                      color: duration === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                    }}
-                  >
-                    {m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${(m / 60).toFixed(1)}h`}
-                  </button>
-                ))}
-              </div>
-              {/* Time-blocked on Calendar as a sized slot (same as events) and shown next
-                  to its time in Dashboard's "Today's Scaffolded Steps" — this is just the
-                  block length, not a separate "estimate" field. */}
-            </div>
-          )}
 
           <div data-tour="tasks-category">
             <div style={fieldLabelStyle}>Category</div>

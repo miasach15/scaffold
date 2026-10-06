@@ -7,10 +7,9 @@ import ModalPortal from "../shared/ModalPortal";
 
 // Click any task, anywhere (Tasks page or Calendar), to land here — shows the full,
 // untruncated title and lets you rename it, since chips elsewhere often clip it.
-const DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
 const durationLabel = (m) => (m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${(m / 60).toFixed(1)}h`);
 
-export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate, onSetStart, onSetDuration, onSetNotes }) {
+export default function TaskDetailModal({ task, onClose, onRename, onToggleDone, onRemove, onOpenFocus, onSetDate, onSetStart, onSetNotes }) {
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [notesDraft, setNotesDraft] = useState(task.notes || "");
   const [editingDate, setEditingDate] = useState(false);
@@ -61,28 +60,6 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
                   />
                 )}
               </div>
-              {/* Hidden for a breakdown step (groupId/eduId) — each one can run a
-                  different length night to night, so there's no single number to edit
-                  here. Available for a plain task regardless of whether it has a time,
-                  same as the add form. */}
-              {onSetDuration && !task.groupId && !task.eduId && (
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
-                  {DURATION_PRESETS.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => onSetDuration(task.id, m)}
-                      style={{
-                        padding: "3px 9px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-                        border: `1px solid ${task.duration === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                        background: "#fff",
-                        color: task.duration === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-                      }}
-                    >
-                      {durationLabel(m)}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           ) : task.date ? (
             <div onClick={() => onSetDate && setEditingDate(true)} title={onSetDate ? "Click to change date or time" : undefined} style={{ fontSize: 12.5, color: "#8B95A1", cursor: onSetDate ? "pointer" : "default" }}>
