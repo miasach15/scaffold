@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthProvider";
-import { INK, MUTED, PAPER_BG, THEME_PRESETS, cardStyle, serifFont } from "../../lib/constants";
+import { INK, MUTED, PAPER_BG, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
-import { inputStyle, primaryBtn, ghostBtn } from "../../lib/styles";
 import IntroSplash from "./IntroSplash";
 
 // The opening screens (this one + OnboardingQuiz) get their own accent — Sky — matching
@@ -11,6 +10,13 @@ import IntroSplash from "./IntroSplash";
 // exist yet at this point anyway. Background stays the app's normal PAPER_BG, same as
 // that Figma screen's own near-white background.
 const SKY = THEME_PRESETS.sky.primary;
+
+// No wrapping card — a bordered, off-white box sitting on the page's own near-white
+// background read as a second, slightly-mismatched surface rather than a deliberate
+// one. The form just sits directly on the page instead, same instinct as the rest of
+// the app's recent move away from stacking boxes on boxes.
+const fieldLabel = { fontSize: 12, fontWeight: 600, color: MUTED, display: "block", marginBottom: 6 };
+const fieldInput = { width: "100%", padding: "13px 16px", borderRadius: 14, border: "1.5px solid #E5E0EE", fontSize: 15, outline: "none", background: "#fff", color: INK, transition: "border-color .15s" };
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
@@ -74,7 +80,7 @@ export default function AuthScreen() {
         * { box-sizing: border-box; }
         button { font-family: inherit; cursor: pointer; }
         input { font-family: inherit; }
-        input:focus { outline: none; border-color: ${SKY} !important; box-shadow: 0 0 0 3px rgba(130,144,216,0.14); }
+        input:focus { outline: none; border-color: ${SKY} !important; }
         @media (max-width: 640px) {
           input { font-size: 16px !important; } /* prevents iOS auto-zoom-on-focus */
         }
@@ -89,47 +95,54 @@ export default function AuthScreen() {
           .auth-fade { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
         }
       `}</style>
-      <form onSubmit={submit} className="auth-fade" style={{ ...cardStyle, width: 380, maxWidth: "100%", padding: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <Monogram size={26} />
-          <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.3 }}>Scaffold</div>
-        </div>
-        <div style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>
-          {mode === "sign-in" ? "Welcome back." : mode === "sign-up" ? "Create an account to save your data." : "We'll email you a link to reset your password."}
+      <form onSubmit={submit} className="auth-fade" style={{ width: 360, maxWidth: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 36 }}>
+          <Monogram size={42} />
+          <div style={{ fontFamily: serifFont, fontSize: 32, color: INK, letterSpacing: -0.5, marginTop: 10 }}>Scaffold</div>
+          <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 15, color: MUTED, marginTop: 6 }}>
+            {mode === "sign-in" ? "Good to see you again." : mode === "sign-up" ? "Let's get you set up." : "We'll email you a link to reset your password."}
+          </div>
         </div>
 
-        <label style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, display: "block", marginBottom: 4 }}>Email</label>
-        <input
-          type="email"
-          autoFocus
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          style={{ ...inputStyle, width: "100%", marginBottom: mode === "forgot" ? 0 : 12 }}
-        />
+        <div style={{ marginBottom: mode === "forgot" ? 0 : 16 }}>
+          <label style={fieldLabel}>Email</label>
+          <input
+            type="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            style={fieldInput}
+          />
+        </div>
         {mode !== "forgot" && (
-          <>
-            <label style={{ fontSize: 11.5, fontWeight: 600, color: MUTED, display: "block", marginBottom: 4 }}>Password</label>
+          <div>
+            <label style={fieldLabel}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              style={{ ...inputStyle, width: "100%" }}
+              style={fieldInput}
             />
-          </>
+          </div>
         )}
 
         {mode === "sign-in" && (
-          <button type="button" onClick={() => switchMode("forgot")} style={{ ...ghostBtn, border: "none", background: "none", padding: 0, marginTop: 8, fontSize: 12, color: MUTED }}>
+          <button type="button" onClick={() => switchMode("forgot")} style={{ border: "none", background: "none", padding: 0, marginTop: 10, fontSize: 12.5, color: MUTED, cursor: "pointer" }}>
             Forgot password?
           </button>
         )}
 
-        {error && <div style={{ fontSize: 12.5, color: "#B03A3A", marginTop: 10 }}>{error}</div>}
-        {info && <div style={{ fontSize: 12.5, color: "#2C6B4C", marginTop: 10 }}>{info}</div>}
+        {error && <div style={{ fontSize: 12.5, color: "#B03A3A", marginTop: 12 }}>{error}</div>}
+        {info && <div style={{ fontSize: 12.5, color: "#2C6B4C", marginTop: 12 }}>{info}</div>}
 
-        <button type="submit" disabled={busy} className="btn-primary" style={{ ...primaryBtn, background: SKY, width: "100%", marginTop: 18, opacity: busy ? 0.6 : 1 }}>
+        <button
+          type="submit"
+          disabled={busy}
+          className="btn-primary"
+          style={{ display: "block", width: "100%", padding: "14px", borderRadius: 999, border: "none", background: SKY, color: "#fff", fontSize: 15, fontWeight: 700, marginTop: 24, opacity: busy ? 0.6 : 1, cursor: busy ? "default" : "pointer" }}
+        >
           {busy ? "Please wait..." : mode === "sign-in" ? "Sign in" : mode === "sign-up" ? "Sign up" : "Send reset link"}
         </button>
 
@@ -137,7 +150,7 @@ export default function AuthScreen() {
           <button
             type="button"
             onClick={() => switchMode("sign-in")}
-            style={{ ...ghostBtn, width: "100%", marginTop: 8, border: "none", background: "none" }}
+            style={{ display: "block", width: "100%", textAlign: "center", border: "none", background: "none", padding: 0, marginTop: 16, fontSize: 13, color: MUTED, cursor: "pointer" }}
           >
             Back to sign in
           </button>
@@ -145,7 +158,7 @@ export default function AuthScreen() {
           <button
             type="button"
             onClick={() => switchMode(mode === "sign-in" ? "sign-up" : "sign-in")}
-            style={{ ...ghostBtn, width: "100%", marginTop: 8, border: "none", background: "none" }}
+            style={{ display: "block", width: "100%", textAlign: "center", border: "none", background: "none", padding: 0, marginTop: 16, fontSize: 13, color: MUTED, cursor: "pointer" }}
           >
             {mode === "sign-in" ? "Need an account? Sign up" : "Already have an account? Sign in"}
           </button>
