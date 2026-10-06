@@ -95,7 +95,7 @@ export default function OnboardingQuiz({ onComplete }) {
         {step === 1 && (
           <div>
             <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
-            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Rename, add, or remove — these are yours. School can be renamed, just not removed.</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Rename, add, or remove: these are yours. School can be renamed, just not removed.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} protectedKey={eduKey} />
           </div>
         )}

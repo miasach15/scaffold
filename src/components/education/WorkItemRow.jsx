@@ -16,7 +16,7 @@ export default function WorkItemRow({ item }) {
         checked={item.done}
         onClick={item.onToggleDone}
         color={col}
-        title={item.onFocus ? "Marks today's session done — not the whole assignment" : undefined}
+        title={item.onFocus ? "Marks today's session done, not the whole assignment" : undefined}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (

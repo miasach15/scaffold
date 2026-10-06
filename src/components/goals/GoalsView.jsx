@@ -96,7 +96,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         <div data-tour="goals-add" style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 26px", marginBottom: 20 }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, marginBottom: 6 }}>What's your goal?</div>
           <div style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>
-            Big projects live here — quick errands go on Tasks.
+            Big projects live here. Quick errands go on Tasks.
           </div>
           <textarea
             value={outcome}

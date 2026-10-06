@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Flame } from "lucide-react";
-import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SUGGESTED_HABITS, SURFACE, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn, suggestionChip } from "../../lib/styles";
 import { AddRow, EmptyState, SectionHeader } from "../shared/Misc";
 import { addDays, currentStreak, dayLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
@@ -12,13 +12,6 @@ const navBtnStyle = {
   width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
   display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0,
 };
-
-// A warm paper-and-ink ledger instead of the app's usual lavender/white cards — filled
-// vs. hollow dots in thin-ruled rows, like a printed habit tracker. Scoped to this one
-// table (cream background, a warmer neutral border) rather than changing the shared
-// BORDER/SURFACE tokens everywhere else.
-const PAPER = "#FBF7EE";
-const INK_BORDER = "#DED5C2";
 
 export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDone }) {
   const [title, setTitle] = useState("");
@@ -50,7 +43,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
     <div>
       <SectionHeader
         title="Habits"
-        subtitle="Progress over perfection — missing a day doesn't reset anything."
+        subtitle="Progress over perfection. Missing a day doesn't reset anything."
         right={habits.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
@@ -92,14 +85,14 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           </div>
 
           <div style={{ overflowX: "auto" }}>
-            <div style={{ background: PAPER, border: `1px solid ${INK_BORDER}`, borderRadius: 3, minWidth: 560 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(140px, 260px) repeat(7, 52px)", borderBottom: `1px solid ${INK_BORDER}` }}>
+            <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 3 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(120px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: `1px solid ${BORDER}` }}>
                 <div style={{ padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
                 {weekDays.map((d) => {
                   const iso = toISO(d);
                   const isToday = iso === todayISO;
                   return (
-                    <div key={iso} style={{ textAlign: "center", padding: "10px 4px", borderLeft: `1px solid ${INK_BORDER}` }}>
+                    <div key={iso} style={{ textAlign: "center", padding: "10px 4px", borderLeft: `1px solid ${BORDER}` }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: 0.4, color: isToday ? INK : MUTED, textTransform: "uppercase" }}>{dayLabel(d).slice(0, 2)}</div>
                       <div style={{ fontFamily: serifFont, fontSize: 14, color: isToday ? INK : MUTED, marginTop: 1 }}>{d.getDate()}</div>
                     </div>
@@ -113,7 +106,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                   <div
                     key={h.id}
                     className="habit-row"
-                    style={{ display: "grid", gridTemplateColumns: "minmax(140px, 260px) repeat(7, 52px)", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${INK_BORDER}` }}
+                    style={{ display: "grid", gridTemplateColumns: "minmax(120px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${BORDER}` }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
                       <button
@@ -147,7 +140,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                           title={iso}
                           className="habit-dot-btn"
                           style={{
-                            borderLeft: `1px solid ${INK_BORDER}`, background: "none", border: "none", borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: INK_BORDER,
+                            borderLeft: `1px solid ${BORDER}`, background: "none", border: "none", borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: BORDER,
                             display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0", cursor: "pointer", outline: "none",
                           }}
                         >
@@ -168,7 +161,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           </div>
           <style>{`
             .habit-row:hover .habit-row-delete { opacity: 1 !important; }
-            .habit-dot-btn:focus-visible span { box-shadow: 0 0 0 2px ${PAPER}, 0 0 0 3.5px ${INK}; }
+            .habit-dot-btn:focus-visible span { box-shadow: 0 0 0 2px ${SURFACE}, 0 0 0 3.5px ${INK}; }
           `}</style>
         </>
       )}

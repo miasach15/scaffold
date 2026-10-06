@@ -109,7 +109,7 @@ export default function ClassCard({
         </div>
 
         <div style={{ fontSize: 15, fontWeight: 700, color: col.text, minWidth: 52, textAlign: "right" }}>
-          {overallPct != null ? `${overallPct}%` : "—"}
+          {overallPct != null ? `${overallPct}%` : "–"}
         </div>
 
         {cls && (
@@ -182,7 +182,7 @@ export default function ClassCard({
           )}
 
           {gradedItems.length === 0 ? (
-            <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score — or add one below if it was never on the calendar to begin with." />
+            <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score, or add one below if it was never on the calendar to begin with." />
           ) : (
             <div>
               {gradedItems.map((item) => (

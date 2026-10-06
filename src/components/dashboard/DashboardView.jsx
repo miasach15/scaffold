@@ -380,7 +380,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               onClick={() => setShowCheckin(true)}
               className="hoverable"
               style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, border: "none", background: "none", cursor: "pointer", color: INK, fontSize: 13.5, fontWeight: 500, padding: 0 }}
-              title="Say what you got done — updates the rest of today's plan to match"
+              title="Say what you got done (updates the rest of today's plan to match)"
             >
               <MessageCircle size={16} strokeWidth={1.8} /> Check in
             </button>
@@ -485,7 +485,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               isFirstUse ? (
                 <div style={{ padding: "6px 0 4px" }}>
-                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet — start with whatever's actually on your mind.</div>
+                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
                       Add something that's stressing you out
@@ -528,7 +528,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             {onReorderTasks && (
                               <div
                                 onPointerDown={startDrag(t.id)}
-                                title="Drag to reorder — the top spot is what Start launches"
+                                title="Drag to reorder (the top spot is what Start launches)"
                                 style={{ display: "flex", flexShrink: 0, color: isTop ? PRIMARY_DARK : "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
                               >
                                 <GripVertical size={14} strokeWidth={2} />

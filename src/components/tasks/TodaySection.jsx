@@ -391,7 +391,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                   checked={!!it.done}
                   onClick={it.onToggle}
                   color={it.col}
-                  title={it.isEduSession ? "Marks today's session done — not the whole assignment" : undefined}
+                  title={it.isEduSession ? "Marks today's session done, not the whole assignment" : undefined}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button

@@ -87,7 +87,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
             <textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
-              placeholder={'A tiny, concrete first move — e.g. "Open Pearson, do problems 1–3 (~10 min)"'}
+              placeholder={'A tiny, concrete first move, e.g. "Open Pearson, do problems 1–3 (~10 min)"'}
               rows={2}
               style={{ ...inputStyle, width: "100%", resize: "vertical", fontSize: 12.5, marginTop: 3 }}
             />

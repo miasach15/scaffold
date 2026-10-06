@@ -429,7 +429,7 @@ export default function EducationView({
               type="time"
               value={dueTime}
               onChange={(e) => setDueTime(e.target.value)}
-              title="Optional: a specific time it's due (e.g. a test at a set period) — shows timed on Calendar instead of in the all-day row"
+              title="Optional: a specific time it's due (e.g. a test at a set period), shows timed on Calendar instead of in the all-day row"
               style={{ ...inputStyle, width: 112, padding: "4px 8px", fontSize: 12.5 }}
             />
           )}
@@ -445,7 +445,7 @@ export default function EducationView({
 
       <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           {type === "Homework" && (
-            <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets one reminder to work on it, the day before it's due — for something bigger that needs its own spread of sessions, use Assignment instead.</div>
+            <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets one reminder to work on it, the day before it's due. For something bigger that needs its own spread of sessions, use Assignment instead.</div>
           )}
 
           {schedulable && (

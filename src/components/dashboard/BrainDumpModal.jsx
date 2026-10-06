@@ -123,7 +123,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
               <div style={{ fontSize: 15, fontWeight: 700 }}>Get it all out</div>
               {listening && <div style={{ fontSize: 11, fontWeight: 700, color: PRIMARY_DARK }}>Listening…</div>}
             </div>
-            <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Type, paste, or talk it out — one thing per line (or pause between thoughts). Sort it into real tasks after.</div>
+            <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Type, paste, or talk it out. One thing per line (or pause between thoughts). Sort it into real tasks after.</div>
             <div style={{ position: "relative" }}>
               <textarea
                 autoFocus
@@ -243,7 +243,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                               background: "#fff",
                               color: d.scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             }}
-                            title="Only use a set number of your least-busy days — this figures out which ones"
+                            title="Only use a set number of your least-busy days (this figures out which ones)"
                           >
                             Pick days
                           </button>
@@ -257,7 +257,7 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
                               placeholder="Days"
                               value={d.pickDaysCount}
                               onChange={(e) => updateDraft(d.id, { pickDaysCount: e.target.value })}
-                              title="How many days you're free to spread this across — picks your quietest days automatically"
+                              title="How many days you're free to spread this across (picks your quietest days automatically)"
                               style={{ ...inputStyle, width: 60, fontSize: 11.5, padding: "3px 6px" }}
                             />
                             <span style={{ fontSize: 11, color: "#93A0AD" }}>days you're free</span>

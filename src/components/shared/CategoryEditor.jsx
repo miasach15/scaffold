@@ -57,7 +57,7 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
                 <Pencil size={11} strokeWidth={2.3} />
               </button>
               {key === protectedKey ? (
-                <span title="Always here — this category can't be removed" style={{ color: col.text, opacity: 0.5, padding: 3, display: "flex" }}>
+                <span title="Always here (this category can't be removed)" style={{ color: col.text, opacity: 0.5, padding: 3, display: "flex" }}>
                   <Lock size={11} strokeWidth={2.3} />
                 </span>
               ) : (

@@ -427,7 +427,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                           background: "#fff",
                           color: scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
-                        title="Only use a set number of your least-busy days — this figures out which ones"
+                        title="Only use a set number of your least-busy days (this figures out which ones)"
                       >
                         Pick days
                       </button>
@@ -441,7 +441,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                           placeholder="Days"
                           value={pickDaysCount}
                           onChange={(e) => setPickDaysCount(e.target.value)}
-                          title="How many days you're free to spread this across — picks your quietest days automatically"
+                          title="How many days you're free to spread this across (picks your quietest days automatically)"
                           style={{ ...inputStyle, width: 70 }}
                         />
                         <span style={{ fontSize: 12, color: "#93A0AD" }}>days you're free</span>

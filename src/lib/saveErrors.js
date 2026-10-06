@@ -5,7 +5,7 @@
 // one needing a toast-setter threaded in through props — they just import this directly.
 const listeners = new Set();
 
-export function reportSaveError(message = "Couldn't save that — check your connection and try again.") {
+export function reportSaveError(message = "Couldn't save that. Check your connection and try again.") {
   listeners.forEach((fn) => fn(message));
 }
 

@@ -9,15 +9,15 @@ import { ghostBtn, primaryBtn } from "../../lib/styles";
 const STEPS = [
   {
     view: "dashboard", title: "Capture everything",
-    bullets: ["Brain dump or the sticky note catches whatever's on your mind — a task, a test, an errand — the moment you think of it. Sort it out later, not right now."],
+    bullets: ["Brain dump or the sticky note catches whatever's on your mind (a task, a test, an errand) the moment you think of it. Sort it out later, not right now."],
   },
   {
     view: "education", title: "Scaffold breaks it down",
-    bullets: ["Add an assignment with a due date, and it splits into work sessions leading up to it — no more staring down one big deadline."],
+    bullets: ["Add an assignment with a due date, and it splits into work sessions leading up to it. No more staring down one big deadline."],
   },
   {
     view: "calendar", title: "Your workload is placed realistically",
-    bullets: ["Every session lands on a day based on how busy you already are — nothing crammed on top of what's already there."],
+    bullets: ["Every session lands on a day based on how busy you already are. Nothing crammed on top of what's already there."],
   },
   {
     view: "tasks", title: "Ask \"What should I do now?\"",

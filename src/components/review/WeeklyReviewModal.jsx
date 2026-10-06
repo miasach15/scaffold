@@ -106,7 +106,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
     if (tracked.length === 0) return null;
     const avgRatio = tracked.reduce((sum, t) => sum + t.actualMinutes / t.duration, 0) / tracked.length;
     if (avgRatio >= 0.85 && avgRatio <= 1.15) return "Your estimates were close to how long things actually took this week.";
-    if (avgRatio > 1.15) return `Tracked sessions ran about ${Math.round((avgRatio - 1) * 100)}% longer than planned this week — worth padding your estimates a little.`;
+    if (avgRatio > 1.15) return `Tracked sessions ran about ${Math.round((avgRatio - 1) * 100)}% longer than planned this week. Worth padding your estimates a little.`;
     return `Tracked sessions wrapped up about ${Math.round((1 - avgRatio) * 100)}% faster than planned this week.`;
   })();
 
@@ -122,7 +122,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
       <div style={{ ...modalStyle, width: 420, maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
         <div style={{ fontSize: 12.5, color: "#93A0AD" }}>{weekStart} to {weekEnd}</div>
-        <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 16 }}>No streaks, no score — just what actually happened.</div>
+        <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 16 }}>No streaks, no score, just what actually happened.</div>
 
         {totalWins === 0 && habitStats.length === 0 ? (
           <EmptyState text="Nothing marked done this week yet. Come back once you've checked a few things off." />
@@ -135,7 +135,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
 
             <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               <StatTile value={tasksDone.length} label="tasks done" />
-              <StatTile value={focusedMin > 0 ? formatDuration(focusedMin) : "—"} label="focused" />
+              <StatTile value={focusedMin > 0 ? formatDuration(focusedMin) : "–"} label="focused" />
               <StatTile value={habitCheckIns} label="habit check-ins" />
             </div>
 
@@ -143,7 +143,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
             {stillOpen > 0 && (
               <InsightCard
                 title="Nothing waiting"
-                body={stillOpen === 1 ? "1 open thing still has a place — it'll keep showing up on Dashboard until it's done, nothing's lost." : `${stillOpen} open things still have a place — they'll keep showing up on Dashboard until they're done, nothing's lost.`}
+                body={stillOpen === 1 ? "1 open thing still has a place. It'll keep showing up on Dashboard until it's done, nothing's lost." : `${stillOpen} open things still have a place. They'll keep showing up on Dashboard until they're done, nothing's lost.`}
               />
             )}
 

@@ -506,7 +506,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               Fantastic effort{firstName ? `, ${firstName}` : ""}
             </div>
             <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 16, color: "#FF9286", marginBottom: 20 }}>
-              "you did it — one step closer"
+              "you did it, one step closer"
             </div>
 
             <div style={{ textAlign: "left", background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>

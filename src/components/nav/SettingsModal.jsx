@@ -292,7 +292,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
             <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
-              Pace &amp; capacity: three empty calendar hours aren't automatically three productive ones — this is how Scaffold accounts for the rest.
+              Pace &amp; capacity: three empty calendar hours aren't automatically three productive ones. This is how Scaffold accounts for the rest.
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -321,7 +321,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
                   value={transitionBufferMinutes ?? 0}
                   onChange={(e) => onUpdateProfile({ transitionBufferMinutes: Number(e.target.value) })}
                   style={{ ...inputStyle, fontSize: 12, padding: "5px 7px", flex: 1, minWidth: 160 }}
-                  title="Padding before and after every fixed task/event — travel time, prep, decompressing — factored into 'done around' and free-time math"
+                  title="Padding before and after every fixed task/event (travel time, prep, decompressing), factored into 'done around' and free-time math"
                 >
                   {TRANSITION_BUFFER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -373,7 +373,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
             ) : (
               <div style={{ background: TONE.danger.bg, border: `1px solid ${TONE.danger.border}`, borderRadius: 10, padding: 12 }}>
                 <div style={{ fontSize: 12.5, color: TONE.danger.text, lineHeight: 1.5, marginBottom: 10 }}>
-                  This permanently deletes your account and everything in it — every task, event, goal, habit, class, grade, all of it. This can't be undone. Download a backup above first if you want to keep a copy.
+                  This permanently deletes your account and everything in it: every task, event, goal, habit, class, grade, all of it. This can't be undone. Download a backup above first if you want to keep a copy.
                 </div>
                 <div style={{ fontSize: 11.5, color: TONE.danger.text, marginBottom: 6 }}>Type DELETE to confirm:</div>
                 <input

@@ -164,7 +164,7 @@ export default function CheckinModal({ openItems, tasks, events, onClose, onMark
                             background: "#fff",
                             color: d.type === t ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                           }}
-                          title={t === "event" ? "A fixed-time thing — goes on the calendar at a specific time" : "Flexible work — fits in wherever there's time"}
+                          title={t === "event" ? "A fixed-time thing (goes on the calendar at a specific time)" : "Flexible work (fits in wherever there's time)"}
                         >
                           {t}
                         </button>
@@ -283,7 +283,7 @@ export default function CheckinModal({ openItems, tasks, events, onClose, onMark
           ) : (
             <>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What's going on?</div>
-              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Mark things done, add something new, push a deadline back — just say it.</div>
+              <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 12 }}>Mark things done, add something new, push a deadline back, just say it.</div>
               <div style={{ position: "relative" }}>
                 <textarea
                   autoFocus

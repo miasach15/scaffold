@@ -60,7 +60,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
               type="time"
               value={decimalToTimeInput(item.dueStart)}
               onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
-              title="Optional: a specific time it's due — shows timed on Calendar instead of in the all-day row"
+              title="Optional: a specific time it's due (shows timed on Calendar instead of in the all-day row)"
               style={{ ...inputStyle, width: 104, fontSize: 12, padding: "3px 6px" }}
             />
           </div>
@@ -85,7 +85,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
           {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
         </div>
         {item.type === "Homework" && (
-          <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: -4, marginBottom: 8 }}>Homework only ever gets one reminder, the day before it's due — add more below if you need extra time on this one.</div>
+          <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: -4, marginBottom: 8 }}>Homework only ever gets one reminder, the day before it's due. Add more below if you need extra time on this one.</div>
         )}
         {sorted.length === 0 ? (
           <EmptyState text={`No ${actionLabel}s scheduled yet.`} />
@@ -93,7 +93,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
             {sorted.map((s) => (
               <div key={s.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
-                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} title="Marks this session done — not the whole assignment" />
+                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} title="Marks this session done, not the whole assignment" />
                 <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
                 <input
                   value={drafts[s.id] ?? ""}
