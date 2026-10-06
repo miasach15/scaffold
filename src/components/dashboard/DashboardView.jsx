@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, NotebookPen } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -580,44 +580,80 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               card everywhere else. */}
           {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
 
-          {/* Focus Timer/Habits/Done today are the quiet, secondary things on this page —
-              "Today's steps" is what Dashboard is actually for. No wrapping card here —
-              a hairline + spacing marks each new section instead of another rounded box,
-              so this column doesn't read as a box full of smaller boxes. */}
-          {!hasActiveFocusSession && (
-            <div style={{ flexShrink: 0 }}>
-              <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
-                <svg width="112" height="112" viewBox="0 0 112 112">
-                  <circle cx="56" cy="56" r="44" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" />
-                </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>ready</div>
+          {/* Same soft-glow/pill-button treatment as the real Focus Timer (FocusTimerModal)
+              — tied to the same top-priority task the list below highlights, so this reads
+              as "the one thing to start," not a separate taskless timer with its own look.
+              Pressing it calls the exact same onStartFocus the row's own Start button does;
+              this is just a second, friendlier way into the same action. */}
+          {!hasActiveFocusSession && (() => {
+            const heroTask = displayUntimed[0] || null;
+            const col = heroTask ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal : null;
+            const glow = col ? `${col.accent}40` : null;
+            return (
+              <div style={{
+                flexShrink: 0, position: "relative", overflow: "hidden",
+                background: col ? `radial-gradient(130% 90% at 50% -10%, ${col.bg} 0%, #fff 60%)` : "#fff",
+                border: `1px solid ${BORDER}`, borderRadius: 20, padding: "16px 16px 14px",
+              }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: col ? col.text : MUTED, textTransform: "uppercase", letterSpacing: 0.3 }}>
+                  Focus Session
                 </div>
-              </div>
+                {heroTask && (
+                  <div style={{ textAlign: "center", margin: "4px 0 2px" }}>
+                    <div style={{ fontFamily: serifFont, fontSize: 15, color: INK, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {heroTask.title}
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 2 }}>
+                      {heroTask.category}
+                    </div>
+                  </div>
+                )}
 
-              <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                {FOCUS_PRESETS.map((m) => (
+                <div style={{ position: "relative", width: 112, height: 112, margin: "8px auto 12px" }}>
+                  {col && <div style={{ position: "absolute", inset: -16, borderRadius: "50%", background: `radial-gradient(circle, ${glow} 0%, transparent 72%)`, pointerEvents: "none" }} />}
+                  <svg width="112" height="112" viewBox="0 0 112 112" style={{ position: "relative" }}>
+                    <circle cx="56" cy="56" r="44" fill="none" stroke={col ? col.accent : PRIMARY_DARK} strokeWidth="7" />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 14 }}>
+                  {FOCUS_PRESETS.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setFocusMinutes(m)}
+                      style={{
+                        padding: "5px 12px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                        border: `1.5px solid ${focusMinutes === m ? (col ? col.accent : PRIMARY_DARK) : BORDER}`,
+                        background: focusMinutes === m && col ? col.bg : "#fff",
+                        color: focusMinutes === m ? (col ? col.text : PRIMARY_DARK) : MUTED,
+                      }}
+                    >
+                      {m}m
+                    </button>
+                  ))}
+                </div>
+
+                {heroTask ? (
                   <button
-                    key={m}
-                    onClick={() => setFocusMinutes(m)}
+                    onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
+                    className="hoverable"
                     style={{
-                      ...ghostBtn, padding: "5px 14px", background: "#fff",
-                      borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
-                      color: focusMinutes === m ? PRIMARY_DARK : MUTED,
-                      fontWeight: focusMinutes === m ? 700 : 600,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
+                      padding: "11px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                      fontSize: 13.5, fontWeight: 700, cursor: "pointer",
                     }}
                   >
-                    {m}m
+                    <Play size={14} color="#fff" /> Start to Focus
                   </button>
-                ))}
+                ) : (
+                  <div style={{ textAlign: "center", fontSize: 11.5, color: MUTED }}>Nothing to start yet.</div>
+                )}
               </div>
-
-              {/* Starting a session is the highlighted suggestion card's job now (its own
-                  Start button reads this exact duration) — this is just the "how long"
-                  picker, not a second place to press start for the same action. */}
-            </div>
-          )}
+            );
+          })()}
 
           <div style={{ borderTop: hasActiveFocusSession ? "none" : `1px solid ${BORDER}`, paddingTop: hasActiveFocusSession ? 0 : 16, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
