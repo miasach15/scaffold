@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, NotebookPen } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 const FOCUS_PRESETS = [15, 25, 50];
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
-// page's own background — one continuous surface instead of white boxes on gray. The one
-// lifted surface on the page is the "Up next" hero (see NextActionHero) — everything else
-// (This week, the rest of today's list, Habits, Done today) stays flat/bordered-once at
-// most, so the hierarchy reads at a glance instead of every section competing as its own box.
+// page's own background — one continuous surface instead of white boxes on gray.
 const flatSection = { background: "transparent", border: "none", borderRadius: 0, boxShadow: "none" };
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -39,104 +36,6 @@ function TimelineRow({ item, col, isLast, isPast }) {
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(item.duration)}</div>}
     </div>
   );
-}
-
-// The one dominant element on the page. Scaffold's actual job is getting you STARTED on
-// something — not just displaying a schedule — so this replaces both the old "suggested
-// row inside the list" and the separate, task-less Pomodoro ring with a single task-tied
-// control: pick (or accept the suggested) task from a real dropdown, pick a duration,
-// start. Everything else on the page is deliberately quieter so this is the one thing
-// that visually leads.
-function NextActionHero({ mode, heroTask, candidates, onPickTask, nextItem, nextItemIsTask, focusMinutes, setFocusMinutes, onStart, col, statusLine, onBrainDump, onPlanFirst }) {
-  const shell = (children) => (
-    <div style={{ position: "relative", border: `1px solid ${BORDER}`, borderLeft: col ? `4px solid ${col.accent}` : `1px solid ${BORDER}`, borderRadius: 20, padding: "22px 26px", background: "#fff" }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: col ? col.text : MUTED, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 10 }}>Up next</div>
-      {children}
-    </div>
-  );
-
-  if (mode === "firstUse") {
-    return shell(
-      <>
-        <div style={{ fontSize: 14, color: MUTED, marginBottom: 14 }}>Nothing here yet — start with whatever's actually on your mind.</div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={onBrainDump} className="hoverable" style={primaryBtn}>Add something that's stressing you out</button>
-          <button onClick={onPlanFirst} style={ghostBtn}>Plan my first assignment</button>
-        </div>
-      </>
-    );
-  }
-  if (mode === "nothing") {
-    return shell(<div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>Nothing on your plate today.</div>);
-  }
-  if (mode === "done") {
-    return shell(<div style={{ fontFamily: serifFont, fontSize: 20, color: INK }}>That's everything for today — nice work.</div>);
-  }
-  if (mode === "pick") {
-    return shell(
-      <>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ fontFamily: serifFont, fontSize: 23, color: INK }}>Start on</div>
-          <select
-            value={heroTask.id}
-            onChange={(e) => onPickTask(e.target.value)}
-            aria-label="Task to start"
-            style={{
-              fontFamily: serifFont, fontSize: 23, color: INK, background: "none", border: "none",
-              borderBottom: `2px solid ${col.accent}`, padding: "0 2px 2px", cursor: candidates.length > 1 ? "pointer" : "default",
-              maxWidth: "100%",
-            }}
-          >
-            {candidates.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-          </select>
-        </div>
-        {statusLine && <div style={{ fontSize: 12.5, color: MUTED, marginTop: 8 }}>{statusLine}</div>}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 6 }}>
-            {FOCUS_PRESETS.map((m) => (
-              <button
-                key={m}
-                onClick={() => setFocusMinutes(m)}
-                style={{
-                  ...ghostBtn, padding: "6px 13px", background: "#fff",
-                  borderColor: focusMinutes === m ? col.accent : BORDER,
-                  color: focusMinutes === m ? col.text : MUTED,
-                  fontWeight: focusMinutes === m ? 700 : 600,
-                }}
-              >
-                {m}m
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => onStart(heroTask.id, heroTask.title, focusMinutes)}
-            className="hoverable"
-            style={{ padding: "11px 24px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-          >
-            Start {focusMinutes}m
-          </button>
-        </div>
-      </>
-    );
-  }
-  if (mode === "waiting") {
-    return shell(
-      <>
-        <div style={{ fontFamily: serifFont, fontSize: 23, color: INK, marginBottom: 6 }}>{nextItem.title}</div>
-        <div style={{ fontSize: 12.5, color: MUTED, marginBottom: nextItemIsTask ? 18 : 0 }}>{decimalToTimeLabel(nextItem.start)}</div>
-        {nextItemIsTask && (
-          <button
-            onClick={() => onStart(nextItem.id, nextItem.title, nextItem.duration || focusMinutes)}
-            className="hoverable"
-            style={{ padding: "11px 24px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-          >
-            Start now
-          </button>
-        )}
-      </>
-    );
-  }
-  return null;
 }
 
 function greeting() {
@@ -436,44 +335,18 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // that day, capped at 3 dots so a heavy day doesn't sprawl sideways.
   const dayLoad = (iso) => Math.min(3, tasks.filter((t) => !t.done && t.date === iso).length + events.filter((e) => e.date === iso).length);
 
-  // What the hero at the top of the page shows — a manual pick from the dropdown wins if
-  // it's still among today's flexible tasks; otherwise the top of the (possibly dragged)
-  // priority order. No reset effect needed: once the picked id drops out of today's list
-  // (done, or a new day), this just falls back to the top of the list on its own.
-  const [heroOverrideId, setHeroOverrideId] = useState(null);
-  const heroCandidates = displayUntimed;
-  const heroTask = heroCandidates.find((t) => t.id === heroOverrideId) || heroCandidates[0] || null;
-  const nextTimedTask = !heroTask ? todaysTimedTasks.find((t) => t.start + (t.duration || 60) / 60 > nowDecimal) || null : null;
-  const upcomingEvent = todaysEvents.find((e) => e.start + (e.duration || 60) / 60 > nowDecimal) || null;
-  const nextEvent = !heroTask && !nextTimedTask ? upcomingEvent : null;
-  const remainingAfterHero = Math.max(0, remainingStepCount - (heroTask ? 1 : 0));
+  const hasAnythingToday = todaysTimedTasks.length > 0 || todaysUntimed.length > 0 || todaysEvents.length > 0;
   // "All done for today" used to fire the moment every TASK was done, even with an event
-  // (tutoring, practice) still sitting there untouched later that day — this is what
-  // actually checks for that instead of ignoring events entirely.
-  const heroStatusLine = heroTask
-    ? remainingAfterHero > 0
-      ? `${remainingAfterHero} more after this · done around ${decimalToTimeLabel(estimatedFinishDecimal)}`
+  // (tutoring, practice) still sitting there untouched later that day — this checks for
+  // that instead of ignoring events entirely.
+  const upcomingEvent = todaysEvents.find((e) => e.start + (e.duration || 60) / 60 > nowDecimal) || null;
+  const stepsStatusText = scaffoldedTotalCount > 0
+    ? remainingStepCount > 0
+      ? `${remainingStepCount} step${remainingStepCount === 1 ? "" : "s"} left · done around ${decimalToTimeLabel(estimatedFinishDecimal)}`
       : upcomingEvent
         ? `Then ${upcomingEvent.title} at ${decimalToTimeLabel(upcomingEvent.start)}`
-        : "Last thing on your list today."
+        : "All done for today"
     : "";
-  const hasAnythingToday = todaysTimedTasks.length > 0 || todaysUntimed.length > 0 || todaysEvents.length > 0;
-  const heroMode = isFirstUse
-    ? "firstUse"
-    : heroTask
-      ? "pick"
-      : nextTimedTask || nextEvent
-        ? "waiting"
-        : hasAnythingToday
-          ? "done" // had timed items today, all of them already past
-          : scaffoldedTotalCount > 0
-            ? "done" // had stuff today and finished all of it
-            : "nothing"; // nothing was ever on the books today
-  const heroCol = heroTask
-    ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal
-    : nextTimedTask || nextEvent
-      ? CATEGORY_COLORS[(nextTimedTask || nextEvent).category] || CATEGORY_COLORS.Personal
-      : null;
 
   return (
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
@@ -570,33 +443,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         </div>
       </div>
 
-      {/* The one dominant element on the page — see NextActionHero above. When a session
-          is already running, this becomes an empty slot instead: App.jsx portals the SAME
-          floating-timer component (see FocusTimerModal's portalTarget) into it, so there's
-          never two timers/pickers visible at once, and the running timer takes over the
-          exact spot the "start" picker just occupied. */}
-      <div style={{ flexShrink: 0, marginBottom: 24 }}>
-        {hasActiveFocusSession ? (
-          <div ref={focusSlotRef} />
-        ) : (
-          <NextActionHero
-            mode={heroMode}
-            heroTask={heroTask}
-            candidates={heroCandidates}
-            onPickTask={setHeroOverrideId}
-            nextItem={nextTimedTask || nextEvent}
-            nextItemIsTask={!!nextTimedTask}
-            focusMinutes={focusMinutes}
-            setFocusMinutes={setFocusMinutes}
-            onStart={onStartFocus}
-            col={heroCol}
-            statusLine={heroStatusLine}
-            onBrainDump={() => setShowBrainDump(true)}
-            onPlanFirst={() => setView("education")}
-          />
-        )}
-      </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`
           @media (max-width: 900px) {
@@ -613,7 +459,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           {hasAnythingToday ? (
             <>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Then today</div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Today's steps</div>
+                {stepsStatusText && <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>{stepsStatusText}</div>}
+              </div>
               {todaysTimedTasks.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {todaysTimedTasks.map((item, i) => (
@@ -622,39 +471,58 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 </div>
               )}
               {displayUntimed.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {displayUntimed.map((t, i) => {
+                    const isTop = i === 0;
                     const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                     return (
                       <div
                         key={t.id}
                         ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                         style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "9px 0",
-                          borderBottom: i === displayUntimed.length - 1 ? "none" : `1px solid ${BORDER}`,
+                          display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: isTop ? "10px 12px" : "9px 0",
+                          borderRadius: isTop ? 14 : 0,
+                          background: isTop ? "#fff" : "transparent",
+                          border: isTop ? `1.5px solid ${PRIMARY}` : "none",
+                          borderBottom: isTop ? `1.5px solid ${PRIMARY}` : i === displayUntimed.length - 1 ? "none" : `1px solid ${BORDER}`,
+                          marginBottom: isTop ? 2 : 0,
                           opacity: draggingId === t.id ? 0.4 : 1,
                         }}
                       >
-                        <div style={{ width: 3, borderRadius: 2, background: col.accent, alignSelf: "stretch", flexShrink: 0 }} />
+                        {!isTop && <div style={{ width: 3, borderRadius: 2, background: col.accent, alignSelf: "stretch", flexShrink: 0 }} />}
                         {onReorderTasks && (
                           <div
                             onPointerDown={startDrag(t.id)}
-                            title="Drag to reorder — this decides what the hero above suggests next"
-                            style={{ display: "flex", flexShrink: 0, color: "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
+                            title="Drag to reorder — the top spot is what Start launches"
+                            style={{ display: "flex", flexShrink: 0, color: isTop ? PRIMARY_DARK : "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
                           >
                             <GripVertical size={14} strokeWidth={2} />
                           </div>
                         )}
-                        {onToggleDone && <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={col} size={16} />}
+                        {onToggleDone && (
+                          <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
+                        )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            <WorkTitle title={t.title} mutedColor={MUTED} />
+                            <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${formatDuration(t.duration)}` : ""}
                           </div>
-                          <StepNotes notes={t.notes} title={t.title} duration={t.duration} />
+                          <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} duration={t.duration} />
                         </div>
-                        {t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
+                        {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                         {t.date && (
                           <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
+                        )}
+                        {isTop && onStartFocus && (
+                          <button
+                            onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
+                            className="hoverable"
+                            style={{
+                              flexShrink: 0, padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                              background: PRIMARY_DARK, color: "#fff", fontSize: 12, fontWeight: 700,
+                            }}
+                          >
+                            Start
+                          </button>
                         )}
                       </div>
                     );
@@ -669,13 +537,65 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 </div>
               )}
             </>
+          ) : isFirstUse ? (
+            <div style={{ padding: "6px 0 4px" }}>
+              <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet — start with whatever's actually on your mind.</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
+                  Add something that's stressing you out
+                </button>
+                <button onClick={() => setView("education")} style={ghostBtn}>
+                  Plan my first assignment
+                </button>
+              </div>
+            </div>
           ) : (
-            !isFirstUse && <EmptyState text="Nothing else scheduled for today." />
+            <EmptyState text="Nothing scheduled for today yet." />
           )}
         </div>
 
-        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ flexShrink: 0 }}>
+        <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {/* Sits FIRST in the right column, ahead of Habits. When a session is already
+              running, this becomes an empty slot: App.jsx portals the SAME floating-timer
+              component (see FocusTimerModal's portalTarget) into it instead of leaving the
+              idle picker showing underneath, so there's never two timers visible at once. */}
+          {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
+
+          {!hasActiveFocusSession && (
+            <div style={{ flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 112, height: 112, margin: "0 auto 10px" }}>
+                <svg width="112" height="112" viewBox="0 0 112 112">
+                  <circle cx="56" cy="56" r="44" fill="none" stroke={PRIMARY_DARK} strokeWidth="7" />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: 0.3 }}>{pad(focusMinutes)}:00</div>
+                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>ready</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                {FOCUS_PRESETS.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setFocusMinutes(m)}
+                    style={{
+                      ...ghostBtn, padding: "5px 14px", background: "#fff",
+                      borderColor: focusMinutes === m ? PRIMARY_DARK : BORDER,
+                      color: focusMinutes === m ? PRIMARY_DARK : MUTED,
+                      fontWeight: focusMinutes === m ? 700 : 600,
+                    }}
+                  >
+                    {m}m
+                  </button>
+                ))}
+              </div>
+
+              {/* Starting a session is the highlighted top row's job (its own Start button
+                  reads this exact duration) — this is just the "how long" picker. */}
+            </div>
+          )}
+
+          <div style={{ borderTop: hasActiveFocusSession ? "none" : `1px solid ${BORDER}`, paddingTop: hasActiveFocusSession ? 0 : 16, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Habits</div>
               {habits.length > 0 && (
