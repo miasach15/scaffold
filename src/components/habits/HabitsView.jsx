@@ -93,7 +93,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
           <div style={{ overflowX: "auto" }}>
             <div style={{ background: PAPER, border: `1px solid ${INK_BORDER}`, borderRadius: 3, minWidth: 560 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr repeat(7, 52px)", borderBottom: `1px solid ${INK_BORDER}` }}>
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(140px, 260px) repeat(7, 52px)", borderBottom: `1px solid ${INK_BORDER}` }}>
                 <div style={{ padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
                 {weekDays.map((d) => {
                   const iso = toISO(d);
@@ -113,7 +113,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                   <div
                     key={h.id}
                     className="habit-row"
-                    style={{ display: "grid", gridTemplateColumns: "1fr repeat(7, 52px)", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${INK_BORDER}` }}
+                    style={{ display: "grid", gridTemplateColumns: "minmax(140px, 260px) repeat(7, 52px)", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${INK_BORDER}` }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
                       <button
@@ -145,9 +145,10 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                           key={iso}
                           onClick={() => onSetDone(h.id, iso, !done)}
                           title={iso}
+                          className="habit-dot-btn"
                           style={{
                             borderLeft: `1px solid ${INK_BORDER}`, background: "none", border: "none", borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: INK_BORDER,
-                            display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0", cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0", cursor: "pointer", outline: "none",
                           }}
                         >
                           <span
@@ -167,6 +168,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           </div>
           <style>{`
             .habit-row:hover .habit-row-delete { opacity: 1 !important; }
+            .habit-dot-btn:focus-visible span { box-shadow: 0 0 0 2px ${PAPER}, 0 0 0 3.5px ${INK}; }
           `}</style>
         </>
       )}
