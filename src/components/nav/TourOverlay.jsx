@@ -23,6 +23,10 @@ const STEPS = [
     view: "tasks", title: "Ask \"What should I do now?\"",
     bullets: ["Don't know where to start? One button picks the next thing for you, every time."],
   },
+  {
+    view: "dashboard", title: "One more thing worth doing now",
+    bullets: ["Tap your initial in the bottom-left corner to open Settings, then turn on reminders so Scaffold can nudge you toward what's next, even when the app isn't open."],
+  },
 ];
 
 export default function TourOverlay({ setView, onCloseModals, onFinish }) {

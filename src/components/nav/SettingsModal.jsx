@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
-import { CATEGORY_COLOR_SWATCHES, PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
@@ -45,7 +45,7 @@ const TRANSITION_BUFFER_OPTIONS = [
   { value: 20, label: "20 min" },
 ];
 
-export default function SettingsModal({ themeColor, onSetTheme, categoryColors, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -163,7 +163,7 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
         {categoryKeys && (
           <>
             <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>
-              Categories: rename, add, or remove your own. Click the pencil to rename, × to remove.
+              Categories: click one to change its color. Pencil renames, × removes.
             </div>
             <CategoryEditor
               categoryKeys={categoryKeys}
@@ -171,67 +171,11 @@ export default function SettingsModal({ themeColor, onSetTheme, categoryColors, 
               onRename={onRenameCategory}
               onAdd={onAddCategory}
               onRemove={onRemoveCategory}
+              onSetCategoryColor={onSetCategoryColor}
               protectedKey={protectedCategory}
             />
           </>
         )}
-
-        <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Category colors: used across the calendar, goals, and onboarding.</div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {(categoryKeys || []).map((cat) => {
-            const activeKey = categoryColors?.[cat];
-            const isCustom = typeof activeKey === "string" && activeKey.startsWith("custom:");
-            const customHex = isCustom ? activeKey.slice(7) : "#8290D8";
-            return (
-              <div key={cat}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>{cat}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                  {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
-                    // The custom swatch takes over the Peach slot (rather than tacking on
-                    // a 12th dot) so this row keeps the same length and stays on one line.
-                    if (key === "peach") {
-                      return (
-                        <label
-                          key="custom"
-                          title="Custom color"
-                          style={{
-                            position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            background: isCustom ? customHex : "#F3F4F6",
-                            border: `2px solid ${isCustom ? customHex : "transparent"}`,
-                            boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
-                          }}
-                        >
-                          {!isCustom && <ColorWheelIcon size={14} />}
-                          <input
-                            type="color"
-                            value={customHex}
-                            onChange={(e) => onSetCategoryColor(cat, `custom:${e.target.value}`)}
-                            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-                          />
-                        </label>
-                      );
-                    }
-                    const active = activeKey === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => onSetCategoryColor(cat, key)}
-                        title={key}
-                        style={{
-                          width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                          background: swatch.bg, border: `2px solid ${active ? swatch.border : "transparent"}`,
-                          boxShadow: active ? `0 0 0 2px ${swatch.bg}` : "none",
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
