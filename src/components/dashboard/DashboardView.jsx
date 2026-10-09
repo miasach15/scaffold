@@ -230,7 +230,13 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // at the biggest task while the clock runs out. Either way, row 0 of this list IS "the
   // suggestion" — highlighted with its own Start button below — so dragging a different
   // row into that spot is how you change what starts right now.
-  const baseUntimedOrder = fitsInTime
+  // A fresh drag (today's own) already won the sort above and sits at todaysUntimed[0] —
+  // that's an explicit "I want this one first," which outranks the tight-schedule
+  // heuristic same as it outranks due-date order. Without this check, dragging anything
+  // into place on a packed day got silently undone the instant the quick-lead reorder ran
+  // on the next render, right after the drag released.
+  const topIsFreshDrag = todaysUntimed[0]?.orderIndex != null && todaysUntimed[0]?.orderSetDate === todayISO;
+  const baseUntimedOrder = fitsInTime || topIsFreshDrag
     ? todaysUntimed
     : (() => {
         const quick = [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
