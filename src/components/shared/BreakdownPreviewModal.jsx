@@ -12,6 +12,11 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
     next[i] = { ...next[i], title };
     onChangeItems(next);
   };
+  const updateNotes = (i, notes) => {
+    const next = items.slice();
+    next[i] = { ...next[i], notes };
+    onChangeItems(next);
+  };
   const removeItem = (i) => onChangeItems(items.filter((_, idx) => idx !== i));
 
   return (
@@ -37,7 +42,16 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
                   <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(it.date)}</div>
                   <button onClick={() => removeItem(i)} className="btn-delete" style={deleteBtn}>×</button>
                 </div>
-                {it.notes && <div style={{ fontSize: 11, color: "#B4BCC5", padding: "0 2px 6px" }}>Steps that day: {it.notes}</div>}
+                {it.notes != null && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 2px 6px" }}>
+                    <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap" }}>Steps that day:</div>
+                    <input
+                      value={it.notes}
+                      onChange={(e) => updateNotes(i, e.target.value)}
+                      style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "2px", fontSize: 11, color: "#8A94A6" }}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
