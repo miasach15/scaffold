@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
-import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, sessionMinutesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -85,7 +85,15 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       // means the first step IS tomorrow, so force it explicitly (dates[0] is already the
       // earliest of the batch by construction, so this can't collide with dates[1]).
       if (scheduleMode === "every" && startFrom === "tomorrow" && dates.length > 0) dates[0] = startISO;
-      setPendingPlan({ items: groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim()) });
+      // A quieter day gets a longer sitting, a day already carrying other tasks/events gets
+      // a shorter one — same load-aware idea distributeDatesByLoad already uses to pick
+      // WHICH days, applied here to how much time each one actually gets (same pattern
+      // App.jsx's addEduItem uses for Education work sessions).
+      const minutes = sessionMinutesByLoad(dates, tasks, events, 60, { min: 45, max: 90 });
+      const minutesByDate = Object.fromEntries(dates.map((d, i) => [d, minutes[i]]));
+      const items = groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim())
+        .map((it) => ({ ...it, duration: minutesByDate[it.date] }));
+      setPendingPlan({ items });
     } catch (e) {
       setBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {
@@ -103,7 +111,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     // shows up in the calendar's "Due" row like everything else that's actually due.
     const groupDueDate = groupId ? date : null;
     const groupDueStart = groupId && time ? timeToDecimal(time) : null;
-    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: null, category, groupId, groupTitle, groupDueDate, groupDueStart, notes: it.notes || null }));
+    pendingPlan.items.forEach((it) => onAddTask({ title: it.title, date: it.date, start: null, duration: it.duration ?? null, category, groupId, groupTitle, groupDueDate, groupDueStart, notes: it.notes || null }));
     setPendingPlan(null);
     resetForm();
   };

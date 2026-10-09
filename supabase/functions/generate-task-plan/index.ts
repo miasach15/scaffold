@@ -51,6 +51,8 @@ Break this into an ordered list of concrete work steps to get it fully done — 
 
 Each step should be sized as ONE sitting of about 45 minutes to 1.5 hours of real, substantial focused work — err toward the longer end. This is NOT a quick checklist item: things like "open a doc", "gather links", "check requirements", or "make a list" are all too small on their own — fold trivial steps like that into the larger piece of real work they support. Size the number of steps to the actual scope of the task: a small task might only need 2-3 steps, a substantial one might need up to 8-10 — but every single step must independently be a real 45-90 minute sitting of work, never a checklist trivia item.
 
+Balance effort, not just step count: don't let an early, lighter phase (research, planning, gathering material) soak up several steps while the heaviest phase (the actual execution/building/writing) gets compressed into just one step right before the deadline. If that execution phase is the biggest piece of real work — it usually is — give IT the most steps, and keep prep phases to as few steps as they honestly need. Each step in the list should represent roughly the same amount of substantive effort as the others, not wildly different amounts dressed up as equal-looking line items.
+
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Draft outline", "Analyze survey data", "Build first slides") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".`;
 

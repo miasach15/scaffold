@@ -610,29 +610,28 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             const recommendedIdx = heroTask?.duration ? 1 : -1;
             return (
               <div style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 }}>Focus session</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ position: "relative", width: 56, height: 56, flexShrink: 0 }}>
-                    <svg width="56" height="56" viewBox="0 0 56 56">
-                      <circle cx="28" cy="28" r="23" fill="none" stroke={accent} strokeWidth="4" opacity={0.85} />
-                    </svg>
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ fontFamily: serifFont, fontSize: 11.5, color: INK }}>{pad(focusMinutes)}:00</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>Focus session</div>
+                {heroTask ? (
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{heroTask.title}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, background: col.bg, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+                      {heroTask.category}
                     </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {heroTask ? (
-                      <>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{heroTask.title}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3 }}>{heroTask.category}</div>
-                      </>
-                    ) : (
-                      <div style={{ fontSize: 13, color: MUTED }}>Nothing to start yet.</div>
-                    )}
+                ) : (
+                  <div style={{ fontSize: 13, color: MUTED }}>Nothing to start yet.</div>
+                )}
+
+                <div style={{ position: "relative", width: 106, height: 106, margin: "10px auto 2px" }}>
+                  <svg width="106" height="106" viewBox="0 0 106 106">
+                    <circle cx="53" cy="53" r="44" fill="none" stroke={accent} strokeWidth="6" opacity={0.85} />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ fontFamily: serifFont, fontSize: 22, color: INK }}>{pad(focusMinutes)}:00</div>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 5, marginTop: 9, marginBottom: 9 }}>
+                <div style={{ display: "flex", gap: 5, justifyContent: "center", marginTop: 9, marginBottom: 9 }}>
                   {presets.map((m, i) => (
                     <button
                       key={m}
