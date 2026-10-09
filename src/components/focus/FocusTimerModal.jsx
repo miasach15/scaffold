@@ -350,7 +350,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                   onClick={keepGoing}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_DARK, color: "#fff",
+                    padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
                     fontSize: 14.5, fontWeight: 500, cursor: "pointer",
                   }}
                 >
@@ -388,7 +388,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                       key={m}
                       onClick={() => setPreset(m)}
                       title={task.duration && i === 1 ? `${task.title}'s recommended length` : undefined}
-                      style={{ ...ghostBtn, padding: "6px 12px", background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}
+                      style={{ ...ghostBtn, padding: "6px 12px", borderRadius: 999, background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}
                     >
                       {m}m{task.duration && i === 1 ? " ★" : ""}
                     </button>
@@ -402,7 +402,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                   disabled={finished}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    padding: compact ? "10px" : "13px", borderRadius: 14, border: "none", background: PRIMARY_DARK, color: "#fff",
+                    padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
                     fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
                   }}
                 >
