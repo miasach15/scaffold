@@ -25,18 +25,17 @@ function ColorWheelIcon({ size = 14 }) {
 // can be renamed but never removed — its × is replaced with a small lock instead.
 // onSetCategoryColor (optional — Settings passes it, the onboarding quiz doesn't) turns
 // each pill itself into the color picker: click it (not the rename/remove icons) and a
-// small palette pops open right there, instead of a whole extra always-visible swatch
-// row per category sitting on the page whether you're touching it or not.
+// swatch grid opens right below the WHOLE pill row (not floating off the clicked pill
+// itself) — a floating popover anchored to one pill in a wrapped row has nowhere safe to
+// go that doesn't overlap either the edge of the screen or whatever sits right below it
+// (the "Add a category" row, and Settings' next section after that); sitting inline here
+// instead pushes that content down the normal way, same as every other expand/collapse
+// in the app (e.g. a carried-over breakdown's step list), so nothing ever gets covered.
 export default function CategoryEditor({ categoryKeys, categoryColors, onRename, onAdd, onRemove, protectedKey, onSetCategoryColor }) {
   const [editingKey, setEditingKey] = useState(null);
   const [draft, setDraft] = useState("");
   const [newName, setNewName] = useState("");
   const [colorPickerKey, setColorPickerKey] = useState(null);
-  // Measured at the moment a pill is clicked — a pill near the right edge of the screen
-  // (e.g. "Sports" at the end of a wrapped row) would otherwise push the fixed-width
-  // swatch grid half off-screen if it always opened flush with the pill's own left edge.
-  const [colorPickerFlip, setColorPickerFlip] = useState(false);
-  const POPOVER_WIDTH = 180;
 
   const startEdit = (key) => {
     setEditingKey(key);
@@ -52,12 +51,13 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
     setNewName("");
   };
 
+  const pickerCol = colorPickerKey ? categoryColors[colorPickerKey] || { text: "#4A5568" } : null;
+
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {categoryKeys.map((key) => {
           const col = categoryColors[key] || { bg: "#F1F3F5", border: "#C9D0D8", text: "#4A5568" };
-          const activeColorKey = categoryColors?.[key];
           return editingKey === key ? (
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <input
@@ -73,51 +73,46 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
               />
             </div>
           ) : (
-            <div key={key} style={{ position: "relative" }}>
-              <div
-                onClick={(e) => {
-                  if (!onSetCategoryColor) return;
-                  if (colorPickerKey === key) { setColorPickerKey(null); return; }
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setColorPickerFlip(rect.left + POPOVER_WIDTH > window.innerWidth - 12);
-                  setColorPickerKey(key);
-                }}
-                title={onSetCategoryColor ? "Click to change this category's color" : undefined}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 3, padding: "5px 6px 5px 12px", borderRadius: 999,
-                  border: `1.5px solid ${col.border}`, background: col.bg, color: col.text, fontSize: 12.5, fontWeight: 700,
-                  cursor: onSetCategoryColor ? "pointer" : "default",
-                }}
-              >
-                {key}
-                <button onClick={(e) => { e.stopPropagation(); startEdit(key); }} title="Rename" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
-                  <Pencil size={11} strokeWidth={2.3} />
-                </button>
-                {key === protectedKey ? (
-                  <span title="Always here (this category can't be removed)" style={{ color: col.text, opacity: 0.5, padding: 3, display: "flex" }}>
-                    <Lock size={11} strokeWidth={2.3} />
-                  </span>
-                ) : (
-                  categoryKeys.length > 1 && (
-                    <button onClick={(e) => { e.stopPropagation(); onRemove(key); }} title="Remove" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
-                      <X size={12} strokeWidth={2.3} />
-                    </button>
-                  )
-                )}
-              </div>
-
-              {colorPickerKey === key && (
-                <ColorPopover
-                  activeColorKey={activeColorKey}
-                  onPick={(value) => onSetCategoryColor(key, value)}
-                  onClose={() => setColorPickerKey(null)}
-                  align={colorPickerFlip ? "right" : "left"}
-                />
+            <div
+              key={key}
+              onClick={() => onSetCategoryColor && setColorPickerKey((k) => (k === key ? null : key))}
+              title={onSetCategoryColor ? "Click to change this category's color" : undefined}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3, padding: "5px 6px 5px 12px", borderRadius: 999,
+                border: `1.5px solid ${col.border}`, background: col.bg, color: col.text, fontSize: 12.5, fontWeight: 700,
+                cursor: onSetCategoryColor ? "pointer" : "default",
+                boxShadow: colorPickerKey === key ? `0 0 0 2px ${col.border}` : "none",
+              }}
+            >
+              {key}
+              <button onClick={(e) => { e.stopPropagation(); startEdit(key); }} title="Rename" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
+                <Pencil size={11} strokeWidth={2.3} />
+              </button>
+              {key === protectedKey ? (
+                <span title="Always here (this category can't be removed)" style={{ color: col.text, opacity: 0.5, padding: 3, display: "flex" }}>
+                  <Lock size={11} strokeWidth={2.3} />
+                </span>
+              ) : (
+                categoryKeys.length > 1 && (
+                  <button onClick={(e) => { e.stopPropagation(); onRemove(key); }} title="Remove" style={{ background: "none", border: "none", cursor: "pointer", color: col.text, opacity: 0.6, padding: 3, display: "flex" }}>
+                    <X size={12} strokeWidth={2.3} />
+                  </button>
+                )
               )}
             </div>
           );
         })}
       </div>
+
+      {colorPickerKey && (
+        <ColorSwatchGrid
+          label={colorPickerKey}
+          labelColor={pickerCol.text}
+          activeColorKey={categoryColors?.[colorPickerKey]}
+          onPick={(value) => onSetCategoryColor(colorPickerKey, value)}
+        />
+      )}
+
       <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
         <input
           placeholder="Add a category..."
@@ -136,20 +131,20 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
 
 // The actual swatch grid — same 10 presets + 1 custom-color-wheel slot the old always-
 // visible per-category row used to show, just tucked behind a click now instead of
-// sitting on the page for every category at once.
-function ColorPopover({ activeColorKey, onPick, onClose, align = "left" }) {
+// sitting on the page for every category at once. Renders inline, right below the pill
+// row (see the comment above CategoryEditor), rather than floating over nearby content.
+function ColorSwatchGrid({ label, labelColor, activeColorKey, onPick }) {
   const isCustom = typeof activeColorKey === "string" && activeColorKey.startsWith("custom:");
   const customHex = isCustom ? activeColorKey.slice(7) : "#8290D8";
   return (
-    <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 210 }} />
-      <div
-        style={{
-          position: "absolute", top: "calc(100% + 6px)", [align]: 0, zIndex: 211,
-          background: "#fff", border: "1px solid #E5E0EE", borderRadius: 12, boxShadow: "0 10px 30px rgba(26,26,46,0.14)",
-          padding: 10, display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, width: 180,
-        }}
-      >
+    <div
+      style={{
+        marginTop: 8, background: "#FAFAFC", border: "1px solid #E5E0EE", borderRadius: 12,
+        padding: 10, display: "flex", flexDirection: "column", gap: 8,
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 700, color: labelColor }}>{label}'s color</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, width: "fit-content" }}>
         {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
           // The custom swatch takes over the Peach slot (rather than tacking on a 12th
           // dot) so the grid stays a clean 6x2 instead of an awkward leftover row.
@@ -170,7 +165,7 @@ function ColorPopover({ activeColorKey, onPick, onClose, align = "left" }) {
                 <input
                   type="color"
                   value={customHex}
-                  onChange={(e) => { onPick(`custom:${e.target.value}`); onClose(); }}
+                  onChange={(e) => onPick(`custom:${e.target.value}`)}
                   style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
                 />
               </label>
@@ -180,7 +175,7 @@ function ColorPopover({ activeColorKey, onPick, onClose, align = "left" }) {
           return (
             <button
               key={key}
-              onClick={() => { onPick(key); onClose(); }}
+              onClick={() => onPick(key)}
               title={key}
               style={{
                 width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
@@ -191,6 +186,6 @@ function ColorPopover({ activeColorKey, onPick, onClose, align = "left" }) {
           );
         })}
       </div>
-    </>
+    </div>
   );
 }
