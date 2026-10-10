@@ -66,10 +66,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // the new order is only persisted (via onReorderTasks) once, on release.
   const [draggingId, setDraggingId] = useState(null);
   const [liveOrder, setLiveOrder] = useState(null); // ids in their current on-screen order, only while dragging
-  // A carried-over breakdown's extra steps (see groupItems' otherSteps) default to
-  // expanded — manually collapsing one adds its id here.
-  const [collapsedBreakdowns, setCollapsedBreakdowns] = useState(() => new Set());
-  const toggleBreakdownCollapsed = (id) => setCollapsedBreakdowns((prev) => {
+  // A carried-over breakdown's extra steps (see groupItems' otherSteps) stay hidden
+  // behind the dropdown by default — clicking it to expand adds the id here.
+  const [expandedBreakdowns, setExpandedBreakdowns] = useState(() => new Set());
+  const toggleBreakdownExpanded = (id) => setExpandedBreakdowns((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
@@ -539,7 +539,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                         const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
-                        const stepsCollapsed = collapsedBreakdowns.has(t.id);
+                        const stepsExpanded = expandedBreakdowns.has(t.id);
                         return (
                           <div key={t.id}>
                           <div
@@ -575,11 +575,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             )}
                             {hasOtherSteps && (
                               <button
-                                onClick={() => toggleBreakdownCollapsed(t.id)}
-                                title={stepsCollapsed ? "Show every step — check off any you already did" : "Hide the other steps"}
+                                onClick={() => toggleBreakdownExpanded(t.id)}
+                                title={stepsExpanded ? "Hide the other steps" : "Show every step — check off any you already did"}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
                               >
-                                {stepsCollapsed ? <ChevronDown size={15} strokeWidth={2.2} /> : <ChevronUp size={15} strokeWidth={2.2} />}
+                                {stepsExpanded ? <ChevronUp size={15} strokeWidth={2.2} /> : <ChevronDown size={15} strokeWidth={2.2} />}
                               </button>
                             )}
                             {isTop && onStartFocus && (
@@ -595,7 +595,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               </button>
                             )}
                           </div>
-                          {hasOtherSteps && !stepsCollapsed && (
+                          {hasOtherSteps && stepsExpanded && (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6, marginLeft: 34, paddingLeft: 10, borderLeft: `2px solid ${BORDER}` }}>
                               {/* Every step in a breakdown shares the same uniform title (see
                                   the group's own title rule) — the actual distinguishing content
