@@ -63,8 +63,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
-      if (steps.length === 0) throw new Error("No steps came back. Try adding a bit more detail.");
+      const rawSteps = (data?.steps || []).filter((s) => s.title);
+      if (rawSteps.length === 0) throw new Error("No steps came back. Try adding a bit more detail.");
+      const steps = rawSteps.map((s) => s.title);
+      const stepMinutes = rawSteps.map((s) => (typeof s.minutes === "number" ? s.minutes : 60));
 
       const todayISO = toISO(new Date());
       // "Every day" mode normally starts today (if there's still time before it's due) —
@@ -88,8 +90,9 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       // A quieter day gets a longer sitting, a day already carrying other tasks/events gets
       // a shorter one — same load-aware idea distributeDatesByLoad already uses to pick
       // WHICH days, applied here to how much time each one actually gets (same pattern
-      // App.jsx's addEduItem uses for Education work sessions).
-      const minutes = sessionMinutesByLoad(dates, tasks, events, 60, { min: 45, max: 90 });
+      // App.jsx's addEduItem uses for Education work sessions). Starts from each step's OWN
+      // minutes estimate (see generate-task-plan) rather than one flat number for all of them.
+      const minutes = sessionMinutesByLoad(dates, tasks, events, stepMinutes, { min: 45, max: 90 });
       const minutesByDate = Object.fromEntries(dates.map((d, i) => [d, minutes[i]]));
       const items = groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim())
         .map((it) => ({ ...it, duration: minutesByDate[it.date] }));

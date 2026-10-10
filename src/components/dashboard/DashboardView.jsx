@@ -607,7 +607,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                   <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {s.notes || s.title}
                                   </div>
-                                  {s.date && <div style={{ fontSize: 10.5, color: MUTED, whiteSpace: "nowrap", flexShrink: 0 }}>{formatShortDate(s.date)}</div>}
+                                  {/* An overdue/today step just reads as part of today's carried-
+                                      over list already — printing its original, now-past work day
+                                      ("Fri, Oct 9") next to it reads like it's still due then, not
+                                      today. Only a step scheduled for the future (you got ahead on
+                                      it) gets its real date shown. */}
+                                  {s.date && s.date > todayISO && <div style={{ fontSize: 10.5, color: MUTED, whiteSpace: "nowrap", flexShrink: 0 }}>{formatShortDate(s.date)}</div>}
                                 </div>
                               ))}
                             </div>

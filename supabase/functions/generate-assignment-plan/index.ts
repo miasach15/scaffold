@@ -16,8 +16,8 @@ const PLAN_SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        properties: { title: { type: "string" } },
-        required: ["title"],
+        properties: { title: { type: "string" }, minutes: { type: "integer" } },
+        required: ["title", "minutes"],
         additionalProperties: false,
       },
     },
@@ -55,6 +55,8 @@ Each step should be sized as ONE sitting of about 45 minutes to 1.5 hours of rea
 
 Balance effort, not just step count: don't let an early, lighter phase (gathering sources, picking quotes, outlining) soak up several steps while the heaviest phase (drafting, writing, building) gets compressed into just one step right before the deadline. If drafting/writing is the biggest piece of real work — it usually is — give IT the most steps (e.g. one step per section/paragraph/part), and keep prep phases to as few steps as they honestly need. Each step in the list should represent roughly the same amount of substantive effort as the others, not wildly different amounts dressed up as equal-looking line items.
 ${stepHint ? `\nThe student has ${stepHint} work day${stepHint === 1 ? "" : "s"} available before it's due, so aim for around ${stepHint} steps if that genuinely fits the assignment's scope — but never pad the list with filler or merge unrelated work just to hit that number. Go with fewer or more steps if the real scope calls for it.` : ""}
+
+For EACH step, also give a realistic "minutes" estimate for that specific step — don't just reuse the same number for every step. A step that's mostly reading/organizing/light editing genuinely runs shorter (45-60) than one that's real drafting/writing/problem-solving from scratch (75-90), even though both clear the 45-minute floor above. Estimate each one on its own merits, the way an honest student would if asked "how long will THIS part actually take me."
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Outline the essay", "Draft intro paragraph", "Cite sources", "Proofread and submit") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".`;

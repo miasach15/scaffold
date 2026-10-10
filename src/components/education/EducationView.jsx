@@ -132,7 +132,13 @@ export default function EducationView({
       // packing from the front, so shifting the window's start to tomorrow isn't enough
       // by itself — force the actual first step onto it (same fix as Tasks' AI breakdown).
       if (workMode === "everyday" && startFrom === "tomorrow" && dates.length > 0) dates[0] = startISO;
-      return groupItemsByDate(schedule.steps.map((t, i) => ({ title: t, date: dates[i] })), `${workVerb}: ${title.trim()}`);
+      // Each AI step carries its own realistic minutes estimate (see generate-assignment-
+      // plan) — grouping by date drops extra fields, so this is stashed in a separate
+      // date->minutes map and read back out after, rather than lost along the way.
+      const minutesByDate = {};
+      schedule.steps.forEach((s, i) => { minutesByDate[dates[i]] = s.minutes; });
+      return groupItemsByDate(schedule.steps.map((s, i) => ({ title: s.title, date: dates[i] })), `${workVerb}: ${title.trim()}`)
+        .map((it) => ({ ...it, minutes: minutesByDate[it.date] }));
     }
     // An assessment crams into the days right before it, not spread thin across however
     // far off it is; an assignment still spreads across your least-busy days either way.
@@ -152,7 +158,7 @@ export default function EducationView({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
+      const steps = (data?.steps || []).filter((s) => s.title).map((s) => ({ title: s.title, minutes: typeof s.minutes === "number" ? s.minutes : 60 }));
       if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
       const schedule = { steps };
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
@@ -212,7 +218,7 @@ export default function EducationView({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const steps = (data?.steps || []).map((s) => s.title).filter(Boolean);
+      const steps = (data?.steps || []).filter((s) => s.title);
       if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
       const todayISOForPlan = toISO(new Date());
       const startISO = item.dueDate > todayISOForPlan ? todayISOForPlan : item.dueDate;
@@ -220,7 +226,12 @@ export default function EducationView({
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
       const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
       tasks.filter((t) => t.eduId === item.id).forEach((t) => onRemoveSession(t.id));
-      steps.forEach((stepTitle, i) => onAddSession(item.id, stepTitle, dates[i], "17:00", 60, true));
+      // Each step's own minutes estimate (see generate-assignment-plan), clamped to the
+      // same real-sitting range the prompt itself asks for.
+      steps.forEach((s, i) => {
+        const minutes = Math.round(Math.min(90, Math.max(45, s.minutes ?? 60)) / 5) * 5;
+        onAddSession(item.id, s.title, dates[i], "17:00", minutes, true);
+      });
     } catch (e) {
       setSessionBreakdownError(e.message || "Couldn't reach the planner. It may not be set up yet.");
     } finally {

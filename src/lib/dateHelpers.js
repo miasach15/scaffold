@@ -351,6 +351,11 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
 // Scales relative to the OTHER sessions in this same breakdown (not the whole calendar's
 // average), so a generally-busy week still gets a sensible spread rather than every
 // session bottoming out at the floor.
+// baseMinutes can be a single flat number (every date starts from the same estimate) OR
+// an array the same length as `dates` (each date starts from its OWN estimate — e.g. an
+// AI-generated step's own per-step minutes, see generate-assignment-plan/generate-task-
+// plan) — the load adjustment below applies the same way either way, just on top of
+// whichever starting point that date actually has.
 export const sessionMinutesByLoad = (dates, existingTasks, existingEvents, baseMinutes, { min = 15, max = 90 } = {}) => {
   if (!dates || dates.length === 0) return [];
   const loadByDate = {};
@@ -364,11 +369,12 @@ export const sessionMinutesByLoad = (dates, existingTasks, existingEvents, baseM
   });
   const loads = dates.map((d) => loadByDate[d] || 0);
   const avgLoad = loads.reduce((sum, l) => sum + l, 0) / loads.length;
+  const baseFor = (i) => (Array.isArray(baseMinutes) ? baseMinutes[i] ?? baseMinutes[0] : baseMinutes);
   // Half the gap between this day's load and the breakdown's own average, added onto (or
   // subtracted from) the base length — a day well below average gets meaningfully longer,
   // a day well above it gets meaningfully shorter, clamped to a sane floor/ceiling either way.
-  return loads.map((load) => {
-    const scaled = baseMinutes + (avgLoad - load) * 0.5;
+  return loads.map((load, i) => {
+    const scaled = baseFor(i) + (avgLoad - load) * 0.5;
     return Math.round(Math.min(max, Math.max(min, scaled)) / 5) * 5;
   });
 };

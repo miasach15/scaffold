@@ -433,8 +433,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // bigger, more honest number. sessionMinutesByLoad then spreads that base around per
     // day based on how loaded each day already is — a quiet night gets more than a
     // packed one instead of every session getting the exact same flat length regardless
-    // of what else is going on that day.
+    // of what else is going on that day. Homework is genuinely a lighter lift than a real
+    // Assignment/Assessment sitting (~half an hour vs. ~an hour), so it keeps its own
+    // pace-based baseline and a tighter floor/ceiling instead of sharing one number with
+    // everything else on this page.
     const sessionMinutes = Math.round(30 * (profile.paceMultiplier || 1));
+    const homeworkMinutesOpts = { min: 20, max: 45 };
 
     if (type === "Homework") {
       // A homework item gets a gentle "Finish:" reminder every day from today through the
@@ -456,7 +460,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         // already-packed one — except the actual last day, which is never skipped even if
         // packed, since that's the real deadline, not an optional early start.
         const workDates = candidateDates.filter((d, i) => i === candidateDates.length - 1 || tasks.filter((t) => t.date === d && !t.done).length < 5);
-        const workMinutes = sessionMinutesByLoad(workDates, tasks, events, sessionMinutes);
+        const workMinutes = sessionMinutesByLoad(workDates, tasks, events, sessionMinutes, homeworkMinutesOpts);
         workDates.forEach((workDate, i) => {
           addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutes[i], eduId: row.id, category: profile.educationCategory });
         });
@@ -471,16 +475,15 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const previewItems = hasPreview ? workDays.previewItems : null;
       const effectiveSchedule = hasPreview ? workDays.schedule : workDays;
       const isAiSteps = typeof effectiveSchedule === "object" && Array.isArray(effectiveSchedule.steps) && effectiveSchedule.steps.length > 0;
-      // An AI-generated step is deliberately sized as "one real 45-90 minute sitting of
-      // work" (see the generate-assignment-plan/generate-task-plan prompts) — the generic
-      // pace-based sessionMinutes default below (a flat ~30min, floor of 15) is for the
-      // plain "Work on X" reminder sessions a non-AI schedule gets, and badly undersizes an
-      // actual AI step if reused here (a 15-minute "pick a passage and lens" isn't real).
-      const stepBaseMinutes = isAiSteps ? 60 : sessionMinutes;
-      const stepMinutesOpts = isAiSteps ? { min: 45, max: 90 } : undefined;
+      // A real Assignment/Assessment sitting — drafting/building, or actually studying —
+      // runs around an hour, not the lighter Homework baseline above. An AI-generated step
+      // also carries its own per-step minutes estimate (see generate-assignment-plan); that
+      // becomes the base for THAT date instead of the flat 60 when it's available.
+      const stepMinutesOpts = { min: 45, max: 90 };
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
-          const previewMinutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, stepBaseMinutes, stepMinutesOpts);
+          const previewBase = previewItems.map((it) => (typeof it.minutes === "number" ? it.minutes : 60));
+          const previewMinutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, previewBase, stepMinutesOpts);
           previewItems.forEach((it, i) => {
             addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: previewMinutes[i], eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
           });
@@ -493,9 +496,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
         if (isAiSteps) {
           const dates = distributeDatesByLoad(startISO, endISO, effectiveSchedule.steps.length, tasks, events);
-          const minutes = sessionMinutesByLoad(dates, tasks, events, stepBaseMinutes, stepMinutesOpts);
-          effectiveSchedule.steps.forEach((stepTitle, i) => {
-            addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: stepTitle });
+          const stepBase = effectiveSchedule.steps.map((s) => (typeof s.minutes === "number" ? s.minutes : 60));
+          const minutes = sessionMinutesByLoad(dates, tasks, events, stepBase, stepMinutesOpts);
+          effectiveSchedule.steps.forEach((s, i) => {
+            addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: s.title });
           });
         } else {
           // An assessment crams into the days right before it, not spread thin across
@@ -503,7 +507,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           const dates = type === "Assessment"
             ? daysBeforeDue(row.dueDate, effectiveSchedule)
             : effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
-          const minutes = sessionMinutesByLoad(dates, tasks, events, sessionMinutes);
+          const minutes = sessionMinutesByLoad(dates, tasks, events, 60, stepMinutesOpts);
           dates.forEach((d, i) => {
             addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory });
           });
