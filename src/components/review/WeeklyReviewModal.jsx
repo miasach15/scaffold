@@ -1,7 +1,7 @@
 import { ListChecks } from "lucide-react";
 import { BORDER, HABIT_COLOR, INK, MUTED, PRIMARY, PRIMARY_DARK, TASK_COLOR, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, formatDuration, getLocalToday, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, formatDuration, startOfWeek, toISO } from "../../lib/dateHelpers";
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import ModalPortal from "../shared/ModalPortal";
@@ -110,11 +110,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
     return `Tracked sessions wrapped up about ${Math.round((1 - avgRatio) * 100)}% faster than planned this week.`;
   })();
 
-  // Reassurance, not a guilt count: nothing due this week (or earlier, still unfinished)
-  // just vanishes — it's still sitting in Tasks/Dashboard waiting, same as always.
-  const today = getLocalToday();
-  const stillOpen = tasks.filter((t) => !t.done && (!t.date || t.date <= today)).length;
-
   return (
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
@@ -140,12 +135,6 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
             </div>
 
             {paceInsight && <InsightCard title="A plan that learns your pace" body={paceInsight} />}
-            {stillOpen > 0 && (
-              <InsightCard
-                title="Nothing waiting"
-                body={stillOpen === 1 ? "1 open thing still has a place. It'll keep showing up on Dashboard until it's done, nothing's lost." : `${stillOpen} open things still have a place. They'll keep showing up on Dashboard until they're done, nothing's lost.`}
-              />
-            )}
 
             {tasksDone.length > 0 && (
               <ReviewSection title={`Tasks completed (${tasksDone.length})`} items={tasksDone.map((t) => t.title)} color={TASK_COLOR} />

@@ -140,7 +140,7 @@ function ColorSwatchGrid({ label, labelColor, activeColorKey, onPick }) {
     <div
       style={{
         marginTop: 8, background: "#FAFAFC", border: "1px solid #E5E0EE", borderRadius: 12,
-        padding: 10, display: "flex", flexDirection: "column", gap: 8,
+        padding: 10, display: "flex", flexDirection: "column", gap: 8, width: "fit-content",
       }}
     >
       <div style={{ fontSize: 11, fontWeight: 700, color: labelColor }}>{label}'s color</div>
