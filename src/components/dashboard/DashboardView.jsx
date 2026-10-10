@@ -137,15 +137,20 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     })
     .filter(({ next }) => next && next.date && next.date <= todayISO)
     // Which STEP is next is picked by its own work day (just above) — but the row
-    // itself sorts/shows a badge for the project's overall due date instead, same as
-    // eduSessionItems below, so both land by how urgent the real deadline actually is.
-    // A next step whose own work day has already passed means the whole breakdown has
-    // carried over — the normal "just show the next step" row can then be hiding real
-    // progress on later steps you already did while this one sat untouched, so carried-
-    // over groups surface every remaining step (not just the next one) to check off.
+    // itself normally sorts/shows a badge for the project's overall due date instead,
+    // same as eduSessionItems below, so both land by how urgent the real deadline
+    // actually is. A next step whose own work day has already passed means the whole
+    // breakdown has carried over, though — in that case the row sorts/shows a badge for
+    // TODAY instead of the (possibly days-out) project deadline, so it reads as the
+    // overdue thing it actually is and sits near the top with everything else that's
+    // overdue/due today, rather than ranking by a calm future due date and reading as
+    // "moved to the bottom" once nothing else is boosting it up there. The normal "just
+    // show the next step" row can also hide real progress on later steps you already did
+    // while this one sat untouched, so carried-over groups surface every remaining step
+    // (not just the next one) to check off.
     .map(({ next, otherSteps }) => {
       const carriedOver = !!next.date && next.date < todayISO;
-      return { ...next, date: next.groupDueDate || next.date, carriedOver, otherSteps: carriedOver ? otherSteps : [] };
+      return { ...next, date: carriedOver ? todayISO : (next.groupDueDate || next.date), carriedOver, otherSteps: carriedOver ? otherSteps : [] };
     });
   // Same idea for Education work sessions ("Work on X"/"Study X") — only the most
   // recent due-or-overdue, still-undone session per assignment shows, never a pile of
