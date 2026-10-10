@@ -445,7 +445,7 @@ export default function EducationView({
 
       <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           {type === "Homework" && (
-            <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets one reminder to work on it, the day before it's due. For something bigger that needs its own spread of sessions, use Assignment instead.</div>
+            <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework gets a reminder to work on it every day until it's due, but only ever shows one at a time. For something bigger that needs its own spread of sessions, use Assignment instead.</div>
           )}
 
           {schedulable && (
