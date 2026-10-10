@@ -32,6 +32,11 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
   const [draft, setDraft] = useState("");
   const [newName, setNewName] = useState("");
   const [colorPickerKey, setColorPickerKey] = useState(null);
+  // Measured at the moment a pill is clicked — a pill near the right edge of the screen
+  // (e.g. "Sports" at the end of a wrapped row) would otherwise push the fixed-width
+  // swatch grid half off-screen if it always opened flush with the pill's own left edge.
+  const [colorPickerFlip, setColorPickerFlip] = useState(false);
+  const POPOVER_WIDTH = 180;
 
   const startEdit = (key) => {
     setEditingKey(key);
@@ -70,7 +75,13 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
           ) : (
             <div key={key} style={{ position: "relative" }}>
               <div
-                onClick={() => onSetCategoryColor && setColorPickerKey((k) => (k === key ? null : key))}
+                onClick={(e) => {
+                  if (!onSetCategoryColor) return;
+                  if (colorPickerKey === key) { setColorPickerKey(null); return; }
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setColorPickerFlip(rect.left + POPOVER_WIDTH > window.innerWidth - 12);
+                  setColorPickerKey(key);
+                }}
                 title={onSetCategoryColor ? "Click to change this category's color" : undefined}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 3, padding: "5px 6px 5px 12px", borderRadius: 999,
@@ -100,6 +111,7 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
                   activeColorKey={activeColorKey}
                   onPick={(value) => onSetCategoryColor(key, value)}
                   onClose={() => setColorPickerKey(null)}
+                  align={colorPickerFlip ? "right" : "left"}
                 />
               )}
             </div>
@@ -125,7 +137,7 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
 // The actual swatch grid — same 10 presets + 1 custom-color-wheel slot the old always-
 // visible per-category row used to show, just tucked behind a click now instead of
 // sitting on the page for every category at once.
-function ColorPopover({ activeColorKey, onPick, onClose }) {
+function ColorPopover({ activeColorKey, onPick, onClose, align = "left" }) {
   const isCustom = typeof activeColorKey === "string" && activeColorKey.startsWith("custom:");
   const customHex = isCustom ? activeColorKey.slice(7) : "#8290D8";
   return (
@@ -133,7 +145,7 @@ function ColorPopover({ activeColorKey, onPick, onClose }) {
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 210 }} />
       <div
         style={{
-          position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 211,
+          position: "absolute", top: "calc(100% + 6px)", [align]: 0, zIndex: 211,
           background: "#fff", border: "1px solid #E5E0EE", borderRadius: 12, boxShadow: "0 10px 30px rgba(26,26,46,0.14)",
           padding: 10, display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, width: 180,
         }}
