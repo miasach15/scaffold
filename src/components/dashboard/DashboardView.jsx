@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -54,7 +54,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -66,6 +66,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // the new order is only persisted (via onReorderTasks) once, on release.
   const [draggingId, setDraggingId] = useState(null);
   const [liveOrder, setLiveOrder] = useState(null); // ids in their current on-screen order, only while dragging
+  // A carried-over breakdown's extra steps (see groupItems' otherSteps) default to
+  // expanded — manually collapsing one adds its id here.
+  const [collapsedBreakdowns, setCollapsedBreakdowns] = useState(() => new Set());
+  const toggleBreakdownCollapsed = (id) => setCollapsedBreakdowns((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
   const dragRef = useRef(null); // mutable { id, order } for the active gesture, so the move/up listeners don't need to resubscribe on every reflow
   const rowElsRef = useRef({}); // task id -> row DOM node, for hit-testing during drag
   const onReorderTasksRef = useRef(onReorderTasks);
@@ -123,12 +131,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     (activeGroupSteps[t.groupId] ||= []).push(t);
   });
   const groupItems = Object.values(activeGroupSteps)
-    .map((steps) => steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0])
-    .filter((next) => next && next.date && next.date <= todayISO)
+    .map((steps) => {
+      const sorted = steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      return { next: sorted[0], otherSteps: sorted.slice(1) };
+    })
+    .filter(({ next }) => next && next.date && next.date <= todayISO)
     // Which STEP is next is picked by its own work day (just above) — but the row
     // itself sorts/shows a badge for the project's overall due date instead, same as
     // eduSessionItems below, so both land by how urgent the real deadline actually is.
-    .map((next) => ({ ...next, date: next.groupDueDate || next.date }));
+    // A next step whose own work day has already passed means the whole breakdown has
+    // carried over — the normal "just show the next step" row can then be hiding real
+    // progress on later steps you already did while this one sat untouched, so carried-
+    // over groups surface every remaining step (not just the next one) to check off.
+    .map(({ next, otherSteps }) => {
+      const carriedOver = !!next.date && next.date < todayISO;
+      return { ...next, date: next.groupDueDate || next.date, carriedOver, otherSteps: carriedOver ? otherSteps : [] };
+    });
   // Same idea for Education work sessions ("Work on X"/"Study X") — only the most
   // recent due-or-overdue, still-undone session per assignment shows, never a pile of
   // rows with the same title for every day that slipped by.
@@ -520,9 +538,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                       {displayUntimed.map((t, i) => {
                         const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
+                        const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
+                        const stepsCollapsed = collapsedBreakdowns.has(t.id);
                         return (
+                          <div key={t.id}>
                           <div
-                            key={t.id}
                             ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
                               display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
@@ -553,6 +573,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                             )}
+                            {hasOtherSteps && (
+                              <button
+                                onClick={() => toggleBreakdownCollapsed(t.id)}
+                                title={stepsCollapsed ? "Show every step — check off any you already did" : "Hide the other steps"}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
+                              >
+                                {stepsCollapsed ? <ChevronDown size={15} strokeWidth={2.2} /> : <ChevronUp size={15} strokeWidth={2.2} />}
+                              </button>
+                            )}
                             {isTop && onStartFocus && (
                               <button
                                 onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
@@ -565,6 +594,19 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 Start
                               </button>
                             )}
+                          </div>
+                          {hasOtherSteps && !stepsCollapsed && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6, marginLeft: 34, paddingLeft: 10, borderLeft: `2px solid ${BORDER}` }}>
+                              {t.otherSteps.map((s) => (
+                                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <Checkbox checked={false} onClick={() => onCheckOffStep?.(s.id)} color={col} size={14} title="Already did this? Check it off." />
+                                  <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    <WorkTitle title={s.title} mutedColor={MUTED} />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           </div>
                         );
                       })}

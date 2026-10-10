@@ -273,10 +273,30 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const undoEduDelete = () => {
     if (eduDeleteUndo.undo()) setPendingDeleteEduIds([]);
   };
+  // Checking off a step from a carried-over breakdown's expanded "other steps" list (see
+  // DashboardView's groupItems/otherSteps) gets the same undo window as a delete — these
+  // are steps you're saying you ALREADY did while the view was only ever showing one at a
+  // time, so an accidental tap shouldn't be permanent.
+  const [pendingDoneStepId, setPendingDoneStepId] = useState(null);
+  const stepDoneUndo = useUndoableDelete();
+  const requestStepDone = (id) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t) return;
+    setPendingDoneStepId(id);
+    stepDoneUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" checked off`, () => {
+      setTaskDone(id, true);
+      setPendingDoneStepId((cur) => (cur === id ? null : cur));
+    });
+  };
+  const undoStepDone = () => {
+    if (stepDoneUndo.undo()) setPendingDoneStepId(null);
+  };
   // A pending-deleted assignment's own sessions shouldn't keep showing elsewhere for the
   // few seconds before the delete actually commits — the deadline would already be gone
-  // while "Study: X" still sat in Today with nothing to point back to.
-  const visibleTasks = tasks.filter((t) => t.id !== pendingDeleteTaskId && !(t.eduId && pendingDeleteEduIds.includes(t.eduId)));
+  // while "Study: X" still sat in Today with nothing to point back to. A step just
+  // checked off from the carried-over "other steps" list hides the same way, right up
+  // until its undo window actually commits it done.
+  const visibleTasks = tasks.filter((t) => t.id !== pendingDeleteTaskId && t.id !== pendingDoneStepId && !(t.eduId && pendingDeleteEduIds.includes(t.eduId)));
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
   // down" breakdown) so the Focus Timer can show the whole checklist alongside it —
@@ -748,6 +768,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAddEvents={addEvents}
             onSetDate={setTaskDate}
             onReorderTasks={reorderTasks}
+            onCheckOffStep={requestStepDone}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
@@ -1004,6 +1025,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
       {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
+      {stepDoneUndo.pending && <UndoToast label={stepDoneUndo.pending.label} onUndo={undoStepDone} />}
       <SaveErrorToast />
 
       {showSearch && (
