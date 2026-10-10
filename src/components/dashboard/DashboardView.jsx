@@ -13,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, inLeadWindow, meaningfulFocusPresets, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -597,12 +597,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           </div>
                           {hasOtherSteps && !stepsCollapsed && (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6, marginLeft: 34, paddingLeft: 10, borderLeft: `2px solid ${BORDER}` }}>
+                              {/* Every step in a breakdown shares the same uniform title (see
+                                  the group's own title rule) — the actual distinguishing content
+                                  for THIS day lives in notes instead, so that's what shows here,
+                                  not a repeat of the same title on every row. */}
                               {t.otherSteps.map((s) => (
                                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <Checkbox checked={false} onClick={() => onCheckOffStep?.(s.id)} color={col} size={14} title="Already did this? Check it off." />
                                   <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    <WorkTitle title={s.title} mutedColor={MUTED} />
+                                    {s.notes || s.title}
                                   </div>
+                                  {s.date && <div style={{ fontSize: 10.5, color: MUTED, whiteSpace: "nowrap", flexShrink: 0 }}>{formatShortDate(s.date)}</div>}
                                 </div>
                               ))}
                             </div>
