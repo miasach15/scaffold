@@ -95,8 +95,15 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // done some other way (the deadline row's own checkbox, or the Upcoming list) back to
     // not-done — that would silently undo a "this is already turned in" the student set
     // independently of its sessions.
+    // Homework is the one exception to "needs every session done" — it's genuinely one
+    // sitting, just offered every day leading up to the deadline (see addEduItem) so
+    // there's room to start early. Finishing WHICHEVER day's session you actually do
+    // completes it outright; the other, now-pointless daily reminders for days you never
+    // got to simply stop showing (see doneEduIds in Dashboard/TodaySection) rather than
+    // nagging you again tomorrow for something you already turned in.
+    const doneThreshold = eduItem.type === "Homework" ? linked.some((x) => (x.id === id ? done : x.done)) : allDoneAfter;
     if (done) {
-      if (allDoneAfter && !eduItem.done) setEduDone(t.eduId, true);
+      if (doneThreshold && !eduItem.done) setEduDone(t.eduId, true);
     } else if (eduItem.done) {
       setEduDone(t.eduId, false);
     }
