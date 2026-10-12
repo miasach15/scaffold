@@ -95,15 +95,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // done some other way (the deadline row's own checkbox, or the Upcoming list) back to
     // not-done — that would silently undo a "this is already turned in" the student set
     // independently of its sessions.
-    // Homework is the one exception to "needs every session done" — it's genuinely one
-    // sitting, just offered every day leading up to the deadline (see addEduItem) so
-    // there's room to start early. Finishing WHICHEVER day's session you actually do
-    // completes it outright; the other, now-pointless daily reminders for days you never
-    // got to simply stop showing (see doneEduIds in Dashboard/TodaySection) rather than
-    // nagging you again tomorrow for something you already turned in.
-    const doneThreshold = eduItem.type === "Homework" ? linked.some((x) => (x.id === id ? done : x.done)) : allDoneAfter;
     if (done) {
-      if (doneThreshold && !eduItem.done) setEduDone(t.eduId, true);
+      if (allDoneAfter && !eduItem.done) setEduDone(t.eduId, true);
     } else if (eduItem.done) {
       setEduDone(t.eduId, false);
     }
@@ -448,29 +441,16 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     const homeworkMinutesOpts = { min: 20, max: 45 };
 
     if (type === "Homework") {
-      // A homework item gets a gentle "Finish:" reminder every day from today through the
-      // day before it's due — not just the one night before — so there's actually room to
-      // start early instead of it only ever showing up once it's already late to begin.
-      // These all share the same eduId, so Dashboard/TodaySection's existing "only the
-      // latest still-undone due-or-past one shows" collapsing (see eduSessionItems) means
-      // just one row surfaces at a time either way — this only widens WHEN it's allowed to
-      // surface, not how many copies pile up. The badge on that row reads off the real due
-      // date (not the work day), so every day before the actual deadline it shows a calm
-      // "Due in N days"/neutral tone, never the bold/urgent treatment — that only kicks in
-      // once it's actually due today or tomorrow, same as it always has.
-      const homeworkTodayISO = toISO(new Date());
+      // A homework item is genuinely one sitting, not a multi-day project — it gets a
+      // single reminder the night before it's due, the same as it's always worked. (A
+      // multi-day "shows up every day leading up to it" version of this was tried and
+      // reverted — homework kept nagging about the same one piece of work on days you
+      // genuinely weren't going to get to it, and the sub-tasks editor listed it as
+      // several separate things instead of the one thing it actually is.)
       for (const row of rows) {
-        const finalDay = dayBefore(row.dueDate);
-        const startISO = homeworkTodayISO > finalDay ? finalDay : homeworkTodayISO;
-        const candidateDates = dateRangeISO(startISO, finalDay);
-        // Skip a day that's already carrying 5+ undone tasks rather than pile onto an
-        // already-packed one — except the actual last day, which is never skipped even if
-        // packed, since that's the real deadline, not an optional early start.
-        const workDates = candidateDates.filter((d, i) => i === candidateDates.length - 1 || tasks.filter((t) => t.date === d && !t.done).length < 5);
-        const workMinutes = sessionMinutesByLoad(workDates, tasks, events, sessionMinutes, homeworkMinutesOpts);
-        workDates.forEach((workDate, i) => {
-          addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutes[i], eduId: row.id, category: profile.educationCategory });
-        });
+        const workDate = dayBefore(row.dueDate);
+        const [workMinutes] = sessionMinutesByLoad([workDate], tasks, events, sessionMinutes, homeworkMinutesOpts);
+        addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutes, eduId: row.id, category: profile.educationCategory });
       }
     } else if ((type === "Assignment" || type === "Assessment") && workDays) {
       const workVerb = type === "Assessment" ? "Study" : "Work on";
