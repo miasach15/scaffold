@@ -56,7 +56,8 @@ Balance effort, not just step count: don't let an early, lighter phase (research
 For EACH step, also give a realistic "minutes" estimate for that specific step — don't just reuse the same number for every step. A step that's mostly reading/organizing/light editing genuinely runs shorter (45-60) than one that's real drafting/building/problem-solving from scratch (75-90), even though both clear the 45-minute floor above. Estimate each one on its own merits, the way an honest person would if asked "how long will THIS part actually take me."
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
-- Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Draft outline", "Analyze survey data", "Build first slides") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".`;
+- Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Draft outline", "Analyze survey data", "Build first slides") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".
+- Never use a comma anywhere in a title, including a list like "Revise, format, and submit" — that reads as several separate items elsewhere in the app, not one. Pick the single most important verb+object instead (e.g. "Proofread and submit"), and drop the rest.`;
 
     // Anthropic's API occasionally returns a transient overloaded_error / 429 —
     // retry a couple times with backoff before giving up.

@@ -469,10 +469,23 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const stepMinutesOpts = { min: 45, max: 90 };
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
-          const previewBase = previewItems.map((it) => (typeof it.minutes === "number" ? it.minutes : 60));
-          const previewMinutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, previewBase, stepMinutesOpts);
+          // A day that only ever had one real step on it still gets the usual load-aware
+          // adjustment (see stepMinutesOpts). A day multiple steps got packed onto (not
+          // enough runway before the deadline to give each its own day — see
+          // previewSchedule's stepCount) already carries an accurate SUM of real work;
+          // load-adjusting or clamping that back down to a single step's 45-90 range would
+          // shrink it into something that no longer reflects what's actually due that day.
+          const singleIdxs = previewItems.map((_, i) => i).filter((i) => (previewItems[i].stepCount || 1) <= 1);
+          const singleMinutes = sessionMinutesByLoad(
+            singleIdxs.map((i) => previewItems[i].date), tasks, events,
+            singleIdxs.map((i) => (typeof previewItems[i].minutes === "number" ? previewItems[i].minutes : 60)),
+            stepMinutesOpts
+          );
+          const adjustedByIndex = {};
+          singleIdxs.forEach((i, j) => { adjustedByIndex[i] = singleMinutes[j]; });
           previewItems.forEach((it, i) => {
-            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: previewMinutes[i], eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
+            const duration = adjustedByIndex[i] !== undefined ? adjustedByIndex[i] : it.minutes;
+            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration, eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
           });
           return;
         }

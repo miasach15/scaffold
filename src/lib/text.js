@@ -10,3 +10,13 @@ export function splitWorkPrefix(title) {
   if (!m) return { prefix: null, subject: title };
   return { prefix: `${m[1]}: `, subject: m[2] };
 }
+
+// An AI-generated step title (see generate-assignment-plan/generate-task-plan) is
+// supposed to never contain a comma — titles from the SAME day get comma-joined into one
+// task's notes elsewhere (groupItemsByDate), so a comma INSIDE a single title (e.g. "Revise,
+// format, and submit") gets misread as three separate steps once joined, and shows up
+// fragmented. The prompt already asks for this, but this is the backstop for whenever a
+// comma slips through anyway.
+export function sanitizeStepTitle(title) {
+  return (title || "").replace(/,/g, "").replace(/\s+/g, " ").trim();
+}

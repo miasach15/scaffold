@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, sessionMinutesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { uid } from "../../lib/id";
+import { sanitizeStepTitle } from "../../lib/text";
 import { supabase } from "../../lib/supabase";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
@@ -65,7 +66,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       if (data?.error) throw new Error(data.error);
       const rawSteps = (data?.steps || []).filter((s) => s.title);
       if (rawSteps.length === 0) throw new Error("No steps came back. Try adding a bit more detail.");
-      const steps = rawSteps.map((s) => s.title);
+      const steps = rawSteps.map((s) => sanitizeStepTitle(s.title));
       const stepMinutes = rawSteps.map((s) => (typeof s.minutes === "number" ? s.minutes : 60));
 
       const todayISO = toISO(new Date());
@@ -92,8 +93,20 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       // WHICH days, applied here to how much time each one actually gets (same pattern
       // App.jsx's addEduItem uses for Education work sessions). Starts from each step's OWN
       // minutes estimate (see generate-task-plan) rather than one flat number for all of them.
-      const minutes = sessionMinutesByLoad(dates, tasks, events, stepMinutes, { min: 45, max: 90 });
-      const minutesByDate = Object.fromEntries(dates.map((d, i) => [d, minutes[i]]));
+      // When there isn't enough runway before it's due to give every step its own day,
+      // distributeDatesByLoad packs more than one onto the same date — that day's duration
+      // is the SUM of everything actually packed onto it (real work doesn't shrink just
+      // because it landed on a shared day), not load-adjusted/clamped like a normal single-
+      // step day would be.
+      const dateCounts = {};
+      dates.forEach((d) => { dateCounts[d] = (dateCounts[d] || 0) + 1; });
+      const singleIdxs = dates.map((_, i) => i).filter((i) => dateCounts[dates[i]] === 1);
+      const singleMinutes = sessionMinutesByLoad(singleIdxs.map((i) => dates[i]), tasks, events, singleIdxs.map((i) => stepMinutes[i]), { min: 45, max: 90 });
+      const minutesByDate = {};
+      singleIdxs.forEach((i, j) => { minutesByDate[dates[i]] = singleMinutes[j]; });
+      dates.forEach((d, i) => {
+        if (dateCounts[d] > 1) minutesByDate[d] = (minutesByDate[d] || 0) + stepMinutes[i];
+      });
       const items = groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim())
         .map((it) => ({ ...it, duration: minutesByDate[it.date] }));
       setPendingPlan({ items });

@@ -3,6 +3,7 @@ import { ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
+import { sanitizeStepTitle } from "../../lib/text";
 import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, FilterPill, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
@@ -134,11 +135,22 @@ export default function EducationView({
       if (workMode === "everyday" && startFrom === "tomorrow" && dates.length > 0) dates[0] = startISO;
       // Each AI step carries its own realistic minutes estimate (see generate-assignment-
       // plan) — grouping by date drops extra fields, so this is stashed in a separate
-      // date->minutes map and read back out after, rather than lost along the way.
+      // date->minutes map and read back out after, rather than lost along the way. When
+      // there isn't enough runway before the deadline to give every step its own day,
+      // distributeDatesByLoad packs more than one onto the same date — that day's total
+      // is the SUM of everything actually packed onto it (real work doesn't get smaller
+      // just because it landed on a shared day), not just whichever step happened to be
+      // written last. stepCountByDate lets App.jsx's addEduItem tell a packed day (use
+      // this sum as-is) apart from a normal single-step day (still load-adjusted below).
       const minutesByDate = {};
-      schedule.steps.forEach((s, i) => { minutesByDate[dates[i]] = s.minutes; });
+      const stepCountByDate = {};
+      schedule.steps.forEach((s, i) => {
+        const d = dates[i];
+        minutesByDate[d] = (minutesByDate[d] || 0) + (typeof s.minutes === "number" ? s.minutes : 60);
+        stepCountByDate[d] = (stepCountByDate[d] || 0) + 1;
+      });
       return groupItemsByDate(schedule.steps.map((s, i) => ({ title: s.title, date: dates[i] })), `${workVerb}: ${title.trim()}`)
-        .map((it) => ({ ...it, minutes: minutesByDate[it.date] }));
+        .map((it) => ({ ...it, minutes: minutesByDate[it.date], stepCount: stepCountByDate[it.date] }));
     }
     // An assessment crams into the days right before it, not spread thin across however
     // far off it is; an assignment still spreads across your least-busy days either way.
@@ -158,7 +170,7 @@ export default function EducationView({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const steps = (data?.steps || []).filter((s) => s.title).map((s) => ({ title: s.title, minutes: typeof s.minutes === "number" ? s.minutes : 60 }));
+      const steps = (data?.steps || []).filter((s) => s.title).map((s) => ({ title: sanitizeStepTitle(s.title), minutes: typeof s.minutes === "number" ? s.minutes : 60 }));
       if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
       const schedule = { steps };
       setPendingPlan({ schedule, repeatValue: "None", items: previewSchedule(schedule) });
@@ -218,7 +230,7 @@ export default function EducationView({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      const steps = (data?.steps || []).filter((s) => s.title);
+      const steps = (data?.steps || []).filter((s) => s.title).map((s) => ({ ...s, title: sanitizeStepTitle(s.title) }));
       if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
       const todayISOForPlan = toISO(new Date());
       const startISO = item.dueDate > todayISOForPlan ? todayISOForPlan : item.dueDate;
