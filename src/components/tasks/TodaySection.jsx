@@ -72,6 +72,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   }, [lowEnergy]);
   const todayISO = getLocalToday();
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  // The cap below never hides something genuinely urgent — overdue, due today, tomorrow,
+  // or the day after — no matter how many there are; it only ever trims the less-pressing
+  // tail beyond that.
+  const mustShowCutoff = toISO(addDays(new Date(todayISO + "T00:00:00"), 2));
 
   // Only a task/step you own gets a "Not today" button — pushing its date forward is
   // safe since it's self-imposed. Education deadlines and goal actions are external
@@ -258,7 +262,20 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   // never "quick." Nothing that's actually due gets hidden — this only trims what's
   // heaviest, not what's real.
   const allRelevant = lowEnergy ? sortedAll.filter((it) => !it.isGroup) : sortedAll;
-  const relevant = expanded ? allRelevant : allRelevant.slice(0, VISIBLE_CAP);
+  // Capped at VISIBLE_CAP, same as before — except a must-show item (see mustShowCutoff
+  // above, and a breakdown's own row, which always represents real current work) is never
+  // one of the ones trimmed off. The cap still limits how many less-pressing items pad the
+  // list out alongside them, so a day with 5 truly urgent things plus some that can wait
+  // doesn't balloon past a plain glance.
+  let shownCount = 0;
+  const relevant = expanded
+    ? allRelevant
+    : allRelevant.filter((it) => {
+        const mustShow = it.isGroup || (it.date && it.date <= mustShowCutoff);
+        if (mustShow) { shownCount++; return true; }
+        if (shownCount < VISIBLE_CAP) { shownCount++; return true; }
+        return false;
+      });
   const hiddenCount = allRelevant.length - relevant.length;
   const hiddenForEnergy = lowEnergy ? sortedAll.length - allRelevant.length : 0;
   // Items kept visible purely because they were just checked off (see justDone) don't

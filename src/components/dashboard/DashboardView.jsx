@@ -66,6 +66,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // the new order is only persisted (via onReorderTasks) once, on release.
   const [draggingId, setDraggingId] = useState(null);
   const [liveOrder, setLiveOrder] = useState(null); // ids in their current on-screen order, only while dragging
+  // "Anytime today" stays a glance, not a wall — capped at UNTIMED_VISIBLE_CAP unless
+  // expanded. A must-show item (overdue/due today/tomorrow/the day after, or a
+  // breakdown's own row — always real current work) is never one of the ones the cap
+  // trims off; it only ever limits how many less-pressing items pad the list out
+  // alongside them.
+  const [untimedExpanded, setUntimedExpanded] = useState(false);
   // A carried-over breakdown's extra steps (see groupItems' otherSteps) stay hidden
   // behind the dropdown by default — clicking it to expand adds the id here.
   const [expandedBreakdowns, setExpandedBreakdowns] = useState(() => new Set());
@@ -274,6 +280,18 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // The same task the top "Anytime today" row highlights — the Focus Session widget
   // below is tied to this one task, same as that row's own Start button.
   const heroTask = displayUntimed[0] || null;
+  const UNTIMED_VISIBLE_CAP = 5;
+  const untimedMustShowCutoff = toISO(addDays(new Date(todayISO + "T00:00:00"), 2));
+  let untimedShownCount = 0;
+  const visibleUntimed = untimedExpanded
+    ? displayUntimed
+    : displayUntimed.filter((t) => {
+        const mustShow = !!t.groupId || !!t.carriedOver || (t.date && t.date <= untimedMustShowCutoff);
+        if (mustShow) { untimedShownCount++; return true; }
+        if (untimedShownCount < UNTIMED_VISIBLE_CAP) { untimedShownCount++; return true; }
+        return false;
+      });
+  const hiddenUntimedCount = displayUntimed.length - visibleUntimed.length;
   // Defaults the picker to THIS task's own recommended length (see
   // meaningfulFocusPresets) whenever the suggested task changes, instead of always
   // landing on a generic pace-based number unrelated to what's actually being started.
@@ -544,7 +562,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {displayUntimed.map((t, i) => {
+                      {visibleUntimed.map((t, i) => {
                         const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
@@ -630,6 +648,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                         );
                       })}
                     </div>
+                    {hiddenUntimedCount > 0 && (
+                      <button
+                        onClick={() => setUntimedExpanded(true)}
+                        style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "6px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        Show {hiddenUntimedCount} more
+                      </button>
+                    )}
+                    {untimedExpanded && displayUntimed.length > UNTIMED_VISIBLE_CAP && (
+                      <button
+                        onClick={() => setUntimedExpanded(false)}
+                        style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "6px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        Show less
+                      </button>
+                    )}
                   </div>
                 )}
                 {todaysEvents.length > 0 && (
