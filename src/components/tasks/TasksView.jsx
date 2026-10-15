@@ -96,8 +96,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       // When there isn't enough runway before it's due to give every step its own day,
       // distributeDatesByLoad packs more than one onto the same date — that day's duration
       // is the SUM of everything actually packed onto it (real work doesn't shrink just
-      // because it landed on a shared day), not load-adjusted/clamped like a normal single-
-      // step day would be.
+      // because it landed on a shared day), capped at the same 90-minute ceiling a single
+      // step gets. Nobody's sitting down for 2+ hours on one task in one evening just
+      // because the calendar was tight that week — past the cap it's "this day is
+      // genuinely packed," not "schedule a 3-hour block."
       const dateCounts = {};
       dates.forEach((d) => { dateCounts[d] = (dateCounts[d] || 0) + 1; });
       const singleIdxs = dates.map((_, i) => i).filter((i) => dateCounts[dates[i]] === 1);
@@ -105,7 +107,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       const minutesByDate = {};
       singleIdxs.forEach((i, j) => { minutesByDate[dates[i]] = singleMinutes[j]; });
       dates.forEach((d, i) => {
-        if (dateCounts[d] > 1) minutesByDate[d] = (minutesByDate[d] || 0) + stepMinutes[i];
+        if (dateCounts[d] > 1) minutesByDate[d] = Math.min(90, (minutesByDate[d] || 0) + stepMinutes[i]);
       });
       const items = groupItemsByDate(steps.map((stepTitle, i) => ({ title: stepTitle, date: dates[i] })), title.trim())
         .map((it) => ({ ...it, duration: minutesByDate[it.date] }));

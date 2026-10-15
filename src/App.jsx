@@ -472,9 +472,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           // A day that only ever had one real step on it still gets the usual load-aware
           // adjustment (see stepMinutesOpts). A day multiple steps got packed onto (not
           // enough runway before the deadline to give each its own day — see
-          // previewSchedule's stepCount) already carries an accurate SUM of real work;
-          // load-adjusting or clamping that back down to a single step's 45-90 range would
-          // shrink it into something that no longer reflects what's actually due that day.
+          // previewSchedule's stepCount) carries the SUM of those real steps' own
+          // estimates, same as a single step would never be understated — but still
+          // capped at the same 90-minute ceiling as everything else here. Nobody's
+          // actually sitting down for 2+ hours on one assignment in one evening just
+          // because the calendar happened to be tight; past that cap it's "this day is
+          // genuinely packed," not "schedule a 3-hour block."
           const singleIdxs = previewItems.map((_, i) => i).filter((i) => (previewItems[i].stepCount || 1) <= 1);
           const singleMinutes = sessionMinutesByLoad(
             singleIdxs.map((i) => previewItems[i].date), tasks, events,
@@ -484,7 +487,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           const adjustedByIndex = {};
           singleIdxs.forEach((i, j) => { adjustedByIndex[i] = singleMinutes[j]; });
           previewItems.forEach((it, i) => {
-            const duration = adjustedByIndex[i] !== undefined ? adjustedByIndex[i] : it.minutes;
+            const duration = adjustedByIndex[i] !== undefined ? adjustedByIndex[i] : Math.min(it.minutes, stepMinutesOpts.max);
             addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration, eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
           });
           return;
