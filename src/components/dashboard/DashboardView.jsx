@@ -537,7 +537,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                             )}
-                            {onRescheduleTask && t.date && t.date <= todayISO && (
+                            {onRescheduleTask && (
                               <button
                                 onClick={() => onRescheduleTask(t.id, tomorrowISO, null)}
                                 title="Not getting to this tonight? Push it to tomorrow."
