@@ -783,6 +783,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAddTask={addTask}
             onAddEvents={addEvents}
             onSetDate={setTaskDate}
+            onRescheduleTask={rescheduleTask}
             onReorderTasks={reorderTasks}
             onCheckOffStep={requestStepDone}
             autoOpenBrainDump={autoOpenBrainDump}

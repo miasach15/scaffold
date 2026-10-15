@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
+import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play, SkipForward } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -54,7 +54,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onRescheduleTask, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [focusMinutes, setFocusMinutes] = useState(
     profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
@@ -120,6 +120,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   }, []);
 
   const todayISO = toISO(new Date());
+  const tomorrowISO = toISO(addDays(new Date(), 1));
 
   // Tasks always come first and are ordered by how urgent they are — a timed task is
   // more pressing the sooner today it's due, so those sort by start time ascending;
@@ -535,6 +536,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                             {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
+                            )}
+                            {onRescheduleTask && t.date && t.date <= todayISO && (
+                              <button
+                                onClick={() => onRescheduleTask(t.id, tomorrowISO, null)}
+                                title="Not getting to this tonight? Push it to tomorrow."
+                                style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
+                              >
+                                <SkipForward size={14} strokeWidth={2.2} />
+                              </button>
                             )}
                             {hasOtherSteps && (
                               <button
