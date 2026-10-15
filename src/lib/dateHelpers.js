@@ -179,17 +179,17 @@ export const daysBeforeDue = (dueISO, count) => {
 };
 // A study session right after you start reviewing for a test is lighter — just getting
 // oriented — than one the night before it. This ramps linearly from a brief 30-minute
-// session at the start of a study run up to a full 2-hour one by the last session before
-// the test, so sessions actually intensify as the test gets closer (and as more study
-// time has already gone in) instead of every night getting the same flat length
+// session at the start of a study run up to a full 90-minute one by the last session
+// before the test, so sessions actually intensify as the test gets closer (and as more
+// study time has already gone in) instead of every night getting the same flat length
 // regardless of how close it actually is. `i` is the session's position counting from
 // the START of the run (0 = earliest/furthest from the test), `count` the total sessions
 // in the run (see daysBeforeDue, which this is meant to pair with — same date order).
 // A single-session run (the test is basically tomorrow) goes straight to the top of the
 // range, since that one session IS the night-before cram.
 export const studyRampMinutes = (i, count) => {
-  if (count <= 1) return 120;
-  return Math.round((30 + (120 - 30) * (i / (count - 1))) / 5) * 5;
+  if (count <= 1) return 90;
+  return Math.round((30 + (90 - 30) * (i / (count - 1))) / 5) * 5;
 };
 export const formatShortDate = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });

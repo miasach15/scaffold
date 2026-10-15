@@ -504,13 +504,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         } else if (type === "Assessment") {
           // An assessment crams into the days right before it, not spread thin across
           // however far off it is — and each session's own length ramps up with it: light
-          // and short right after you start studying, up to a full 2-hour session the
+          // and short right after you start studying, up to a full 90-minute session the
           // night before (see studyRampMinutes). The usual load adjustment still applies
-          // on top of that ramped base, just with the wider 30-120 range this calls for
+          // on top of that ramped base, just with the wider 30-90 range this calls for
           // instead of a single sitting's 45-90.
           const dates = daysBeforeDue(row.dueDate, effectiveSchedule);
           const rampBase = dates.map((_, i) => studyRampMinutes(i, dates.length));
-          const minutes = sessionMinutesByLoad(dates, tasks, events, rampBase, { min: 30, max: 120 });
+          const minutes = sessionMinutesByLoad(dates, tasks, events, rampBase, { min: 30, max: 90 });
           dates.forEach((d, i) => {
             addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory });
           });
