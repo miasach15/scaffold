@@ -2,20 +2,25 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { toISO } from "../lib/dateHelpers";
 
 const categoryFromRow = (row) => ({ id: row.id, name: row.name, weight: Number(row.weight) || 0, orderIndex: row.order_index });
+const termFromRow = (row) => ({ id: row.id, classId: row.class_id, label: row.label, finalPercent: Number(row.final_percent), startedAt: row.started_at, endedAt: row.ended_at });
 const classFromRow = (row) => ({
   id: row.id,
   subject: row.subject,
   gradingMode: row.grading_mode, // "points" | "weighted"
-  // Both optional — see migration_grade_term_weight.sql. Left blank, the end-of-year
-  // projection just falls back to the end-of-term one instead of needing these first.
-  termWeightPercent: row.term_weight_percent != null ? Number(row.term_weight_percent) : null,
-  priorTermsGrade: row.prior_terms_grade != null ? Number(row.prior_terms_grade) : null,
+  // Where the ACTIVE term began — see migration_grade_terms.sql. null means no boundary
+  // has ever been set, so every item counts (same as before this existed).
+  currentTermStartedAt: row.current_term_started_at || null,
   categories: (row.grade_categories || [])
     .slice()
     .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
     .map(categoryFromRow),
+  pastTerms: (row.grade_terms || [])
+    .slice()
+    .sort((a, b) => (b.ended_at || "").localeCompare(a.ended_at || "")) // most recently ended first
+    .map(termFromRow),
 });
 
 // Per-class grading setup — how each class (matched to edu_items.subject by name) turns
@@ -30,7 +35,7 @@ export function useGrades(userId) {
     setLoading(true);
     const { data } = await supabase
       .from("grade_classes")
-      .select("*, grade_categories(*)")
+      .select("*, grade_categories(*), grade_terms(*)")
       .eq("user_id", userId)
       .order("subject");
     setClasses((data || []).map(classFromRow));
@@ -49,7 +54,7 @@ export function useGrades(userId) {
       const existing = classes.find((c) => c.subject === subject);
       if (existing) return existing;
       const row = { id: uid(), user_id: userId, subject, grading_mode: "points" };
-      const created = { id: row.id, subject, gradingMode: "points", categories: [] };
+      const created = { id: row.id, subject, gradingMode: "points", currentTermStartedAt: null, categories: [], pastTerms: [] };
       setClasses((cs) => [...cs, created]);
       const { error } = await supabase.from("grade_classes").insert(row);
       if (error) reportSaveError();
@@ -68,17 +73,25 @@ export function useGrades(userId) {
     [ensureClass]
   );
 
-  // The two optional inputs behind the end-of-year projection (see GradesView) — stored
-  // on the class itself since they describe the class's overall year structure, not any
-  // one category. null clears a field back to "not set" (falls back to end-of-term).
-  const setYearProjectionInputs = useCallback(
-    async (subject, { termWeightPercent, priorTermsGrade }) => {
-      const cls = await ensureClass(subject);
-      setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, termWeightPercent, priorTermsGrade })));
-      const { error } = await supabase.from("grade_classes").update({ term_weight_percent: termWeightPercent, prior_terms_grade: priorTermsGrade }).eq("id", cls.id);
-      if (error) reportSaveError();
+  // Locks in the class's REAL current grade (not a guess) as a finished term, then moves
+  // the active-term boundary to today — every item due before today now belongs to that
+  // archived term and stops counting toward the class's current grade; anything due today
+  // or later starts the new term fresh. `finalPercent`/`startedAt` are computed by the
+  // caller (ClassCard) from the exact same math the current-grade number already uses.
+  const endTerm = useCallback(
+    async (classId, { label, finalPercent, startedAt }) => {
+      const endedAt = toISO(new Date());
+      const row = { id: uid(), user_id: userId, class_id: classId, label: label || null, final_percent: finalPercent, started_at: startedAt || null, ended_at: endedAt };
+      setClasses((cs) => cs.map((c) => (c.id !== classId ? c : {
+        ...c,
+        currentTermStartedAt: endedAt,
+        pastTerms: [termFromRow(row), ...c.pastTerms],
+      })));
+      const { error: insertError } = await supabase.from("grade_terms").insert(row);
+      const { error: updateError } = await supabase.from("grade_classes").update({ current_term_started_at: endedAt }).eq("id", classId);
+      if (insertError || updateError) reportSaveError();
     },
-    [ensureClass]
+    [userId]
   );
 
   const addCategory = useCallback(
@@ -123,5 +136,5 @@ export function useGrades(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { classes, loading, ensureClass, setGradingMode, setYearProjectionInputs, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
+  return { classes, loading, ensureClass, setGradingMode, endTerm, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
 }

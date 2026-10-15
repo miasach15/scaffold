@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Plus, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronRight, Flag, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
-import { projectTermPercent, projectYearPercent } from "../../lib/gradeProjection";
 import { EmptyState } from "../shared/Misc";
 import GradeRow from "./GradeRow";
 
@@ -39,12 +39,12 @@ function weightedPercent(items, categories) {
 export default function ClassCard({
   subject,
   label,
-  cls, // { id, gradingMode, categories } — undefined/default when never configured
-  items, // all edu items for this subject
+  cls, // { id, gradingMode, categories, currentTermStartedAt, pastTerms } — undefined/default when never configured
+  items, // all edu items for this subject, every term
   educationCategory,
   onAddManualGrade,
   onSetGradingMode,
-  onSetYearProjectionInputs,
+  onEndTerm,
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
@@ -63,35 +63,27 @@ export default function ClassCard({
   const [gradeTitle, setGradeTitle] = useState("");
   const [gradeEarned, setGradeEarned] = useState("");
   const [gradePossible, setGradePossible] = useState("");
-  const [editingYearInputs, setEditingYearInputs] = useState(false);
-  const [termWeightDraft, setTermWeightDraft] = useState("");
-  const [priorGradeDraft, setPriorGradeDraft] = useState("");
+  const [endingTerm, setEndingTerm] = useState(false);
+  const [termLabelDraft, setTermLabelDraft] = useState("");
+  // A hypothetical "what if I got X on this" — scratch state only, never saved. Lets you
+  // actually go try different scores on whatever's still upcoming and see what the class
+  // grade would become, rather than this app guessing a number for you.
+  const [whatIfOpen, setWhatIfOpen] = useState(false);
+  const [whatIfScores, setWhatIfScores] = useState({}); // itemId -> { earned, possible, categoryId }
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
-  const gradedItems = items.filter((i) => i.done).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
   const weighted = gradingMode === "weighted" && categories.length > 0;
-  const overallPct = weighted ? weightedPercent(gradedItems, categories) : pointsPercent(gradedItems);
   const weightSum = categories.reduce((s, c) => s + c.weight, 0);
 
-  // "Current grade" above only counts work that's actually been scored — these instead
-  // answer "if I keep up this average, where do I land" once everything still open on the
-  // calendar for this class actually happens (see lib/gradeProjection). The year number
-  // additionally blends in how earlier terms went, once you've told it how (optional).
-  const termProjection = projectTermPercent(gradedItems, categories, gradingMode);
-  const yearProjection = projectYearPercent(termProjection, cls?.termWeightPercent ?? null, cls?.priorTermsGrade ?? null);
-  const hasYearInputs = cls?.termWeightPercent != null && cls?.priorTermsGrade != null;
-  const startEditingYearInputs = () => {
-    setTermWeightDraft(cls?.termWeightPercent != null ? String(cls.termWeightPercent) : "");
-    setPriorGradeDraft(cls?.priorTermsGrade != null ? String(cls.priorTermsGrade) : "");
-    setEditingYearInputs(true);
-  };
-  const saveYearInputs = () => {
-    const tw = termWeightDraft === "" ? null : Math.min(100, Math.max(0, Number(termWeightDraft)));
-    const pg = priorGradeDraft === "" ? null : Number(priorGradeDraft);
-    onSetYearProjectionInputs(subject, { termWeightPercent: tw, priorTermsGrade: pg });
-    setEditingYearInputs(false);
-  };
+  // Only items from the ACTIVE term count toward the current grade — see onEndTerm below.
+  // No boundary ever set means every item still counts, same as before terms existed.
+  const currentTermItems = cls?.currentTermStartedAt
+    ? items.filter((i) => !i.dueDate || i.dueDate >= cls.currentTermStartedAt)
+    : items;
+  const gradedItems = currentTermItems.filter((i) => i.done).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
+  const pendingItems = currentTermItems.filter((i) => !i.done && i.dueDate);
+  const overallPct = weighted ? weightedPercent(gradedItems, categories) : pointsPercent(gradedItems);
 
   const addCategory = () => {
     if (!newCatName.trim()) return;
@@ -106,6 +98,29 @@ export default function ClassCard({
     onAddManualGrade(subject, gradeTitle.trim(), gradeEarned === "" ? null : Number(gradeEarned), Number(gradePossible));
     setGradeTitle(""); setGradeEarned(""); setGradePossible(""); setAddingGrade(false);
   };
+
+  const confirmEndTerm = () => {
+    if (!cls || overallPct == null) return;
+    onEndTerm(cls.id, { label: termLabelDraft.trim() || null, finalPercent: overallPct, startedAt: cls.currentTermStartedAt ?? null });
+    setEndingTerm(false);
+    setTermLabelDraft("");
+  };
+
+  const setWhatIf = (id, field, value) => setWhatIfScores((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  const clearWhatIf = () => setWhatIfScores({});
+  // Each pending item only counts toward the hypothetical grade once BOTH its earned and
+  // possible fields are actually filled in — same "doesn't count until it's really there"
+  // rule the real grade already follows for anything not yet scored.
+  const whatIfExtras = pendingItems
+    .map((it) => {
+      const w = whatIfScores[it.id];
+      if (!w || w.earned === "" || w.earned == null || w.possible === "" || w.possible == null) return null;
+      return { ...it, scoreEarned: Number(w.earned), scorePossible: Number(w.possible), gradeCategoryId: w.categoryId ?? it.gradeCategoryId };
+    })
+    .filter(Boolean);
+  const hasWhatIfInput = whatIfExtras.length > 0;
+  const whatIfItems = [...gradedItems, ...whatIfExtras];
+  const whatIfPct = weighted ? weightedPercent(whatIfItems, categories) : pointsPercent(whatIfItems);
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, transition: "box-shadow .15s ease, transform .15s ease" }}>
@@ -149,55 +164,6 @@ export default function ClassCard({
 
       {expanded && (
         <div style={{ padding: "12px 14px" }}>
-          {termProjection != null && (
-            <div style={{ border: `1px solid ${col.border}`, borderRadius: 12, padding: "9px 12px", marginBottom: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: col.text }}>
-                  <TrendingUp size={12} strokeWidth={2.3} /> Projected
-                </div>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: "#93A0AD" }}>End of term </span>
-                  <span style={{ fontWeight: 700, color: col.text }}>{termProjection}%</span>
-                </div>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: "#93A0AD" }}>End of year </span>
-                  <span style={{ fontWeight: 700, color: col.text }}>{yearProjection}%</span>
-                </div>
-                {!editingYearInputs && (
-                  <button onClick={startEditingYearInputs} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#93A0AD", textDecoration: "underline", marginLeft: "auto" }}>
-                    {hasYearInputs ? "Edit year weighting" : "Set up year weighting"}
-                  </button>
-                )}
-              </div>
-              {!hasYearInputs && !editingYearInputs && (
-                <div style={{ fontSize: 10.5, color: "#B4BCC5", marginTop: 4 }}>
-                  End of year assumes this term is the whole picture. Add how much it's worth and how earlier terms went for a real year estimate.
-                </div>
-              )}
-              {editingYearInputs && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>This term is</span>
-                  <input
-                    type="number" min={0} max={100} value={termWeightDraft} aria-label="This term's weight toward the year, percent"
-                    onChange={(e) => setTermWeightDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && saveYearInputs()}
-                    style={{ ...inputStyle, width: 56, fontSize: 12, padding: "4px 6px" }}
-                  />
-                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>% of the year. Earlier terms averaged</span>
-                  <input
-                    type="number" min={0} max={100} value={priorGradeDraft} aria-label="Average grade from earlier terms, percent"
-                    onChange={(e) => setPriorGradeDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && saveYearInputs()}
-                    style={{ ...inputStyle, width: 56, fontSize: 12, padding: "4px 6px" }}
-                  />
-                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>%.</span>
-                  <button onClick={saveYearInputs} className="btn-primary" style={{ ...primaryBtn, fontSize: 11.5, padding: "5px 10px" }}>Save</button>
-                  <button onClick={() => setEditingYearInputs(false)} style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 10px" }}>Cancel</button>
-                </div>
-              )}
-            </div>
-          )}
-
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (
@@ -307,6 +273,112 @@ export default function ClassCard({
             >
               <Plus size={12} strokeWidth={2.5} /> Add a grade
             </button>
+          )}
+
+          {/* "What if" — your own hand on the numbers, never a guess this app makes for
+              you. Nothing here is saved; it only exists to answer "what would I need". */}
+          {pendingItems.length > 0 && (
+            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
+              <button
+                onClick={() => setWhatIfOpen((x) => !x)}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5, fontWeight: 700, color: col.text, display: "flex", alignItems: "center", gap: 4 }}
+              >
+                {whatIfOpen ? <ChevronDown size={13} strokeWidth={2.3} /> : <ChevronRight size={13} strokeWidth={2.3} />}
+                What if?
+              </button>
+              {whatIfOpen && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 11, color: "#93A0AD", marginBottom: 8 }}>
+                    Try a score on anything still upcoming and see what the class grade would become — nothing here is saved.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                    {pendingItems.map((it) => {
+                      const w = whatIfScores[it.id] || {};
+                      const needsCategory = weighted && !it.gradeCategoryId && w.categoryId == null;
+                      return (
+                        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <div style={{ flex: "1 1 140px", fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
+                          {weighted && (
+                            <select
+                              value={w.categoryId ?? it.gradeCategoryId ?? ""}
+                              onChange={(e) => setWhatIf(it.id, "categoryId", e.target.value || null)}
+                              aria-label={`${it.title} category`}
+                              style={{ ...inputStyle, fontSize: 11, padding: "4px 6px", width: 110, color: needsCategory ? "#B03A3A" : undefined }}
+                            >
+                              <option value="">No category</option>
+                              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                          )}
+                          <input
+                            type="number" placeholder="earned" aria-label={`${it.title} hypothetical score earned`} value={w.earned ?? ""}
+                            onChange={(e) => setWhatIf(it.id, "earned", e.target.value)}
+                            style={{ ...inputStyle, width: 60, fontSize: 12, padding: "4px 6px" }}
+                          />
+                          <span style={{ fontSize: 12, color: "#93A0AD" }}>/</span>
+                          <input
+                            type="number" placeholder="of" aria-label={`${it.title} hypothetical score possible`} value={w.possible ?? ""}
+                            onChange={(e) => setWhatIf(it.id, "possible", e.target.value)}
+                            style={{ ...inputStyle, width: 60, fontSize: 12, padding: "4px 6px" }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ fontSize: 13 }}>
+                      <span style={{ color: "#93A0AD" }}>Would become </span>
+                      <span style={{ fontWeight: 700, color: col.text }}>{whatIfPct != null ? `${whatIfPct}%` : "–"}</span>
+                    </div>
+                    {hasWhatIfInput && (
+                      <button onClick={clearWhatIf} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#93A0AD", textDecoration: "underline" }}>Clear</button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Ending a term locks in the REAL grade right now (not a guess) as a finished
+              term you can look back on, then starts a fresh one — see onEndTerm. */}
+          {cls && (
+            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
+              {endingTerm ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, color: "#4A5568" }}>End this term at <strong>{overallPct}%</strong> and start fresh —</span>
+                  <input
+                    placeholder="label (optional, e.g. Semester 1)" aria-label="Term label" value={termLabelDraft}
+                    onChange={(e) => setTermLabelDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && confirmEndTerm()}
+                    style={{ ...inputStyle, flex: "1 1 160px", fontSize: 12, padding: "5px 8px" }}
+                    autoFocus
+                  />
+                  <button onClick={confirmEndTerm} className="btn-primary" style={{ ...primaryBtn, fontSize: 11.5, padding: "6px 10px" }}>Confirm</button>
+                  <button onClick={() => { setEndingTerm(false); setTermLabelDraft(""); }} style={{ ...ghostBtn, fontSize: 11.5, padding: "6px 10px" }}>Cancel</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEndingTerm(true)}
+                  disabled={overallPct == null}
+                  title={overallPct == null ? "Nothing scored yet this term" : "Lock in this term's grade and start a new one"}
+                  style={{ ...ghostBtn, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5, opacity: overallPct == null ? 0.5 : 1 }}
+                >
+                  <Flag size={12} strokeWidth={2.3} /> End term
+                </button>
+              )}
+              {cls.pastTerms?.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 6 }}>Past terms</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {cls.pastTerms.map((t) => (
+                      <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "#4A5568" }}>
+                        <span>{t.label || `Ended ${formatShortDate(t.endedAt)}`}</span>
+                        <span style={{ fontWeight: 700, color: col.text }}>{t.finalPercent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
