@@ -41,7 +41,7 @@ const HabitsView = lazy(() => import("./components/habits/HabitsView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
-import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, studyRampMinutes, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
@@ -72,7 +72,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible } = useEduItems(userId);
-  const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
+  const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, setYearProjectionInputs: setGradeYearProjectionInputs, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
@@ -501,12 +501,21 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           effectiveSchedule.steps.forEach((s, i) => {
             addTask({ title: `${workVerb}: ${title}`, date: dates[i], start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: s.title });
           });
-        } else {
+        } else if (type === "Assessment") {
           // An assessment crams into the days right before it, not spread thin across
-          // however far off it is; an assignment still spreads across your least-busy days either way.
-          const dates = type === "Assessment"
-            ? daysBeforeDue(row.dueDate, effectiveSchedule)
-            : effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
+          // however far off it is — and each session's own length ramps up with it: light
+          // and short right after you start studying, up to a full 2-hour session the
+          // night before (see studyRampMinutes). The usual load adjustment still applies
+          // on top of that ramped base, just with the wider 30-120 range this calls for
+          // instead of a single sitting's 45-90.
+          const dates = daysBeforeDue(row.dueDate, effectiveSchedule);
+          const rampBase = dates.map((_, i) => studyRampMinutes(i, dates.length));
+          const minutes = sessionMinutesByLoad(dates, tasks, events, rampBase, { min: 30, max: 120 });
+          dates.forEach((d, i) => {
+            addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory });
+          });
+        } else {
+          const dates = effectiveSchedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, effectiveSchedule, tasks, events);
           const minutes = sessionMinutesByLoad(dates, tasks, events, 60, stepMinutesOpts);
           dates.forEach((d, i) => {
             addTask({ title: `${workVerb}: ${title}`, date: d, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory });
@@ -889,6 +898,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             educationCategory={profile.educationCategory}
             onAddManualGrade={addManualGradeItem}
             onSetGradingMode={setGradeMode}
+            onSetYearProjectionInputs={setGradeYearProjectionInputs}
             onAddCategory={addGradeCategory}
             onRenameCategory={renameGradeCategory}
             onSetCategoryWeight={setGradeCategoryWeight}

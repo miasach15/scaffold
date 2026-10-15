@@ -245,6 +245,12 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     if (aFresh && bFresh) return a.orderIndex - b.orderIndex;
     if (aFresh) return -1;
     if (bFresh) return 1;
+    // Same date, no fresh drag — the quicker, easier thing to knock out goes first (e.g.
+    // a 30min homework reminder before a 90min study session), before the category nudge
+    // below even comes into play — two same-category things (homework and studying both
+    // count as Education) would otherwise tie there and fall through to list order.
+    const durationDiff = (a.duration ?? 30) - (b.duration ?? 30);
+    if (durationDiff !== 0) return durationDiff;
     return categoryRank(a) - categoryRank(b);
   });
   // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+

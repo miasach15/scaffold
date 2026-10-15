@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, TrendingUp } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { projectTermPercent, projectYearPercent } from "../../lib/gradeProjection";
 import { EmptyState } from "../shared/Misc";
 import GradeRow from "./GradeRow";
 
@@ -43,6 +44,7 @@ export default function ClassCard({
   educationCategory,
   onAddManualGrade,
   onSetGradingMode,
+  onSetYearProjectionInputs,
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
@@ -61,6 +63,9 @@ export default function ClassCard({
   const [gradeTitle, setGradeTitle] = useState("");
   const [gradeEarned, setGradeEarned] = useState("");
   const [gradePossible, setGradePossible] = useState("");
+  const [editingYearInputs, setEditingYearInputs] = useState(false);
+  const [termWeightDraft, setTermWeightDraft] = useState("");
+  const [priorGradeDraft, setPriorGradeDraft] = useState("");
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
@@ -68,6 +73,25 @@ export default function ClassCard({
   const weighted = gradingMode === "weighted" && categories.length > 0;
   const overallPct = weighted ? weightedPercent(gradedItems, categories) : pointsPercent(gradedItems);
   const weightSum = categories.reduce((s, c) => s + c.weight, 0);
+
+  // "Current grade" above only counts work that's actually been scored — these instead
+  // answer "if I keep up this average, where do I land" once everything still open on the
+  // calendar for this class actually happens (see lib/gradeProjection). The year number
+  // additionally blends in how earlier terms went, once you've told it how (optional).
+  const termProjection = projectTermPercent(gradedItems, categories, gradingMode);
+  const yearProjection = projectYearPercent(termProjection, cls?.termWeightPercent ?? null, cls?.priorTermsGrade ?? null);
+  const hasYearInputs = cls?.termWeightPercent != null && cls?.priorTermsGrade != null;
+  const startEditingYearInputs = () => {
+    setTermWeightDraft(cls?.termWeightPercent != null ? String(cls.termWeightPercent) : "");
+    setPriorGradeDraft(cls?.priorTermsGrade != null ? String(cls.priorTermsGrade) : "");
+    setEditingYearInputs(true);
+  };
+  const saveYearInputs = () => {
+    const tw = termWeightDraft === "" ? null : Math.min(100, Math.max(0, Number(termWeightDraft)));
+    const pg = priorGradeDraft === "" ? null : Number(priorGradeDraft);
+    onSetYearProjectionInputs(subject, { termWeightPercent: tw, priorTermsGrade: pg });
+    setEditingYearInputs(false);
+  };
 
   const addCategory = () => {
     if (!newCatName.trim()) return;
@@ -125,6 +149,55 @@ export default function ClassCard({
 
       {expanded && (
         <div style={{ padding: "12px 14px" }}>
+          {termProjection != null && (
+            <div style={{ border: `1px solid ${col.border}`, borderRadius: 12, padding: "9px 12px", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: col.text }}>
+                  <TrendingUp size={12} strokeWidth={2.3} /> Projected
+                </div>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: "#93A0AD" }}>End of term </span>
+                  <span style={{ fontWeight: 700, color: col.text }}>{termProjection}%</span>
+                </div>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: "#93A0AD" }}>End of year </span>
+                  <span style={{ fontWeight: 700, color: col.text }}>{yearProjection}%</span>
+                </div>
+                {!editingYearInputs && (
+                  <button onClick={startEditingYearInputs} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#93A0AD", textDecoration: "underline", marginLeft: "auto" }}>
+                    {hasYearInputs ? "Edit year weighting" : "Set up year weighting"}
+                  </button>
+                )}
+              </div>
+              {!hasYearInputs && !editingYearInputs && (
+                <div style={{ fontSize: 10.5, color: "#B4BCC5", marginTop: 4 }}>
+                  End of year assumes this term is the whole picture. Add how much it's worth and how earlier terms went for a real year estimate.
+                </div>
+              )}
+              {editingYearInputs && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>This term is</span>
+                  <input
+                    type="number" min={0} max={100} value={termWeightDraft} aria-label="This term's weight toward the year, percent"
+                    onChange={(e) => setTermWeightDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && saveYearInputs()}
+                    style={{ ...inputStyle, width: 56, fontSize: 12, padding: "4px 6px" }}
+                  />
+                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>% of the year. Earlier terms averaged</span>
+                  <input
+                    type="number" min={0} max={100} value={priorGradeDraft} aria-label="Average grade from earlier terms, percent"
+                    onChange={(e) => setPriorGradeDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && saveYearInputs()}
+                    style={{ ...inputStyle, width: 56, fontSize: 12, padding: "4px 6px" }}
+                  />
+                  <span style={{ fontSize: 11.5, color: "#4A5568" }}>%.</span>
+                  <button onClick={saveYearInputs} className="btn-primary" style={{ ...primaryBtn, fontSize: 11.5, padding: "5px 10px" }}>Save</button>
+                  <button onClick={() => setEditingYearInputs(false)} style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 10px" }}>Cancel</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (

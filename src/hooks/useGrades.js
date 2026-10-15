@@ -8,6 +8,10 @@ const classFromRow = (row) => ({
   id: row.id,
   subject: row.subject,
   gradingMode: row.grading_mode, // "points" | "weighted"
+  // Both optional — see migration_grade_term_weight.sql. Left blank, the end-of-year
+  // projection just falls back to the end-of-term one instead of needing these first.
+  termWeightPercent: row.term_weight_percent != null ? Number(row.term_weight_percent) : null,
+  priorTermsGrade: row.prior_terms_grade != null ? Number(row.prior_terms_grade) : null,
   categories: (row.grade_categories || [])
     .slice()
     .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
@@ -64,6 +68,19 @@ export function useGrades(userId) {
     [ensureClass]
   );
 
+  // The two optional inputs behind the end-of-year projection (see GradesView) — stored
+  // on the class itself since they describe the class's overall year structure, not any
+  // one category. null clears a field back to "not set" (falls back to end-of-term).
+  const setYearProjectionInputs = useCallback(
+    async (subject, { termWeightPercent, priorTermsGrade }) => {
+      const cls = await ensureClass(subject);
+      setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, termWeightPercent, priorTermsGrade })));
+      const { error } = await supabase.from("grade_classes").update({ term_weight_percent: termWeightPercent, prior_terms_grade: priorTermsGrade }).eq("id", cls.id);
+      if (error) reportSaveError();
+    },
+    [ensureClass]
+  );
+
   const addCategory = useCallback(
     async (subject, name, weight) => {
       if (!name.trim()) return;
@@ -106,5 +123,5 @@ export function useGrades(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { classes, loading, ensureClass, setGradingMode, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
+  return { classes, loading, ensureClass, setGradingMode, setYearProjectionInputs, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
 }

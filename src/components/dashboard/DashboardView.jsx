@@ -212,7 +212,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     if (bFresh) return 1;
     const ad = a.sortDate || a.date || "9999-99-99";
     const bd = b.sortDate || b.date || "9999-99-99";
-    return ad.localeCompare(bd);
+    if (ad !== bd) return ad.localeCompare(bd);
+    // Same urgency (due/overdue the same day) — the easier, quicker thing to knock out
+    // goes first (e.g. a 30min homework reminder before a 90min study session), same
+    // "duration stands in for how big a lift it is" idea the rest of the app already uses.
+    return (a.duration ?? 30) - (b.duration ?? 30);
   });
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 

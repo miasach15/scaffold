@@ -225,7 +225,14 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
     if (!a.date && !b.date) return 0;
     if (!a.date) return 1;
     if (!b.date) return -1;
-    return a.date.localeCompare(b.date);
+    const dateDiff = a.date.localeCompare(b.date);
+    if (dateDiff !== 0) return dateDiff;
+    // Same due date — the quicker, easier thing to knock out goes first (e.g. a 30min
+    // homework reminder before a 90min study session); a group/deadline/milestone has no
+    // single duration of its own, so it just sits at a neutral default here rather than
+    // always winning or losing the tie.
+    const durationOf = (it) => (it.type === "single" ? (it.task.duration ?? 30) : 30);
+    return durationOf(a) - durationOf(b);
   });
 
   // Same instinct as Today's cap — a long flat list is its own kind of overwhelm. Split

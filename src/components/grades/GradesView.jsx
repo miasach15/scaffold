@@ -12,6 +12,7 @@ export default function GradesView({
   educationCategory,
   onAddManualGrade,
   onSetGradingMode,
+  onSetYearProjectionInputs,
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
@@ -72,6 +73,7 @@ export default function GradesView({
             educationCategory={educationCategory}
             onAddManualGrade={onAddManualGrade}
             onSetGradingMode={onSetGradingMode}
+            onSetYearProjectionInputs={onSetYearProjectionInputs}
             onAddCategory={onAddCategory}
             onRenameCategory={onRenameCategory}
             onSetCategoryWeight={onSetCategoryWeight}
