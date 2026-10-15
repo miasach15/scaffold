@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -13,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, dayLabel, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -390,22 +390,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     }, CHECKIN_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
-  // Browsing which week this widget shows is local to Dashboard — it's just a peek, not
-  // the same "which day is selected" state Calendar owns; jumping back to this week is
-  // just clicking the range label once you've moved off it.
-  const [weekOffset, setWeekOffset] = useState(0);
-  const weekStart = startOfWeek(addDays(new Date(), weekOffset * 7));
-  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
-  const weekRangeLabel = (() => {
-    const start = weekDays[0], end = weekDays[6];
-    const startMonth = start.toLocaleDateString(undefined, { month: "long" });
-    const endMonth = end.toLocaleDateString(undefined, { month: "long" });
-    return startMonth === endMonth ? `${startMonth} ${start.getDate()}–${end.getDate()}` : `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}`;
-  })();
   const firstName = (profile?.name || "").trim().split(" ")[0];
-  // "This week" strip's per-day load dots — how many tasks/events actually land on
-  // that day, capped at 3 dots so a heavy day doesn't sprawl sideways.
-  const dayLoad = (iso) => Math.min(3, tasks.filter((t) => !t.done && t.date === iso).length + events.filter((e) => e.date === iso).length);
 
   return (
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
@@ -467,55 +452,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         `}</style>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ ...flatSection, flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <button
-                onClick={() => setWeekOffset(0)}
-                disabled={weekOffset === 0}
-                title={weekOffset === 0 ? undefined : "Back to this week"}
-                style={{ background: "none", border: "none", padding: 0, fontSize: 13, fontWeight: 700, color: INK, cursor: weekOffset === 0 ? "default" : "pointer", textDecoration: weekOffset === 0 ? "none" : "underline" }}
-              >
-                {weekRangeLabel}
-              </button>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                <div style={{ display: "flex", gap: 2 }}>
-                  <button onClick={() => setWeekOffset((o) => o - 1)} title="Previous week" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: MUTED, display: "flex" }}>
-                    <ChevronLeft size={14} strokeWidth={2.3} />
-                  </button>
-                  <button onClick={() => setWeekOffset((o) => o + 1)} title="Next week" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: MUTED, display: "flex" }}>
-                    <ChevronRight size={14} strokeWidth={2.3} />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
-              {weekDays.map((d) => {
-                const iso = toISO(d);
-                const isToday = iso === todayISO;
-                const load = dayLoad(iso);
-                return (
-                  <button
-                    key={iso}
-                    onClick={() => { onSelectDay(iso); setView("calendar"); }}
-                    style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "6px 2px",
-                      borderRadius: 10, background: "transparent", border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{dayLabel(d).slice(0, 1).toUpperCase()}</div>
-                    <div style={{ fontFamily: serifFont, fontSize: 17, color: isToday ? PRIMARY_DARK : INK }}>{d.getDate()}</div>
-                    <div style={{ display: "flex", gap: 2, height: 4, alignItems: "center" }}>
-                      {Array.from({ length: load }).map((_, i) => (
-                        <div key={i} style={{ width: 4, height: 4, borderRadius: 2, background: isToday ? PRIMARY_DARK : "#C3CAD3" }} />
-                      ))}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
               <div style={{ fontFamily: serifFont, fontSize: 29, color: INK, letterSpacing: -0.4 }}>Today's steps</div>

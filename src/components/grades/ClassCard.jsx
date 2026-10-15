@@ -69,7 +69,7 @@ export default function ClassCard({
   // actually go try different scores on whatever's still upcoming and see what the class
   // grade would become, rather than this app guessing a number for you.
   const [whatIfOpen, setWhatIfOpen] = useState(false);
-  const [whatIfScores, setWhatIfScores] = useState({}); // itemId -> { earned, possible, categoryId }
+  const [whatIfScores, setWhatIfScores] = useState({}); // itemId -> { earned, possible }
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
@@ -115,12 +115,13 @@ export default function ClassCard({
     .map((it) => {
       const w = whatIfScores[it.id];
       if (!w || w.earned === "" || w.earned == null || w.possible === "" || w.possible == null) return null;
-      return { ...it, scoreEarned: Number(w.earned), scorePossible: Number(w.possible), gradeCategoryId: w.categoryId ?? it.gradeCategoryId };
+      return { ...it, scoreEarned: Number(w.earned), scorePossible: Number(w.possible) };
     })
     .filter(Boolean);
   const hasWhatIfInput = whatIfExtras.length > 0;
   const whatIfItems = [...gradedItems, ...whatIfExtras];
   const whatIfPct = weighted ? weightedPercent(whatIfItems, categories) : pointsPercent(whatIfItems);
+  const categoryName = (id) => categories.find((c) => c.id === id)?.name;
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, transition: "box-shadow .15s ease, transform .15s ease" }}>
@@ -275,6 +276,34 @@ export default function ClassCard({
             </button>
           )}
 
+          {/* Categorizing upcoming work is real and saved, same as it is for completed items
+              above — kept separate from What-if below, which is scratch-only. */}
+          {weighted && pendingItems.length > 0 && (
+            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — pick a category</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {pendingItems.map((it) => {
+                  const uncategorized = !categories.some((c) => c.id === it.gradeCategoryId);
+                  return (
+                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
+                      <select
+                        value={it.gradeCategoryId || ""}
+                        onChange={(e) => onSetItemCategory(it.id, e.target.value || null)}
+                        title="Which category this will count toward"
+                        aria-label={`${it.title} category`}
+                        style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 118, color: uncategorized ? "#B03A3A" : undefined }}
+                      >
+                        <option value="">No category</option>
+                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* "What if" — your own hand on the numbers, never a guess this app makes for
               you. Nothing here is saved; it only exists to answer "what would I need". */}
           {pendingItems.length > 0 && (
@@ -294,20 +323,14 @@ export default function ClassCard({
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                     {pendingItems.map((it) => {
                       const w = whatIfScores[it.id] || {};
-                      const needsCategory = weighted && !it.gradeCategoryId && w.categoryId == null;
+                      const needsCategory = weighted && !it.gradeCategoryId;
                       return (
                         <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <div style={{ flex: "1 1 140px", fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
                           {weighted && (
-                            <select
-                              value={w.categoryId ?? it.gradeCategoryId ?? ""}
-                              onChange={(e) => setWhatIf(it.id, "categoryId", e.target.value || null)}
-                              aria-label={`${it.title} category`}
-                              style={{ ...inputStyle, fontSize: 11, padding: "4px 6px", width: 110, color: needsCategory ? "#B03A3A" : undefined }}
-                            >
-                              <option value="">No category</option>
-                              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                            <div style={{ fontSize: 11, width: 110, color: needsCategory ? "#B03A3A" : "#93A0AD" }}>
+                              {categoryName(it.gradeCategoryId) || "no category"}
+                            </div>
                           )}
                           <input
                             type="number" placeholder="earned" aria-label={`${it.title} hypothetical score earned`} value={w.earned ?? ""}
