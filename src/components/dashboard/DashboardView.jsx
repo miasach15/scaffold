@@ -414,6 +414,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
             {greeting()}{firstName ? `, ${firstName}` : ""}
           </div>
+          <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>
+            {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
           <button
