@@ -3,17 +3,21 @@ import { addDays, dayBefore, getLocalToday, toISO } from "./dateHelpers";
 const parseISO = (iso) => new Date(`${iso}T00:00:00`);
 const nextDayISO = (iso) => toISO(addDays(parseISO(iso), 1));
 
-// Joins an absorbed session's notes onto the target session's, same "what's already
-// there, then the new part after a comma" convention groupItemsByDate already uses for
-// same-day step collisions. Skips re-appending content that's already present, so
-// re-planning after a page refresh mid-run (see applyOverdueSessionOps) can't double it.
+// Joins an absorbed session's notes onto the target session's — the absorbed piece
+// always comes FIRST, the target's own notes last. The session being absorbed is always
+// the more-overdue one (planOverdueSessionReflow only ever absorbs into a day that's
+// today or later), so it's the one that was actually due first; showing it after the
+// target's own same-day content would read as "do today's own thing, then go back and
+// do the older thing," backwards from the order they're actually meant to happen in.
+// Skips re-appending content that's already present, so re-planning after a page
+// refresh mid-run (see applyOverdueSessionOps) can't double it.
 export const mergeAbsorbedNotes = (existingNotes, absorbedNotes) => {
   const existing = (existingNotes || "").trim();
   const absorbed = (absorbedNotes || "").trim();
   if (!absorbed) return existingNotes || null;
   if (!existing) return absorbed;
   if (existing.includes(absorbed)) return existingNotes;
-  return `${existing}, ${absorbed}`;
+  return `${absorbed}, ${existing}`;
 };
 
 // Pure planning pass — no Supabase calls, no side effects. Given every task and

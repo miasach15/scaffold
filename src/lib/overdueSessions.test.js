@@ -185,8 +185,8 @@ describe("applyOverdueSessionOps — the actual apply path App.jsx's effect call
     const removeTask = async (id) => removed.push(id);
     return applyOverdueSessionOps(ops, tasks, { setTaskDate: async () => {}, setTaskNotes, removeTask }).then(() => {
       expect(notesWrites).toEqual([
-        ["target", "base, from a"],
-        ["target", "base, from a, from b"],
+        ["target", "from a, base"],
+        ["target", "from b, from a, base"],
       ]);
       expect(removed).toEqual(["a", "b"]);
     });
@@ -205,8 +205,8 @@ describe("applyOverdueSessionOps — the actual apply path App.jsx's effect call
 });
 
 describe("mergeAbsorbedNotes", () => {
-  it("appends after a comma when both sides have content", () => {
-    expect(mergeAbsorbedNotes("read chapter 3", "finish outline")).toBe("read chapter 3, finish outline");
+  it("puts the absorbed (more overdue, do-first) content before the target's own", () => {
+    expect(mergeAbsorbedNotes("read chapter 3", "finish outline")).toBe("finish outline, read chapter 3");
   });
   it("returns the absorbed content alone when the target has none", () => {
     expect(mergeAbsorbedNotes(null, "finish outline")).toBe("finish outline");
@@ -215,7 +215,7 @@ describe("mergeAbsorbedNotes", () => {
     expect(mergeAbsorbedNotes("read chapter 3", null)).toBe("read chapter 3");
   });
   it("doesn't duplicate content that's already been absorbed (safe to re-run mid-absorb)", () => {
-    expect(mergeAbsorbedNotes("read chapter 3, finish outline", "finish outline")).toBe("read chapter 3, finish outline");
+    expect(mergeAbsorbedNotes("finish outline, read chapter 3", "finish outline")).toBe("finish outline, read chapter 3");
   });
 });
 
