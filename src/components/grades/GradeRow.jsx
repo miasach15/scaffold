@@ -82,7 +82,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
           <button
             onClick={() => setEditing(true)}
             title="Click to edit score"
-            style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 8, padding: "5px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0 }}
+            style={{ background: col.bg, border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0 }}
           >
             <span style={{ fontSize: 13, fontWeight: 700, color: col.text }}>{pct}%</span>
             <span style={{ fontSize: 9.5, color: "#93A0AD" }}>{item.scoreEarned}/{item.scorePossible}</span>
