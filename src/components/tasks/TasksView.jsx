@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, sessionMinutesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { compareTaskPriority } from "../../lib/taskPriority";
 import { uid } from "../../lib/id";
 import { sanitizeStepTitle } from "../../lib/text";
 import { supabase } from "../../lib/supabase";
@@ -41,6 +42,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   // struck through, until this view is freshly loaded again.
   const [justDone, setJustDone] = useState(() => new Set());
   const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
+  const todayISO = toISO(new Date());
   const handleToggleDone = (id, done) => {
     if (done) markJustDone(id);
     onToggleDone(id, done);
@@ -216,26 +218,21 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   // day-to-day small steps, so they show in Today instead, not here.
   const milestoneDeadlines = (goalMilestoneChips || []).filter((c) => !c.done);
 
-  // Ordered by the day each is due, soonest first. Anything with no due date at all has
-  // no "day due" to sort by, so it sinks to the bottom instead of breaking the order.
+  // Same shared ordering Dashboard's "Anytime today" and Tasks' own Today glance above
+  // sort by (see compareTaskPriority) — homework, then assignment work, then studying,
+  // unless something's actually due today/tomorrow, which jumps the queue regardless of
+  // kind. A manual drag from Dashboard wins over all of that too, so a reorder shows up
+  // the same way here as it does there. Each wrapper carries its own title/groupId/
+  // eduType/orderIndex/orderSetDate passthrough so the shared comparator (which only
+  // knows about those generic fields, not this file's `task`/`group`/`edu`/`chip` shapes)
+  // can read them; a group/deadline/milestone has no single duration of its own, so it
+  // just sits at a neutral default there rather than always winning or losing a tie.
   const combined = [
-    ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t })),
-    ...groupRows.map((g) => ({ type: "group", date: g.groupDueDate || g.remainingItems[0]?.date || null, group: g })),
-    ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e })),
-    ...milestoneDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c })),
-  ].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
-    const dateDiff = a.date.localeCompare(b.date);
-    if (dateDiff !== 0) return dateDiff;
-    // Same due date — the quicker, easier thing to knock out goes first (e.g. a 30min
-    // homework reminder before a 90min study session); a group/deadline/milestone has no
-    // single duration of its own, so it just sits at a neutral default here rather than
-    // always winning or losing the tie.
-    const durationOf = (it) => (it.type === "single" ? (it.task.duration ?? 30) : 30);
-    return durationOf(a) - durationOf(b);
-  });
+    ...singleTasks.map((t) => ({ type: "single", date: t.date, task: t, title: t.title, duration: t.duration, orderIndex: t.orderIndex, orderSetDate: t.orderSetDate })),
+    ...groupRows.map((g) => ({ type: "group", date: g.groupDueDate || g.remainingItems[0]?.date || null, group: g, title: g.groupTitle, groupId: g.groupId, duration: null })),
+    ...eduDeadlines.map((e) => ({ type: "edu", date: e.dueDate, edu: e, title: e.title, eduType: e.type, duration: null })),
+    ...milestoneDeadlines.map((c) => ({ type: "goal", date: c.date, chip: c, title: c.title, duration: null })),
+  ].sort((a, b) => compareTaskPriority(a, b, todayISO));
 
   // Same instinct as Today's cap — a long flat list is its own kind of overwhelm. Split
   // into what actually needs attention this week (overdue counts as "this week" too) vs.

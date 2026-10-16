@@ -3,6 +3,7 @@ import { BatteryLow } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
+import { compareTaskPriority } from "../../lib/taskPriority";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -184,7 +185,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       const groupTitle = allSteps.find((s) => s.groupTitle)?.groupTitle || next.title;
       const groupDueDate = allSteps.find((s) => s.groupDueDate)?.groupDueDate || null;
       return {
-        id: `group-${groupId}`, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone, duration: next.duration,
+        id: `group-${groupId}`, groupId, title: groupTitle, date: groupDueDate, leadDays: null, isGroup: true, focusId: next.id, done: allDone, duration: next.duration,
         orderIndex: next.orderIndex, orderSetDate: next.orderSetDate,
         subLabel: allDone ? "All steps done" : `${remaining.length} step${remaining.length === 1 ? "" : "s"} left${next.date ? ` · next: ${next.title}` : ""}`,
         category: next.category || "Personal",
@@ -208,7 +209,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
   const eduDeadlineItems = (eduItems || [])
     .filter((e) => (!e.done || justDone.has(`edu-${e.id}`)) && e.dueDate && e.dueDate <= todayISO && !eduIdsWithSessions.has(e.id))
     .map((e) => ({
-      id: `edu-${e.id}`, title: e.title, date: e.dueDate, leadDays: null, isGroup: false, focusId: null, done: e.done,
+      id: `edu-${e.id}`, title: e.title, date: e.dueDate, eduType: e.type, leadDays: null, isGroup: false, focusId: null, done: e.done,
       category: educationCategory, col: CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!e.done) markJustDone(`edu-${e.id}`); onSetEduDone(e.id, !e.done); }, onOpen: onGoToEducation,
     }));
@@ -222,41 +223,15 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     }));
 
   // Date still wins outright — whatever's due soonest (or most overdue) goes on top no
-  // matter what category it is. Category only breaks a tie when two things land on the
-  // exact same date: Education first, then everything else, Personal last — a small
-  // nudge for same-day ties, never enough to override actual proximity to the due date.
-  const categoryRank = (it) => {
-    if (it.category === educationCategory) return 0;
-    if (it.category === "Personal") return 2;
-    return 1;
-  };
-  // Same date, plus a manual order set by dragging on Dashboard's "Anytime today" —
-  // that order wins over the category nudge here too, so a manual reorder actually
-  // shows up the same way on both pages instead of only ever being visible on the one
-  // it was dragged on. Only trusts TODAY's own drag (same freshness check Dashboard's
-  // own sort uses) — a stale order_index from a previous day falls back to the category
-  // nudge instead of permanently pinning a same-day tie.
-  const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) => {
-    const ad = a.sortDate || a.date;
-    const bd = b.sortDate || b.date;
-    if (!ad && !bd) return categoryRank(a) - categoryRank(b);
-    if (!ad) return 1;
-    if (!bd) return -1;
-    const dateDiff = ad.localeCompare(bd);
-    if (dateDiff !== 0) return dateDiff;
-    const aFresh = a.orderIndex != null && a.orderSetDate === todayISO;
-    const bFresh = b.orderIndex != null && b.orderSetDate === todayISO;
-    if (aFresh && bFresh) return a.orderIndex - b.orderIndex;
-    if (aFresh) return -1;
-    if (bFresh) return 1;
-    // Same date, no fresh drag — the quicker, easier thing to knock out goes first (e.g.
-    // a 30min homework reminder before a 90min study session), before the category nudge
-    // below even comes into play — two same-category things (homework and studying both
-    // count as Education) would otherwise tie there and fall through to list order.
-    const durationDiff = (a.duration ?? 30) - (b.duration ?? 30);
-    if (durationDiff !== 0) return durationDiff;
-    return categoryRank(a) - categoryRank(b);
-  });
+  // matter what category it is. Same shared ordering Dashboard's "Anytime today" and
+  // Tasks' own Upcoming list below sort by (see compareTaskPriority) — homework, then
+  // assignment work, then studying, unless something's actually due today/tomorrow,
+  // which jumps the queue regardless of kind. A manual drag from Dashboard wins over all
+  // of that too (same freshness check every page's sort uses), so a reorder shows up the
+  // same way everywhere it's dragged from, not just on the page it happened on.
+  const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) =>
+    compareTaskPriority(a, b, todayISO)
+  );
   // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+
   // steps by construction (see confirmPlan), so it's the one category that's honestly
   // never "quick." Nothing that's actually due gets hidden — this only trims what's

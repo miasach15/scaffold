@@ -14,6 +14,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
 import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { compareTaskPriority } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -207,23 +208,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     // to break ties between two things due the same day. But that override only holds
     // for TODAY's own drag (orderSetDate === todayISO) — otherwise a single drag from a
     // week ago would keep outranking everything by due date forever, including a
-    // brand-new task that's due today and has never been touched. Due date decides the
-    // order for anything not freshly dragged, with overdue/carried-over items leading,
-    // then today's, then anything shown early because it's coming up soon.
-  ].sort((a, b) => {
-    const aFresh = a.orderIndex != null && a.orderSetDate === todayISO;
-    const bFresh = b.orderIndex != null && b.orderSetDate === todayISO;
-    if (aFresh && bFresh) return a.orderIndex - b.orderIndex;
-    if (aFresh) return -1;
-    if (bFresh) return 1;
-    const ad = a.sortDate || a.date || "9999-99-99";
-    const bd = b.sortDate || b.date || "9999-99-99";
-    if (ad !== bd) return ad.localeCompare(bd);
-    // Same urgency (due/overdue the same day) — the easier, quicker thing to knock out
-    // goes first (e.g. a 30min homework reminder before a 90min study session), same
-    // "duration stands in for how big a lift it is" idea the rest of the app already uses.
-    return (a.duration ?? 30) - (b.duration ?? 30);
-  });
+    // brand-new task that's due today and has never been touched. Short of a drag,
+    // compareTaskPriority (src/lib/taskPriority.js) is the same ordering Tasks' Today
+    // glance and Upcoming list also sort by — homework, then assignment work, then
+    // studying, unless something's actually due today/tomorrow, which jumps the queue
+    // regardless of kind.
+  ].sort((a, b) => compareTaskPriority(a, b, todayISO));
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
   // "Do you have enough time today?" — free time left in your usual active window (the
