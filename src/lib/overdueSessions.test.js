@@ -5,7 +5,7 @@
 // are plain YYYY-MM-DD strings throughout, same convention as the rest of the app.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { getLocalToday } from "./dateHelpers";
-import { applyOverdueSessionOps, mergeAbsorbedNotes, planOverdueSessionReflow } from "./overdueSessions";
+import { applyOverdueSessionOps, mergeAbsorbedNotes, planOverdueSessionReflow, planPushTaskToNextDay } from "./overdueSessions";
 
 // A minimal session-task factory — only the fields planOverdueSessionReflow reads.
 const session = (id, date, { done = false, notes = null, eduId = "e1" } = {}) => ({ id, eduId, date, done, notes });
@@ -241,5 +241,50 @@ describe("planOverdueSessionReflow — midnight boundary, UTC vs America/New_Yor
     expect(utc.today).toBe("2026-09-15");
     expect(ny.today).toBe("2026-09-15");
     expect(utc.ops).toEqual(ny.ops);
+  });
+});
+
+describe("planPushTaskToNextDay — Dashboard's manual 'push to tomorrow' button", () => {
+  it("combines into an existing same-eduId session already on the next day instead of duplicating it", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-15", duration: 30, eduId: "edu1", done: false, notes: "step A" },
+      { id: "b", date: "2026-10-16", duration: 45, eduId: "edu1", done: false, notes: "step B" },
+    ];
+    const eduItems = [{ id: "edu1", dueDate: "2026-10-25" }];
+    const ops = planPushTaskToNextDay(tasks, [], eduItems, "a", 600);
+    expect(ops).toEqual([{ type: "absorb", overdueTaskId: "a", targetTaskId: "b", absorbedNotes: "step A" }]);
+  });
+
+  it("combines into an existing same-groupId step already on the next day", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-15", duration: 30, groupId: "g1", groupDueDate: "2026-10-25", done: false },
+      { id: "b", date: "2026-10-16", duration: 45, groupId: "g1", groupDueDate: "2026-10-25", done: false },
+    ];
+    const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
+    expect(ops).toEqual([{ type: "absorb", overdueTaskId: "a", targetTaskId: "b", absorbedNotes: undefined }]);
+  });
+
+  it("skips past a day that's already over capacity, landing on the next day that has room", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-15", duration: 30, eduId: "edu2", done: false },
+      { id: "busy", date: "2026-10-16", duration: 600, done: false }, // unrelated, just fills the day up
+    ];
+    const eduItems = [{ id: "edu2", dueDate: "2026-10-25" }];
+    const ops = planPushTaskToNextDay(tasks, [], eduItems, "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-17" }]);
+  });
+
+  it("a plain task with no deadline just moves to the next day when it's free", () => {
+    const tasks = [{ id: "a", date: "2026-10-15", duration: 30, done: false }];
+    const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-16" }]);
+  });
+
+  it("never pushes a breakdown step onto or past its own real deadline", () => {
+    const tasks = [{ id: "a", date: "2026-10-15", duration: 30, groupId: "g1", groupDueDate: "2026-10-16", done: false }];
+    const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
+    // Last eligible work day is the day before the 10-16 deadline, which is 10-15 — the
+    // task's own current date — so there's nowhere forward left to land but right back on it.
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-15" }]);
   });
 });

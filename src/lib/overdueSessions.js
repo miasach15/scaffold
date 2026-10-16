@@ -128,6 +128,58 @@ export function planOverdueSessionReflow(tasks, eduItems, todayISO = getLocalTod
   return ops;
 }
 
+// Plans what happens when the student explicitly pushes ONE task forward by a day (the
+// Dashboard "push to tomorrow" button) — for something she already knows she's not
+// getting to tonight. Same combine behavior the automatic reflow above already uses: if
+// the day this lands on already holds another not-done session for the exact same
+// assignment/breakdown (matching eduId or groupId), that's the same piece of work twice
+// over, so this absorbs into the one already there instead of creating a second row for
+// it. If there's nothing to absorb into, it only actually lands on a day that still has
+// real room left (the same usable-window capacity math the automatic overload rebalance
+// already uses) — a day with no session on it yet isn't necessarily a free day, it might
+// just already be packed with other work, which is exactly the case that should keep
+// this walking forward one more day rather than dropping onto an already-overloaded day.
+// Never pushes a breakdown step/work session onto or past its own real deadline (same
+// "never on the due date itself" rule every scheduler here follows); a plain task has no
+// separate deadline of its own (its date IS the due date), so it only gets a generous
+// safety bound instead.
+export function planPushTaskToNextDay(tasks, events, eduItems, taskId, capacityMinutes) {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task || !task.date) return [];
+
+  const sameAssignment = (other) =>
+    other.id !== task.id && !other.done &&
+    ((task.eduId && other.eduId === task.eduId) || (task.groupId && other.groupId === task.groupId));
+
+  const deadline = task.groupDueDate || (task.eduId ? eduItems.find((e) => e.id === task.eduId)?.dueDate : null);
+  const lastDay = deadline ? dayBefore(deadline) : toISO(addDays(parseISO(task.date), 60));
+
+  const loadOf = (date) => {
+    let load = 0;
+    tasks.forEach((t) => { if (t.id !== task.id && t.date === date && !t.done) load += t.duration ?? 30; });
+    (events || []).forEach((e) => { if (e.date === date) load += e.duration ?? 60; });
+    return load;
+  };
+
+  let day = nextDayISO(task.date);
+  let guard = 0;
+  while (guard++ < 60) {
+    if (day > lastDay) { day = lastDay; break; }
+    const existing = tasks.find((t) => t.date === day && sameAssignment(t));
+    if (existing) return [{ type: "absorb", overdueTaskId: task.id, targetTaskId: existing.id, absorbedNotes: task.notes }];
+    if (!capacityMinutes || loadOf(day) + (task.duration ?? 30) <= capacityMinutes) {
+      return [{ type: "move", taskId: task.id, toDate: day }];
+    }
+    day = nextDayISO(day);
+  }
+  // Ran every day through the deadline (or the safety bound) without finding room —
+  // still worth one last check for something to combine with there before just landing
+  // on it anyway; better than refusing to move it at all.
+  const existing = tasks.find((t) => t.date === day && sameAssignment(t));
+  if (existing) return [{ type: "absorb", overdueTaskId: task.id, targetTaskId: existing.id, absorbedNotes: task.notes }];
+  return [{ type: "move", taskId: task.id, toDate: day }];
+}
+
 // Applies a plan from planOverdueSessionReflow in order. Keeps its own running notes
 // per task id (rather than re-reading the `tasks` array, which stays fixed for the
 // duration of this call) so two absorbs into the same session within one pass merge

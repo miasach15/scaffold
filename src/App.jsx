@@ -42,7 +42,7 @@ const EducationView = lazy(() => import("./components/education/EducationView"))
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, studyRampMinutes, timeToDecimal, toISO } from "./lib/dateHelpers";
-import { applyOverdueSessionOps, planOverdueSessionReflow } from "./lib/overdueSessions";
+import { applyOverdueSessionOps, planOverdueSessionReflow, planPushTaskToNextDay } from "./lib/overdueSessions";
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
 
@@ -207,6 +207,22 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // nothing's left over capacity (planOverloadRebalance returns no ops at that point).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, events, eduItems, tasksLoading, eduItemsLoading, eventsLoading, profile, runOverloadRebalance]);
+
+  // Dashboard's "push to tomorrow" button (see planPushTaskToNextDay) — not a plain
+  // date move: combines into an already-scheduled session for the same assignment if
+  // the target day has one, and keeps walking forward a day at a time past any day
+  // that's already over capacity, using the same usable-window math runOverloadRebalance
+  // above already uses.
+  const pushTaskForward = useCallback(
+    async (taskId) => {
+      const dayHours = Math.max(0, (profile?.whatnowWindowEnd ?? 21) - (profile?.whatnowWindowStart ?? 9));
+      const capacityMinutes = Math.max(0, dayHours * 60 - (profile?.afterSchoolBufferMinutes ?? 0));
+      const ops = planPushTaskToNextDay(tasksRef.current, eventsRef.current, eduItemsRef.current, taskId, capacityMinutes);
+      if (ops.length === 0) return;
+      await applyOverdueSessionOps(ops, tasksRef.current, { setTaskDate, setTaskNotes, removeTask });
+    },
+    [profile, setTaskDate, setTaskNotes, removeTask]
+  );
 
   // Cmd/Ctrl+K opens search from anywhere; "/" does too, as long as you're not already
   // typing into something. Each modal still handles its own Escape-to-close.
@@ -783,7 +799,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAddTask={addTask}
             onAddEvents={addEvents}
             onSetDate={setTaskDate}
-            onRescheduleTask={rescheduleTask}
+            onPushTomorrow={pushTaskForward}
             onReorderTasks={reorderTasks}
             onCheckOffStep={requestStepDone}
             autoOpenBrainDump={autoOpenBrainDump}
