@@ -56,7 +56,7 @@ export default function ClassCard({
 }) {
   const CATEGORY_COLORS = useCategoryColors();
   const col = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatWeight, setNewCatWeight] = useState("");
   const [addingGrade, setAddingGrade] = useState(false);
