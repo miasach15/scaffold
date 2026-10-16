@@ -308,7 +308,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
             <div style={{ fontFamily: serifFont, fontSize: compact ? 17 : 19, color: INK, lineHeight: 1.2, minWidth: 0 }}>{task.title}</div>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, background: catColor.bg, padding: "4px 10px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: catColor.text, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
               {task.category}
             </div>
           </div>

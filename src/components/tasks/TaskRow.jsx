@@ -53,7 +53,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
       {/* An Education-generated task's own category is already set to the user's actual
           School category (see App.jsx), so `col` above is already that live color —
           no separate hardcoded Education color needed here. */}
-      {t.eduId && <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5 }}>from Education</div>}
+      {t.eduId && <div style={{ fontSize: 10, color: col.text }}>from Education</div>}
       {overdue && onSetDate && (
         <button onClick={() => onSetDate(t.id, getLocalToday())} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}>
           Move to today

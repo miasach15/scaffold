@@ -81,7 +81,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
                 className="hoverable"
                 style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "10px 12px", borderRadius: 10, border: "none", background: "none", cursor: "pointer" }}
               >
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#93A0AD", background: "#F1F3F5", padding: "3px 7px", borderRadius: 5, flexShrink: 0, whiteSpace: "nowrap" }}>{TYPE_LABEL[r.type]}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#93A0AD", flexShrink: 0, whiteSpace: "nowrap" }}>{TYPE_LABEL[r.type]}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.title}</div>
                   {r.sub && <div style={{ fontSize: 11.5, color: "#B4BCC5", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.sub}</div>}

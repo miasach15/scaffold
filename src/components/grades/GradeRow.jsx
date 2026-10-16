@@ -44,7 +44,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
         <div style={{ flex: 1, minWidth: 140 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>
           <div style={{ display: "flex", gap: 5, marginTop: 2, alignItems: "center" }}>
-            <div style={{ fontSize: 10, color: col.text, background: col.bg, display: "inline-block", padding: "1px 6px", borderRadius: 5, fontWeight: 600 }}>{item.type}</div>
+            <div style={{ fontSize: 10, color: col.text, fontWeight: 600 }}>{item.type}</div>
             <div style={{ fontSize: 10, color: "#B4BCC5" }}>{formatShortDate(item.dueDate)}</div>
           </div>
         </div>

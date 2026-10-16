@@ -14,7 +14,7 @@ export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
       <Checkbox checked={item.done} onClick={onToggle} color={col} />
-      <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>Milestone</div>
+      <div style={{ fontSize: 10, color: col.text, fontWeight: 700, flexShrink: 0 }}>Milestone</div>
       <button
         onClick={onOpen}
         title="Go to Goals"

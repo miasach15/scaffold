@@ -31,7 +31,7 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
         {/* The subject ("Chemistry", "Calc") is more useful at a glance than the
             Homework/Assignment/Assessment type — falls back to type only for the rare
             item with no subject set. */}
-        <div style={{ fontSize: 10, color: col.text, background: col.bg, padding: "2px 6px", borderRadius: 5, fontWeight: 700, flexShrink: 0 }}>{item.subject || item.type}</div>
+        <div style={{ fontSize: 10, color: col.text, fontWeight: 700, flexShrink: 0 }}>{item.subject || item.type}</div>
         <button
           onClick={() => expandable && setExpanded((x) => !x)}
           className="expand-toggle"

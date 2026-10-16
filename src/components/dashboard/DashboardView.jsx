@@ -660,7 +660,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 {heroTask ? (
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{heroTask.title}</div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, background: col.bg, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
                       {heroTask.category}
                     </div>
                   </div>

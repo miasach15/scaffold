@@ -94,7 +94,7 @@ export default function MonthView({ monthDate, setMonthDate, events, dueChips, o
                     const col = dotColor(it);
                     return (
                       <div key={i} title={dotLabel(it)} style={{
-                        fontSize: 9.5, fontWeight: 600, padding: "1px 5px", borderRadius: 5, color: col.text, background: col.bg, border: `1px solid ${col.border}`,
+                        fontSize: 9.5, fontWeight: 600, color: col.text,
                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%",
                       }}>
                         {dotLabel(it)}

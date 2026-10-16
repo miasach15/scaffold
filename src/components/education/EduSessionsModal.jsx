@@ -41,7 +41,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
     <ModalPortal>
     <div style={overlayStyle} onClick={onClose}>
       <div style={{ ...modalStyle, width: 420, maxHeight: "82vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: 10.5, color: col.text, background: col.bg, display: "inline-block", padding: "2px 7px", borderRadius: 5, fontWeight: 700, marginBottom: 6 }}>{item.type}</div>
+        <div style={{ fontSize: 10.5, color: col.text, fontWeight: 700, marginBottom: 6 }}>{item.type}</div>
         <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
         {onUpdateDeadline && editingDeadline ? (
           <div
