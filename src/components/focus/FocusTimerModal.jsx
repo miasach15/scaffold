@@ -207,6 +207,19 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const ss = remaining % 60;
   const finished = remaining === 0;
 
+  // The countdown in the browser tab's own title (next to the favicon) — so it's
+  // visible at a glance even on another tab, not just while this modal is in front.
+  // The true original title is captured once on mount/restored once on unmount, rather
+  // than inside the per-tick effect below, so a brief in-between tick's title never
+  // ends up "stuck" as what gets restored when the timer closes.
+  const originalTitleRef = useRef(document.title);
+  useEffect(() => {
+    return () => { document.title = originalTitleRef.current; };
+  }, []);
+  useEffect(() => {
+    document.title = finished ? `Done · ${originalTitleRef.current}` : `${mm}:${pad(ss)} · ${originalTitleRef.current}`;
+  }, [mm, ss, finished]);
+
   // The rest of this task's breakdown (if it's one step of a "break it down" group) —
   // shown as a checklist so you can see the whole thing and check off steps without
   // leaving the timer.
