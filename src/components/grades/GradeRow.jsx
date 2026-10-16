@@ -7,11 +7,8 @@ import Swatch from "../shared/Swatch";
 // A completed Education item with an optional score — click "Add score" (or the
 // existing score) to edit earned/possible inline, e.g. 18/20 or 92/100. When the class
 // has categories set up, a dropdown lets you pick which one this item counts toward.
-// `col` comes from the class card above (the user's actual School category color) and
-// still colors the type label and score box below — only the circle itself is a fixed
-// mint, picked directly rather than following the live category color.
-const SWATCH_COLOR = "#97D5C6";
-
+// `col` comes from the class card above (the user's actual School category color), same
+// live color Education's own rows already use — not a fixed color that ignores it.
 export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onRemove }) {
   const [editing, setEditing] = useState(false);
   const [earned, setEarned] = useState(item.scoreEarned ?? "");
@@ -43,7 +40,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
   return (
     <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, background: "#fff" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <Swatch color={SWATCH_COLOR} />
+        <Swatch color={col} />
         <div style={{ flex: 1, minWidth: 140 }}>
           <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.title}</div>
           <div style={{ display: "flex", gap: 5, marginTop: 2, alignItems: "center" }}>
