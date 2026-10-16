@@ -154,6 +154,17 @@ export default function ClassCard({
 
         {cls && (
           <button
+            onClick={() => setEndingTerm(true)}
+            disabled={overallPct == null}
+            title={overallPct == null ? "Nothing scored yet this term" : "Lock in this term's grade and start a new one"}
+            style={{ background: "none", border: "none", cursor: overallPct == null ? "default" : "pointer", color: col.text, opacity: overallPct == null ? 0.35 : 0.65, padding: 4, display: "flex" }}
+          >
+            <Flag size={15} strokeWidth={2.2} />
+          </button>
+        )}
+
+        {cls && (
+          <button
             onClick={() => onRemoveClass(cls.id)}
             title={items.length > 0 ? "Remove this class's grading setup (it'll come back in Total points mode if you still have items in it)" : "Remove this class"}
             style={{ ...deleteBtn, color: col.text, opacity: 0.6 }}
@@ -362,10 +373,12 @@ export default function ClassCard({
           )}
 
           {/* Ending a term locks in the REAL grade right now (not a guess) as a finished
-              term you can look back on, then starts a fresh one — see onEndTerm. */}
-          {cls && (
+              term you can look back on, then starts a fresh one — see onEndTerm. The
+              trigger itself is the flag icon in the header, top right; this is just the
+              confirm step once that's clicked, plus the archive of past terms. */}
+          {cls && (endingTerm || cls.pastTerms?.length > 0) && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              {endingTerm ? (
+              {endingTerm && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: "#4A5568" }}>End this term at <strong>{overallPct}%</strong> and start fresh —</span>
                   <input
@@ -378,18 +391,9 @@ export default function ClassCard({
                   <button onClick={confirmEndTerm} className="btn-primary" style={{ ...primaryBtn, fontSize: 11.5, padding: "6px 10px" }}>Confirm</button>
                   <button onClick={() => { setEndingTerm(false); setTermLabelDraft(""); }} style={{ ...ghostBtn, fontSize: 11.5, padding: "6px 10px" }}>Cancel</button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setEndingTerm(true)}
-                  disabled={overallPct == null}
-                  title={overallPct == null ? "Nothing scored yet this term" : "Lock in this term's grade and start a new one"}
-                  style={{ ...ghostBtn, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5, opacity: overallPct == null ? 0.5 : 1 }}
-                >
-                  <Flag size={12} strokeWidth={2.3} /> End term
-                </button>
               )}
               {cls.pastTerms?.length > 0 && (
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: endingTerm ? 10 : 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 6 }}>Past terms</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     {cls.pastTerms.map((t) => (

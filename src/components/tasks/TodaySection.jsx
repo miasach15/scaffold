@@ -3,7 +3,7 @@ import { BatteryLow } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
-import { compareTaskPriority } from "../../lib/taskPriority";
+import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -153,7 +153,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
     const dueDate = parentEdu?.dueDate || next.date;
     const sortDate = parentEdu?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate;
     return [{
-      id: next.id, title: next.title, date: dueDate, sortDate, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
+      id: next.id, eduId: next.eduId, title: next.title, date: dueDate, sortDate, leadDays: null, isGroup: false, isEduSession: true, focusId: next.id, done: next.done, duration: next.duration,
       orderIndex: next.orderIndex, orderSetDate: next.orderSetDate,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
@@ -383,6 +383,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
             // overdue case — this fills that gap with a plain "due tomorrow"/"in N days"
             // read on the real date, whenever nothing else already said something about it.
             const showPlainDue = !it.done && !tagLabel && !waitingOnWindow && it.date && it.date !== todayISO;
+            // Several of this same assignment's own sessions already came and went undone
+            // — worth a nudge to switch to something else for a while, same as Dashboard's
+            // own "Anytime today" row gives it.
+            const stuckOnThis = !it.done && staleSessionCount(tasks, { eduId: it.eduId, groupId: it.groupId }, todayISO) >= STALE_SESSION_THRESHOLD;
             return (
               <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, opacity: it.done ? 0.5 : active ? 1 : 0.65 }}>
                 <Checkbox
@@ -405,6 +409,11 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                     <WorkTitle title={it.title} mutedColor="#B4BCC5" />
                   </button>
                   {it.subLabel && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
+                  {stuckOnThis && (
+                    <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
+                      Been at this a few sessions now — maybe switch to something else for a bit.
+                    </div>
+                  )}
                 </div>
                 {!it.done && it.duration != null && (
                   <div style={{ fontSize: 11, color: "#B4BCC5", whiteSpace: "nowrap", flexShrink: 0 }}>~{formatDuration(it.duration)}</div>

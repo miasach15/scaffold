@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play, SkipForward } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -14,7 +14,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
 import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
-import { compareTaskPriority } from "../../lib/taskPriority";
+import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
@@ -493,6 +493,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
                         const stepsExpanded = expandedBreakdowns.has(t.id);
+                        // Several of this same assignment's own sessions already came and went
+                        // undone — not "a lot left to do," specifically "stuck on this one
+                        // thing a while" — worth a nudge to switch to something else for now.
+                        const stuckOnThis = staleSessionCount(tasks, { eduId: t.eduId, groupId: t.groupId }, todayISO) >= STALE_SESSION_THRESHOLD;
                         return (
                           <div key={t.id}>
                           <div
@@ -521,6 +525,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${formatDuration(t.duration)}` : ""}
                               </div>
                               <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} duration={t.duration} />
+                              {stuckOnThis && (
+                                <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
+                                  Been at this a few sessions now — maybe switch to something else for a bit.
+                                </div>
+                              )}
                             </div>
                             {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                             {t.date && (

@@ -62,3 +62,17 @@ export function compareTaskPriority(a, b, todayISO) {
   }
   return (a.duration ?? 30) - (b.duration ?? 30);
 }
+
+// How many of this specific assignment's/project's own work sessions have already come
+// and gone (scheduled on or before today) without being finished — a rough "how long has
+// she been stuck on this one thing" signal, not a count of everything left to do on it.
+// Three or more means it's been multiple separate sessions with no real progress, which
+// is worth a nudge to switch to something else for a while rather than grinding on the
+// same assignment again.
+export const STALE_SESSION_THRESHOLD = 3;
+export function staleSessionCount(tasks, { eduId, groupId }, todayISO) {
+  if (!eduId && !groupId) return 0;
+  return (tasks || []).filter(
+    (t) => !t.done && t.date && t.date <= todayISO && ((eduId && t.eduId === eduId) || (groupId && t.groupId === groupId))
+  ).length;
+}
