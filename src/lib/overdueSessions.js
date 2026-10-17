@@ -155,8 +155,15 @@ export function planPushTaskToNextDay(tasks, events, eduItems, taskId, capacityM
     other.id !== task.id && !other.done &&
     ((task.eduId && other.eduId === task.eduId) || (task.groupId && other.groupId === task.groupId));
 
+  // A deadline that's already passed (the assignment/test itself is overdue, not just
+  // this work session) isn't a real ceiling anymore — clamping to the day before an
+  // already-past due date would push this BACKWARD into the past instead of forward.
+  // Once the real deadline is behind you, there's nothing left to respect but the same
+  // generous safety bound a plain task with no deadline gets.
+  const todayISO = getLocalToday();
   const deadline = task.groupDueDate || (task.eduId ? eduItems.find((e) => e.id === task.eduId)?.dueDate : null);
-  const lastDay = deadline ? dayBefore(deadline) : toISO(addDays(parseISO(task.date), 60));
+  const deadlineLastDay = deadline ? dayBefore(deadline) : null;
+  const lastDay = deadlineLastDay && deadlineLastDay >= todayISO ? deadlineLastDay : toISO(addDays(parseISO(task.date), 60));
 
   const loadOf = (date) => {
     let load = 0;

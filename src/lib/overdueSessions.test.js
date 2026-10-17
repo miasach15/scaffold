@@ -3,7 +3,7 @@
 // planOverdueSessionReflow — no Supabase, no React, no component rendering — since the
 // entire decision ("shift or absorb, in what order") lives in that one function. Dates
 // are plain YYYY-MM-DD strings throughout, same convention as the rest of the app.
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { getLocalToday } from "./dateHelpers";
 import { applyOverdueSessionOps, mergeAbsorbedNotes, planOverdueSessionReflow, planPushTaskToNextDay } from "./overdueSessions";
 
@@ -245,6 +245,15 @@ describe("planOverdueSessionReflow — midnight boundary, UTC vs America/New_Yor
 });
 
 describe("planPushTaskToNextDay — Dashboard's manual 'push to tomorrow' button", () => {
+  // Fixed "today" well before every date these tests use, so getLocalToday() (which
+  // the deadline-already-passed check below relies on) is deterministic regardless of
+  // the real wall-clock date the suite happens to run on.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-01T12:00:00"));
+  });
+  afterEach(() => vi.useRealTimers());
+
   it("combines into an existing same-eduId session already on the next day instead of duplicating it", () => {
     const tasks = [
       { id: "a", date: "2026-10-15", duration: 30, eduId: "edu1", done: false, notes: "step A" },
@@ -286,5 +295,24 @@ describe("planPushTaskToNextDay — Dashboard's manual 'push to tomorrow' button
     // Last eligible work day is the day before the 10-16 deadline, which is 10-15 — the
     // task's own current date — so there's nowhere forward left to land but right back on it.
     expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-15" }]);
+  });
+
+  it("still pushes forward when the real deadline has already passed, instead of clamping backward into the past", () => {
+    // A Homework reminder carried over onto today (its real due date was two days ago —
+    // Homework never gets a second session, so the overdue reflow just keeps moving
+    // this same session forward, but the due date itself never changes). Pushing it
+    // used to clamp to dayBefore(dueDate), which is BEFORE today for an overdue
+    // deadline — moving it backward instead of to tomorrow.
+    const tasks = [{ id: "a", date: "2026-10-01", duration: 45, eduId: "hw1", done: false }];
+    const eduItems = [{ id: "hw1", dueDate: "2026-09-29" }]; // due two days before "today" (10-01)
+    const ops = planPushTaskToNextDay(tasks, [], eduItems, "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-02" }]);
+  });
+
+  it("still pushes forward when the deadline is today (due but not yet overdue)", () => {
+    const tasks = [{ id: "a", date: "2026-10-01", duration: 45, eduId: "hw1", done: false }];
+    const eduItems = [{ id: "hw1", dueDate: "2026-10-01" }]; // due today
+    const ops = planPushTaskToNextDay(tasks, [], eduItems, "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-02" }]);
   });
 });
