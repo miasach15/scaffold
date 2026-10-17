@@ -3,7 +3,7 @@ import { Search, X } from "lucide-react";
 import { overlayStyle } from "../../lib/styles";
 import ModalPortal from "./ModalPortal";
 
-const TYPE_LABEL = { task: "Task", edu: "Education", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", event: "Calendar" };
+const TYPE_LABEL = { task: "Task", edu: "School", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", event: "Calendar" };
 
 // A single client-side search across everything already loaded into the app — tasks,
 // Education items, goals/milestones/actions, habits, and calendar events. Nothing new
@@ -60,7 +60,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && onClose()}
-            placeholder="Search tasks, goals, education, habits, calendar..."
+            placeholder="Search tasks, goals, school, habits, calendar..."
             aria-label="Search everything in Scaffold"
             style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", background: "transparent" }}
           />

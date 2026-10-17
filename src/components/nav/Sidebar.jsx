@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
-  { key: "education", label: "Education", icon: GraduationCap },
+  { key: "education", label: "School", icon: GraduationCap },
   { key: "goals", label: "Goals", icon: Target },
   { key: "habits", label: "Habits", icon: Repeat },
   { key: "grades", label: "Grades", icon: Percent },
@@ -28,7 +28,7 @@ const TAB_BAR_ITEMS = [
   { key: "dashboard", label: "Home", icon: Home },
   { key: "calendar", label: "Calendar", icon: CalendarIcon },
   { key: "tasks", label: "Tasks", icon: CheckSquare },
-  { key: "education", label: "Education", icon: GraduationCap },
+  { key: "education", label: "School", icon: GraduationCap },
 ];
 const MORE_DRAWER_VIEWS = ["goals", "habits", "grades"];
 

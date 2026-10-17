@@ -93,7 +93,7 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
                 <Plus size={12} strokeWidth={2.5} /> Add session
               </button>
             )}
-            {onOpen && <button onClick={onOpen} style={{ background: "none", border: "none", padding: 0, fontSize: 11.5, color: "#93A0AD", textDecoration: "underline", cursor: "pointer" }}>Open in Education</button>}
+            {onOpen && <button onClick={onOpen} style={{ background: "none", border: "none", padding: 0, fontSize: 11.5, color: "#93A0AD", textDecoration: "underline", cursor: "pointer" }}>Open in School</button>}
           </div>
         </div>
       )}

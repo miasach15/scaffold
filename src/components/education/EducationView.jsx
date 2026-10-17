@@ -368,7 +368,7 @@ export default function EducationView({
   return (
     <div>
       <SectionHeader
-        title="Education"
+        title="School"
         subtitle="Assignments, tests, and homework in one place."
         right={
           !showAddForm && (
