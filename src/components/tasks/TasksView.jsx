@@ -318,6 +318,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       <TodaySection
         tasks={tasks}
         onToggleDone={handleToggleDone}
+        onRemove={onRemove}
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}
         onRescheduleTask={onRescheduleTask}

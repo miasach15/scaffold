@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { formatShortDate } from "../../lib/dateHelpers";
-import { deleteBtn, ghostBtn, inputStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 import ModalPortal from "./ModalPortal";
 
 // Shows the tasks a breakdown is about to create — with the dates they've been
-// scheduled on — before anything actually lands in the Tasks list. You can rename or
-// remove any row here; nothing is added until you confirm. Used by both the Assignment
-// and plain-Task "break it down" flows.
+// scheduled on — before anything actually lands in the Tasks list. You can rename,
+// move to a different day, or remove any row here; nothing is added until you confirm.
+// Used by both the Assignment and plain-Task "break it down" flows.
 export default function BreakdownPreviewModal({ heading, items, onChangeItems, onConfirm, onCancel }) {
+  // Which row's date is currently open for editing — only one at a time, same as every
+  // other per-row date toggle in the app (TodaySection, GroupedTaskRow, TaskRow).
+  const [editingDateIdx, setEditingDateIdx] = useState(null);
+
   const updateTitle = (i, title) => {
     const next = items.slice();
     next[i] = { ...next[i], title };
@@ -15,6 +20,12 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
   const updateNotes = (i, notes) => {
     const next = items.slice();
     next[i] = { ...next[i], notes };
+    onChangeItems(next);
+  };
+  const updateDate = (i, date) => {
+    if (!date) return;
+    const next = items.slice();
+    next[i] = { ...next[i], date };
     onChangeItems(next);
   };
   const removeItem = (i) => onChangeItems(items.filter((_, idx) => idx !== i));
@@ -39,7 +50,25 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
                     onChange={(e) => updateTitle(i, e.target.value)}
                     style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5 }}
                   />
-                  <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(it.date)}</div>
+                  {editingDateIdx === i ? (
+                    <input
+                      type="date"
+                      autoFocus
+                      value={it.date || ""}
+                      onChange={(e) => updateDate(i, e.target.value)}
+                      onBlur={() => setEditingDateIdx(null)}
+                      {...noTypeDateProps}
+                      style={{ ...inputStyle, width: 130, fontSize: 11, padding: "3px 6px" }}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditingDateIdx(i)}
+                      title="Click to change the day"
+                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}
+                    >
+                      {formatShortDate(it.date)}
+                    </button>
+                  )}
                   <button onClick={() => removeItem(i)} className="btn-delete" style={deleteBtn}>×</button>
                 </div>
                 {it.notes != null && (

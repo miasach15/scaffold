@@ -4,7 +4,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
-import { ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
+import { deleteBtn, ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import WhatNowModal from "./WhatNowModal";
@@ -19,7 +19,7 @@ const VISIBLE_CAP = 5; // more than this and it stops being a glance — collaps
 const LOW_ENERGY_KEY = "scaffold-low-energy";
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
-// no delete buttons, nothing but a checkbox and a title. How something ends up here,
+// just a checkbox, a title, and a delete button. How something ends up here,
 // and whether it's bold or dimmed:
 //   1. No due date at all — persists every day, dimmed, until you finish it. No due date
 //      means no urgency to signal, so it never bolds on its own.
@@ -37,7 +37,7 @@ const LOW_ENERGY_KEY = "scaffold-low-energy";
 //      slipped by undone, only the most recent shows — never a pile of identically-
 //      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDate, onRescheduleTask, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocus, onSetDate, onRescheduleTask, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
@@ -93,6 +93,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       category: t.category || "Personal",
       col: CATEGORY_COLORS[t.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!t.done) markJustDone(t.id); onToggleDone(t.id, !t.done); }, onOpen: () => onOpenFocus(t.id, t.title),
+      onRemove: onRemove ? () => onRemove(t.id) : null,
     }));
 
   // Plain, undone, overdue tasks — sorted oldest first, so whatever's been avoided
@@ -158,6 +159,7 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
       onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
+      onRemove: onRemove ? () => onRemove(next.id) : null,
     }];
   });
 
@@ -194,6 +196,10 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
           ? () => onToggleDone(next.id, false)
           : () => { markJustDone(`group-${groupId}`); onToggleDone(next.id, true); },
         onOpen: () => onOpenFocus(next.id, next.title),
+        // Only the one step this row is actually standing in for — same scope the
+        // checkbox above already has, not "delete the whole project" from a collapsed
+        // glance row.
+        onRemove: !allDone && onRemove ? () => onRemove(next.id) : null,
       };
     })
     .filter(Boolean);
@@ -426,6 +432,9 @@ export default function TodaySection({ tasks, onToggleDone, onOpenFocus, onSetDa
                 )}
                 {showPlainDue && (
                   <div style={{ flexShrink: 0 }}><UrgencyBadge iso={it.date} done={false} leadDays={null} /></div>
+                )}
+                {it.onRemove && (
+                  <button onClick={it.onRemove} className="btn-delete" style={deleteBtn}>×</button>
                 )}
               </div>
             );
