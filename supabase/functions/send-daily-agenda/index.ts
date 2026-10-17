@@ -14,8 +14,14 @@
 // listUsers needs actual pagination (loop on the `page` param until a short page comes
 // back) — not worth building until there's an actual user to hit that ceiling.
 //
+// ALSO requires a fresh sign-in at or after SIGNIN_CUTOFF (see below) and
+// !email_opt_out (see migration_email_opt_out.sql / supabase/functions/unsubscribe) —
+// an account has to clear all three (onboarding cutoff, signed back in, not
+// unsubscribed) to actually get today's email.
+//
 // Deploy with:  supabase functions deploy send-daily-agenda
-// Uses the same RESEND_API_KEY secret already set for send-welcome-email.
+// Uses the same RESEND_API_KEY secret already set for send-welcome-email. Also needs
+// UNSUB_SECRET set (same secret the unsubscribe function checks against).
 // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are injected automatically — no need to set
 // those yourself.
 // Scheduled by migration_daily_agenda_cron.sql (pg_cron, once deployed).
@@ -25,12 +31,33 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = Deno.env.get("DIGEST_FROM_EMAIL") || Deno.env.get("WELCOME_FROM_EMAIL") || "Scaffold <onboarding@resend.dev>";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const UNSUB_SECRET = Deno.env.get("UNSUB_SECRET") || "";
 
 // Only accounts created at or after this moment get the daily send — everyone who
 // already existed before this went live is excluded, permanently, not just for today.
 const ONBOARDING_CUTOFF = new Date("2026-09-19T18:38:20Z");
+
+// Everyone gets force-signed-out of any session older than this moment by
+// AuthProvider.jsx on the client (rotating Supabase's JWT key on its own turned out NOT
+// to do this — it keeps the previous signing key valid for a transition window by
+// design, so existing sessions kept working). Only a sign-in AT OR AFTER this moment
+// counts here too, so today's send only reaches people who've actually come back and
+// re-authenticated since — same cutoff AuthProvider enforces, so "signed back in" means
+// the same thing in both places.
+const SIGNIN_CUTOFF = new Date("2026-10-17T15:20:06Z");
+
+// Duplicated identically in send-welcome-email, send-getting-started-email, and
+// verified the same way in supabase/functions/unsubscribe.
+async function signToken(uid: string): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(UNSUB_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(uid));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function unsubscribeLink(uid: string): Promise<string> {
+  return `${SUPABASE_URL}/functions/v1/unsubscribe?uid=${encodeURIComponent(uid)}&sig=${await signToken(uid)}`;
+}
 
 // Same swatch palette as src/lib/constants.js (CATEGORY_COLOR_SWATCHES + each swatch's
 // THEME_PRESETS.primary as `accent`) — duplicated here since a Deno edge function can't
@@ -122,20 +149,25 @@ serve(async (_req) => {
 
     const { data: usersPage, error: usersErr } = await admin.auth.admin.listUsers({ perPage: 200 });
     if (usersErr) return json({ error: usersErr.message }, 500);
-    const users = usersPage.users.filter((u) => !!u.email && new Date(u.created_at) >= ONBOARDING_CUTOFF);
-    if (users.length === 0) return json({ ok: true, sent: 0, note: "no accounts created on/after the onboarding cutoff yet" });
+    const users = usersPage.users.filter(
+      (u) => !!u.email && new Date(u.created_at) >= ONBOARDING_CUTOFF && !!u.last_sign_in_at && new Date(u.last_sign_in_at) >= SIGNIN_CUTOFF
+    );
+    if (users.length === 0) return json({ ok: true, sent: 0, note: "no accounts created on/after the onboarding cutoff, signed in since SIGNIN_CUTOFF, yet" });
 
     const userIds = users.map((u) => u.id);
     const [{ data: profiles }, { data: tasks }, { data: events }] = await Promise.all([
-      admin.from("profiles").select("id,name,category_colors").in("id", userIds),
+      admin.from("profiles").select("id,name,category_colors,email_opt_out").in("id", userIds),
       admin.from("tasks").select("user_id,title,date,start,duration,category,notes,done,group_id,edu_id").in("user_id", userIds).eq("done", false),
       admin.from("events").select("user_id,title,date,start,duration,category").in("user_id", userIds).in("date", [today, tomorrow]),
     ]);
+    const optedOut = new Set((profiles || []).filter((p) => p.email_opt_out).map((p) => p.id));
 
     let sent = 0;
     const errors: string[] = [];
 
     for (const user of users) {
+      if (optedOut.has(user.id)) continue;
+      const unsubUrl = UNSUB_SECRET ? await unsubscribeLink(user.id) : null;
       const profile = (profiles || []).find((p) => p.id === user.id);
       const categoryColors: Record<string, string> = { ...DEFAULT_CATEGORY_COLOR_KEYS, ...(profile?.category_colors || {}) };
       const accentFor = (category: string | null) => SWATCHES[(category && categoryColors[category]) || "pink"]?.accent || SWATCHES.pink.accent;
@@ -239,7 +271,9 @@ serve(async (_req) => {
               ${lookingAhead}
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #D9D3E6; margin-top:28px; padding-top:16px;">
                 <tr>
-                  <td style="font-family:${SANS}; font-size:11px; color:#9CA3AF;">Sent automatically by Scaffold</td>
+                  <td style="font-family:${SANS}; font-size:11px; color:#9CA3AF;">
+                    Sent automatically by Scaffold${unsubUrl ? ` · <a href="${unsubUrl}" style="color:#9CA3AF;">Unsubscribe</a>` : ""}
+                  </td>
                   <td align="right"><div style="width:14px; height:14px; border-radius:4px; background:#8290D8;"></div></td>
                 </tr>
               </table>
@@ -255,7 +289,10 @@ serve(async (_req) => {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: FROM_EMAIL, to: user.email, subject: totalItems > 0 ? `Your day: ${totalItems} thing${totalItems === 1 ? "" : "s"} on the calendar` : "Your day: nothing on the calendar", html }),
+        body: JSON.stringify({
+          from: FROM_EMAIL, to: user.email, subject: totalItems > 0 ? `Your day: ${totalItems} thing${totalItems === 1 ? "" : "s"} on the calendar` : "Your day: nothing on the calendar", html,
+          ...(unsubUrl ? { headers: { "List-Unsubscribe": `<${unsubUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+        }),
       });
 
       if (res.ok) sent++;

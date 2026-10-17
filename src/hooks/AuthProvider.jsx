@@ -3,6 +3,17 @@ import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
+// A one-time forced sign-out of every existing session, enforced here instead of by
+// rotating Supabase's JWT key — the dashboard's key rotation keeps the previous signing
+// key valid for a transition window on purpose (zero-downtime by design), so it doesn't
+// actually invalidate anything already issued. This does it directly: any session whose
+// last real sign-in (not a silent token refresh — last_sign_in_at only updates on an
+// actual sign-in event) predates this cutoff gets signed out the moment the app loads,
+// landing them back on the sign-in screen. Matches the same cutoff send-daily-agenda
+// uses to decide who gets the daily email, so "signed back in" means the same thing in
+// both places.
+const SIGNIN_CUTOFF = new Date("2026-10-17T15:20:06Z");
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined); // undefined = not yet loaded
   // Set when the user arrives via a "reset your password" email link — we intercept
@@ -10,9 +21,16 @@ export function AuthProvider({ children }) {
   const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const applyCutoff = (s) => {
+      if (s?.user?.last_sign_in_at && new Date(s.user.last_sign_in_at) < SIGNIN_CUTOFF) {
+        supabase.auth.signOut();
+        return null;
+      }
+      return s;
+    };
+    supabase.auth.getSession().then(({ data }) => setSession(applyCutoff(data.session)));
     const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      setSession(newSession);
+      setSession(applyCutoff(newSession));
       if (event === "PASSWORD_RECOVERY") setPasswordRecovery(true);
     });
     return () => listener.subscription.unsubscribe();
