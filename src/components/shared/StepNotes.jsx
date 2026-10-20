@@ -13,14 +13,10 @@ const stepParts = (notes, title) => {
   return notes.split(",").map((s) => s.trim()).filter(Boolean).filter((p) => p.toLowerCase() !== (title || "").toLowerCase());
 };
 
-export default function StepNotes({ notes, title, duration, color, fontSize = 11.5, align }) {
+export default function StepNotes({ notes, title, color, fontSize = 11.5, align }) {
   const [expanded, setExpanded] = useState(false);
   const parts = stepParts(notes, title);
   if (parts.length === 0) return null;
-  // Splitting the row's own duration evenly across its steps gives a real estimate for
-  // just the next one ("Next: problem 4 · 15m") instead of one lump number for the whole
-  // session.
-  const perStepMin = parts.length > 1 && duration != null ? Math.max(1, Math.round(duration / parts.length)) : null;
   const baseColor = color || MUTED;
   return (
     <div style={{ marginTop: 1, textAlign: align }}>
@@ -33,7 +29,7 @@ export default function StepNotes({ notes, title, duration, color, fontSize = 11
           }}
         >
           {expanded ? <ChevronDown size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}{perStepMin ? ` · ${perStepMin}m` : ""}</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</span>
         </button>
       ) : (
         <div style={{ fontSize, color: baseColor, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</div>
@@ -41,7 +37,7 @@ export default function StepNotes({ notes, title, duration, color, fontSize = 11
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, paddingLeft: align === "center" ? 0 : 15, textAlign: "left" }}>
           {parts.slice(1).map((p, i) => (
-            <div key={i} style={{ fontSize: fontSize - 0.5, color: MUTED, textAlign: align }}>{p}{perStepMin ? ` · ${perStepMin}m` : ""}</div>
+            <div key={i} style={{ fontSize: fontSize - 0.5, color: MUTED, textAlign: align }}>{p}</div>
           ))}
         </div>
       )}

@@ -344,7 +344,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
           </div>
           {!compact && (task.notes ? (
             <div style={{ marginBottom: 14 }}>
-              <StepNotes notes={task.notes} title={task.title} duration={task.duration} color={MUTED} fontSize={12.5} align="center" />
+              <StepNotes notes={task.notes} title={task.title} color={MUTED} fontSize={12.5} align="center" />
             </div>
           ) : (
             <div style={{ marginBottom: 14 }} />
