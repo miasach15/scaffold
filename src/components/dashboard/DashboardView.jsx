@@ -407,7 +407,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         />
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
+      <div style={{ display: "grid", gridTemplateColumns: "0.85fr 1.1fr 1fr", gap: 24, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`
           @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr !important; flex: none !important; min-height: 0 !important; }
@@ -417,8 +417,26 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                back to natural content height here, leaving .dashboard-wrap as the one
                real scroll container. */
             .dv-root, .dv-col { flex: none !important; min-height: 0 !important; overflow: visible !important; }
+            .dv-timeline-col { height: 480px !important; }
           }
         `}</style>
+
+        {/* The hour-ruled schedule gets its own column — narrow, tall, nothing else
+            competing for its height — instead of sharing a card with the untimed list
+            below it, which was squeezing it down to only a few visible hours at a time. */}
+        <div className="dv-col dv-timeline-col" style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0, flex: 1, minHeight: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>Today</div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <DashboardTimeline
+              timedTasks={todaysTimedTasks}
+              events={todaysEvents}
+              onOpenFocus={onStartFocus}
+              onToggleDone={onToggleDone}
+              onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
+              onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
+            />
+          </div>
+        </div>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px", flexShrink: 0 }}>
@@ -438,47 +456,25 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 )}
               </div>
             </div>
-            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
-              isFirstUse ? (
-                <div style={{ padding: "6px 0 4px" }}>
-                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
-                      Add something that's stressing you out
-                    </button>
-                    <button onClick={() => setView("education")} style={ghostBtn}>
-                      Plan my first assignment
-                    </button>
-                  </div>
+            {isFirstUse ? (
+              <div style={{ padding: "6px 0 4px" }}>
+                <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
+                    Add something that's stressing you out
+                  </button>
+                  <button onClick={() => setView("education")} style={ghostBtn}>
+                    Plan my first assignment
+                  </button>
                 </div>
-              ) : (
-                <div>
-                  <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>Nothing scheduled for today yet — click anywhere on the timeline to add something.</div>
-                  <DashboardTimeline
-                    timedTasks={[]}
-                    events={[]}
-                    onOpenFocus={onStartFocus}
-                    onToggleDone={onToggleDone}
-                    onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
-                    onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
-                  />
-                </div>
-              )
+              </div>
+            ) : displayUntimed.length === 0 ? (
+              <EmptyState text="Nothing untimed on your plate right now — the timeline's got whatever's scheduled." />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <DashboardTimeline
-                  timedTasks={todaysTimedTasks}
-                  events={todaysEvents}
-                  onOpenFocus={onStartFocus}
-                  onToggleDone={onToggleDone}
-                  onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
-                  onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
-                />
-                {displayUntimed.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {visibleUntimed.map((t, i) => {
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {visibleUntimed.map((t, i) => {
                         const isTop = i === 0;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
@@ -590,15 +586,13 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                         Show {hiddenUntimedCount} more
                       </button>
                     )}
-                    {untimedExpanded && displayUntimed.length > UNTIMED_VISIBLE_CAP && (
-                      <button
-                        onClick={() => setUntimedExpanded(false)}
-                        style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "6px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
-                      >
-                        Show less
-                      </button>
-                    )}
-                  </div>
+                {untimedExpanded && displayUntimed.length > UNTIMED_VISIBLE_CAP && (
+                  <button
+                    onClick={() => setUntimedExpanded(false)}
+                    style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "6px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Show less
+                  </button>
                 )}
               </div>
             )}
