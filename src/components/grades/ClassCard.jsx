@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Flag, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
@@ -70,6 +70,10 @@ export default function ClassCard({
   // grade would become, rather than this app guessing a number for you.
   const [whatIfOpen, setWhatIfOpen] = useState(false);
   const [whatIfScores, setWhatIfScores] = useState({}); // itemId -> { earned, possible }
+  // "To hit X% overall, what do I need to average on what's left" — the reverse of the
+  // What-if calculator below (that one takes scores and shows a result; this takes a
+  // target result and works backward to a score). Also scratch-only, never saved.
+  const [targetPct, setTargetPct] = useState("");
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
@@ -122,6 +126,29 @@ export default function ClassCard({
   const whatIfItems = [...gradedItems, ...whatIfExtras];
   const whatIfPct = weighted ? weightedPercent(whatIfItems, categories) : pointsPercent(whatIfItems);
   const categoryName = (id) => categories.find((c) => c.id === id)?.name;
+
+  // Binary search for the single uniform percentage — applied evenly across every
+  // pending item — that would land the real grade math (points or weighted, whichever
+  // mode this class uses) at the typed target. Reuses pointsPercent/weightedPercent
+  // exactly as-is rather than deriving a separate formula, so it can never drift from
+  // what the actual grade display means. A pending item with no category assigned
+  // doesn't count toward a weighted target, same as it doesn't count toward the real
+  // grade until categorized.
+  const requiredAvgPct = useMemo(() => {
+    const target = Number(targetPct);
+    if (!targetPct || Number.isNaN(target) || pendingItems.length === 0) return null;
+    let lo = 0, hi = 100;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      const trial = [...gradedItems, ...pendingItems.map((it) => ({ ...it, scoreEarned: mid, scorePossible: 100 }))];
+      const pct = (weighted ? weightedPercent(trial, categories) : pointsPercent(trial)) ?? 0;
+      if (pct < target) lo = mid; else hi = mid;
+    }
+    return round1(hi);
+  }, [targetPct, pendingItems, gradedItems, weighted, categories]);
+  // Even a perfect score on everything left wouldn't reach it — worth saying outright
+  // rather than showing "100%" looking like a normal, achievable answer.
+  const targetUnreachable = requiredAvgPct != null && requiredAvgPct >= 99.95;
 
   return (
     <div className="hoverable" style={{ border: `1px solid ${col.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 12, transition: "box-shadow .15s ease, transform .15s ease" }}>
@@ -176,6 +203,25 @@ export default function ClassCard({
 
       {expanded && (
         <div style={{ padding: "12px 14px" }}>
+          {overallPct != null && pendingItems.length > 0 && (
+            <div style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>To hit</div>
+              <input
+                type="number" min={0} max={100} value={targetPct} placeholder={`${overallPct}`}
+                onChange={(e) => setTargetPct(e.target.value)}
+                aria-label="Target grade percent"
+                style={{ ...inputStyle, width: 56, fontSize: 13, padding: "5px 7px", textAlign: "center" }}
+              />
+              <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>% overall —</div>
+              <div style={{ fontSize: 12.5, color: col.text, flex: 1, minWidth: 140 }}>
+                {requiredAvgPct == null
+                  ? "type a target"
+                  : targetUnreachable
+                  ? "not reachable, even with a perfect score on everything left"
+                  : <>average <strong>{requiredAvgPct}%</strong> on what's left</>}
+              </div>
+            </div>
+          )}
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (
@@ -186,24 +232,31 @@ export default function ClassCard({
                     const inCat = gradedItems.filter((i) => i.gradeCategoryId === cat.id && i.scoreEarned != null && i.scorePossible > 0);
                     const catPct = inCat.length > 0 ? pointsPercent(inCat) : null;
                     return (
-                      <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input
-                          value={cat.name}
-                          aria-label="Category name"
-                          onChange={(e) => onRenameCategory(cls.id, cat.id, e.target.value)}
-                          style={{ ...inputStyle, flex: 1, fontSize: 12.5, padding: "5px 8px" }}
-                        />
-                        <input
-                          type="number" min={0} max={100} value={cat.weight}
-                          aria-label={`${cat.name} weight percent`}
-                          onChange={(e) => onSetCategoryWeight(cls.id, cat.id, e.target.value)}
-                          style={{ ...inputStyle, width: 56, fontSize: 12.5, padding: "5px 8px" }}
-                        />
-                        <span style={{ fontSize: 11.5, color: "#93A0AD" }}>%</span>
-                        <span style={{ fontSize: 11, color: "#93A0AD", width: 90 }}>
-                          {catPct != null ? `${catPct}% (${inCat.length})` : "no scores yet"}
-                        </span>
-                        <button onClick={() => onRemoveCategory(cls.id, cat.id)} style={deleteBtn}>×</button>
+                      <div key={cat.id}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <input
+                            value={cat.name}
+                            aria-label="Category name"
+                            onChange={(e) => onRenameCategory(cls.id, cat.id, e.target.value)}
+                            style={{ ...inputStyle, flex: 1, fontSize: 12.5, padding: "5px 8px" }}
+                          />
+                          <input
+                            type="number" min={0} max={100} value={cat.weight}
+                            aria-label={`${cat.name} weight percent`}
+                            onChange={(e) => onSetCategoryWeight(cls.id, cat.id, e.target.value)}
+                            style={{ ...inputStyle, width: 56, fontSize: 12.5, padding: "5px 8px" }}
+                          />
+                          <span style={{ fontSize: 11.5, color: "#93A0AD" }}>%</span>
+                          <span style={{ fontSize: 11, color: "#93A0AD", width: 90 }}>
+                            {catPct != null ? `${catPct}% (${inCat.length})` : "no scores yet"}
+                          </span>
+                          <button onClick={() => onRemoveCategory(cls.id, cat.id)} style={deleteBtn}>×</button>
+                        </div>
+                        {catPct != null && (
+                          <div style={{ height: 4, borderRadius: 2, background: "#EDEDED", marginTop: 5, overflow: "hidden" }}>
+                            <div style={{ width: `${Math.min(100, catPct)}%`, height: "100%", background: col.accent || col.text, borderRadius: 2 }} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
