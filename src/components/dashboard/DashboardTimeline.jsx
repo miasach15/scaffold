@@ -5,12 +5,11 @@ import { hourLabel } from "../../lib/dateHelpers";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import CalBlock from "../calendar/CalBlock";
 
-// A single hour-ruled day column — the same positioned-block math Calendar's own week
-// grid uses (see CalBlock), just one day and a shorter row height. No fixed pixel
-// height here: this fills whatever vertical space its own Dashboard column gives it
-// (see DashboardView's dedicated "Today" column), auto-scrolled to "now" on mount so
-// whatever portion is visible centers around the current time.
+// A compact, scrollable hour-ruled day column — the same positioned-block math Calendar's
+// own week grid uses (see CalBlock), just a single day, a shorter row height, and a fixed
+// viewport that auto-scrolls to "now" instead of showing the whole 24 hours at once.
 const ROW_H = 34;
+const GRID_HEIGHT = 280;
 
 export default function DashboardTimeline({ timedTasks, events, onOpenFocus, onToggleDone, onEditEvent, onAddTaskAt }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -41,16 +40,16 @@ export default function DashboardTimeline({ timedTasks, events, onOpenFocus, onT
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+    <div>
       {onAddTaskAt && (
         <button
           onClick={() => startAddAt(Math.round(nowDecimal))}
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: MUTED, fontSize: 11.5, fontWeight: 600, padding: 0, marginBottom: 6, flexShrink: 0 }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: MUTED, fontSize: 11.5, fontWeight: 600, padding: 0, marginBottom: 6 }}
         >
           <Plus size={12} strokeWidth={2.5} /> Add a time block
         </button>
       )}
-      <div ref={scrollRef} style={{ display: "grid", gridTemplateColumns: "40px 1fr", flex: 1, minHeight: 0, overflowY: "auto", borderRadius: 10, border: `1px solid ${BORDER}` }}>
+      <div ref={scrollRef} style={{ display: "grid", gridTemplateColumns: "44px 1fr", height: GRID_HEIGHT, overflowY: "auto", borderRadius: 10, border: `1px solid ${BORDER}` }}>
         <div style={{ position: "relative", height: 24 * ROW_H, background: "#FAFAF9" }}>
           {Array.from({ length: 24 }, (_, h) => (
             <div key={h} style={{ position: "absolute", top: h * ROW_H - 6, right: 8, fontSize: 9.5, color: "#B4BCC5" }}>
