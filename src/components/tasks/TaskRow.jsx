@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FileText, Pencil, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, getLocalToday, isOverdueTask, timeToDecimal } from "../../lib/dateHelpers";
-import { deleteBtn, ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
+import { deleteBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 
@@ -55,7 +55,10 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
           no separate hardcoded Education color needed here. */}
       {t.eduId && <div style={{ fontSize: 10, color: col.text }}>from School</div>}
       {overdue && onSetDate && (
-        <button onClick={() => onSetDate(t.id, getLocalToday())} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}>
+        <button
+          onClick={() => onSetDate(t.id, getLocalToday())}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 13, fontWeight: 600, textDecoration: "underline", minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}
+        >
           Move to today
         </button>
       )}

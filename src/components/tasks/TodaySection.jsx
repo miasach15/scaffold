@@ -4,7 +4,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatDuration, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
-import { deleteBtn, ghostBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
+import { deleteBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import WhatNowModal from "./WhatNowModal";
@@ -319,7 +319,10 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
                   {it.title}
                 </button>
                 {it.onMoveToToday && (
-                  <button onClick={it.onMoveToToday} className="hoverable" style={{ ...ghostBtn, minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}>
+                  <button
+                    onClick={it.onMoveToToday}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 13, fontWeight: 600, textDecoration: "underline", minHeight: 44, minWidth: 44, padding: "0 12px", flexShrink: 0 }}
+                  >
                     Move to today
                   </button>
                 )}
