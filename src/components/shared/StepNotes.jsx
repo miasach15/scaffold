@@ -50,7 +50,10 @@ export default function StepNotes({ notes, title, taskId, color, fontSize = 11.5
   useEffect(() => setChecked(loadChecked(taskId)), [taskId]);
 
   const parts = stepParts(notes, title);
-  if (parts.length === 0) return null;
+  // Crossing one off removes it from the list entirely rather than leaving it behind
+  // struck through — once it's done, it's not part of "what's left" anymore.
+  const remaining = parts.filter((p) => !checked.has(p));
+  if (remaining.length === 0) return null;
   const baseColor = color || MUTED;
 
   const toggle = (part) => {
@@ -66,7 +69,7 @@ export default function StepNotes({ notes, title, taskId, color, fontSize = 11.5
 
   return (
     <div style={{ marginTop: 1, textAlign: align }}>
-      {parts.length > 1 ? (
+      {remaining.length > 1 ? (
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
           style={{
@@ -75,24 +78,21 @@ export default function StepNotes({ notes, title, taskId, color, fontSize = 11.5
           }}
         >
           {expanded ? <ChevronDown size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: checked.has(parts[0]) ? "line-through" : "none" }}>Next: {parts[0]}</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {remaining[0]}</span>
         </button>
       ) : (
-        <div style={{ fontSize, color: baseColor, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {parts[0]}</div>
+        <div style={{ fontSize, color: baseColor, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Next: {remaining[0]}</div>
       )}
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4, paddingLeft: align === "center" ? 0 : 15, textAlign: "left" }}>
-          {parts.map((p, i) => {
-            const isChecked = checked.has(p);
-            return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: align === "center" ? "center" : "flex-start" }}>
-                {taskId && (
-                  <Checkbox checked={isChecked} onClick={(e) => { e.stopPropagation(); toggle(p); }} color={{ border: baseColor }} size={12} />
-                )}
-                <span style={{ fontSize: fontSize - 0.5, color: isChecked ? "#B4BCC5" : MUTED, textDecoration: isChecked ? "line-through" : "none" }}>{p}</span>
-              </div>
-            );
-          })}
+          {remaining.map((p, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: align === "center" ? "center" : "flex-start" }}>
+              {taskId && (
+                <Checkbox checked={false} onClick={(e) => { e.stopPropagation(); toggle(p); }} color={{ border: baseColor }} size={12} />
+              )}
+              <span style={{ fontSize: fontSize - 0.5, color: MUTED }}>{p}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
