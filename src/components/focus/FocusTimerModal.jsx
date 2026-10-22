@@ -37,6 +37,13 @@ async function notifySessionDone(title) {
   }
 }
 
+// A full Pomodoro round is 4 work sessions, a short break after each of the first
+// three, a longer one after the fourth — standard Pomodoro Technique ratios, not
+// something invented for this app.
+const TOTAL_CYCLES = 4;
+const SHORT_BREAK_MIN = 5;
+const LONG_BREAK_MIN = 15;
+
 export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
@@ -44,6 +51,13 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
+  // Which work session of the round this is (1-indexed) and whether the timer's
+  // currently running a work stretch or a break — `totalSeconds`/`remaining` above are
+  // reused for both, so the work length gets stashed separately (workSecondsRef) to
+  // restore once a break ends and the next work session starts.
+  const [phase, setPhase] = useState("work"); // "work" | "break"
+  const [cycle, setCycle] = useState(1);
+  const workSecondsRef = useRef(initial);
   // The floating card is anchored bottom-right, so its one resize handle sits at the
   // opposite (top-left) corner — pulling it away from the anchor grows the card, same
   // direction the cursor actually moves. `null` means "default size, not resized yet".
@@ -186,6 +200,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     setRemaining(mins * 60);
     prevRemainingRef.current = mins * 60;
     endTimeRef.current = null;
+    workSecondsRef.current = mins * 60;
   };
   const reset = () => {
     setRunning(false);
@@ -201,6 +216,34 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     setRemaining(totalSeconds);
     prevRemainingRef.current = totalSeconds;
     endTimeRef.current = Date.now() + totalSeconds * 1000;
+    setRunning(true);
+  };
+  // A work session just ended — hand off to a break instead of straight back to the
+  // same countdown. Every 4th session gets the longer break, same as a real Pomodoro
+  // round; the cycle number itself only advances once the NEXT work session starts
+  // (startNextWorkSession below), so "Session 2 of 4" stays accurate while this break
+  // is running — it's still break-after-session-2, not session 3 yet.
+  const startBreak = () => {
+    ensureAudioCtx();
+    const mins = cycle % TOTAL_CYCLES === 0 ? LONG_BREAK_MIN : SHORT_BREAK_MIN;
+    setPhase("break");
+    setTotalSeconds(mins * 60);
+    setRemaining(mins * 60);
+    prevRemainingRef.current = mins * 60;
+    endTimeRef.current = Date.now() + mins * 60 * 1000;
+    setRunning(true);
+  };
+  // Break's over (or skipped) — back to work, same task, same length as the last work
+  // session, cycle count rolling over to 1 after a full 4-session round.
+  const startNextWorkSession = () => {
+    ensureAudioCtx();
+    setPhase("work");
+    setCycle((c) => (c % TOTAL_CYCLES) + 1);
+    const secs = workSecondsRef.current;
+    setTotalSeconds(secs);
+    setRemaining(secs);
+    prevRemainingRef.current = secs;
+    endTimeRef.current = Date.now() + secs * 1000;
     setRunning(true);
   };
   const mm = Math.floor(remaining / 60);
@@ -303,7 +346,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
     const card = (
       <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>Focus Session</div>
+            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>{phase === "work" ? "Focus Session" : cycle % TOTAL_CYCLES === 0 ? "Long Break" : "Short Break"}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               {task.id && onOpenDetail && (
                 <button
@@ -330,7 +373,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
               <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
               <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={PRIMARY_DARK} strokeWidth={ringStroke} strokeLinecap="round"
+                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={phase === "work" ? PRIMARY_DARK : TONE.soon.text} strokeWidth={ringStroke} strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * ringRadius}
                 strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
                 style={{ transition: "stroke-dashoffset 1s linear" }}
@@ -342,6 +385,11 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
               </div>
             </div>
           </div>
+          {phase === "work" && (
+            <div style={{ textAlign: "center", fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: compact ? 6 : 8 }}>
+              Session {cycle} of {TOTAL_CYCLES}
+            </div>
+          )}
           {!compact && (task.notes ? (
             <div style={{ marginBottom: 14 }}>
               <StepNotes notes={task.notes} title={task.title} taskId={task.id} color={MUTED} fontSize={12.5} align="center" />
@@ -350,24 +398,42 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             <div style={{ marginBottom: 14 }} />
           ))}
 
-          {finished && !task.done ? (
+          {finished && phase === "break" ? (
+            // The break ran out — the natural next move in a Pomodoro round is just
+            // straight back into the next work session on the same task.
+            <>
+              <div style={{ textAlign: "center", fontSize: 13, color: TONE.soon.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
+                Break's over.
+              </div>
+              <button
+                onClick={startNextWorkSession}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
+                  padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                  fontSize: 14.5, fontWeight: 500, cursor: "pointer", marginBottom: compact ? 8 : 12,
+                }}
+              >
+                <Play size={16} color="#fff" /> Start Session {(cycle % TOTAL_CYCLES) + 1}
+              </button>
+            </>
+          ) : finished && !task.done ? (
             // Ran out the clock without marking it done — rather than a dead end, this
-            // is the one moment it's worth asking outright: keep pushing on the same
-            // thing, or is it actually time to switch to something else.
+            // is the one moment it's worth asking outright: take the break a Pomodoro
+            // round calls for, keep pushing on the same thing, or switch to something else.
             <>
               <div style={{ textAlign: "center", fontSize: 13, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
                 Time's up on {task.title}.
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                 <button
-                  onClick={keepGoing}
+                  onClick={startBreak}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
                     fontSize: 14.5, fontWeight: 500, cursor: "pointer",
                   }}
                 >
-                  <Play size={16} color="#fff" /> Keep Going
+                  Take a {cycle % TOTAL_CYCLES === 0 ? LONG_BREAK_MIN : SHORT_BREAK_MIN}m break
                 </button>
                 <button
                   onClick={reset}
@@ -375,6 +441,14 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                   style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 >
                   <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
+                <button
+                  onClick={keepGoing}
+                  style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
+                >
+                  <Play size={14} /> Keep going
                 </button>
               </div>
               {otherTask && (
@@ -394,7 +468,7 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
             <>
               {finished ? (
                 <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>Time's up. Nice focus session.</div>
-              ) : (
+              ) : phase === "work" ? (
                 <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
                   {meaningfulFocusPresets(task.duration).map((m, i) => (
                     <button
@@ -407,6 +481,10 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                     </button>
                   ))}
                 </div>
+              ) : (
+                <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
+                  {cycle % TOTAL_CYCLES === 0 ? "Long break" : "Short break"} — back to it after.
+                </div>
               )}
 
               <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 12 }}>
@@ -415,12 +493,12 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
                   disabled={finished}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                    padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: phase === "work" ? PRIMARY_DARK : TONE.soon.text, color: "#fff",
                     fontSize: 14.5, fontWeight: 500, opacity: finished ? 0.4 : 1, cursor: finished ? "default" : "pointer",
                   }}
                 >
                   {running ? <Pause size={16} color="#fff" /> : <Play size={16} color="#fff" />}
-                  {running ? "Pause Session" : "Start Session"}
+                  {running ? (phase === "work" ? "Pause Session" : "Pause Break") : (phase === "work" ? "Start Session" : "Start Break")}
                 </button>
                 <button
                   onClick={reset}
