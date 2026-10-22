@@ -22,10 +22,31 @@ import BrainDumpModal from "./BrainDumpModal";
 import CheckinModal from "./CheckinModal";
 import WorkTitle from "../shared/WorkTitle";
 import StepNotes from "../shared/StepNotes";
-import DashboardTimeline from "./DashboardTimeline";
 
 const CHECKIN_INTERVAL_MS = 60 * 60 * 1000;
 
+// A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
+// for the first/soonest item, a paler ring for the rest) connected by a line down to the
+// next row, per category color. Figma's dashboard mockup carries this same treatment.
+function TimelineRow({ item, col, isFirst, isLast, isPast }) {
+  return (
+    <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
+      <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 10, flexShrink: 0 }}>
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, marginTop: 8, background: isPast ? "transparent" : isFirst ? col.accent : "#fff", border: isPast ? `1.5px solid ${BORDER}` : isFirst ? "none" : `1.5px solid ${col.border}` }} />
+        {!isLast && <div style={{ flex: 1, width: 1.5, background: col.border, marginTop: 2 }} />}
+      </div>
+      <div style={{ flex: 1, background: SURFACE, borderRadius: 10, padding: "8px 12px", minWidth: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase" }}>{item.category}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <WorkTitle title={item.title} mutedColor={MUTED} />
+        </div>
+        <StepNotes notes={item.notes} title={item.title} taskId={item.id} />
+      </div>
+      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{formatDuration(item.duration)}</div>}
+    </div>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -452,30 +473,19 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   </div>
                 </div>
               ) : (
-                <div>
-                  <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>Nothing scheduled for today yet — click anywhere on the timeline to add something.</div>
-                  <DashboardTimeline
-                    timedTasks={[]}
-                    events={[]}
-                    onOpenFocus={onStartFocus}
-                    onToggleDone={onToggleDone}
-                    onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
-                    onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
-                  />
-                </div>
+                <EmptyState text="Nothing scheduled for today yet." />
               )
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <DashboardTimeline
-                  timedTasks={todaysTimedTasks}
-                  events={todaysEvents}
-                  onOpenFocus={onStartFocus}
-                  onToggleDone={onToggleDone}
-                  onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
-                  onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
-                />
+                {todaysTimedTasks.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {todaysTimedTasks.map((item, i) => (
+                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
+                    ))}
+                  </div>
+                )}
                 {displayUntimed.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {visibleUntimed.map((t, i) => {
@@ -598,6 +608,16 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                         Show less
                       </button>
                     )}
+                  </div>
+                )}
+                {todaysEvents.length > 0 && (
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Today's events</div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      {todaysEvents.map((item, i) => (
+                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

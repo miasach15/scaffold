@@ -2,9 +2,9 @@ import { ROW_H } from "../../lib/constants";
 import { decimalToTimeLabel, formatDuration } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
-export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent, rowHeight = ROW_H }) {
-  const top = item.start * rowHeight;
-  const height = Math.max((item.duration / 60) * rowHeight, 18);
+export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent }) {
+  const top = item.start * ROW_H;
+  const height = Math.max((item.duration / 60) * ROW_H, 18);
   const accent = color.accent || color.border;
   return (
     <div
