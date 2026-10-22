@@ -452,21 +452,30 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   </div>
                 </div>
               ) : (
-                <EmptyState text="Nothing scheduled for today yet." />
-              )
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {(todaysTimedTasks.length > 0 || todaysEvents.length > 0) && (
+                <div>
+                  <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>Nothing scheduled for today yet — click anywhere on the timeline to add something.</div>
                   <DashboardTimeline
-                    timedTasks={todaysTimedTasks}
-                    events={todaysEvents}
+                    timedTasks={[]}
+                    events={[]}
                     onOpenFocus={onStartFocus}
                     onToggleDone={onToggleDone}
                     onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
+                    onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
                   />
-                )}
+                </div>
+              )
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <DashboardTimeline
+                  timedTasks={todaysTimedTasks}
+                  events={todaysEvents}
+                  onOpenFocus={onStartFocus}
+                  onToggleDone={onToggleDone}
+                  onEditEvent={() => { onSelectDay(todayISO); setView("calendar"); }}
+                  onAddTaskAt={(hour, title) => onAddTask({ title, date: todayISO, start: hour, duration: 30, category: "Personal" })}
+                />
                 {displayUntimed.length > 0 && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysEvents.length > 0 ? 10 : 0 }}>
+                  <div style={{ marginTop: 10 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {visibleUntimed.map((t, i) => {
