@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { DatePickerButton, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
+import VisionBoard from "./VisionBoard";
 
 const toggleBtn = {
   display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
@@ -13,7 +14,7 @@ const toggleBtn = {
   fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
 };
 
-export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
+export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate, visionBoardItems, onAddVisionPhoto, onRenameVisionPhoto, onRemoveVisionPhoto }) {
   const CATEGORY_COLORS = useCategoryColors();
   // Goals used to hardcode Personal/Health/Social (deliberately leaving out Education,
   // since Education had its own separate system) — now that categories are user-defined,
@@ -91,6 +92,15 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       <div style={{ marginBottom: 10 }}>
         <SectionHeader title="Goals" subtitle="Big projects, broken into a clear, day-by-day path." />
       </div>
+
+      {onAddVisionPhoto && (
+        <VisionBoard
+          items={visionBoardItems || []}
+          onAddPhoto={onAddVisionPhoto}
+          onRename={onRenameVisionPhoto}
+          onRemove={onRemoveVisionPhoto}
+        />
+      )}
 
       {!atGoalLimit && (
         <div data-tour="goals-add" style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 26px", marginBottom: 20 }}>

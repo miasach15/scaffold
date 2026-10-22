@@ -8,6 +8,7 @@ import { useHabits } from "./hooks/useHabits";
 import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
+import { useVisionBoard } from "./hooks/useVisionBoard";
 import { useUsageTracking } from "./hooks/useUsageTracking";
 import { supabase } from "./lib/supabase";
 
@@ -74,6 +75,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
+  const { items: visionBoardItems, addItem: addVisionPhoto, renameItem: renameVisionPhoto, removeItem: removeVisionPhoto } = useVisionBoard(userId);
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
   // assignment itself, too — without this, the sessions disappear (see EducationView's
@@ -885,6 +887,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemoveAction={removeAction}
             onRenameAction={renameAction}
             onSetActionDueDate={setActionDueDate}
+            visionBoardItems={visionBoardItems}
+            onAddVisionPhoto={addVisionPhoto}
+            onRenameVisionPhoto={renameVisionPhoto}
+            onRemoveVisionPhoto={removeVisionPhoto}
           />
         )}
         {view === "habits" && (
