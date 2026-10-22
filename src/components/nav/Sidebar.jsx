@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat,
-  Search, ListChecks, Settings, LogOut, Menu, X,
+  Search, ListChecks, Wind, Settings, LogOut, Menu, X,
 } from "lucide-react";
 import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
@@ -32,7 +32,7 @@ const TAB_BAR_ITEMS = [
 ];
 const MORE_DRAWER_VIEWS = ["goals", "habits", "grades"];
 
-export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSettings, onOpenSearch, onSignOut, profile }) {
+export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenLifeReset, onOpenSettings, onOpenSearch, onSignOut, profile }) {
   const [open, setOpen] = useState(false);
   // Settings and sign-out tucked behind the profile avatar instead of two more flat icons
   // in a row — account actions, not things-to-do-right-now the way Search/Weekly Review are.
@@ -147,6 +147,9 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
             </button>
             <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
               <ListChecks size={16} />
+            </button>
+            <button onClick={onOpenLifeReset} title="Life Reset" className="sb-icon-btn" style={iconBtnStyle}>
+              <Wind size={16} />
             </button>
           </div>
 
