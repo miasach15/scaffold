@@ -6,7 +6,8 @@
 // Still callable manually the same way for a one-off resend/test — see below.
 //
 // Deploy with:  supabase functions deploy send-getting-started-email
-// Uses the same RESEND_API_KEY secret already set for send-welcome-email.
+// Uses the same RESEND_API_KEY secret already set for send-welcome-email. Also needs
+// UNSUB_SECRET set (same secret the unsubscribe function checks against).
 //
 // To send it manually: POST to the function URL with a JSON body { "email": "you@example.com" }.
 // From the Supabase Dashboard: Edge Functions → send-getting-started-email → there's an
@@ -16,11 +17,29 @@
 //     -H "Content-Type: application/json" \
 //     -H "Authorization: Bearer <anon/publishable key>" \
 //     -d '{"email":"miasachdev15@gmail.com"}'
+//
+// Carries a real "Unsubscribe" link/button same as send-welcome-email and
+// send-daily-agenda now do — see supabase/functions/unsubscribe.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = Deno.env.get("WELCOME_FROM_EMAIL") || "Scaffold <onboarding@resend.dev>";
+const UNSUB_SECRET = Deno.env.get("UNSUB_SECRET") || "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// Duplicated identically in send-welcome-email, send-daily-agenda, and verified the
+// same way in supabase/functions/unsubscribe.
+async function signToken(uid: string): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(UNSUB_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(uid));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function unsubscribeLink(uid: string): Promise<string> {
+  return `${SUPABASE_URL}/functions/v1/unsubscribe?uid=${encodeURIComponent(uid)}&sig=${await signToken(uid)}`;
+}
 
 // Brand kit values (Figma "Brand & Identity" section — color palette + typography specs):
 //   Page #F0F0F0 (the gray behind the card, not the card itself) · Card #FFFFFF · Surface #FAFAF9
@@ -80,8 +99,21 @@ serve(async (req) => {
   try {
     const payload = await req.json();
     const email = payload.email;
+    const uid = payload.uid;
     if (!email) return new Response(JSON.stringify({ error: "missing email" }), { status: 400 });
     if (!RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500 });
+
+    let unsubUrl: string | null = null;
+    if (uid) {
+      if (SERVICE_ROLE_KEY) {
+        const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+        const { data: profile } = await admin.from("profiles").select("email_opt_out").eq("id", uid).maybeSingle();
+        if (profile?.email_opt_out) {
+          return new Response(JSON.stringify({ ok: true, skipped: "opted out" }), { status: 200 });
+        }
+      }
+      if (UNSUB_SECRET) unsubUrl = await unsubscribeLink(uid);
+    }
 
     const html = `<!DOCTYPE html>
 <html>
@@ -135,7 +167,9 @@ serve(async (req) => {
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${STEP_BORDER}; padding-top:16px;">
                 <tr>
-                  <td style="font-family:${SANS}; font-size:11px; color:${SUBTLE};">Sent automatically by Scaffold</td>
+                  <td style="font-family:${SANS}; font-size:11px; color:${SUBTLE};">
+                    Sent automatically by Scaffold${unsubUrl ? ` · <a href="${unsubUrl}" style="color:${SUBTLE};">Unsubscribe</a>` : ""}
+                  </td>
                   <td align="right"><div style="width:14px; height:14px; border-radius:4px; background:${PURPLE};"></div></td>
                 </tr>
               </table>
@@ -152,7 +186,10 @@ serve(async (req) => {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM_EMAIL, to: email, subject: "Getting set up in Scaffold", html }),
+      body: JSON.stringify({
+        from: FROM_EMAIL, to: email, subject: "Getting set up in Scaffold", html,
+        ...(unsubUrl ? { headers: { "List-Unsubscribe": `<${unsubUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+      }),
     });
 
     if (!res.ok) return new Response(JSON.stringify({ error: await res.text() }), { status: 502 });

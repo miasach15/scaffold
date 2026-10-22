@@ -9,6 +9,12 @@
 -- earlier version was actually never run (the live trigger function still only inserted
 -- the profile row), so re-running this is what turns automatic welcome/getting-started
 -- emails on for the first time, not just adding the second one.
+--
+-- UPDATED again to also pass the new user's id (`uid`) in each call's body, alongside
+-- their email — both sender functions now need it to build a per-user unsubscribe link
+-- and to check email_opt_out before sending (see migration_email_opt_out.sql and
+-- supabase/functions/unsubscribe). Safe to re-run; this is still the same trigger,
+-- just with one more field in the two request bodies.
 
 create extension if not exists pg_net;
 
@@ -24,7 +30,7 @@ begin
       'Content-Type', 'application/json',
       'Authorization', 'Bearer sb_publishable_1TP5xUtpjVuZC8_WXS0irQ_2X5TKiIh'
     ),
-    body := jsonb_build_object('email', new.email)
+    body := jsonb_build_object('email', new.email, 'uid', new.id)
   );
 
   perform net.http_post(
@@ -33,7 +39,7 @@ begin
       'Content-Type', 'application/json',
       'Authorization', 'Bearer sb_publishable_1TP5xUtpjVuZC8_WXS0irQ_2X5TKiIh'
     ),
-    body := jsonb_build_object('email', new.email)
+    body := jsonb_build_object('email', new.email, 'uid', new.id)
   );
 
   return new;
