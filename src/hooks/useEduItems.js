@@ -14,6 +14,7 @@ const fromRow = (row) => ({
   scoreEarned: row.score_earned == null ? null : Number(row.score_earned),
   scorePossible: row.score_possible == null ? null : Number(row.score_possible),
   gradeCategoryId: row.grade_category_id,
+  itemWeight: row.item_weight == null ? null : Number(row.item_weight),
   // "This deadline can move if it needs to" — softens this item's own urgency once it's
   // close/overdue instead of spiking it the same way a fixed deadline does (see
   // inLeadWindow/urgency sort in DashboardView and EducationView).
@@ -108,10 +109,22 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
-  // categoryId null = "no category" (excluded from a weighted class's percent until assigned)
+  // categoryId null = "no category" (excluded from a weighted class's percent until assigned).
+  // Picking a real category clears any standalone item weight — the two are mutually
+  // exclusive paths to the same "how much does this count" question.
   const setGradeCategory = useCallback(async (id, categoryId) => {
-    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, gradeCategoryId: categoryId } : x)));
-    const { error } = await supabase.from("edu_items").update({ grade_category_id: categoryId }).eq("id", id);
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, gradeCategoryId: categoryId, itemWeight: categoryId != null ? null : x.itemWeight } : x)));
+    const { error } = await supabase.from("edu_items").update({ grade_category_id: categoryId, item_weight: categoryId != null ? null : undefined }).eq("id", id);
+    if (error) reportSaveError();
+  }, []);
+
+  // A standalone weight for one item, bypassing categories entirely — e.g. "this final
+  // is just 20% of the class" without ever setting up a Final category. Setting a real
+  // weight clears any category this item was in, same mutual-exclusion rule as above.
+  const setItemWeight = useCallback(async (id, weight) => {
+    const w = weight === null || weight === "" ? null : Number(weight);
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, itemWeight: w, gradeCategoryId: w != null ? null : x.gradeCategoryId } : x)));
+    const { error } = await supabase.from("edu_items").update({ item_weight: w, grade_category_id: w != null ? null : undefined }).eq("id", id);
     if (error) reportSaveError();
   }, []);
 
@@ -121,5 +134,5 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setDeadline, setFlexible };
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible };
 }

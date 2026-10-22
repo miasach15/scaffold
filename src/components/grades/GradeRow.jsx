@@ -5,11 +5,14 @@ import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Swatch from "../shared/Swatch";
 
 // A completed Education item with an optional score — click "Add score" (or the
-// existing score) to edit earned/possible inline, e.g. 18/20 or 92/100. When the class
-// has categories set up, a dropdown lets you pick which one this item counts toward.
-// `col` comes from the class card above (the user's actual School category color), same
-// live color Education's own rows already use — not a fixed color that ignores it.
-export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onRemove }) {
+// existing score) to edit earned/possible inline, e.g. 18/20 or 92/100. When the class is
+// in weighted mode (categories is an array, possibly empty), a dropdown lets you pick
+// which category this item counts toward, and a separate field lets it skip categories
+// entirely and carry its own weight instead — picking one clears the other, enforced in
+// useEduItems. `col` comes from the class card above (the user's actual School category
+// color), same live color Education's own rows already use — not a fixed color that
+// ignores it.
+export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onSetItemWeight, onRemove }) {
   const [editing, setEditing] = useState(false);
   const [earned, setEarned] = useState(item.scoreEarned ?? "");
   const [possible, setPossible] = useState(item.scorePossible ?? "");
@@ -21,8 +24,9 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
 
   const hasScore = item.scoreEarned != null && item.scorePossible != null && item.scorePossible > 0;
   const pct = hasScore ? Math.round((item.scoreEarned / item.scorePossible) * 1000) / 10 : null;
-  const hasCategories = categories && categories.length > 0;
-  const uncategorized = hasCategories && !categories.some((c) => c.id === item.gradeCategoryId);
+  const weightedModeOn = categories != null;
+  const hasCategories = weightedModeOn && categories.length > 0;
+  const uncategorized = weightedModeOn && item.itemWeight == null && !categories.some((c) => c.id === item.gradeCategoryId);
 
   const save = () => {
     const e = earned === "" ? null : Number(earned);
@@ -55,11 +59,23 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
             onChange={(e) => onSetCategory(item.id, e.target.value || null)}
             title="Which category this counts toward"
             aria-label="Grade category"
-            style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 118, color: uncategorized ? "#B03A3A" : undefined }}
+            style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108, color: uncategorized ? "#B03A3A" : undefined }}
           >
             <option value="">No category</option>
             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+        )}
+
+        {weightedModeOn && (
+          <input
+            type="number" min={0} max={100}
+            value={item.itemWeight ?? ""}
+            onChange={(e) => onSetItemWeight(item.id, e.target.value)}
+            placeholder="own %"
+            title="Give this one assignment its own weight instead of a category"
+            aria-label="Own weight percent"
+            style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
+          />
         )}
 
         {editing ? (
@@ -94,7 +110,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
         <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>
       </div>
       {hasScore && uncategorized && (
-        <div style={{ fontSize: 10.5, color: "#B03A3A", marginTop: 6 }}>Pick a category above to count this toward the grade.</div>
+        <div style={{ fontSize: 10.5, color: "#B03A3A", marginTop: 6 }}>Pick a category, or give it its own weight, to count this toward the grade.</div>
       )}
     </div>
   );

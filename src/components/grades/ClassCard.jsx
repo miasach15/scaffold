@@ -19,21 +19,29 @@ function pointsPercent(items) {
 // Standard "current grade" math: only categories that actually have scored work in them
 // count, and their weights are renormalized against each other — so a half-graded
 // semester (e.g. only Assessments entered so far) still shows a sensible number instead of
-// being dragged down by empty categories.
+// being dragged down by empty categories. An item can skip categories entirely and carry
+// its own standalone weight instead (itemWeight) — it counts as its own single-item
+// bucket right alongside the named categories, at its own weight. The two are mutually
+// exclusive per item (see useEduItems' setGradeCategory/setItemWeight), but this filters
+// itemWeight out of a category's items anyway as a defensive no-double-count guard.
 function weightedPercent(items, categories) {
   const scored = items.filter((i) => i.scoreEarned != null && i.scorePossible > 0);
   const catStats = categories
     .map((cat) => {
-      const inCat = scored.filter((i) => i.gradeCategoryId === cat.id);
+      const inCat = scored.filter((i) => i.gradeCategoryId === cat.id && i.itemWeight == null);
       if (inCat.length === 0) return null;
       const earned = inCat.reduce((s, i) => s + i.scoreEarned, 0);
       const possible = inCat.reduce((s, i) => s + i.scorePossible, 0);
       return possible > 0 ? { weight: cat.weight, pct: (earned / possible) * 100 } : null;
     })
     .filter(Boolean);
-  const totalWeight = catStats.reduce((s, c) => s + c.weight, 0);
+  const ownWeightStats = scored
+    .filter((i) => i.itemWeight != null && i.itemWeight > 0)
+    .map((i) => ({ weight: i.itemWeight, pct: (i.scoreEarned / i.scorePossible) * 100 }));
+  const allStats = [...catStats, ...ownWeightStats];
+  const totalWeight = allStats.reduce((s, c) => s + c.weight, 0);
   if (totalWeight <= 0) return null;
-  return round1(catStats.reduce((s, c) => s + c.pct * (c.weight / totalWeight), 0));
+  return round1(allStats.reduce((s, c) => s + c.pct * (c.weight / totalWeight), 0));
 }
 
 export default function ClassCard({
@@ -52,6 +60,7 @@ export default function ClassCard({
   onRemoveClass,
   onSetScore,
   onSetItemCategory,
+  onSetItemWeight,
   onRemoveItem,
 }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -77,7 +86,9 @@ export default function ClassCard({
 
   const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
-  const weighted = gradingMode === "weighted" && categories.length > 0;
+  // A class in weighted mode can also run on standalone item weights alone, with zero
+  // named categories ever set up — so "weighted" no longer requires categories.length > 0.
+  const weighted = gradingMode === "weighted";
   const weightSum = categories.reduce((s, c) => s + c.weight, 0);
 
   // Only items from the ACTIVE term count toward the current grade — see onEndTerm below.
@@ -88,6 +99,11 @@ export default function ClassCard({
   const gradedItems = currentTermItems.filter((i) => i.done).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
   const pendingItems = currentTermItems.filter((i) => !i.done && i.dueDate);
   const overallPct = weighted ? weightedPercent(gradedItems, categories) : pointsPercent(gradedItems);
+  // Individually-weighted items (see itemWeight) count toward this same "does it add up
+  // to 100%" sanity check, same as a named category does — whether they're graded yet or
+  // not, same as categories aren't filtered down to only ones with scores either.
+  const itemWeightSum = currentTermItems.reduce((s, i) => s + (i.itemWeight || 0), 0);
+  const totalWeightSum = weightSum + itemWeightSum;
 
   const addCategory = () => {
     if (!newCatName.trim()) return;
@@ -225,7 +241,7 @@ export default function ClassCard({
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
               {categories.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Assessments, Homework, Participation) and give it a weight.</div>
+                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Assessments, Homework, Participation) and give it a weight — or skip categories and give an individual assignment its own weight directly, below.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
                   {categories.map((cat) => {
@@ -260,8 +276,8 @@ export default function ClassCard({
                       </div>
                     );
                   })}
-                  <div style={{ fontSize: 10.5, color: weightSum === 100 ? "#93A0AD" : "#B0873A" }}>
-                    Weights add up to {weightSum}%{weightSum !== 100 ? " (that's fine, the grade is calculated from whatever's set up so far)" : ""}.
+                  <div style={{ fontSize: 10.5, color: totalWeightSum === 100 ? "#93A0AD" : "#B0873A" }}>
+                    Categories add up to {weightSum}%{itemWeightSum > 0 ? `, plus ${itemWeightSum}% in individually-weighted assignments below` : ""}{totalWeightSum !== 100 ? " (that's fine, the grade is calculated from whatever's set up so far)" : ""}.
                   </div>
                 </div>
               )}
@@ -297,6 +313,7 @@ export default function ClassCard({
                   categories={weighted ? categories : null}
                   onSetScore={onSetScore}
                   onSetCategory={onSetItemCategory}
+                  onSetItemWeight={onSetItemWeight}
                   onRemove={onRemoveItem}
                 />
               ))}
@@ -344,23 +361,34 @@ export default function ClassCard({
               above — kept separate from What-if below, which is scratch-only. */}
           {weighted && pendingItems.length > 0 && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — pick a category</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — pick a category, or give it its own weight</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {pendingItems.map((it) => {
-                  const uncategorized = !categories.some((c) => c.id === it.gradeCategoryId);
+                  const uncategorized = it.itemWeight == null && !categories.some((c) => c.id === it.gradeCategoryId);
                   return (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
-                      <select
-                        value={it.gradeCategoryId || ""}
-                        onChange={(e) => onSetItemCategory(it.id, e.target.value || null)}
-                        title="Which category this will count toward"
-                        aria-label={`${it.title} category`}
-                        style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 118, color: uncategorized ? "#B03A3A" : undefined }}
-                      >
-                        <option value="">No category</option>
-                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+                      {categories.length > 0 && (
+                        <select
+                          value={it.gradeCategoryId || ""}
+                          onChange={(e) => onSetItemCategory(it.id, e.target.value || null)}
+                          title="Which category this will count toward"
+                          aria-label={`${it.title} category`}
+                          style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108, color: uncategorized ? "#B03A3A" : undefined }}
+                        >
+                          <option value="">No category</option>
+                          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      )}
+                      <input
+                        type="number" min={0} max={100}
+                        value={it.itemWeight ?? ""}
+                        onChange={(e) => onSetItemWeight(it.id, e.target.value)}
+                        placeholder="own %"
+                        title="Give this one assignment its own weight instead of a category"
+                        aria-label={`${it.title} own weight percent`}
+                        style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
+                      />
                     </div>
                   );
                 })}
@@ -387,13 +415,13 @@ export default function ClassCard({
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                     {pendingItems.map((it) => {
                       const w = whatIfScores[it.id] || {};
-                      const needsCategory = weighted && !it.gradeCategoryId;
+                      const needsCategory = weighted && it.itemWeight == null && !it.gradeCategoryId;
                       return (
                         <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <div style={{ flex: "1 1 140px", fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
                           {weighted && (
                             <div style={{ fontSize: 11, width: 110, color: needsCategory ? "#B03A3A" : "#93A0AD" }}>
-                              {categoryName(it.gradeCategoryId) || "no category"}
+                              {it.itemWeight != null ? `own weight: ${it.itemWeight}%` : (categoryName(it.gradeCategoryId) || "no category")}
                             </div>
                           )}
                           <input

@@ -20,6 +20,7 @@ export default function GradesView({
   onRemoveClass,
   onSetScore,
   onSetItemCategory,
+  onSetItemWeight,
   onRemoveItem,
   onEnsureClass,
 }) {
@@ -81,6 +82,7 @@ export default function GradesView({
             onRemoveClass={onRemoveClass}
             onSetScore={onSetScore}
             onSetItemCategory={onSetItemCategory}
+            onSetItemWeight={onSetItemWeight}
             onRemoveItem={onRemoveItem}
           />
         ))
