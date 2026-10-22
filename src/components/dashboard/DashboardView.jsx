@@ -41,7 +41,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           <WorkTitle title={item.title} mutedColor={MUTED} />
         </div>
-        <StepNotes notes={item.notes} title={item.title} />
+        <StepNotes notes={item.notes} title={item.title} taskId={item.id} />
       </div>
       {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{formatDuration(item.duration)}</div>}
     </div>
@@ -524,7 +524,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${formatDuration(t.duration)}` : ""}
                               </div>
-                              <StepNotes notes={t.notes} title={t.title} color={isTop ? PRIMARY_DARK : undefined} />
+                              <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
                               {stuckOnThis && (
                                 <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
                                   Been at this a few sessions now — maybe switch to something else for a bit.

@@ -25,7 +25,7 @@ export default function WorkItemRow({ item }) {
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></div>
         )}
         {item.onFocus ? (
-          <StepNotes notes={item.subtitle} title={item.title} color="#93A0AD" fontSize={10.5} />
+          <StepNotes notes={item.subtitle} title={item.title} taskId={item.id} color="#93A0AD" fontSize={10.5} />
         ) : (
           item.subtitle && <div style={{ fontSize: 10.5, color: "#93A0AD" }}>{item.subtitle}</div>
         )}
