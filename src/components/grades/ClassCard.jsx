@@ -281,12 +281,12 @@ export default function ClassCard({
                   </div>
                 </div>
               )}
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <input
                   placeholder="Category name..." aria-label="New category name" value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
-                  style={{ ...inputStyle, flex: 1, fontSize: 12.5 }}
+                  style={{ ...inputStyle, flex: "1 1 140px", fontSize: 12.5, minWidth: 0 }}
                 />
                 <input
                   type="number" min={0} max={100} placeholder="weight %" aria-label="New category weight percent" value={newCatWeight}

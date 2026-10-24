@@ -53,61 +53,67 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
           </div>
         </div>
 
-        {hasCategories && (
-          <select
-            value={item.gradeCategoryId || ""}
-            onChange={(e) => onSetCategory(item.id, e.target.value || null)}
-            title="Which category this counts toward"
-            aria-label="Grade category"
-            style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108, color: uncategorized ? "#B03A3A" : undefined }}
-          >
-            <option value="">No category</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        )}
+        {/* Everything after the title wraps together as one group — previously each
+            piece (category select, own weight, score, delete) could wrap independently,
+            which stranded the delete button alone on its own line once the own-weight
+            field made the row too tight to fit on narrower screens. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", flexShrink: 0 }}>
+          {hasCategories && (
+            <select
+              value={item.gradeCategoryId || ""}
+              onChange={(e) => onSetCategory(item.id, e.target.value || null)}
+              title="Which category this counts toward"
+              aria-label="Grade category"
+              style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108, color: uncategorized ? "#B03A3A" : undefined }}
+            >
+              <option value="">No category</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          )}
 
-        {weightedModeOn && (
-          <input
-            type="number" min={0} max={100}
-            value={item.itemWeight ?? ""}
-            onChange={(e) => onSetItemWeight(item.id, e.target.value)}
-            placeholder="own %"
-            title="Give this one assignment its own weight instead of a category"
-            aria-label="Own weight percent"
-            style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
-          />
-        )}
-
-        {editing ? (
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {weightedModeOn && (
             <input
-              type="number" placeholder="earned" aria-label="Points earned" value={earned}
-              onChange={(e) => setEarned(e.target.value)}
-              style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
+              type="number" min={0} max={100}
+              value={item.itemWeight ?? ""}
+              onChange={(e) => onSetItemWeight(item.id, e.target.value)}
+              placeholder="own %"
+              title="Give this one assignment its own weight instead of a category"
+              aria-label="Own weight percent"
+              style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
             />
-            <span style={{ fontSize: 12, color: "#93A0AD" }}>/</span>
-            <input
-              type="number" placeholder="of" aria-label="Points possible" value={possible}
-              onChange={(e) => setPossible(e.target.value)}
-              style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
-            />
-            <button onClick={save} className="btn-primary" style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 9px", fontWeight: 700 }}>Save</button>
-            <button onClick={cancel} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
-          </div>
-        ) : hasScore ? (
-          <button
-            onClick={() => setEditing(true)}
-            title="Click to edit score"
-            style={{ background: col.bg, border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0 }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 700, color: col.text }}>{pct}%</span>
-            <span style={{ fontSize: 9.5, color: "#93A0AD" }}>{item.scoreEarned}/{item.scorePossible}</span>
-          </button>
-        ) : (
-          <button onClick={() => setEditing(true)} style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 10px", whiteSpace: "nowrap" }}>+ Add score</button>
-        )}
+          )}
 
-        <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>
+          {editing ? (
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input
+                type="number" placeholder="earned" aria-label="Points earned" value={earned}
+                onChange={(e) => setEarned(e.target.value)}
+                style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
+              />
+              <span style={{ fontSize: 12, color: "#93A0AD" }}>/</span>
+              <input
+                type="number" placeholder="of" aria-label="Points possible" value={possible}
+                onChange={(e) => setPossible(e.target.value)}
+                style={{ ...inputStyle, width: 60, padding: "5px 7px", fontSize: 12 }}
+              />
+              <button onClick={save} className="btn-primary" style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 9px", fontWeight: 700 }}>Save</button>
+              <button onClick={cancel} title="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", fontSize: 14, padding: "0 2px" }}>×</button>
+            </div>
+          ) : hasScore ? (
+            <button
+              onClick={() => setEditing(true)}
+              title="Click to edit score"
+              style={{ background: col.bg, border: "none", borderRadius: 8, padding: "5px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0 }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 700, color: col.text }}>{pct}%</span>
+              <span style={{ fontSize: 9.5, color: "#93A0AD" }}>{item.scoreEarned}/{item.scorePossible}</span>
+            </button>
+          ) : (
+            <button onClick={() => setEditing(true)} style={{ ...ghostBtn, fontSize: 11.5, padding: "5px 10px", whiteSpace: "nowrap" }}>+ Add score</button>
+          )}
+
+          <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>
+        </div>
       </div>
       {hasScore && uncategorized && (
         <div style={{ fontSize: 10.5, color: "#B03A3A", marginTop: 6 }}>Pick a category, or give it its own weight, to count this toward the grade.</div>
