@@ -8,7 +8,6 @@ import { useHabits } from "./hooks/useHabits";
 import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
 import { useInbox } from "./hooks/useInbox";
-import { useVisionBoard } from "./hooks/useVisionBoard";
 import { useUsageTracking } from "./hooks/useUsageTracking";
 import { supabase } from "./lib/supabase";
 
@@ -76,7 +75,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
-  const { items: visionBoardItems, addItem: addVisionPhoto, renameItem: renameVisionPhoto, removeItem: removeVisionPhoto } = useVisionBoard(userId);
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
   // assignment itself, too — without this, the sessions disappear (see EducationView's
@@ -461,16 +459,28 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     const homeworkMinutesOpts = { min: 20, max: 45 };
 
     if (type === "Homework") {
-      // A homework item is genuinely one sitting, not a multi-day project — it gets a
-      // single reminder the night before it's due, the same as it's always worked. (A
-      // multi-day "shows up every day leading up to it" version of this was tried and
-      // reverted — homework kept nagging about the same one piece of work on days you
-      // genuinely weren't going to get to it, and the sub-tasks editor listed it as
-      // several separate things instead of the one thing it actually is.)
+      // Shows up every day from today through the night before it's due, not just one
+      // reminder the night before — a single faraway ping is easy to let slide, and
+      // it's always one tap to push a day you're not getting to it forward. A day only
+      // gets skipped if it's already carrying real weight: two or more other study
+      // sessions already sitting on it, or two or more other things due the day after
+      // it. The night before is never skipped, so there's always at least that one
+      // backstop reminder no matter how crowded everything else got.
+      const todayISO = toISO(new Date());
       for (const row of rows) {
-        const workDate = dayBefore(row.dueDate);
-        const [workMinutes] = sessionMinutesByLoad([workDate], tasks, events, sessionMinutes, homeworkMinutesOpts);
-        addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutes, eduId: row.id, category: profile.educationCategory });
+        const lastWorkDay = dayBefore(row.dueDate);
+        const candidateDays = dateRangeISO(todayISO, lastWorkDay);
+        const workDates = candidateDays.filter((d) => {
+          if (d === lastWorkDay) return true;
+          const studySessionsThatDay = tasks.filter((t) => t.date === d && t.eduId).length;
+          const nextDayISO = toISO(addDays(new Date(d + "T00:00:00"), 1));
+          const dueNextDay = eduItems.filter((e) => e.dueDate === nextDayISO).length;
+          return studySessionsThatDay < 2 && dueNextDay < 2;
+        });
+        const workMinutesPerDay = sessionMinutesByLoad(workDates, tasks, events, sessionMinutes, homeworkMinutesOpts);
+        workDates.forEach((workDate, i) => {
+          addTask({ title: `Finish: ${title}`, date: workDate, start: null, duration: workMinutesPerDay[i], eduId: row.id, category: profile.educationCategory });
+        });
       }
     } else if ((type === "Assignment" || type === "Assessment") && workDays) {
       const workVerb = type === "Assessment" ? "Study" : "Work on";
@@ -890,10 +900,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemoveAction={removeAction}
             onRenameAction={renameAction}
             onSetActionDueDate={setActionDueDate}
-            visionBoardItems={visionBoardItems}
-            onAddVisionPhoto={addVisionPhoto}
-            onRenameVisionPhoto={renameVisionPhoto}
-            onRemoveVisionPhoto={removeVisionPhoto}
           />
         )}
         {view === "habits" && (
