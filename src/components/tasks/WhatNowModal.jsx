@@ -4,6 +4,7 @@ import { serifFont } from "../../lib/constants";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import ModalPortal from "../shared/ModalPortal";
+import FreehandIcon from "../shared/FreehandIcon";
 
 // Picks the single most pressing thing from an already-sorted queue and shows just
 // that — nothing else on screen. Even a capped 5-item list is still a decision; this
@@ -36,7 +37,10 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", textAlign: "center", marginTop: -4, marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: -4, marginBottom: 4 }}>
+              <FreehandIcon name="creativity-idea-bulb" size={40} />
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", textAlign: "center", marginBottom: 16 }}>
               Do this next
             </div>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>

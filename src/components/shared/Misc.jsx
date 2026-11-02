@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { PRIMARY, BORDER, MUTED, serifFont } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { noTypeDateProps } from "../../lib/styles";
+import FreehandIcon from "./FreehandIcon";
 
 // The brand kit's monogram — the "S" mark, transparent background. Shared so every
 // wordmark (Sidebar, AuthScreen, OnboardingQuiz) uses the exact same mark.
@@ -104,8 +105,17 @@ export function AddRow({ children }) {
 export function List({ children }) {
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>;
 }
-export function EmptyState({ text }) {
-  return <div style={{ fontSize: 13, color: "#B4BCC5", padding: "14px 0" }}>{text}</div>;
+// `icon` is optional — a hand-drawn Freehand icon name (see FreehandIcon), only worth
+// passing for a page's one main empty state, not every small "nothing here" line in the
+// app, so it stays a rare, deliberate touch instead of visual noise everywhere.
+export function EmptyState({ text, icon }) {
+  if (!icon) return <div style={{ fontSize: 13, color: "#B4BCC5", padding: "14px 0" }}>{text}</div>;
+  return (
+    <div style={{ textAlign: "center", padding: "28px 0 18px" }}>
+      <FreehandIcon name={icon} size={56} color="#D7DBE2" style={{ marginBottom: 10 }} />
+      <div style={{ fontSize: 13, color: "#B4BCC5" }}>{text}</div>
+    </div>
+  );
 }
 export function ProgressBar({ done, total, color, track }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;

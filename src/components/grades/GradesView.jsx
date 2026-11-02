@@ -62,7 +62,7 @@ export default function GradesView({
       </AddRow>
 
       {orderedKeys.length === 0 ? (
-        <EmptyState text="No classes yet. Add one above, or it'll show up automatically once you enter a subject on a School item." />
+        <EmptyState text="No classes yet. Add one above, or it'll show up automatically once you enter a subject on a School item." icon="notes-book" />
       ) : (
         orderedKeys.map((key) => (
           <ClassCard

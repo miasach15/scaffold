@@ -536,7 +536,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       {combined.length === 0 ? (
         <>
           <SubHeader>Tasks</SubHeader>
-          <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." />
+          <EmptyState text="No tasks yet. Add one above or click a cell on the Calendar." icon="task-list-clipboard-check" />
         </>
       ) : (
         <>

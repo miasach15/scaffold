@@ -18,6 +18,7 @@ import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from 
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
+import FreehandIcon from "../shared/FreehandIcon";
 import BrainDumpModal from "./BrainDumpModal";
 import CheckinModal from "./CheckinModal";
 import WorkTitle from "../shared/WorkTitle";
@@ -471,6 +472,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                       Plan my first assignment
                     </button>
                   </div>
+                </div>
+              ) : scaffoldedTotalCount > 0 ? (
+                // Everything that WAS on today's list is finished, not "nothing was ever
+                // scheduled" — different moment, worth a small win instead of a flat
+                // empty-state line.
+                <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
+                  <FreehandIcon name="fireworks-2" size={52} color={PRIMARY} style={{ marginBottom: 8 }} />
+                  <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>That's everything for today.</div>
                 </div>
               ) : (
                 <EmptyState text="Nothing scheduled for today yet." />

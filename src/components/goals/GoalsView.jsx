@@ -160,7 +160,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
       )}
 
       {goals.length === 0 ? (
-        <EmptyState text="No goals yet." />
+        <EmptyState text="No goals yet." icon="select-target-crosshair-1" />
       ) : (
         filtered.length === 0 ? (
           <EmptyState text={`No ${filter} goals yet.`} />

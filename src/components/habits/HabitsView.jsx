@@ -73,7 +73,7 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
       )}
 
       {habits.length === 0 ? (
-        <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." />
+        <EmptyState text="No habits in your list yet. Add one above or tap a suggestion." icon="synchronize-arrows" />
       ) : (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>

@@ -2,29 +2,30 @@ import { useEffect, useRef, useState } from "react";
 import { GripHorizontal } from "lucide-react";
 import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
+import FreehandIcon from "../shared/FreehandIcon";
 
 // Four steps, each explaining what Scaffold actually DOES for you rather than walking
 // through pages one by one (the old 11-step version was a page-by-page tour and read
 // like a feature list, not the reason the app exists).
 const STEPS = [
   {
-    view: "dashboard", title: "Capture everything",
+    view: "dashboard", title: "Capture everything", icon: "notes-add",
     bullets: ["Brain dump or the sticky note catches whatever's on your mind (a task, a test, an errand) the moment you think of it. Sort it out later, not right now."],
   },
   {
-    view: "education", title: "Scaffold breaks it down",
+    view: "education", title: "Scaffold breaks it down", icon: "stairs-ascend",
     bullets: ["Add an assignment with a due date, and it splits into work sessions leading up to it. No more staring down one big deadline."],
   },
   {
-    view: "calendar", title: "Your workload is placed realistically",
+    view: "calendar", title: "Your workload is placed realistically", icon: "calendar-grid",
     bullets: ["Every session lands on a day based on how busy you already are. Nothing crammed on top of what's already there."],
   },
   {
-    view: "tasks", title: "Ask \"What should I do now?\"",
+    view: "tasks", title: "Ask \"What should I do now?\"", icon: "creativity-idea-bulb",
     bullets: ["Don't know where to start? One button picks the next thing for you, every time."],
   },
   {
-    view: "dashboard", title: "One more thing worth doing now",
+    view: "dashboard", title: "One more thing worth doing now", icon: "alert-alarm-bell",
     bullets: ["Tap your initial in the bottom-left corner to open Settings, then turn on reminders so Scaffold can nudge you toward what's next, even when the app isn't open."],
   },
 ];
@@ -110,6 +111,7 @@ export default function TourOverlay({ setView, onCloseModals, onFinish }) {
           }}
         />
       </div>
+      <FreehandIcon name={step.icon} size={36} color={PRIMARY} style={{ marginBottom: 8 }} />
       <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>{step.title}</div>
       <ul style={{ margin: 0, marginBottom: 18, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
         {step.bullets.map((b, idx) => (
