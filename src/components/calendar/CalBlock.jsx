@@ -2,17 +2,22 @@ import { ROW_H } from "../../lib/constants";
 import { decimalToTimeLabel, formatDuration } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
-export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent }) {
+// col/cols (see layoutOverlaps) place this block in a side-by-side column among whatever
+// else overlaps it at the same time, instead of every block defaulting to the full column
+// width and just stacking on top of each other. cols=1 (the normal, non-overlapping case)
+// renders exactly as before.
+export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent, col = 0, cols = 1 }) {
   const top = item.start * ROW_H;
   const height = Math.max((item.duration / 60) * ROW_H, 18);
   const accent = color.accent || color.border;
+  const widthPct = 100 / cols;
   return (
     <div
       onClick={isTask ? onOpenFocus : () => onEditEvent(item)}
       draggable={isTask}
       onDragStart={isTask ? (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: item.id })) : undefined}
       style={{
-        position: "absolute", top, left: 3, right: 3, height,
+        position: "absolute", top, left: `calc(${col * widthPct}% + 3px)`, width: `calc(${widthPct}% - 6px)`, height,
         background: "#fff", border: `1.5px solid ${accent}`, borderRadius: 10,
         padding: "6px 10px 6px 9px", overflow: "hidden", cursor: isTask ? "grab" : "pointer", opacity: done ? 0.5 : 1,
       }}

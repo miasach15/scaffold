@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dayLabel, dateLabel, decimalToTimeLabel, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
+import { addDays, dayLabel, dateLabel, decimalToTimeLabel, layoutOverlaps, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
@@ -172,12 +172,25 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         />
                       ))}
-                      {events.filter((e) => e.date === iso && e.start != null).map((e) => (
-                        <CalBlock key={e.id} item={e} color={CATEGORY_COLORS[e.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} />
-                      ))}
-                      {timedDueChips.filter((c) => c.date === iso).map((c) => (
-                        <CalBlock key={c.kind + c.id} item={{ ...c, title: `${chipLabel(c)} · ${decimalToTimeLabel(c.start)}`, duration: 30 }} color={chipStyle(c)} onEditEvent={() => onChipClick(c)} />
-                      ))}
+                      {/* Everything timed on this day — events and due-chips alike — gets
+                          laid out together so two things scheduled at overlapping times
+                          land side by side instead of stacking on top of each other. */}
+                      {layoutOverlaps([
+                        ...events.filter((e) => e.date === iso && e.start != null).map((e) => ({ kind: "event", start: e.start, duration: e.duration, data: e })),
+                        ...timedDueChips.filter((c) => c.date === iso).map((c) => ({ kind: "chip", start: c.start, duration: 30, data: c })),
+                      ]).map((block) =>
+                        block.kind === "event" ? (
+                          <CalBlock key={block.data.id} item={block.data} color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} col={block.col} cols={block.cols} />
+                        ) : (
+                          <CalBlock
+                            key={block.data.kind + block.data.id}
+                            item={{ ...block.data, title: `${chipLabel(block.data)} · ${decimalToTimeLabel(block.data.start)}`, duration: 30 }}
+                            color={chipStyle(block.data)}
+                            onEditEvent={() => onChipClick(block.data)}
+                            col={block.col} cols={block.cols}
+                          />
+                        )
+                      )}
                       {iso === todayISO && (
                         <div style={{ position: "absolute", top: nowDecimal * ROW_H, left: 0, right: 0, height: 0, zIndex: 5, pointerEvents: "none" }}>
                           <div style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "#C0685E" }} />

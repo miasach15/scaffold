@@ -428,6 +428,42 @@ export const groupItemsByDate = (items, fallbackTitle) => {
       };
     });
 };
+// Two blocks scheduled at overlapping times used to just stack directly on top of each
+// other (same full column width, last one rendered winning visually/clickably) — this
+// assigns each one a column and a column count within its overlap cluster instead, so
+// CalBlock can render them side by side. Standard greedy interval-column assignment: walk
+// items in start order, give each the leftmost column whose last item has already ended,
+// and once a run of overlapping items closes out, every item in it shares that run's
+// total column count (so a block that's only briefly double-booked doesn't stay
+// permanently narrowed next to something it no longer overlaps).
+export const layoutOverlaps = (items) => {
+  const sorted = items
+    .map((it, i) => ({ ...it, _i: i, _end: it.start + (it.duration || 60) / 60 }))
+    .sort((a, b) => a.start - b.start || a._end - b._end);
+  const result = [];
+  let cluster = [];
+  let clusterEnd = -Infinity;
+  const flushCluster = () => {
+    if (cluster.length === 0) return;
+    const columnEnds = [];
+    cluster.forEach((it) => {
+      let col = columnEnds.findIndex((end) => end <= it.start);
+      if (col === -1) col = columnEnds.length;
+      columnEnds[col] = it._end;
+      it._col = col;
+    });
+    const cols = columnEnds.length;
+    cluster.forEach((it) => result.push({ ...it, col: it._col, cols }));
+    cluster = [];
+  };
+  sorted.forEach((it) => {
+    if (cluster.length > 0 && it.start >= clusterEnd) flushCluster();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it._end);
+  });
+  flushCluster();
+  return result.sort((a, b) => a._i - b._i);
+};
 export const monthMatrix = (monthDate) => {
   const first = startOfMonth(monthDate);
   const startOffset = (first.getDay() + 6) % 7; // Monday = 0
