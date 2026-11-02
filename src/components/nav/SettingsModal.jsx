@@ -105,7 +105,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
           <SettingsIcon size={19} color={PRIMARY} strokeWidth={2} /> Settings
         </div>
-        <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 18 }}>Pick an accent color for buttons, highlights, and the calendar.</div>
+        <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 18 }}>Accent color</div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 10 }}>
           {Object.entries(THEME_PRESETS).map(([key, theme]) => {
@@ -162,9 +162,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
 
         {categoryKeys && (
           <>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>
-              Categories: click one to change its color. Pencil renames, × removes.
-            </div>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", margin: "22px 0 10px" }}>Categories</div>
             <CategoryEditor
               categoryKeys={categoryKeys}
               categoryColors={resolvedColors}
@@ -179,9 +177,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
-              "What now?" reminders: a push notification to your phone/desktop pointing at whatever's most worth doing right now.
-            </div>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>"What now?" reminders</div>
             <button
               onClick={toggleWhatnow}
               disabled={push.busy}
@@ -235,9 +231,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>
-              Pace &amp; capacity: three empty calendar hours aren't automatically three productive ones. This is how Scaffold accounts for the rest.
-            </div>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>Pace &amp; capacity</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 12, color: "#5A6472", minWidth: 130 }}>How long things take you</span>
@@ -317,7 +311,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
             ) : (
               <div style={{ background: TONE.danger.bg, border: `1px solid ${TONE.danger.border}`, borderRadius: 10, padding: 12 }}>
                 <div style={{ fontSize: 12.5, color: TONE.danger.text, lineHeight: 1.5, marginBottom: 10 }}>
-                  This permanently deletes your account and everything in it: every task, event, goal, habit, class, grade, all of it. This can't be undone. Download a backup above first if you want to keep a copy.
+                  Permanently deletes your account and everything in it. Can't be undone.
                 </div>
                 <div style={{ fontSize: 11.5, color: TONE.danger.text, marginBottom: 6 }}>Type DELETE to confirm:</div>
                 <input
