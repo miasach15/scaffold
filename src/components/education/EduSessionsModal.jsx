@@ -34,7 +34,13 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
     if (next.trim() !== current) onSetSessionNotes(id, next.trim());
   };
 
-  const sorted = sessions.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  // Not-done sessions first (each still sorted by date among themselves), so opening
+  // this always leads with what's actually left to do rather than making you scroll past
+  // everything you already finished to find it.
+  const sorted = sessions.slice().sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return (a.date || "").localeCompare(b.date || "");
+  });
   const actionLabel = item.type === "Assessment" ? "session" : "sub-task";
 
   return (
