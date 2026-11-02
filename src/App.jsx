@@ -462,20 +462,18 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       // Shows up every day from today through the night before it's due, not just one
       // reminder the night before — a single faraway ping is easy to let slide, and
       // it's always one tap to push a day you're not getting to it forward. A day only
-      // gets skipped if it's already carrying real weight: two or more other study
-      // sessions already sitting on it, or two or more other things due the day after
-      // it. The night before is never skipped, so there's always at least that one
-      // backstop reminder no matter how crowded everything else got.
+      // gets skipped once it's already carrying 5 other assignments' worth of sessions.
+      // The night before is never skipped, so there's always at least that one backstop
+      // reminder no matter how crowded everything else got.
       const todayISO = toISO(new Date());
+      const CROWDED_DAY_THRESHOLD = 5;
       for (const row of rows) {
         const lastWorkDay = dayBefore(row.dueDate);
         const candidateDays = dateRangeISO(todayISO, lastWorkDay);
         const workDates = candidateDays.filter((d) => {
           if (d === lastWorkDay) return true;
-          const studySessionsThatDay = tasks.filter((t) => t.date === d && t.eduId).length;
-          const nextDayISO = toISO(addDays(new Date(d + "T00:00:00"), 1));
-          const dueNextDay = eduItems.filter((e) => e.dueDate === nextDayISO).length;
-          return studySessionsThatDay < 2 && dueNextDay < 2;
+          const sessionsThatDay = tasks.filter((t) => t.date === d && t.eduId).length;
+          return sessionsThatDay < CROWDED_DAY_THRESHOLD;
         });
         const workMinutesPerDay = sessionMinutesByLoad(workDates, tasks, events, sessionMinutes, homeworkMinutesOpts);
         workDates.forEach((workDate, i) => {
