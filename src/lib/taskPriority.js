@@ -1,23 +1,26 @@
 import { addDays, toISO } from "./dateHelpers";
 
-// Homework first, then working on an assignment (a breakdown/project step, or an
-// Education "Work on" session), then studying (an Education "Study" session) — the
-// default order for anything not otherwise urgent (see isUrgentSoon below). Reads
-// whatever signal the caller's own item shape happens to carry: the resolved Education
-// type directly ("Homework"/"Assignment"/"Assessment", for a deadline row that has one
-// but no session title of its own), a groupId (a breakdown project step reads the same
-// as "working on an assignment" even with no title prefix), or the title itself (the
+// Working on an assignment (a breakdown/project step, or an Education "Work on"
+// session) first, then studying (an Education "Study" session), then homework last —
+// applied within BOTH the urgent tier and the regular one below (see
+// compareTaskPriority), which is what actually produces "assignments due tomorrow, then
+// tests due tomorrow, then homework due tomorrow, then upcoming assignments, then
+// upcoming tests, then upcoming homework." Reads whatever signal the caller's own item
+// shape happens to carry: the resolved Education type directly
+// ("Homework"/"Assignment"/"Assessment", for a deadline row that has one but no session
+// title of its own), a groupId (a breakdown project step reads the same as "working on
+// an assignment" even with no title prefix), or the title itself (the
 // "Finish:"/"Work on:"/"Study:" prefixes addEduItem already gives every work session).
 // Anything matching none of those — a plain task, a goal milestone — sorts after all
 // three.
 export function taskKindRank({ eduType, groupId, title } = {}) {
-  if (eduType === "Homework") return 0;
-  if (eduType === "Assessment") return 2;
-  if (eduType === "Assignment" || groupId) return 1;
+  if (eduType === "Assignment" || groupId) return 0;
+  if (eduType === "Assessment") return 1;
+  if (eduType === "Homework") return 2;
   const t = title || "";
-  if (t.startsWith("Finish: ")) return 0;
-  if (t.startsWith("Study: ")) return 2;
-  if (t.startsWith("Work on: ")) return 1;
+  if (t.startsWith("Work on: ")) return 0;
+  if (t.startsWith("Study: ")) return 1;
+  if (t.startsWith("Finish: ")) return 2;
   return 3;
 }
 
@@ -36,8 +39,11 @@ export function isUrgentSoon(dateISO, todayISO) {
 // `duration`, and whatever taskKindRank above needs (`title`/`groupId`/`eduType`) — plus,
 // for a manually dragged item, `orderIndex`/`orderSetDate`. A fresh drag from earlier
 // today always wins outright; short of that: urgent (due today/tomorrow/overdue) before
-// anything else, then homework/assignment-work/studying in that order, then by due date,
-// then by duration (the quicker thing first).
+// anything else, and — within BOTH the urgent tier and the regular one — assignments
+// before tests before homework, then by due date, then by duration (the quicker thing
+// first). Kind outranking date within a tier is deliberate: an assignment due in a week
+// still sits above homework due in two days, same as an assignment due tomorrow sits
+// above a test due tomorrow.
 export function compareTaskPriority(a, b, todayISO) {
   const aFresh = a.orderIndex != null && a.orderSetDate === todayISO;
   const bFresh = b.orderIndex != null && b.orderSetDate === todayISO;
@@ -50,7 +56,6 @@ export function compareTaskPriority(a, b, todayISO) {
   const aUrgent = isUrgentSoon(ad, todayISO);
   const bUrgent = isUrgentSoon(bd, todayISO);
   if (aUrgent !== bUrgent) return aUrgent ? -1 : 1;
-  if (aUrgent && bUrgent && ad !== bd) return ad.localeCompare(bd);
 
   const rankDiff = taskKindRank(a) - taskKindRank(b);
   if (rankDiff !== 0) return rankDiff;

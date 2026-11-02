@@ -219,10 +219,10 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
   const milestoneDeadlines = (goalMilestoneChips || []).filter((c) => !c.done);
 
   // Same shared ordering Dashboard's "Anytime today" and Tasks' own Today glance above
-  // sort by (see compareTaskPriority) — homework, then assignment work, then studying,
-  // unless something's actually due today/tomorrow, which jumps the queue regardless of
-  // kind. A manual drag from Dashboard wins over all of that too, so a reorder shows up
-  // the same way here as it does there. Each wrapper carries its own title/groupId/
+  // sort by (see compareTaskPriority) — assignment work, then studying, then homework
+  // last, applied within both the urgent (due today/tomorrow/overdue) tier and the
+  // regular one. A manual drag from Dashboard wins over all of that too, so a reorder
+  // shows up the same way here as it does there. Each wrapper carries its own title/groupId/
   // eduType/orderIndex/orderSetDate passthrough so the shared comparator (which only
   // knows about those generic fields, not this file's `task`/`group`/`edu`/`chip` shapes)
   // can read them; a group/deadline/milestone has no single duration of its own, so it

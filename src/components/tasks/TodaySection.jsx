@@ -228,13 +228,13 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
       onToggle: () => { if (!c.done) markJustDone(`goal-${c.id}`); onToggleGoalChip(c); }, onOpen: onGoToGoals,
     }));
 
-  // Date still wins outright — whatever's due soonest (or most overdue) goes on top no
-  // matter what category it is. Same shared ordering Dashboard's "Anytime today" and
-  // Tasks' own Upcoming list below sort by (see compareTaskPriority) — homework, then
-  // assignment work, then studying, unless something's actually due today/tomorrow,
-  // which jumps the queue regardless of kind. A manual drag from Dashboard wins over all
-  // of that too (same freshness check every page's sort uses), so a reorder shows up the
-  // same way everywhere it's dragged from, not just on the page it happened on.
+  // Same shared ordering Dashboard's "Anytime today" and Tasks' own Upcoming list below
+  // sort by (see compareTaskPriority) — overdue/due today/due tomorrow outranks anything
+  // further out, and within either tier: assignment work, then studying, then homework
+  // last, by due date, so an assignment outranks homework even if the homework's own due
+  // date is sooner. A manual drag from Dashboard wins over all of that too (same
+  // freshness check every page's sort uses), so a reorder shows up the same way
+  // everywhere it's dragged from, not just on the page it happened on.
   const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) =>
     compareTaskPriority(a, b, todayISO)
   );
