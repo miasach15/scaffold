@@ -43,7 +43,6 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
     <div>
       <SectionHeader
         title="Habits"
-        subtitle="Progress over perfection. Missing a day doesn't reset anything."
         right={habits.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK }}>Weekly Completion:</span>
