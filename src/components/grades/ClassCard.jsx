@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Flag, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -189,9 +189,9 @@ export default function ClassCard({
             onClick={() => setEndingTerm(true)}
             disabled={overallPct == null}
             title={overallPct == null ? "Nothing scored yet this term" : "Lock in this term's grade and start a new one"}
-            style={{ background: "none", border: "none", cursor: overallPct == null ? "default" : "pointer", color: col.text, opacity: overallPct == null ? 0.35 : 0.65, padding: 4, display: "flex" }}
+            style={{ background: "none", border: `1px solid ${col.border}`, borderRadius: 999, cursor: overallPct == null ? "default" : "pointer", color: col.text, opacity: overallPct == null ? 0.35 : 0.8, padding: "4px 10px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
           >
-            <Flag size={15} strokeWidth={2.2} />
+            End term
           </button>
         )}
 
@@ -446,8 +446,8 @@ export default function ClassCard({
 
           {/* Ending a term locks in the REAL grade right now (not a guess) as a finished
               term you can look back on, then starts a fresh one — see onEndTerm. The
-              trigger itself is the flag icon in the header, top right; this is just the
-              confirm step once that's clicked, plus the archive of past terms. */}
+              trigger itself is the "End term" button in the header, top right; this is
+              just the confirm step once that's clicked, plus the archive of past terms. */}
           {cls && (endingTerm || cls.pastTerms?.length > 0) && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
               {endingTerm && (
