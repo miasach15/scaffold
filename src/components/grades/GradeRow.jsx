@@ -72,15 +72,18 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
           )}
 
           {weightedModeOn && (
-            <input
-              type="number" min={0} max={100}
-              value={item.itemWeight ?? ""}
-              onChange={(e) => onSetItemWeight(item.id, e.target.value)}
-              placeholder="own %"
-              title="Give this one assignment its own weight instead of a category"
-              aria-label="Own weight percent"
-              style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
-            />
+            <>
+              {hasCategories && <span style={{ fontSize: 10.5, color: "#C2C9D1", flexShrink: 0 }}>or</span>}
+              <input
+                type="number" min={0} max={100}
+                value={item.itemWeight ?? ""}
+                onChange={(e) => onSetItemWeight(item.id, e.target.value)}
+                placeholder="own wt %"
+                title="Give this one assignment its own weight instead of a category"
+                aria-label="Own weight percent"
+                style={{ ...inputStyle, width: 64, fontSize: 11.5, padding: "5px 7px" }}
+              />
+            </>
           )}
 
           {editing ? (

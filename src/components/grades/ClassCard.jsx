@@ -74,10 +74,11 @@ export default function ClassCard({
   const [gradePossible, setGradePossible] = useState("");
   const [endingTerm, setEndingTerm] = useState(false);
   const [termLabelDraft, setTermLabelDraft] = useState("");
-  // A hypothetical "what if I got X on this" — scratch state only, never saved. Lets you
-  // actually go try different scores on whatever's still upcoming and see what the class
-  // grade would become, rather than this app guessing a number for you.
-  const [whatIfOpen, setWhatIfOpen] = useState(false);
+  // "Try a scenario" bundles the two hypothetical calculators (to-hit-X% below, and
+  // per-item what-if scores) behind one toggle instead of each having its own separate
+  // always-on/click-to-open treatment — one clearly-labeled, closed-by-default section
+  // instead of two different patterns competing for attention by default.
+  const [scenarioOpen, setScenarioOpen] = useState(false);
   const [whatIfScores, setWhatIfScores] = useState({}); // itemId -> { earned, possible }
   // "To hit X% overall, what do I need to average on what's left" — the reverse of the
   // What-if calculator below (that one takes scores and shows a result; this takes a
@@ -219,27 +220,9 @@ export default function ClassCard({
 
       {expanded && (
         <div style={{ padding: "12px 14px" }}>
-          {overallPct != null && pendingItems.length > 0 && (
-            <div style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>To hit</div>
-              <input
-                type="number" min={0} max={100} value={targetPct} placeholder={`${overallPct}`}
-                onChange={(e) => setTargetPct(e.target.value)}
-                aria-label="Target grade percent"
-                style={{ ...inputStyle, width: 56, fontSize: 13, padding: "5px 7px", textAlign: "center" }}
-              />
-              <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>% overall —</div>
-              <div style={{ fontSize: 12.5, color: col.text, flex: 1, minWidth: 140 }}>
-                {requiredAvgPct == null
-                  ? "type a target"
-                  : targetUnreachable
-                  ? "not reachable, even with a perfect score on everything left"
-                  : <>average <strong>{requiredAvgPct}%</strong> on what's left</>}
-              </div>
-            </div>
-          )}
           {gradingMode === "weighted" && (
             <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Categories</div>
               {categories.length === 0 ? (
                 <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Assessments, Homework, Participation) and give it a weight — or skip categories and give an individual assignment its own weight directly, below.</div>
               ) : (
@@ -301,6 +284,7 @@ export default function ClassCard({
             </div>
           )}
 
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Grades</div>
           {gradedItems.length === 0 ? (
             <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score, or add one below if it was never on the calendar to begin with." />
           ) : (
@@ -380,14 +364,15 @@ export default function ClassCard({
                           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       )}
+                      {categories.length > 0 && <span style={{ fontSize: 10.5, color: "#C2C9D1", flexShrink: 0 }}>or</span>}
                       <input
                         type="number" min={0} max={100}
                         value={it.itemWeight ?? ""}
                         onChange={(e) => onSetItemWeight(it.id, e.target.value)}
-                        placeholder="own %"
+                        placeholder="own wt %"
                         title="Give this one assignment its own weight instead of a category"
                         aria-label={`${it.title} own weight percent`}
-                        style={{ ...inputStyle, width: 56, fontSize: 11.5, padding: "5px 7px" }}
+                        style={{ ...inputStyle, width: 64, fontSize: 11.5, padding: "5px 7px" }}
                       />
                     </div>
                   );
@@ -396,21 +381,42 @@ export default function ClassCard({
             </div>
           )}
 
-          {/* "What if" — your own hand on the numbers, never a guess this app makes for
-              you. Nothing here is saved; it only exists to answer "what would I need". */}
+          {/* Both hypothetical calculators — "what would I need to average" and "what if I
+              got X on this" — live behind one toggle now instead of one always showing
+              and the other needing its own separate click. Nothing in here is saved;
+              it only exists to answer "what would it take". */}
           {pendingItems.length > 0 && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
               <button
-                onClick={() => setWhatIfOpen((x) => !x)}
+                onClick={() => setScenarioOpen((x) => !x)}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5, fontWeight: 700, color: col.text, display: "flex", alignItems: "center", gap: 4 }}
               >
-                {whatIfOpen ? <ChevronDown size={13} strokeWidth={2.3} /> : <ChevronRight size={13} strokeWidth={2.3} />}
-                What if?
+                {scenarioOpen ? <ChevronDown size={13} strokeWidth={2.3} /> : <ChevronRight size={13} strokeWidth={2.3} />}
+                Try a scenario
               </button>
-              {whatIfOpen && (
+              {scenarioOpen && (
                 <div style={{ marginTop: 8 }}>
+                  {overallPct != null && (
+                    <div style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 12, padding: "10px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>To hit</div>
+                      <input
+                        type="number" min={0} max={100} value={targetPct} placeholder={`${overallPct}`}
+                        onChange={(e) => setTargetPct(e.target.value)}
+                        aria-label="Target grade percent"
+                        style={{ ...inputStyle, width: 56, fontSize: 13, padding: "5px 7px", textAlign: "center" }}
+                      />
+                      <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>% overall —</div>
+                      <div style={{ fontSize: 12.5, color: col.text, flex: 1, minWidth: 140 }}>
+                        {requiredAvgPct == null
+                          ? "type a target"
+                          : targetUnreachable
+                          ? "not reachable, even with a perfect score on everything left"
+                          : <>average <strong>{requiredAvgPct}%</strong> on what's left</>}
+                      </div>
+                    </div>
+                  )}
                   <div style={{ fontSize: 11, color: "#93A0AD", marginBottom: 8 }}>
-                    Try a score on anything still upcoming and see what the class grade would become — nothing here is saved.
+                    Or try a real score on anything still upcoming and see what the class grade would become.
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                     {pendingItems.map((it) => {
