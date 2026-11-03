@@ -38,21 +38,17 @@ async function notifySessionDone(title) {
   }
 }
 
-// A full Pomodoro round is 4 work sessions, a short break after each of the first
-// three, a longer one after the fourth — standard Pomodoro Technique ratios, not
-// something invented for this app.
-const TOTAL_CYCLES = 4;
-const SHORT_BREAK_MIN = 5;
-const LONG_BREAK_MIN = 15;
-// Every work session in the cycle reuses whatever length session 1 was, repeated up to
-// 4 times — a task's own (sometimes much longer) estimate feeding straight into that
-// would turn "Session 1 of 4" into hours of cycling instead of 4 short, sustainable
-// chunks, which defeats the point of Pomodoro. This caps the "recommended" preset (and
-// the starting default) a long task's own estimate can reach — the short/long presets
-// built around it (meaningfulFocusPresets' 0.6x/1.5x) still land in a real Pomodoro
-// range off of that capped base (20m/35m/50m), nothing further clamps them down. A short
-// task's own shorter estimate comes through unchanged either way.
+// One focus block on whatever task you opened this for — not a fixed-count round. A
+// task's own (sometimes much longer) estimate feeding straight into the starting length
+// unchanged could mean sitting down to a single 90+ minute block, which isn't a realistic
+// "start now" ask. This caps how long the starting/recommended preset can be — the short/
+// long presets built around it (meaningfulFocusPresets' 0.6x/1.5x) still land in a real
+// range off of that capped base (20m/35m/50m). A short task's own shorter estimate comes
+// through unchanged either way, and running past this length is always just "+10 more
+// minutes" away (see the time's-up prompt) rather than needing a bigger block up front.
 const POMODORO_CAP_MIN = 33;
+const BREAK_MIN = 10;
+const ADD_TIME_MIN = 10;
 
 export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -61,12 +57,10 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
-  // Which work session of the round this is (1-indexed) and whether the timer's
-  // currently running a work stretch or a break — `totalSeconds`/`remaining` above are
-  // reused for both, so the work length gets stashed separately (workSecondsRef) to
-  // restore once a break ends and the next work session starts.
+  // Whether the timer's currently running the work block or a break — `totalSeconds`/
+  // `remaining` above are reused for both, so the work length gets stashed separately
+  // (workSecondsRef) to restore once a break ends and work resumes.
   const [phase, setPhase] = useState("work"); // "work" | "break"
-  const [cycle, setCycle] = useState(1);
   const workSecondsRef = useRef(initial);
   // The floating card is anchored bottom-right, so its one resize handle sits at the
   // opposite (top-left) corner — pulling it away from the anchor grows the card, same
@@ -103,11 +97,6 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // at that point.
   const audioCtxRef = useRef(null);
   const prevRemainingRef = useRef(initial);
-  // Seconds already banked from a previous lap(s) of this same session — "Keep going"
-  // past a finished lap starts a fresh countdown rather than just un-zeroing the old
-  // one, so without this the invested-time stat would reset to 0 every time you kept
-  // going instead of accumulating across the whole session.
-  const extraSecondsRef = useRef(0);
   // The wall-clock moment the countdown should hit 0 — set whenever running starts (or
   // resumes). Background/inactive tabs get their setInterval throttled by the browser
   // (sometimes down to once a minute or less), so counting down by decrementing once per
@@ -218,37 +207,34 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     prevRemainingRef.current = totalSeconds;
     endTimeRef.current = null;
   };
-  // Another lap of the same length, picking up where the invested-time count left off —
-  // "Keep going" when a lap finishes but the task isn't actually done yet.
-  const keepGoing = () => {
+  // Ran out the clock mid-task — rather than another full lap of the same length, this
+  // just tacks on a bit more time and keeps the same countdown going, so a task that
+  // genuinely just needed a few more minutes doesn't get treated the same as one that
+  // needs a real break.
+  const addMoreTime = () => {
     ensureAudioCtx();
-    extraSecondsRef.current += totalSeconds;
-    setRemaining(totalSeconds);
-    prevRemainingRef.current = totalSeconds;
-    endTimeRef.current = Date.now() + totalSeconds * 1000;
+    const addSecs = ADD_TIME_MIN * 60;
+    setTotalSeconds((s) => s + addSecs);
+    setRemaining(addSecs);
+    prevRemainingRef.current = addSecs;
+    endTimeRef.current = Date.now() + addSecs * 1000;
     setRunning(true);
   };
-  // A work session just ended — hand off to a break instead of straight back to the
-  // same countdown. Every 4th session gets the longer break, same as a real Pomodoro
-  // round; the cycle number itself only advances once the NEXT work session starts
-  // (startNextWorkSession below), so "Session 2 of 4" stays accurate while this break
-  // is running — it's still break-after-session-2, not session 3 yet.
+  // A work block just ended (or you chose to step away) — hand off to a break instead of
+  // straight back to the same countdown.
   const startBreak = () => {
     ensureAudioCtx();
-    const mins = cycle % TOTAL_CYCLES === 0 ? LONG_BREAK_MIN : SHORT_BREAK_MIN;
     setPhase("break");
-    setTotalSeconds(mins * 60);
-    setRemaining(mins * 60);
-    prevRemainingRef.current = mins * 60;
-    endTimeRef.current = Date.now() + mins * 60 * 1000;
+    setTotalSeconds(BREAK_MIN * 60);
+    setRemaining(BREAK_MIN * 60);
+    prevRemainingRef.current = BREAK_MIN * 60;
+    endTimeRef.current = Date.now() + BREAK_MIN * 60 * 1000;
     setRunning(true);
   };
-  // Break's over (or skipped) — back to work, same task, same length as the last work
-  // session, cycle count rolling over to 1 after a full 4-session round.
-  const startNextWorkSession = () => {
+  // Break's over (or skipped) — back to the same task, same length work block as before.
+  const backToWork = () => {
     ensureAudioCtx();
     setPhase("work");
-    setCycle((c) => (c % TOTAL_CYCLES) + 1);
     const secs = workSecondsRef.current;
     setTotalSeconds(secs);
     setRemaining(secs);
@@ -321,7 +307,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     onClose();
   };
 
-  const investedMin = Math.round(Math.max(0, extraSecondsRef.current + totalSeconds - remaining) / 60);
+  const investedMin = Math.round(Math.max(0, totalSeconds - remaining) / 60);
   const stepsDoneInfo = task.groupId ? { done: steps.filter((s) => s.done).length, total: steps.length } : null;
   // How many tasks you've actually finished today — real data, not a made-up daily quota.
   const todayISO = toISO(new Date());
@@ -389,7 +375,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     const card = (
       <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>{phase === "work" ? "Focus Session" : cycle % TOTAL_CYCLES === 0 ? "Long Break" : "Short Break"}</div>
+            <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>{phase === "work" ? "Focus Session" : "Break"}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               {task.id && onOpenDetail && (
                 <button
@@ -428,11 +414,6 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
               </div>
             </div>
           </div>
-          {phase === "work" && (
-            <div style={{ textAlign: "center", fontSize: 10.5, fontWeight: 700, color: MUTED, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: compact ? 6 : 8 }}>
-              Session {cycle} of {TOTAL_CYCLES}
-            </div>
-          )}
           {!compact && (task.notes ? (
             <div style={{ marginBottom: 14 }}>
               <StepNotes notes={task.notes} title={task.title} taskId={task.id} color={MUTED} fontSize={12.5} align="center" />
@@ -442,41 +423,53 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
           ))}
 
           {finished && phase === "break" ? (
-            // The break ran out — the natural next move in a Pomodoro round is just
-            // straight back into the next work session on the same task.
+            // The break ran out — come back to the same task, or use the break as the
+            // natural jumping-off point to switch to something else instead.
             <>
               <div style={{ textAlign: "center", fontSize: 13, color: TONE.soon.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
                 Break's over.
               </div>
               <button
-                onClick={startNextWorkSession}
+                onClick={backToWork}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
                   padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
                   fontSize: 14.5, fontWeight: 500, cursor: "pointer", marginBottom: compact ? 8 : 12,
                 }}
               >
-                <Play size={16} color="#fff" /> Start Session {(cycle % TOTAL_CYCLES) + 1}
+                <Play size={16} color="#fff" /> Back to it
               </button>
+              {otherTask && (
+                <button
+                  onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
+                  style={{
+                    display: "block", width: "100%", textAlign: "center", marginBottom: compact ? 8 : 12,
+                    padding: compact ? "8px" : "10px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", color: PRIMARY_DARK,
+                    fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  Switch to "{otherTask.title}" instead
+                </button>
+              )}
             </>
           ) : finished && !task.done ? (
-            // Ran out the clock without marking it done — rather than a dead end, this
-            // is the one moment it's worth asking outright: take the break a Pomodoro
-            // round calls for, keep pushing on the same thing, or switch to something else.
+            // Ran out the clock without marking it done — rather than a dead end, this is
+            // the one moment it's worth asking outright: a few more minutes to wrap it up,
+            // a real break (and maybe come back to something else after), or switch now.
             <>
               <div style={{ textAlign: "center", fontSize: 13, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
                 Time's up on {task.title}.
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                 <button
-                  onClick={startBreak}
+                  onClick={addMoreTime}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
                     fontSize: 14.5, fontWeight: 500, cursor: "pointer",
                   }}
                 >
-                  Take a {cycle % TOTAL_CYCLES === 0 ? LONG_BREAK_MIN : SHORT_BREAK_MIN}m break
+                  +{ADD_TIME_MIN} more minutes
                 </button>
                 <button
                   onClick={reset}
@@ -488,10 +481,10 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
                 <button
-                  onClick={keepGoing}
+                  onClick={startBreak}
                   style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
                 >
-                  <Play size={14} /> Keep going
+                  Take a {BREAK_MIN}m break
                 </button>
               </div>
               {otherTask && (
@@ -526,7 +519,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                 </div>
               ) : (
                 <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
-                  {cycle % TOTAL_CYCLES === 0 ? "Long break" : "Short break"} — back to it after.
+                  Break — back to it after.
                 </div>
               )}
 
