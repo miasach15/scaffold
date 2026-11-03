@@ -1031,6 +1031,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           key={focusTask.id}
           task={focusTask}
           tasks={tasks}
+          eduItems={eduItems}
           profile={profile}
           setView={setView}
           onToggleStepDone={setTaskDone}

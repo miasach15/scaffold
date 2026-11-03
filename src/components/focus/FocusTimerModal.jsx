@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
-import { meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { addDays, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { compareTaskPriority } from "../../lib/taskPriority";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
@@ -44,7 +45,7 @@ const TOTAL_CYCLES = 4;
 const SHORT_BREAK_MIN = 5;
 const LONG_BREAK_MIN = 15;
 
-export default function FocusTimerModal({ task, tasks, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
+export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   const initial = (defaultMinutes || 25) * 60;
@@ -317,19 +318,52 @@ export default function FocusTimerModal({ task, tasks, profile, setView, onToggl
   const todayISO = toISO(new Date());
   const completedTodayCount = (tasks || []).filter((t) => t.done && t.date === todayISO).length;
   const firstName = (profile?.name || "").trim().split(" ")[0];
-  // The next thing worth focusing on — soonest date, then soonest time of day, skipping
-  // whatever's already done and the task that was just wrapped up.
+  // The next thing worth focusing on, by the exact same priority Dashboard/Tasks use
+  // (compareTaskPriority) — not just whatever has the nearest raw date, which used to
+  // pick an arbitrary later step of a multi-session project instead of its real next
+  // step, and ignored assignment/test/homework priority entirely. A multi-step
+  // breakdown collapses to its one earliest undone step (same as Dashboard's
+  // groupItems); a multi-session assignment/test collapses to its most due-or-overdue
+  // undone session, or its soonest upcoming one if none are due yet (same as
+  // eduSessionItems) — otherwise this could surface some other session of the SAME
+  // assignment Dashboard already represents as a single different row.
   const nextTask = useMemo(() => {
     if (!celebrating) return null;
-    return [...(tasks || [])]
-      .filter((t) => !t.done && t.id !== task.id)
-      .sort((a, b) => {
-        const ad = a.date || "9999-99-99", bd = b.date || "9999-99-99";
-        if (ad !== bd) return ad.localeCompare(bd);
-        return (a.start ?? 99) - (b.start ?? 99);
-      })[0] || null;
+    const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
+    const activeGroupSteps = {};
+    const activeEduSessions = {};
+    const plain = [];
+    (tasks || []).forEach((t) => {
+      if (t.done || t.id === task.id) return;
+      if (t.groupId) { (activeGroupSteps[t.groupId] ||= []).push(t); return; }
+      if (t.eduId) {
+        if (doneEduIds.has(t.eduId)) return;
+        (activeEduSessions[t.eduId] ||= []).push(t);
+        return;
+      }
+      plain.push(t);
+    });
+    const groupItems = Object.values(activeGroupSteps).map((steps) => {
+      const sorted = steps.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const next = sorted[0];
+      return { ...next, date: next.groupDueDate || next.date };
+    });
+    const eduSessionItems = Object.values(activeEduSessions)
+      .map((sessions) => sessions.slice().sort((a, b) => (a.date || "").localeCompare(b.date || "")))
+      .map((sorted) => {
+        const due = sorted.filter((t) => t.date && t.date <= todayISO);
+        return due.length > 0 ? due[due.length - 1] : sorted[0];
+      })
+      .filter(Boolean)
+      .map((t) => {
+        const parent = (eduItems || []).find((e) => e.id === t.eduId);
+        const dueDate = parent?.dueDate || t.date;
+        const sortDate = parent?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate;
+        return { ...t, date: dueDate, sortDate };
+      });
+    return [...plain, ...groupItems, ...eduSessionItems].sort((a, b) => compareTaskPriority(a, b, todayISO))[0] || null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [celebrating, tasks, task.id]);
+  }, [celebrating, tasks, eduItems, task.id, todayISO]);
 
   if (!celebrating) {
     // Rendered either as a fixed bottom-right floating card (the default, everywhere
