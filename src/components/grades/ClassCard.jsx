@@ -24,7 +24,7 @@ function pointsPercent(items) {
 // counting by points same as always. A class with nothing weighted at all behaves
 // exactly like plain total points; add one weight anywhere and everything else keeps
 // working the same way around it, instead of needing to convert the whole class over.
-function classPercent(items, categories) {
+export function classPercent(items, categories) {
   const scored = items.filter((i) => i.scoreEarned != null && i.scorePossible > 0);
   if (scored.length === 0) return null;
   const catStats = categories
@@ -64,7 +64,6 @@ export default function ClassCard({
   items, // all edu items for this subject, every term
   educationCategory,
   onAddManualGrade,
-  onEndTerm,
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
@@ -84,8 +83,6 @@ export default function ClassCard({
   const [gradeTitle, setGradeTitle] = useState("");
   const [gradeEarned, setGradeEarned] = useState("");
   const [gradePossible, setGradePossible] = useState("");
-  const [endingTerm, setEndingTerm] = useState(false);
-  const [termLabelDraft, setTermLabelDraft] = useState("");
   // "Try a scenario" bundles the two hypothetical calculators (to-hit-X% below, and
   // per-item what-if scores) behind one toggle instead of each having its own separate
   // always-on/click-to-open treatment — one clearly-labeled, closed-by-default section
@@ -100,8 +97,9 @@ export default function ClassCard({
   const categories = cls?.categories || [];
   const weightSum = categories.reduce((s, c) => s + c.weight, 0);
 
-  // Only items from the ACTIVE term count toward the current grade — see onEndTerm below.
-  // No boundary ever set means every item still counts, same as before terms existed.
+  // Only items from the ACTIVE term count toward the current grade — see useGrades' endTerm,
+  // called from GradesView's page-level "End term" button. No boundary ever set means every
+  // item still counts, same as before terms existed.
   const currentTermItems = cls?.currentTermStartedAt
     ? items.filter((i) => !i.dueDate || i.dueDate >= cls.currentTermStartedAt)
     : items;
@@ -126,13 +124,6 @@ export default function ClassCard({
     if (!gradeTitle.trim() || !gradePossible) return;
     onAddManualGrade(subject, gradeTitle.trim(), gradeEarned === "" ? null : Number(gradeEarned), Number(gradePossible));
     setGradeTitle(""); setGradeEarned(""); setGradePossible(""); setAddingGrade(false);
-  };
-
-  const confirmEndTerm = () => {
-    if (!cls || overallPct == null) return;
-    onEndTerm(cls.id, { label: termLabelDraft.trim() || null, finalPercent: overallPct, startedAt: cls.currentTermStartedAt ?? null });
-    setEndingTerm(false);
-    setTermLabelDraft("");
   };
 
   const setWhatIf = (id, field, value) => setWhatIfScores((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
@@ -183,17 +174,6 @@ export default function ClassCard({
         <div style={{ fontSize: 15, fontWeight: 700, color: col.text, minWidth: 52, textAlign: "right" }}>
           {overallPct != null ? `${overallPct}%` : "–"}
         </div>
-
-        {cls && (
-          <button
-            onClick={() => setEndingTerm(true)}
-            disabled={overallPct == null}
-            title={overallPct == null ? "Nothing scored yet this term" : "Lock in this term's grade and start a new one"}
-            style={{ background: "none", border: `1px solid ${col.border}`, borderRadius: 999, cursor: overallPct == null ? "default" : "pointer", color: col.text, opacity: overallPct == null ? 0.35 : 0.8, padding: "4px 10px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
-          >
-            End term
-          </button>
-        )}
 
         {cls && (
           <button
@@ -444,39 +424,20 @@ export default function ClassCard({
             </div>
           )}
 
-          {/* Ending a term locks in the REAL grade right now (not a guess) as a finished
-              term you can look back on, then starts a fresh one — see onEndTerm. The
-              trigger itself is the "End term" button in the header, top right; this is
-              just the confirm step once that's clicked, plus the archive of past terms. */}
-          {cls && (endingTerm || cls.pastTerms?.length > 0) && (
+          {/* Ending a term — see useGrades' endTerm — now happens for every class at once
+              from the page-level "End term" button in GradesView, not per class here.
+              What's left is just the archive of past terms. */}
+          {cls && cls.pastTerms?.length > 0 && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              {endingTerm && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, color: "#4A5568" }}>End this term at <strong>{overallPct}%</strong> and start fresh —</span>
-                  <input
-                    placeholder="label (optional, e.g. Semester 1)" aria-label="Term label" value={termLabelDraft}
-                    onChange={(e) => setTermLabelDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && confirmEndTerm()}
-                    style={{ ...inputStyle, flex: "1 1 160px", fontSize: 12, padding: "5px 8px" }}
-                    autoFocus
-                  />
-                  <button onClick={confirmEndTerm} className="btn-primary" style={{ ...primaryBtn, fontSize: 11.5, padding: "6px 10px" }}>Confirm</button>
-                  <button onClick={() => { setEndingTerm(false); setTermLabelDraft(""); }} style={{ ...ghostBtn, fontSize: 11.5, padding: "6px 10px" }}>Cancel</button>
-                </div>
-              )}
-              {cls.pastTerms?.length > 0 && (
-                <div style={{ marginTop: endingTerm ? 10 : 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 6 }}>Past terms</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    {cls.pastTerms.map((t) => (
-                      <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "#4A5568" }}>
-                        <span>{t.label || `Ended ${formatShortDate(t.endedAt)}`}</span>
-                        <span style={{ fontWeight: 700, color: col.text }}>{t.finalPercent}%</span>
-                      </div>
-                    ))}
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 6 }}>Past terms</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {cls.pastTerms.map((t) => (
+                  <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "#4A5568" }}>
+                    <span>{t.label || `Ended ${formatShortDate(t.endedAt)}`}</span>
+                    <span style={{ fontWeight: 700, color: col.text }}>{t.finalPercent}%</span>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           )}
         </div>
