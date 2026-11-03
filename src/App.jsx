@@ -73,7 +73,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
-  const { classes: gradeClasses, ensureClass: ensureGradeClass, setGradingMode: setGradeMode, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
+  const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
@@ -931,7 +931,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             classes={gradeClasses}
             educationCategory={profile.educationCategory}
             onAddManualGrade={addManualGradeItem}
-            onSetGradingMode={setGradeMode}
             onEndTerm={endGradeTerm}
             onAddCategory={addGradeCategory}
             onRenameCategory={renameGradeCategory}

@@ -16,16 +16,17 @@ function pointsPercent(items) {
   return possible > 0 ? round1((earned / possible) * 100) : null;
 }
 
-// Standard "current grade" math: only categories that actually have scored work in them
-// count, and their weights are renormalized against each other — so a half-graded
-// semester (e.g. only Assessments entered so far) still shows a sensible number instead of
-// being dragged down by empty categories. An item can skip categories entirely and carry
-// its own standalone weight instead (itemWeight) — it counts as its own single-item
-// bucket right alongside the named categories, at its own weight. The two are mutually
-// exclusive per item (see useEduItems' setGradeCategory/setItemWeight), but this filters
-// itemWeight out of a category's items anyway as a defensive no-double-count guard.
-function weightedPercent(items, categories) {
+// The one grade calculation every class uses — no separate "total points" vs "weighted
+// categories" mode to pick between first. By default every item just counts by its own
+// raw points (a 100-point test naturally outweighs a 10-point quiz) — give a category or
+// an individual item its own weight (see useEduItems' setGradeCategory/setItemWeight)
+// and THAT counts for exactly that share instead, with whatever's left over still
+// counting by points same as always. A class with nothing weighted at all behaves
+// exactly like plain total points; add one weight anywhere and everything else keeps
+// working the same way around it, instead of needing to convert the whole class over.
+function classPercent(items, categories) {
   const scored = items.filter((i) => i.scoreEarned != null && i.scorePossible > 0);
+  if (scored.length === 0) return null;
   const catStats = categories
     .map((cat) => {
       const inCat = scored.filter((i) => i.gradeCategoryId === cat.id && i.itemWeight == null);
@@ -38,7 +39,19 @@ function weightedPercent(items, categories) {
   const ownWeightStats = scored
     .filter((i) => i.itemWeight != null && i.itemWeight > 0)
     .map((i) => ({ weight: i.itemWeight, pct: (i.scoreEarned / i.scorePossible) * 100 }));
-  const allStats = [...catStats, ...ownWeightStats];
+  const explicitWeight = catStats.reduce((s, c) => s + c.weight, 0) + ownWeightStats.reduce((s, c) => s + c.weight, 0);
+
+  // Everything else — no category, no own weight — pools together and counts by its own
+  // raw points, automatically filling whatever share of the grade the stats above
+  // haven't already claimed (100% of it, if nothing above exists at all — same result
+  // as the old, separate "total points" mode).
+  const natural = scored.filter((i) => i.itemWeight == null && !categories.some((c) => c.id === i.gradeCategoryId));
+  const naturalEarned = natural.reduce((s, i) => s + i.scoreEarned, 0);
+  const naturalPossible = natural.reduce((s, i) => s + i.scorePossible, 0);
+  const naturalWeight = Math.max(0, 100 - explicitWeight);
+  const naturalStat = naturalPossible > 0 && naturalWeight > 0 ? { weight: naturalWeight, pct: (naturalEarned / naturalPossible) * 100 } : null;
+
+  const allStats = [...catStats, ...ownWeightStats, ...(naturalStat ? [naturalStat] : [])];
   const totalWeight = allStats.reduce((s, c) => s + c.weight, 0);
   if (totalWeight <= 0) return null;
   return round1(allStats.reduce((s, c) => s + c.pct * (c.weight / totalWeight), 0));
@@ -47,11 +60,10 @@ function weightedPercent(items, categories) {
 export default function ClassCard({
   subject,
   label,
-  cls, // { id, gradingMode, categories, currentTermStartedAt, pastTerms } — undefined/default when never configured
+  cls, // { id, categories, currentTermStartedAt, pastTerms } — undefined/default when never configured
   items, // all edu items for this subject, every term
   educationCategory,
   onAddManualGrade,
-  onSetGradingMode,
   onEndTerm,
   onAddCategory,
   onRenameCategory,
@@ -85,11 +97,7 @@ export default function ClassCard({
   // target result and works backward to a score). Also scratch-only, never saved.
   const [targetPct, setTargetPct] = useState("");
 
-  const gradingMode = cls?.gradingMode || "points";
   const categories = cls?.categories || [];
-  // A class in weighted mode can also run on standalone item weights alone, with zero
-  // named categories ever set up — so "weighted" no longer requires categories.length > 0.
-  const weighted = gradingMode === "weighted";
   const weightSum = categories.reduce((s, c) => s + c.weight, 0);
 
   // Only items from the ACTIVE term count toward the current grade — see onEndTerm below.
@@ -99,7 +107,7 @@ export default function ClassCard({
     : items;
   const gradedItems = currentTermItems.filter((i) => i.done).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
   const pendingItems = currentTermItems.filter((i) => !i.done && i.dueDate);
-  const overallPct = weighted ? weightedPercent(gradedItems, categories) : pointsPercent(gradedItems);
+  const overallPct = classPercent(gradedItems, categories);
   // Individually-weighted items (see itemWeight) count toward this same "does it add up
   // to 100%" sanity check, same as a named category does — whether they're graded yet or
   // not, same as categories aren't filtered down to only ones with scores either.
@@ -141,16 +149,13 @@ export default function ClassCard({
     .filter(Boolean);
   const hasWhatIfInput = whatIfExtras.length > 0;
   const whatIfItems = [...gradedItems, ...whatIfExtras];
-  const whatIfPct = weighted ? weightedPercent(whatIfItems, categories) : pointsPercent(whatIfItems);
+  const whatIfPct = classPercent(whatIfItems, categories);
   const categoryName = (id) => categories.find((c) => c.id === id)?.name;
 
   // Binary search for the single uniform percentage — applied evenly across every
-  // pending item — that would land the real grade math (points or weighted, whichever
-  // mode this class uses) at the typed target. Reuses pointsPercent/weightedPercent
-  // exactly as-is rather than deriving a separate formula, so it can never drift from
-  // what the actual grade display means. A pending item with no category assigned
-  // doesn't count toward a weighted target, same as it doesn't count toward the real
-  // grade until categorized.
+  // pending item — that would land the real grade math at the typed target. Reuses
+  // classPercent exactly as-is rather than deriving a separate formula, so it can never
+  // drift from what the actual grade display means.
   const requiredAvgPct = useMemo(() => {
     const target = Number(targetPct);
     if (!targetPct || Number.isNaN(target) || pendingItems.length === 0) return null;
@@ -158,11 +163,11 @@ export default function ClassCard({
     for (let i = 0; i < 40; i++) {
       const mid = (lo + hi) / 2;
       const trial = [...gradedItems, ...pendingItems.map((it) => ({ ...it, scoreEarned: mid, scorePossible: 100 }))];
-      const pct = (weighted ? weightedPercent(trial, categories) : pointsPercent(trial)) ?? 0;
+      const pct = classPercent(trial, categories) ?? 0;
       if (pct < target) lo = mid; else hi = mid;
     }
     return round1(hi);
-  }, [targetPct, pendingItems, gradedItems, weighted, categories]);
+  }, [targetPct, pendingItems, gradedItems, categories]);
   // Even a perfect score on everything left wouldn't reach it — worth saying outright
   // rather than showing "100%" looking like a normal, achievable answer.
   const targetUnreachable = requiredAvgPct != null && requiredAvgPct >= 99.95;
@@ -174,23 +179,6 @@ export default function ClassCard({
           {expanded ? <ChevronDown size={16} strokeWidth={2.3} /> : <ChevronRight size={16} strokeWidth={2.3} />}
         </button>
         <div style={{ flex: 1, minWidth: 80, fontWeight: 700, fontSize: 15, color: col.text }}>{label}</div>
-
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {["points", "weighted"].map((m) => (
-            <button
-              key={m}
-              onClick={() => onSetGradingMode(subject, m)}
-              style={{
-                padding: "5px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-                border: `1px solid ${gradingMode === m ? col.text : col.border}`,
-                background: gradingMode === m ? "#fff" : "transparent",
-                color: col.text, opacity: gradingMode === m ? 1 : 0.6,
-              }}
-            >
-              {m === "points" ? "Total points" : "Weighted categories"}
-            </button>
-          ))}
-        </div>
 
         <div style={{ fontSize: 15, fontWeight: 700, color: col.text, minWidth: 52, textAlign: "right" }}>
           {overallPct != null ? `${overallPct}%` : "–"}
@@ -210,7 +198,7 @@ export default function ClassCard({
         {cls && (
           <button
             onClick={() => onRemoveClass(cls.id)}
-            title={items.length > 0 ? "Remove this class's grading setup (it'll come back in Total points mode if you still have items in it)" : "Remove this class"}
+            title={items.length > 0 ? "Remove this class's categories and weights (it'll come back, with everything just counting by points, if you still have items in it)" : "Remove this class"}
             style={{ ...deleteBtn, color: col.text, opacity: 0.6 }}
           >
             ×
@@ -220,11 +208,10 @@ export default function ClassCard({
 
       {expanded && (
         <div style={{ padding: "12px 14px" }}>
-          {gradingMode === "weighted" && (
-            <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Categories</div>
               {categories.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>No categories yet. Add one below (e.g. Assessments, Homework, Participation) and give it a weight — or skip categories and give an individual assignment its own weight directly, below.</div>
+                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>Nothing set up — every assignment just counts by its own points for now. Add a category below (e.g. Assessments, Homework) to make a whole group count for more or less than its raw points, or give one assignment its own weight directly, further down.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
                   {categories.map((cat) => {
@@ -259,8 +246,11 @@ export default function ClassCard({
                       </div>
                     );
                   })}
-                  <div style={{ fontSize: 10.5, color: totalWeightSum === 100 ? "#93A0AD" : "#B0873A" }}>
-                    Categories add up to {weightSum}%{itemWeightSum > 0 ? `, plus ${itemWeightSum}% in individually-weighted assignments below` : ""}{totalWeightSum !== 100 ? " (that's fine, the grade is calculated from whatever's set up so far)" : ""}.
+                  <div style={{ fontSize: 10.5, color: "#93A0AD" }}>
+                    Categories add up to {weightSum}%{itemWeightSum > 0 ? `, plus ${itemWeightSum}% in individually-weighted assignments` : ""}.{" "}
+                    {totalWeightSum < 100
+                      ? `Everything else counts by points for the remaining ${round1(100 - totalWeightSum)}%.`
+                      : "Nothing's left over for anything else to count by points."}
                   </div>
                 </div>
               )}
@@ -281,8 +271,7 @@ export default function ClassCard({
                   <Plus size={12} strokeWidth={2.5} /> Add category
                 </button>
               </div>
-            </div>
-          )}
+          </div>
 
           <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Grades</div>
           {gradedItems.length === 0 ? (
@@ -294,7 +283,7 @@ export default function ClassCard({
                   key={item.id}
                   item={item}
                   col={col}
-                  categories={weighted ? categories : null}
+                  categories={categories}
                   onSetScore={onSetScore}
                   onSetCategory={onSetItemCategory}
                   onSetItemWeight={onSetItemWeight}
@@ -343,12 +332,11 @@ export default function ClassCard({
 
           {/* Categorizing upcoming work is real and saved, same as it is for completed items
               above — kept separate from What-if below, which is scratch-only. */}
-          {weighted && pendingItems.length > 0 && (
+          {pendingItems.length > 0 && (
             <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — pick a category, or give it its own weight</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — optionally pick a category, or give it its own weight</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {pendingItems.map((it) => {
-                  const uncategorized = it.itemWeight == null && !categories.some((c) => c.id === it.gradeCategoryId);
                   return (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
@@ -358,7 +346,7 @@ export default function ClassCard({
                           onChange={(e) => onSetItemCategory(it.id, e.target.value || null)}
                           title="Which category this will count toward"
                           aria-label={`${it.title} category`}
-                          style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108, color: uncategorized ? "#B03A3A" : undefined }}
+                          style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108 }}
                         >
                           <option value="">No category</option>
                           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -421,15 +409,12 @@ export default function ClassCard({
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
                     {pendingItems.map((it) => {
                       const w = whatIfScores[it.id] || {};
-                      const needsCategory = weighted && it.itemWeight == null && !it.gradeCategoryId;
                       return (
                         <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <div style={{ flex: "1 1 140px", fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
-                          {weighted && (
-                            <div style={{ fontSize: 11, width: 110, color: needsCategory ? "#B03A3A" : "#93A0AD" }}>
-                              {it.itemWeight != null ? `own weight: ${it.itemWeight}%` : (categoryName(it.gradeCategoryId) || "no category")}
-                            </div>
-                          )}
+                          <div style={{ fontSize: 11, width: 110, color: "#93A0AD" }}>
+                            {it.itemWeight != null ? `own weight: ${it.itemWeight}%` : (categoryName(it.gradeCategoryId) || "by points")}
+                          </div>
                           <input
                             type="number" placeholder="earned" aria-label={`${it.title} hypothetical score earned`} value={w.earned ?? ""}
                             onChange={(e) => setWhatIf(it.id, "earned", e.target.value)}

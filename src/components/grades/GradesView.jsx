@@ -11,7 +11,6 @@ export default function GradesView({
   classes,
   educationCategory,
   onAddManualGrade,
-  onSetGradingMode,
   onEndTerm,
   onAddCategory,
   onRenameCategory,
@@ -49,7 +48,7 @@ export default function GradesView({
 
   return (
     <div>
-      <SectionHeader title="Grades" subtitle="One setup per class: total points, or your own weighted categories." />
+      <SectionHeader title="Grades" subtitle="Every class just counts by points, until you give a category or an assignment its own weight." />
 
       <AddRow>
         <input
@@ -73,7 +72,6 @@ export default function GradesView({
             items={itemsBySubject(key)}
             educationCategory={educationCategory}
             onAddManualGrade={onAddManualGrade}
-            onSetGradingMode={onSetGradingMode}
             onEndTerm={onEndTerm}
             onAddCategory={onAddCategory}
             onRenameCategory={onRenameCategory}

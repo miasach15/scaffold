@@ -9,7 +9,6 @@ const termFromRow = (row) => ({ id: row.id, classId: row.class_id, label: row.la
 const classFromRow = (row) => ({
   id: row.id,
   subject: row.subject,
-  gradingMode: row.grading_mode, // "points" | "weighted"
   // Where the ACTIVE term began — see migration_grade_terms.sql. null means no boundary
   // has ever been set, so every item counts (same as before this existed).
   currentTermStartedAt: row.current_term_started_at || null,
@@ -46,31 +45,20 @@ export function useGrades(userId) {
     load();
   }, [load]);
 
-  // Returns the class row for `subject`, creating one (points mode, no categories) the
-  // first time it's touched — e.g. flipping a never-configured subject to "Weighted
-  // categories" or adding its first category.
+  // Returns the class row for `subject`, creating one (no categories yet, everything
+  // counts by points) the first time it's touched — e.g. adding its first category.
   const ensureClass = useCallback(
     async (subject) => {
       const existing = classes.find((c) => c.subject === subject);
       if (existing) return existing;
       const row = { id: uid(), user_id: userId, subject, grading_mode: "points" };
-      const created = { id: row.id, subject, gradingMode: "points", currentTermStartedAt: null, categories: [], pastTerms: [] };
+      const created = { id: row.id, subject, currentTermStartedAt: null, categories: [], pastTerms: [] };
       setClasses((cs) => [...cs, created]);
       const { error } = await supabase.from("grade_classes").insert(row);
       if (error) reportSaveError();
       return created;
     },
     [userId, classes]
-  );
-
-  const setGradingMode = useCallback(
-    async (subject, mode) => {
-      const cls = await ensureClass(subject);
-      setClasses((cs) => cs.map((c) => (c.id === cls.id ? { ...c, gradingMode: mode } : c)));
-      const { error } = await supabase.from("grade_classes").update({ grading_mode: mode }).eq("id", cls.id);
-      if (error) reportSaveError();
-    },
-    [ensureClass]
   );
 
   // Locks in the class's REAL current grade (not a guess) as a finished term, then moves
@@ -136,5 +124,5 @@ export function useGrades(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { classes, loading, ensureClass, setGradingMode, endTerm, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
+  return { classes, loading, ensureClass, endTerm, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
 }
