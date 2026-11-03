@@ -134,5 +134,17 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible };
+  // Picking "No subject" at creation time (or just not knowing yet) shouldn't be
+  // permanent — this is the same free-text field addEduItems sets, just editable after
+  // the fact. Doesn't touch grade_category_id/item_weight even if the new subject
+  // doesn't match the class those were set up under — same as renaming a class's own
+  // subject text elsewhere wouldn't retroactively touch any item's grading setup.
+  const setSubject = useCallback(async (id, subject) => {
+    const trimmed = (subject || "").trim() || null;
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, subject: trimmed } : x)));
+    const { error } = await supabase.from("edu_items").update({ subject: trimmed }).eq("id", id);
+    if (error) reportSaveError();
+  }, []);
+
+  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible, setSubject };
 }

@@ -30,6 +30,7 @@ export default function EducationView({
   onSetSessionDone,
   onUpdateDeadline,
   onSetFlexible,
+  onSetSubject,
   onOpenFocus,
   inboxItems,
   onDiscardInbox,
@@ -629,6 +630,8 @@ export default function EducationView({
             onAddSession={quickAddSession}
             onUpdateDeadline={onUpdateDeadline}
             onSetFlexible={onSetFlexible}
+            onSetSubject={onSetSubject}
+            knownSubjects={knownSubjects}
             onBreakDown={(details) => breakDownExisting(editingItem, details)}
             breakingDown={sessionBreakingDown}
             breakdownError={sessionBreakdownError}

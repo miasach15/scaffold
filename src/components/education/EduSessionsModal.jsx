@@ -8,16 +8,20 @@ import ModalPortal from "../shared/ModalPortal";
 
 // Opened by clicking a deadline row on Education — see which sessions are done, rename
 // or remove any of them, add another, or hand the whole thing to AI to re-plan. The
-// deadline's own due date/time is editable too (click it) — moving the date reflows
-// every not-done session onto the new window (see App.jsx's updateEduDeadline). `col` is
-// your actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onSetFlexible, onBreakDown, breakingDown, breakdownError }) {
+// deadline's own due date/time/subject is editable too (click it) — moving the date
+// reflows every not-done session onto the new window (see App.jsx's updateEduDeadline).
+// Subject can be left unset at creation and picked up here later — same free-text
+// field, same "No subject" default, just not locked in at add-time. `col` is your
+// actual School category color (see EducationView).
+export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onSetFlexible, onSetSubject, knownSubjects, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
   const [showAI, setShowAI] = useState(false);
   const [details, setDetails] = useState("");
   const [editingDeadline, setEditingDeadline] = useState(false);
+  const [addingNewSubject, setAddingNewSubject] = useState(false);
+  const [newSubjectDraft, setNewSubjectDraft] = useState("");
   // Every session already shares one uniform title (see App.jsx's addEduItem) — what's
   // actually worth editing per session is its notes: the specific step(s) that session
   // covers, e.g. "problem 7.13, chapter 7" — so this edits notes, not the title. Local
@@ -49,34 +53,63 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
       <div style={{ ...modalStyle, width: 420, maxHeight: "82vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 10.5, color: col.text, fontWeight: 700, marginBottom: 6 }}>{item.type}</div>
         <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
-        {onUpdateDeadline && editingDeadline ? (
+        {(onUpdateDeadline || onSetSubject) && editingDeadline ? (
           <div
-            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDeadline(false); }}
-            style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 16 }}
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { setEditingDeadline(false); setAddingNewSubject(false); } }}
+            style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", marginBottom: 16 }}
           >
-            <input
-              type="date"
-              autoFocus
-              value={item.dueDate}
-              onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
-              {...noTypeDateProps}
-              style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
-            />
-            <input
-              type="time"
-              value={decimalToTimeInput(item.dueStart)}
-              onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
-              title="Optional: a specific time it's due (shows timed on Calendar instead of in the all-day row)"
-              style={{ ...inputStyle, width: 104, fontSize: 12, padding: "3px 6px" }}
-            />
+            {onUpdateDeadline && (
+              <>
+                <input
+                  type="date"
+                  autoFocus
+                  value={item.dueDate}
+                  onChange={(e) => e.target.value && onUpdateDeadline(item.id, e.target.value, item.dueStart)}
+                  {...noTypeDateProps}
+                  style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
+                />
+                <input
+                  type="time"
+                  value={decimalToTimeInput(item.dueStart)}
+                  onChange={(e) => onUpdateDeadline(item.id, item.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
+                  title="Optional: a specific time it's due (shows timed on Calendar instead of in the all-day row)"
+                  style={{ ...inputStyle, width: 104, fontSize: 12, padding: "3px 6px" }}
+                />
+              </>
+            )}
+            {onSetSubject && (
+              addingNewSubject ? (
+                <input
+                  placeholder="New class name" aria-label="New class name" value={newSubjectDraft} autoFocus={!onUpdateDeadline}
+                  onChange={(e) => setNewSubjectDraft(e.target.value)}
+                  onBlur={() => { if (newSubjectDraft.trim()) onSetSubject(item.id, newSubjectDraft.trim()); setAddingNewSubject(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                  style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
+                />
+              ) : (
+                <select
+                  value={item.subject || ""}
+                  aria-label="Subject"
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") { setAddingNewSubject(true); setNewSubjectDraft(""); }
+                    else onSetSubject(item.id, e.target.value || null);
+                  }}
+                  style={{ ...inputStyle, width: 130, fontSize: 12, padding: "3px 6px" }}
+                >
+                  <option value="">No subject</option>
+                  {(knownSubjects || []).map((s) => <option key={s} value={s}>{s}</option>)}
+                  <option value="__new__">+ New class…</option>
+                </select>
+              )
+            )}
           </div>
         ) : (
           <button
-            onClick={() => onUpdateDeadline && setEditingDeadline(true)}
-            title={onUpdateDeadline ? "Click to change" : undefined}
-            style={{ background: "none", border: "none", padding: 0, marginBottom: 16, cursor: onUpdateDeadline ? "pointer" : "default", textAlign: "left", fontSize: 12, color: "#93A0AD" }}
+            onClick={() => (onUpdateDeadline || onSetSubject) && setEditingDeadline(true)}
+            title={(onUpdateDeadline || onSetSubject) ? "Click to change" : undefined}
+            style={{ background: "none", border: "none", padding: 0, marginBottom: 16, cursor: (onUpdateDeadline || onSetSubject) ? "pointer" : "default", textAlign: "left", fontSize: 12, color: "#93A0AD" }}
           >
-            Due {formatShortDate(item.dueDate)}{item.dueStart != null ? ` · ${decimalToTimeLabel(item.dueStart)}` : ""}{item.subject ? ` · ${item.subject}` : ""}
+            Due {formatShortDate(item.dueDate)}{item.dueStart != null ? ` · ${decimalToTimeLabel(item.dueStart)}` : ""}{item.subject ? ` · ${item.subject}` : (onSetSubject ? " · Add subject" : "")}
           </button>
         )}
 
