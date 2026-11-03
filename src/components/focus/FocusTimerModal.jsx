@@ -44,11 +44,20 @@ async function notifySessionDone(title) {
 const TOTAL_CYCLES = 4;
 const SHORT_BREAK_MIN = 5;
 const LONG_BREAK_MIN = 15;
+// Every work session in the cycle reuses whatever length session 1 was, repeated up to
+// 4 times — a task's own (sometimes much longer) estimate feeding straight into that
+// would turn "Session 1 of 4" into hours of cycling instead of 4 short, sustainable
+// chunks, which defeats the point of Pomodoro. This caps the "recommended" preset (and
+// the starting default) a long task's own estimate can reach — the short/long presets
+// built around it (meaningfulFocusPresets' 0.6x/1.5x) still land in a real Pomodoro
+// range off of that capped base (20m/35m/50m), nothing further clamps them down. A short
+// task's own shorter estimate comes through unchanged either way.
+const POMODORO_CAP_MIN = 33;
 
 export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
-  const initial = (defaultMinutes || 25) * 60;
+  const initial = Math.min(defaultMinutes || 25, POMODORO_CAP_MIN) * 60;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
@@ -504,7 +513,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                 <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>Time's up. Nice focus session.</div>
               ) : phase === "work" ? (
                 <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
-                  {meaningfulFocusPresets(task.duration).map((m, i) => (
+                  {meaningfulFocusPresets(task.duration ? Math.min(task.duration, POMODORO_CAP_MIN) : null).map((m, i) => (
                     <button
                       key={m}
                       onClick={() => setPreset(m)}
