@@ -46,6 +46,7 @@ import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad,
 import { applyOverdueSessionOps, planOverdueSessionReflow, planPushTaskToNextDay } from "./lib/overdueSessions";
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
+import { shouldAutoCompleteEduItem } from "./lib/eduAutoComplete";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -95,9 +96,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // while a sibling is still open must never flip an assignment that was ALREADY marked
     // done some other way (the deadline row's own checkbox, or the Upcoming list) back to
     // not-done — that would silently undo a "this is already turned in" the student set
-    // independently of its sessions.
+    // independently of its sessions. See shouldAutoCompleteEduItem for why Homework needs
+    // an extra check here that Assignment/Assessment don't.
     if (done) {
-      if (allDoneAfter && !eduItem.done) setEduDone(t.eduId, true);
+      const autoComplete = shouldAutoCompleteEduItem({ eduItemType: eduItem.type, eduItemDueDate: eduItem.dueDate, sessionDate: t.date, allLinkedSessionsDone: allDoneAfter });
+      if (autoComplete && !eduItem.done) setEduDone(t.eduId, true);
     } else if (eduItem.done) {
       setEduDone(t.eduId, false);
     }
