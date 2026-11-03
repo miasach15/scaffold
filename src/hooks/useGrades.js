@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
@@ -47,16 +47,32 @@ export function useGrades(userId) {
 
   // Returns the class row for `subject`, creating one (no categories yet, everything
   // counts by points) the first time it's touched — e.g. adding its first category.
+  //
+  // Doesn't add it to `classes` until the insert actually confirms — a category added
+  // right after (addCategory below) references this class's id as a foreign key, and
+  // showing it as selectable before the row genuinely exists server-side is exactly how
+  // a quick "add a category to a class I just created" ends in a save error. `pendingRef`
+  // covers the same case one level up: two calls for the same never-before-seen subject
+  // in quick succession (e.g. the user clicks "+ Add category" twice) share the one
+  // in-flight insert instead of each kicking off its own and racing to create the class
+  // twice.
+  const pendingRef = useRef({});
   const ensureClass = useCallback(
     async (subject) => {
       const existing = classes.find((c) => c.subject === subject);
       if (existing) return existing;
+      if (pendingRef.current[subject]) return pendingRef.current[subject];
       const row = { id: uid(), user_id: userId, subject, grading_mode: "points" };
       const created = { id: row.id, subject, currentTermStartedAt: null, categories: [], pastTerms: [] };
-      setClasses((cs) => [...cs, created]);
-      const { error } = await supabase.from("grade_classes").insert(row);
-      if (error) reportSaveError();
-      return created;
+      const promise = (async () => {
+        const { error } = await supabase.from("grade_classes").insert(row);
+        delete pendingRef.current[subject];
+        if (error) { reportSaveError(); return null; }
+        setClasses((cs) => [...cs, created]);
+        return created;
+      })();
+      pendingRef.current[subject] = promise;
+      return promise;
     },
     [userId, classes]
   );
@@ -82,14 +98,20 @@ export function useGrades(userId) {
     [userId]
   );
 
+  // Same ordering fix as ensureClass above, and for the same reason: this category
+  // becomes selectable on an item's own category dropdown the moment it's in `classes`,
+  // so it can't go in until the insert actually confirms — not before, the way it used
+  // to, which meant selecting a just-added category fast enough could reference an id
+  // that didn't exist in the database yet.
   const addCategory = useCallback(
     async (subject, name, weight) => {
       if (!name.trim()) return;
       const cls = await ensureClass(subject);
+      if (!cls) return; // ensureClass already reported the save error
       const row = { id: uid(), user_id: userId, class_id: cls.id, name: name.trim(), weight: Number(weight) || 0, order_index: cls.categories.length };
-      setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, categories: [...c.categories, categoryFromRow(row)] })));
       const { error } = await supabase.from("grade_categories").insert(row);
-      if (error) reportSaveError();
+      if (error) { reportSaveError(); return; }
+      setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, categories: [...c.categories, categoryFromRow(row)] })));
     },
     [userId, ensureClass]
   );
