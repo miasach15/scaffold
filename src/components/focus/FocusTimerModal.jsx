@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
-import { addDays, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { addDays, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority } from "../../lib/taskPriority";
 import { ghostBtn, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
@@ -38,22 +38,123 @@ async function notifySessionDone(title) {
   }
 }
 
-// One focus block on whatever task you opened this for — not a fixed-count round. A
-// task's own (sometimes much longer) estimate feeding straight into the starting length
-// unchanged could mean sitting down to a single 90+ minute block, which isn't a realistic
-// "start now" ask. This caps how long the starting/recommended preset can be — the short/
-// long presets built around it (meaningfulFocusPresets' 0.6x/1.5x) still land in a real
-// range off of that capped base (20m/35m/50m). A short task's own shorter estimate comes
-// through unchanged either way, and running past this length is always just "+10 more
-// minutes" away (see the time's-up prompt) rather than needing a bigger block up front.
-const POMODORO_CAP_MIN = 33;
+// One focus block on whatever task you opened this for, picked on a dial rather than a
+// fixed-count round. 25 minutes is the classic length when nothing else suggests a
+// number; a task's own estimate overrides it, snapped to the dial's 5-minute steps and
+// capped at the dial's own 60-minute range so a much longer task still starts at a
+// realistic length — running past it is always just "+10 more minutes" away (see the
+// time's-up prompt) rather than needing a bigger block up front.
+const DEFAULT_FOCUS_MIN = 25;
+const DIAL_MIN = 5;
+const DIAL_MAX = 60;
+const DIAL_STEP = 5;
+const snapToDial = (mins) => Math.min(DIAL_MAX, Math.max(DIAL_MIN, Math.round(mins / DIAL_STEP) * DIAL_STEP));
 const BREAK_MIN = 10;
 const ADD_TIME_MIN = 10;
+
+// The drag-to-set duration dial a work block starts on — minutes map to a clock face
+// (60/0 at top, 15 right, 30 bottom, 45 left, going clockwise), same convention an
+// analog clock's minute hand already uses, so there's nothing new to learn about which
+// way it turns. Center shows the whole-minute number, not a running countdown — this
+// only ever renders before a block has started (see its one call site below).
+function DurationDial({ minutes, onChange, size, color }) {
+  const trackRef = useRef(null);
+  const stroke = Math.round(size * 0.075);
+  const r = (size - stroke) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const fraction = minutes / 60;
+  const circumference = 2 * Math.PI * r;
+
+  // Clockwise-from-top angle (degrees) -> screen position, and the reverse for turning a
+  // pointer position back into minutes. Kept as plain sin/cos here (not the SVG
+  // rotate(-90deg)-plus-dashoffset trick the running countdown ring below uses) because
+  // the handle dot and the four clock numbers need real x/y points, not just a stroke
+  // length.
+  const pointAt = (deg) => {
+    const rad = (deg * Math.PI) / 180;
+    return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+  };
+  const minutesFromClient = (clientX, clientY) => {
+    const rect = trackRef.current.getBoundingClientRect();
+    const dx = clientX - (rect.left + rect.width / 2);
+    const dy = clientY - (rect.top + rect.height / 2);
+    let deg = (Math.atan2(dx, -dy) * 180) / Math.PI;
+    deg = ((deg % 360) + 360) % 360;
+    const raw = (deg / 360) * 60 || 60; // dead-on-top (deg=0) reads as a full 60, not 0
+    return snapToDial(raw);
+  };
+
+  const handleMove = (e) => {
+    const p = "touches" in e ? e.touches[0] : e;
+    if (!p) return;
+    onChange(minutesFromClient(p.clientX, p.clientY));
+  };
+  const startDrag = (e) => {
+    e.preventDefault();
+    handleMove(e);
+    const onMove = (ev) => handleMove(ev);
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  };
+
+  const handlePos = pointAt(fraction * 360);
+  const ticks = Array.from({ length: 12 }, (_, i) => i * 30); // every 5 minutes
+  const labels = [[15, 90], [30, 180], [45, 270], [60, 0]];
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, margin: "0 auto", touchAction: "none" }}>
+      <svg
+        ref={trackRef}
+        width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+        onMouseDown={startDrag} onTouchStart={startDrag}
+        style={{ cursor: "grab", display: "block", overflow: "visible" }}
+      >
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color.bg} strokeWidth={stroke} />
+        <circle
+          cx={cx} cy={cy} r={r} fill="none" stroke={color.accent} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={circumference * (1 - fraction)}
+          transform={`rotate(-90 ${cx} ${cy})`}
+        />
+        {ticks.map((deg) => {
+          const inner = pointAt(deg);
+          const outer = { x: cx + (r + stroke / 2 + 5) * Math.sin((deg * Math.PI) / 180), y: cy - (r + stroke / 2 + 5) * Math.cos((deg * Math.PI) / 180) };
+          const onFilled = ((deg / 360) * 60 || 60) <= minutes;
+          return <line key={deg} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={onFilled ? "#fff" : color.border} strokeWidth={1.5} strokeLinecap="round" />;
+        })}
+        <circle cx={handlePos.x} cy={handlePos.y} r={stroke * 0.62} fill={color.accent} stroke="#fff" strokeWidth={2.5} style={{ cursor: "grab" }} />
+      </svg>
+      {labels.map(([m, deg]) => {
+        const p = pointAt(deg);
+        const labelR = r + stroke / 2 + 16;
+        const lx = cx + labelR * Math.sin((deg * Math.PI) / 180);
+        const ly = cy - labelR * Math.cos((deg * Math.PI) / 180);
+        return (
+          <div key={m} style={{ position: "absolute", left: lx, top: ly, transform: "translate(-50%, -50%)", fontSize: 11.5, fontWeight: 600, color: MUTED, pointerEvents: "none" }}>
+            {m}
+          </div>
+        );
+      })}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        <div style={{ fontFamily: serifFont, fontSize: size * 0.24, color: INK, lineHeight: 1 }}>{minutes}</div>
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 1, color: MUTED, marginTop: 4 }}>MINS</div>
+      </div>
+    </div>
+  );
+}
 
 export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, defaultMinutes, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
-  const initial = Math.min(defaultMinutes || 25, POMODORO_CAP_MIN) * 60;
+  const initial = snapToDial(defaultMinutes || DEFAULT_FOCUS_MIN) * 60;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
@@ -398,22 +499,30 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </div>
           </div>
 
-          <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
-            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
-              <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={phase === "work" ? PRIMARY_DARK : TONE.soon.text} strokeWidth={ringStroke} strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * ringRadius}
-                strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
-                style={{ transition: "stroke-dashoffset 1s linear" }}
-              />
-            </svg>
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
-                {pad(mm)}:{pad(ss)}
+          {phase === "work" && !running && !finished ? (
+            // Idle and nothing started yet — drag the dial to set the block's length
+            // instead of picking from a row of preset lengths.
+            <div style={{ margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
+              <DurationDial minutes={Math.round(totalSeconds / 60)} onChange={(m) => setPreset(m)} size={compact ? 140 : 190} color={ACCENT} />
+            </div>
+          ) : (
+            <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
+              <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
+                <circle
+                  cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={phase === "work" ? PRIMARY_DARK : TONE.soon.text} strokeWidth={ringStroke} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * ringRadius}
+                  strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
+                  style={{ transition: "stroke-dashoffset 1s linear" }}
+                />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
+                  {pad(mm)}:{pad(ss)}
+                </div>
               </div>
             </div>
-          </div>
+          )}
           {!compact && (task.notes ? (
             <div style={{ marginBottom: 14 }}>
               <StepNotes notes={task.notes} title={task.title} taskId={task.id} color={MUTED} fontSize={12.5} align="center" />
@@ -453,23 +562,36 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
               )}
             </>
           ) : finished && !task.done ? (
-            // Ran out the clock without marking it done — rather than a dead end, this is
-            // the one moment it's worth asking outright: a few more minutes to wrap it up,
-            // a real break (and maybe come back to something else after), or switch now.
+            // A work block runs out on its own on purpose — the point of a period is that
+            // it ends, not that it quietly offers to keep going. So this leads with moving
+            // on (a break, or straight to something else if one's waiting) rather than
+            // with "+10 more minutes", which is still here for the time it's genuinely
+            // almost done, just not the first thing offered.
             <>
               <div style={{ textAlign: "center", fontSize: 13, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
-                Time's up on {task.title}.
+                Time's up on {task.title}. Good spot to switch gears.
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              {otherTask ? (
                 <button
-                  onClick={addMoreTime}
+                  onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
                   style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    display: "flex", alignItems: "center", justifyContent: "center", width: "100%",
                     padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
-                    fontSize: 14.5, fontWeight: 500, cursor: "pointer",
+                    fontSize: 14.5, fontWeight: 500, cursor: "pointer", marginBottom: 8,
                   }}
                 >
-                  +{ADD_TIME_MIN} more minutes
+                  Switch to "{otherTask.title}"
+                </button>
+              ) : null}
+              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
+                <button
+                  onClick={startBreak}
+                  style={otherTask
+                    ? { ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }
+                    : { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff", fontSize: 14.5, fontWeight: 500, cursor: "pointer" }
+                  }
+                >
+                  Take a {BREAK_MIN}m break
                 </button>
                 <button
                   onClick={reset}
@@ -479,45 +601,18 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                   <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
                 </button>
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
-                <button
-                  onClick={startBreak}
-                  style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
-                >
-                  Take a {BREAK_MIN}m break
-                </button>
-              </div>
-              {otherTask && (
-                <button
-                  onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
-                  style={{
-                    display: "block", width: "100%", textAlign: "center", marginBottom: compact ? 8 : 12,
-                    padding: compact ? "8px" : "10px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", color: PRIMARY_DARK,
-                    fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                  }}
-                >
-                  Switch to "{otherTask.title}" instead
-                </button>
-              )}
+              <button
+                onClick={addMoreTime}
+                style={{ display: "block", width: "100%", background: "none", border: "none", padding: compact ? "0 0 8px" : "0 0 10px", fontSize: 12.5, fontWeight: 600, color: MUTED, cursor: "pointer", textDecoration: "underline" }}
+              >
+                Almost done — just add {ADD_TIME_MIN} more minutes
+              </button>
             </>
           ) : (
             <>
               {finished ? (
                 <div style={{ textAlign: "center", fontSize: 13.5, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>Time's up. Nice focus session.</div>
-              ) : phase === "work" ? (
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
-                  {meaningfulFocusPresets(task.duration ? Math.min(task.duration, POMODORO_CAP_MIN) : null).map((m, i) => (
-                    <button
-                      key={m}
-                      onClick={() => setPreset(m)}
-                      title={task.duration && i === 1 ? `${task.title}'s recommended length` : undefined}
-                      style={{ ...ghostBtn, padding: "6px 12px", borderRadius: 999, background: "#fff", borderColor: totalSeconds === m * 60 ? PRIMARY : BORDER, color: totalSeconds === m * 60 ? PRIMARY_DARK : MUTED }}
-                    >
-                      {m}m{task.duration && i === 1 ? " ★" : ""}
-                    </button>
-                  ))}
-                </div>
-              ) : (
+              ) : phase === "work" ? null : (
                 <div style={{ textAlign: "center", fontSize: 12.5, color: MUTED, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 14 }}>
                   Break — back to it after.
                 </div>
