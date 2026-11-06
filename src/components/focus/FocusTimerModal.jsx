@@ -61,8 +61,15 @@ function DurationDial({ minutes, onChange, size, color }) {
   const trackRef = useRef(null);
   const stroke = Math.round(size * 0.075);
   const r = (size - stroke) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
+  // The tick marks and clock-number labels draw OUTSIDE the ring (see `ticks`/`labels`
+  // below), reaching out to r + stroke/2 + 16. Sizing the wrapper box to just `size` left
+  // no room for that — the labels landed on top of whatever sat above/below the dial
+  // (the task title, the Start button). `box` reserves that space so the dial's real
+  // footprint, including labels, is what pushes neighboring elements away.
+  const pad = Math.max(28, Math.round(size * 0.2));
+  const box = size + pad * 2;
+  const cx = box / 2;
+  const cy = box / 2;
   const fraction = minutes / 60;
   const circumference = 2 * Math.PI * r;
 
@@ -111,12 +118,12 @@ function DurationDial({ minutes, onChange, size, color }) {
   const labels = [[15, 90], [30, 180], [45, 270], [60, 0]];
 
   return (
-    <div style={{ position: "relative", width: size, height: size, margin: "0 auto", touchAction: "none" }}>
+    <div style={{ position: "relative", width: box, height: box, margin: "0 auto", touchAction: "none" }}>
       <svg
         ref={trackRef}
-        width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+        width={box} height={box} viewBox={`0 0 ${box} ${box}`}
         onMouseDown={startDrag} onTouchStart={startDrag}
-        style={{ cursor: "grab", display: "block", overflow: "visible" }}
+        style={{ cursor: "grab", display: "block" }}
       >
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={color.bg} strokeWidth={stroke} />
         <circle

@@ -74,6 +74,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // trims off; it only ever limits how many less-pressing items pad the list out
   // alongside them.
   const [untimedExpanded, setUntimedExpanded] = useState(false);
+  // "Looking ahead" (right column, below Habits) opens at a 3-day glance, same
+  // show-more idea as "Anytime today" above — full week only once asked for.
+  const [upcomingExpanded, setUpcomingExpanded] = useState(false);
   // A carried-over breakdown's extra steps (see groupItems' otherSteps) stay hidden
   // behind the dropdown by default — clicking it to expand adds the id here.
   const [expandedBreakdowns, setExpandedBreakdowns] = useState(() => new Set());
@@ -304,6 +307,24 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // Finished today, across whatever kind of item it was — its own quiet "wins" list
   // below Habits, and the count "Today's steps" shows next to the finish-time estimate.
   const doneTodayTasks = tasks.filter((t) => t.date === todayISO && t.done);
+  // "Looking ahead" — a read-only glance at what's coming, not another queue to manage:
+  // no drag, no Start button, no carry-forward collapsing (that's specifically a "today"
+  // concept for stuff that already slipped by, and none of these days have happened
+  // yet). Just, per day, whatever's actually scheduled: plain tasks/breakdown steps/edu
+  // sessions whose own date is that day, anything due that day without a session landing
+  // on it too (so a deadline several days out that has no work session yet still shows),
+  // and events.
+  const UPCOMING_DEFAULT_DAYS = 3;
+  const UPCOMING_MAX_DAYS = 7;
+  const upcomingDays = Array.from({ length: upcomingExpanded ? UPCOMING_MAX_DAYS : UPCOMING_DEFAULT_DAYS }, (_, i) => {
+    const date = addDays(new Date(todayISO + "T00:00:00"), i + 1);
+    const iso = toISO(date);
+    const dayTasks = tasks.filter((t) => t.date === iso && !t.done).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
+    const eduIdsWithSessionThatDay = new Set(dayTasks.map((t) => t.eduId).filter(Boolean));
+    const dueWithoutSession = (eduItems || []).filter((e) => e.dueDate === iso && !e.done && !eduIdsWithSessionThatDay.has(e.id));
+    const dayEvents = events.filter((e) => e.date === iso).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
+    return { iso, date, dayTasks, dueWithoutSession, dayEvents };
+  });
   const remainingStepCount = todaysTimedTasks.length + todaysUntimed.length;
   const scaffoldedTotalCount = remainingStepCount + doneTodayTasks.length;
   // "No free time left today" reads like the app assigning you a full evening of work —
@@ -767,6 +788,62 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             </div>
           )}
+
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, flexShrink: 0 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Looking ahead</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {upcomingDays.map(({ iso, date, dayTasks, dueWithoutSession, dayEvents }, i) => {
+                const itemCount = dayTasks.length + dueWithoutSession.length + dayEvents.length;
+                const label = i === 0 ? "Tomorrow" : date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+                return (
+                  <div key={iso}>
+                    <button
+                      onClick={() => { onSelectDay?.(iso); setView("calendar"); }}
+                      title="Open this day in Calendar"
+                      style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, marginBottom: 4, cursor: "pointer", textAlign: "left" }}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{label}</span>
+                      {itemCount > 0 && <span style={{ fontSize: 10.5, color: MUTED }}>{itemCount} thing{itemCount === 1 ? "" : "s"}</span>}
+                    </button>
+                    {itemCount === 0 ? (
+                      <div style={{ fontSize: 12, color: MUTED }}>Nothing yet.</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {dayTasks.map((t) => {
+                          const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
+                          return (
+                            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: INK }}>
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: col.accent, flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                              {t.duration != null && <div style={{ fontSize: 10.5, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
+                            </div>
+                          );
+                        })}
+                        {dueWithoutSession.map((e) => (
+                          <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: TONE.warn.text }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: TONE.warn.text, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Due: {e.title}</div>
+                          </div>
+                        ))}
+                        {dayEvents.map((e) => (
+                          <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${MUTED}`, flexShrink: 0, boxSizing: "border-box" }} />
+                            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}{e.start != null ? ` · ${decimalToTimeLabel(e.start)}` : ""}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setUpcomingExpanded((v) => !v)}
+              style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "8px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
+            >
+              {upcomingExpanded ? "Show less" : "Show the rest of the week"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
