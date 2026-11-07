@@ -11,11 +11,15 @@ import ModalPortal from "../shared/ModalPortal";
 import StepNotes from "../shared/StepNotes";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
-// celebration screen's quote below already uses) — the ring, selected duration, and
-// "Mark complete" used to reach for the shared TASK_COLOR constant instead, an ad-hoc
-// pink (#F0B9CE/#8A3A5C) that never actually traced back to a real brand-kit swatch.
-// Kept local to this modal rather than changing TASK_COLOR itself, so Weekly Review's
-// and Onboarding's own "this is a Task" legend color is untouched.
+// celebration screen's quote below already uses) — only a FALLBACK now, for a task
+// whose category string doesn't resolve to anything in CATEGORY_COLORS (see catColor
+// below, which is what the duration dial and "Mark complete" actually use day to day).
+// The dial used to always render in this coral regardless of what the task was, which
+// read as an arbitrary color choice rather than something tied to the task itself — it
+// now picks up the task's own category color instead, same color that card/row already
+// wears everywhere else in the app. Kept local to this modal rather than changing the
+// shared TASK_COLOR constant, so Weekly Review's and Onboarding's own "this is a Task"
+// legend color is untouched.
 const ACCENT = { ...CATEGORY_COLOR_SWATCHES.coral, accent: THEME_PRESETS.coral.primary };
 
 // Fires a real system notification when a session ends — not just the in-app chime,
@@ -510,7 +514,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             // Idle and nothing started yet — drag the dial to set the block's length
             // instead of picking from a row of preset lengths.
             <div style={{ margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
-              <DurationDial minutes={Math.round(totalSeconds / 60)} onChange={(m) => setPreset(m)} size={compact ? 140 : 190} color={ACCENT} />
+              <DurationDial minutes={Math.round(totalSeconds / 60)} onChange={(m) => setPreset(m)} size={compact ? 140 : 190} color={catColor} />
             </div>
           ) : (
             <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
