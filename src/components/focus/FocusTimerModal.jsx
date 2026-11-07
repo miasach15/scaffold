@@ -574,36 +574,34 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </>
           ) : finished && !task.done ? (
             // A work block runs out on its own on purpose — the point of a period is that
-            // it ends, not that it quietly offers to keep going. So this leads with moving
-            // on (a break, or straight to something else if one's waiting) rather than
-            // with "+10 more minutes", which is still here for the time it's genuinely
-            // almost done, just not the first thing offered.
+            // it ends, not that it quietly offers to keep going. A short block only works
+            // if the rest after it is just as real, so the break leads here, not "switch
+            // to the next thing" — that's still one tap away, just not the default.
+            // "+10 more minutes" is still here for the time it's genuinely almost done,
+            // just not the first thing offered either.
             <>
               <div style={{ textAlign: "center", fontSize: 13, color: TONE.warn.text, fontWeight: 700, marginTop: compact ? 8 : 0, marginBottom: compact ? 10 : 12 }}>
-                Time's up on {task.title}. Good spot to switch gears.
+                Time's up on {task.title}. Take the break.
               </div>
-              {otherTask ? (
-                <button
-                  onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center", width: "100%",
-                    padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
-                    fontSize: 14.5, fontWeight: 500, cursor: "pointer", marginBottom: 8,
-                  }}
-                >
-                  Switch to "{otherTask.title}"
-                </button>
-              ) : null}
+              <button
+                onClick={startBreak}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%",
+                  padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff",
+                  fontSize: 14.5, fontWeight: 500, cursor: "pointer", marginBottom: 8,
+                }}
+              >
+                Take a {BREAK_MIN}m break
+              </button>
               <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
-                <button
-                  onClick={startBreak}
-                  style={otherTask
-                    ? { ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }
-                    : { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: compact ? "10px" : "13px", borderRadius: 999, border: "none", background: PRIMARY_DARK, color: "#fff", fontSize: 14.5, fontWeight: 500, cursor: "pointer" }
-                  }
-                >
-                  Take a {BREAK_MIN}m break
-                </button>
+                {otherTask ? (
+                  <button
+                    onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
+                    style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
+                  >
+                    Switch to "{otherTask.title}" instead
+                  </button>
+                ) : null}
                 <button
                   onClick={reset}
                   title="Restart this lap"
@@ -741,6 +739,20 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                     <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>{stepsDoneInfo.done}/{stepsDoneInfo.total} steps done</div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* A small, physical-feeling tally of the actual wins today — same idea as
+                Dashboard's own checked-off "Done today" list, just surfaced right at the
+                moment one of them happens, instead of only as a number buried in a footer. */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {Array.from({ length: Math.min(completedTodayCount, 8) }).map((_, i) => (
+                  <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: catColor.accent }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>
+                {completedTodayCount} focus win{completedTodayCount === 1 ? "" : "s"} today{completedTodayCount > 8 ? ` (+${completedTodayCount - 8})` : ""}
               </div>
             </div>
 
