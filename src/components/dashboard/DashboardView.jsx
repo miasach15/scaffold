@@ -77,6 +77,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // "Looking ahead" (right column, below Habits) opens at a 3-day glance, same
   // show-more idea as "Anytime today" above — full week only once asked for.
   const [upcomingExpanded, setUpcomingExpanded] = useState(false);
+  // Which date chip is open, if any — null means just the dates show, no list under
+  // them. Picking the same one again closes it; picking a different one swaps to it.
+  const [selectedUpcomingDay, setSelectedUpcomingDay] = useState(null);
   // A carried-over breakdown's extra steps (see groupItems' otherSteps) stay hidden
   // behind the dropdown by default — clicking it to expand adds the id here.
   const [expandedBreakdowns, setExpandedBreakdowns] = useState(() => new Set());
@@ -791,58 +794,84 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
 
           <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, flexShrink: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Looking ahead</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Just the dates, nothing else, until you actually tap one — this used to
+                dump every day's full list on the page unasked, which is exactly the
+                "don't show me unless I click" complaint this re-does. Picking a date
+                again (same one) closes it back up. */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {upcomingDays.map(({ iso, date, dayTasks, dueWithoutSession, dayEvents }, i) => {
                 const itemCount = dayTasks.length + dueWithoutSession.length + dayEvents.length;
-                const label = i === 0 ? "Tomorrow" : date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+                const label = i === 0 ? "Tmrw" : date.toLocaleDateString(undefined, { weekday: "short" });
+                const selected = selectedUpcomingDay === iso;
                 return (
-                  <div key={iso}>
-                    <button
-                      onClick={() => { onSelectDay?.(iso); setView("calendar"); }}
-                      title="Open this day in Calendar"
-                      style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, marginBottom: 4, cursor: "pointer", textAlign: "left" }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{label}</span>
-                      {itemCount > 0 && <span style={{ fontSize: 10.5, color: MUTED }}>{itemCount} thing{itemCount === 1 ? "" : "s"}</span>}
-                    </button>
-                    {itemCount === 0 ? (
-                      <div style={{ fontSize: 12, color: MUTED }}>Nothing yet.</div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {dayTasks.map((t) => {
-                          const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
-                          return (
-                            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: INK }}>
-                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: col.accent, flexShrink: 0 }} />
-                              <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                              {t.duration != null && <div style={{ fontSize: 10.5, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
-                            </div>
-                          );
-                        })}
-                        {dueWithoutSession.map((e) => (
-                          <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: TONE.warn.text }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: TONE.warn.text, flexShrink: 0 }} />
-                            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Due: {e.title}</div>
-                          </div>
-                        ))}
-                        {dayEvents.map((e) => (
-                          <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${MUTED}`, flexShrink: 0, boxSizing: "border-box" }} />
-                            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}{e.start != null ? ` · ${decimalToTimeLabel(e.start)}` : ""}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    key={iso}
+                    onClick={() => setSelectedUpcomingDay(selected ? null : iso)}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 42,
+                      padding: "6px 8px", borderRadius: 10, cursor: "pointer",
+                      border: `1px solid ${selected ? PRIMARY_DARK : BORDER}`,
+                      background: selected ? PRIMARY_DARK : "#fff",
+                    }}
+                  >
+                    <span style={{ fontSize: 11, fontWeight: 700, color: selected ? "#fff" : INK }}>{label}</span>
+                    <span style={{ fontSize: 9.5, color: selected ? "rgba(255,255,255,0.8)" : MUTED }}>{date.getDate()}</span>
+                    <span style={{ width: 4, height: 4, borderRadius: "50%", marginTop: 1, background: itemCount > 0 ? (selected ? "#fff" : PRIMARY_DARK) : "transparent" }} />
+                  </button>
                 );
               })}
             </div>
             <button
               onClick={() => setUpcomingExpanded((v) => !v)}
-              style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "8px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
+              style={{ alignSelf: "flex-start", background: "none", border: "none", padding: "6px 0 0", fontSize: 12, color: MUTED, fontWeight: 600, cursor: "pointer" }}
             >
               {upcomingExpanded ? "Show less" : "Show the rest of the week"}
             </button>
+
+            {selectedUpcomingDay && (() => {
+              const day = upcomingDays.find((d) => d.iso === selectedUpcomingDay);
+              if (!day) return null;
+              const { dayTasks, dueWithoutSession, dayEvents } = day;
+              const itemCount = dayTasks.length + dueWithoutSession.length + dayEvents.length;
+              return (
+                <div style={{ marginTop: 10, background: SURFACE, borderRadius: 12, padding: "10px 12px" }}>
+                  {itemCount === 0 ? (
+                    <div style={{ fontSize: 12, color: MUTED }}>Nothing yet.</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      {dayTasks.map((t) => {
+                        const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
+                        return (
+                          <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: INK }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: col.accent, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+                            {t.duration != null && <div style={{ fontSize: 10.5, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
+                          </div>
+                        );
+                      })}
+                      {dueWithoutSession.map((e) => (
+                        <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: TONE.warn.text }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: TONE.warn.text, flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Due: {e.title}</div>
+                        </div>
+                      ))}
+                      {dayEvents.map((e) => (
+                        <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", border: `1.5px solid ${MUTED}`, flexShrink: 0, boxSizing: "border-box" }} />
+                          <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}{e.start != null ? ` · ${decimalToTimeLabel(e.start)}` : ""}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => { onSelectDay?.(selectedUpcomingDay); setView("calendar"); }}
+                    style={{ display: "block", background: "none", border: "none", padding: "8px 0 0", fontSize: 11.5, color: PRIMARY_DARK, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Open in Calendar
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
