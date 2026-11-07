@@ -379,17 +379,22 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // Which other still-open task to offer switching to once a lap finishes without the
   // current one being done — same soonest-first pick as the celebration screen's own
   // "Up next" below, just triggered by running out of time instead of marking complete.
+  // A homework/assignment's own session task doesn't get flagged done just because its
+  // parent Education item was marked done directly (see shouldAutoCompleteEduItem) — so
+  // without this check, a session for something already turned in can still surface here
+  // as if it were live work waiting on you.
   const otherTask = useMemo(() => {
     if (!finished || task.done) return null;
+    const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
     return [...(tasks || [])]
-      .filter((t) => !t.done && t.id !== task.id)
+      .filter((t) => !t.done && t.id !== task.id && !(t.eduId && doneEduIds.has(t.eduId)))
       .sort((a, b) => {
         const ad = a.date || "9999-99-99", bd = b.date || "9999-99-99";
         if (ad !== bd) return ad.localeCompare(bd);
         return (a.start ?? 99) - (b.start ?? 99);
       })[0] || null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finished, task.done, task.id, tasks]);
+  }, [finished, task.done, task.id, tasks, eduItems]);
 
   useEffect(() => {
     if (celebrating) playSuccessChime();
