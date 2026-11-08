@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Home, Calendar as CalendarIcon, CheckSquare, GraduationCap, Percent, Target, Repeat,
-  Search, ListChecks, Wind, Settings, LogOut, Menu, X,
+  Search, ListChecks, List, Wind, Settings, LogOut, Menu, X,
 } from "lucide-react";
 import { BORDER, INK, MUTED, PAPER_BG, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { key: "goals", label: "Goals", icon: Target },
   { key: "habits", label: "Habits", icon: Repeat },
   { key: "grades", label: "Grades", icon: Percent },
+  { key: "lists", label: "Lists", icon: List },
 ];
 
 // On a phone, these four get a persistent one-tap bottom tab (matched to the Figma
@@ -30,7 +31,7 @@ const TAB_BAR_ITEMS = [
   { key: "tasks", label: "Tasks", icon: CheckSquare },
   { key: "education", label: "School", icon: GraduationCap },
 ];
-const MORE_DRAWER_VIEWS = ["goals", "habits", "grades"];
+const MORE_DRAWER_VIEWS = ["goals", "habits", "grades", "lists"];
 
 export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenLifeReset, onOpenSettings, onOpenSearch, onSignOut, profile }) {
   const [open, setOpen] = useState(false);

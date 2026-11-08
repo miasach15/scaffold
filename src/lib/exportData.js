@@ -7,6 +7,7 @@ const TABLES = [
   "goals", "milestones", "goal_actions",
   "habits", "habit_done_dates",
   "journal_entries",
+  "custom_lists", "custom_list_items",
   "watch_items", "books", "restaurants", "bucket_list_items",
   "packing_lists", "packing_list_items", "gifts", "notes",
 ];

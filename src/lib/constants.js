@@ -42,6 +42,7 @@ export const FALLBACK_CATEGORY_COLOR_ROTATION = ["amber", "teal", "slate", "peac
 export const EVENT_COLOR = { bg: "#FCFEFF", border: "#E6F2F8", text: "#3A7796" };
 export const TASK_COLOR = { bg: "#FBEAF0", border: "#F0B9CE", text: "#8A3A5C" };
 export const HABIT_COLOR = { bg: "#DCF2E3", border: "#8FCBA3", text: "#2E6B44" };
+export const LIST_COLOR = { bg: "#FFF2DE", border: "#FFDFAB", text: "#885525" };
 // PRIMARY/PRIMARY_DARK/PRIMARY_TINT resolve to whatever accent theme is currently
 // applied (see THEME_PRESETS + ScaffoldApp, which sets these as CSS custom
 // properties on the root element). The fallback values are the default "Sky" theme —

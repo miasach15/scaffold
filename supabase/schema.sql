@@ -210,6 +210,25 @@ create table if not exists habit_done_dates (
   unique (habit_id, date)
 );
 
+-- ---------- custom lists (user-named lists of their own choosing, e.g. "Movies to
+-- watch"/"Restaurants to go to" — one flexible table pair instead of a fixed page per
+-- list type) ----------
+create table if not exists custom_lists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists custom_list_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  list_id uuid not null references custom_lists(id) on delete cascade,
+  text text not null,
+  done boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- journal ----------
 create table if not exists journal_entries (
   id uuid primary key default gen_random_uuid(),
@@ -309,6 +328,8 @@ alter table milestones enable row level security;
 alter table goal_actions enable row level security;
 alter table habits enable row level security;
 alter table habit_done_dates enable row level security;
+alter table custom_lists enable row level security;
+alter table custom_list_items enable row level security;
 alter table edu_items enable row level security;
 alter table grade_classes enable row level security;
 alter table grade_categories enable row level security;
@@ -360,6 +381,14 @@ create policy "own habits" on habits for all
 
 drop policy if exists "own habit_done_dates" on habit_done_dates;
 create policy "own habit_done_dates" on habit_done_dates for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own custom_lists" on custom_lists;
+create policy "own custom_lists" on custom_lists for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own custom_list_items" on custom_list_items;
+create policy "own custom_list_items" on custom_list_items for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own edu_items" on edu_items;
