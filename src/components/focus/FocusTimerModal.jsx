@@ -762,16 +762,9 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </div>
 
             {nextTask && (
-              <div style={{ textAlign: "left", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 3 }}>Up next</div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTask.title}</div>
-                </div>
-                {nextTask.duration != null && (
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: PRIMARY_DARK, border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 6, flexShrink: 0, whiteSpace: "nowrap" }}>
-                    Est. {Math.round(nextTask.duration)}m
-                  </div>
-                )}
+              <div style={{ textAlign: "left", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 3 }}>Up next</div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTask.title}</div>
               </div>
             )}
 

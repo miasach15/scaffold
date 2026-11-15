@@ -13,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatDuration, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -44,7 +44,6 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
         </div>
         <StepNotes notes={item.notes} title={item.title} taskId={item.id} />
       </div>
-      {item.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{formatDuration(item.duration)}</div>}
     </div>
   );
 }
@@ -555,7 +554,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />{isTop && t.duration != null ? ` · ${formatDuration(t.duration)}` : ""}
+                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
                               </div>
                               <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
                               {stuckOnThis && (
@@ -564,7 +563,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 </div>
                               )}
                             </div>
-                            {!isTop && t.duration != null && <div style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                             {t.date && (
                               <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                             )}
@@ -845,7 +843,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: INK }}>
                             <div style={{ width: 6, height: 6, borderRadius: "50%", background: col.accent, flexShrink: 0 }} />
                             <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                            {t.duration != null && <div style={{ fontSize: 10.5, color: MUTED, flexShrink: 0 }}>{formatDuration(t.duration)}</div>}
                           </div>
                         );
                       })}
