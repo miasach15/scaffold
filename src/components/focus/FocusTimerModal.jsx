@@ -380,7 +380,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // current one being done — same soonest-first pick as the celebration screen's own
   // "Up next" below, just triggered by running out of time instead of marking complete.
   // A homework/assignment's own session task doesn't get flagged done just because its
-  // parent Education item was marked done directly (see shouldAutoCompleteEduItem) — so
+  // parent Education item was marked done directly (see App.jsx's setTaskDone) — so
   // without this check, a session for something already turned in can still surface here
   // as if it were live work waiting on you.
   const otherTask = useMemo(() => {

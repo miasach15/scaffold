@@ -25,6 +25,7 @@ import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import UndoToast from "./components/shared/UndoToast";
+import HomeworkFollowUpToast from "./components/shared/HomeworkFollowUpToast";
 import SaveErrorToast from "./components/shared/SaveErrorToast";
 import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
@@ -86,6 +87,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // separately checked off by hand, which reads as the SAME thing needing two different
   // "done" actions. Symmetric the other way too: unchecking a session un-finishes the
   // assignment if it had auto-completed this way.
+  const [hwFollowUp, setHwFollowUp] = useState(null); // { eduId, title } | null
+  const hwFollowUpTimerRef = useRef(null);
   const setTaskDone = (id, done, actualMinutes) => {
     setTaskDoneRaw(id, done, actualMinutes);
     const t = tasks.find((x) => x.id === id);
@@ -94,19 +97,40 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     const allDoneAfter = linked.every((x) => (x.id === id ? done : x.done));
     const eduItem = eduItems.find((e) => e.id === t.eduId);
     if (!eduItem) return;
-    // Finishing the last open session always completes the assignment. Un-checking a
-    // session re-opens it too — but only ever in that direction. Completing one session
-    // while a sibling is still open must never flip an assignment that was ALREADY marked
-    // done some other way (the deadline row's own checkbox, or the Upcoming list) back to
-    // not-done — that would silently undo a "this is already turned in" the student set
-    // independently of its sessions. See shouldAutoCompleteEduItem for why Homework needs
-    // an extra check here that Assignment/Assessment don't.
-    if (done) {
-      const autoComplete = shouldAutoCompleteEduItem({ eduItemType: eduItem.type, eduItemDueDate: eduItem.dueDate, sessionDate: t.date, allLinkedSessionsDone: allDoneAfter });
-      if (autoComplete && !eduItem.done) setEduDone(t.eduId, true);
-    } else if (eduItem.done) {
-      setEduDone(t.eduId, false);
+    // Un-checking a session re-opens the assignment, but only if it had auto-completed
+    // this way — that must never flip an assignment that was ALREADY marked done some
+    // other way (the deadline row's own checkbox, or the Upcoming list) back to not-done,
+    // which would silently undo a "this is already turned in" set independently of its
+    // sessions.
+    if (!done) {
+      if (eduItem.done) setEduDone(t.eduId, false);
+      return;
     }
+    if (eduItem.done) return;
+    // Homework's daily sessions are all pre-scheduled up front (see addEduItem) — a
+    // session finishing is ambiguous on its own, since it could be the whole assignment
+    // done in one sitting, or just that day's piece with more still to come. Only the
+    // student actually knows which, so ask instead of silently guessing from the date
+    // (see eduAutoComplete.js). Nothing to ask when this was the only session ever
+    // scheduled for it — there's no "just today" to distinguish it from.
+    if (eduItem.type === "Homework" && linked.length > 1) {
+      if (hwFollowUpTimerRef.current) clearTimeout(hwFollowUpTimerRef.current);
+      hwFollowUpTimerRef.current = setTimeout(() => {
+        setHwFollowUp(null);
+        hwFollowUpTimerRef.current = null;
+      }, 7000);
+      setHwFollowUp({ eduId: t.eduId, title: eduItem.title });
+      return;
+    }
+    if (shouldAutoCompleteEduItem({ allLinkedSessionsDone: allDoneAfter })) setEduDone(t.eduId, true);
+  };
+  const resolveHwFollowUp = (wholeThing) => {
+    if (hwFollowUpTimerRef.current) {
+      clearTimeout(hwFollowUpTimerRef.current);
+      hwFollowUpTimerRef.current = null;
+    }
+    if (wholeThing && hwFollowUp) setEduDone(hwFollowUp.eduId, true);
+    setHwFollowUp(null);
   };
 
   const [view, setView] = useState("dashboard");
@@ -1104,6 +1128,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
       {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
       {stepDoneUndo.pending && <UndoToast label={stepDoneUndo.pending.label} onUndo={undoStepDone} />}
+      {hwFollowUp && (
+        <HomeworkFollowUpToast
+          title={hwFollowUp.title}
+          onWholeThing={() => resolveHwFollowUp(true)}
+          onJustToday={() => resolveHwFollowUp(false)}
+        />
+      )}
       <SaveErrorToast />
 
       {showSearch && (
