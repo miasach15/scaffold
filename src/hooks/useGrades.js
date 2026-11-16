@@ -67,7 +67,11 @@ export function useGrades(userId) {
       const promise = (async () => {
         const { error } = await supabase.from("grade_classes").insert(row);
         delete pendingRef.current[subject];
-        if (error) { reportSaveError(); return null; }
+        if (error) {
+          console.error("ensureClass insert failed:", error);
+          reportSaveError(`Couldn't save that — ${error.message || error.code || "unknown error"}.`);
+          return null;
+        }
         setClasses((cs) => [...cs, created]);
         return created;
       })();
@@ -110,7 +114,11 @@ export function useGrades(userId) {
       if (!cls) return; // ensureClass already reported the save error
       const row = { id: uid(), user_id: userId, class_id: cls.id, name: name.trim(), weight: Number(weight) || 0, order_index: cls.categories.length };
       const { error } = await supabase.from("grade_categories").insert(row);
-      if (error) { reportSaveError(); return; }
+      if (error) {
+        console.error("addCategory insert failed:", error);
+        reportSaveError(`Couldn't save that — ${error.message || error.code || "unknown error"}.`);
+        return;
+      }
       setClasses((cs) => cs.map((c) => (c.id !== cls.id ? c : { ...c, categories: [...c.categories, categoryFromRow(row)] })));
     },
     [userId, ensureClass]
