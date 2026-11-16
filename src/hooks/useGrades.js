@@ -68,6 +68,27 @@ export function useGrades(userId) {
         const { error } = await supabase.from("grade_classes").insert(row);
         delete pendingRef.current[subject];
         if (error) {
+          // 23505 = unique_violation on (user_id, subject) — a row for this subject
+          // already exists server-side (almost always a partially-failed earlier attempt:
+          // this insert succeeded once before, but whatever came after it didn't, and
+          // local state never got the chance to pick it back up). Recover by fetching
+          // the real row instead of treating "it already exists" as a dead end.
+          if (error.code === "23505") {
+            const { data, error: fetchError } = await supabase
+              .from("grade_classes")
+              .select("*, grade_categories(*), grade_terms(*)")
+              .eq("user_id", userId)
+              .eq("subject", subject)
+              .maybeSingle();
+            if (fetchError || !data) {
+              console.error("ensureClass recovery fetch failed:", fetchError);
+              reportSaveError(`Couldn't save that — ${error.message || error.code || "unknown error"}.`);
+              return null;
+            }
+            const recovered = classFromRow(data);
+            setClasses((cs) => (cs.some((c) => c.id === recovered.id) ? cs : [...cs, recovered]));
+            return recovered;
+          }
           console.error("ensureClass insert failed:", error);
           reportSaveError(`Couldn't save that — ${error.message || error.code || "unknown error"}.`);
           return null;
