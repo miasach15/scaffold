@@ -321,7 +321,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const upcomingDays = Array.from({ length: upcomingExpanded ? UPCOMING_MAX_DAYS : UPCOMING_DEFAULT_DAYS }, (_, i) => {
     const date = addDays(new Date(todayISO + "T00:00:00"), i + 1);
     const iso = toISO(date);
-    const dayTasks = tasks.filter((t) => t.date === iso && !t.done).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
+    const dayTasks = tasks.filter((t) => t.date === iso && !t.done && !(t.eduId && doneEduIds.has(t.eduId))).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
     const eduIdsWithSessionThatDay = new Set(dayTasks.map((t) => t.eduId).filter(Boolean));
     const dueWithoutSession = (eduItems || []).filter((e) => e.dueDate === iso && !e.done && !eduIdsWithSessionThatDay.has(e.id));
     const dayEvents = events.filter((e) => e.date === iso).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
