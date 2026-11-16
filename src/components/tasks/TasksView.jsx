@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, NotebookPen, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { addDays, dayBefore, distributeDatesByLoad, groupItemsByDate, sessionMinutesByLoad, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority } from "../../lib/taskPriority";
 import { uid } from "../../lib/id";
 import { sanitizeStepTitle } from "../../lib/text";
 import { supabase } from "../../lib/supabase";
-import { ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
+import { inputStyle, primaryBtn } from "../../lib/styles";
 import { AddRow, DatePickerButton, EmptyState, List, SectionHeader, SubHeader } from "../shared/Misc";
 import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import TodaySection from "./TodaySection";
@@ -17,7 +17,7 @@ import TaskRow from "./TaskRow";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, inboxItems, onTurnIntoTask, onDiscardInbox, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -513,23 +513,6 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {inboxItems && inboxItems.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <SubHeader>Quick capture ({inboxItems.length})</SubHeader>
-          <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -4, marginBottom: 8 }}>Jotted down earlier. Turn each into a real task, or discard it.</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {inboxItems.map((it) => (
-              <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E9ED" }}>
-                <NotebookPen size={15} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} />
-                <div style={{ flex: 1, fontSize: 14, minWidth: 0, whiteSpace: "pre-wrap", overflowWrap: "break-word" }}>{it.text}</div>
-                <button onClick={() => onTurnIntoTask(it)} style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}>Turn into task</button>
-                <button onClick={() => onDiscardInbox(it.id)} className="btn-delete" style={{ background: "none", border: "none", fontSize: 16, color: "#C2C9D1", padding: "0 4px" }}>×</button>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

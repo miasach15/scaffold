@@ -205,10 +205,8 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
           </div>
         </div>
       </div>
-      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, marginRight: 56, flexShrink: 0 }}>
-        {/* Click vs. tap wording for desktop vs. touch. Also leaves room on the right so
-            the floating quick-capture button (bottom-right, see StickyNoteCorner) never
-            sits on top of this text on a narrow screen. */}
+      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>
+        {/* Click vs. tap wording for desktop vs. touch. */}
         <span className="cal-hint-desktop">Click any cell to add an event or task.</span>
         <span className="cal-hint-mobile">Tap any cell to add an event or task.</span>
         <style>{`

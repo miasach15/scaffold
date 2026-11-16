@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 // Every table that holds user data — every one of them has a user_id column except
 // profiles, which is keyed by id (== the user's auth id) directly.
 const TABLES = [
-  "events", "edu_items", "tasks", "inbox_items",
+  "events", "edu_items", "tasks",
   "goals", "milestones", "goal_actions",
   "habits", "habit_done_dates",
   "journal_entries",

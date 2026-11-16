@@ -8,7 +8,6 @@ import { useHabits } from "./hooks/useHabits";
 import { useLists } from "./hooks/useLists";
 import { useEduItems } from "./hooks/useEduItems";
 import { useGrades } from "./hooks/useGrades";
-import { useInbox } from "./hooks/useInbox";
 import { useUsageTracking } from "./hooks/useUsageTracking";
 import { supabase } from "./lib/supabase";
 
@@ -23,7 +22,6 @@ import QuickAddModal from "./components/calendar/QuickAddModal";
 import TasksView from "./components/tasks/TasksView";
 import FocusTimerModal from "./components/focus/FocusTimerModal";
 import TaskDetailModal from "./components/tasks/TaskDetailModal";
-import StickyNoteCorner from "./components/shared/StickyNoteCorner";
 import UndoToast from "./components/shared/UndoToast";
 import HomeworkFollowUpToast from "./components/shared/HomeworkFollowUpToast";
 import SaveErrorToast from "./components/shared/SaveErrorToast";
@@ -79,7 +77,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
-  const { items: inboxItems, addItem: addInboxItem, removeItem: removeInboxItem, renameCategoryEverywhere: renameCategoryInInbox } = useInbox(userId);
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
   // assignment itself, too — without this, the sessions disappear (see EducationView's
@@ -359,17 +356,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
   };
-  const turnInboxIntoTask = (item) => {
-    addTask({ title: item.text, date: null, start: null, duration: null, category: item.category || "Personal" });
-    removeInboxItem(item.id);
-  };
-
-  // Quick Capture never navigates you away from what you're doing — it just gets saved,
-  // and shows up as a reminder later: Education captures at the top of the Education
-  // page, everything else in the Inbox at the top of the Tasks page.
-  const handleQuickCapture = (text, category) => addInboxItem(text, category);
-  const eduInboxItems = inboxItems.filter((it) => it.category === profile.educationCategory);
-  const otherInboxItems = inboxItems.filter((it) => it.category !== profile.educationCategory);
 
   const days = useMemo(
     () => (dayView ? [new Date(dayView + "T00:00:00")] : Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))),
@@ -694,9 +680,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     updateProfile({ categoryColors: { ...profile.categoryColors, [category]: swatchKey } });
   };
 
-  // Rename in place (keeps its color/order) AND carries every task/event/goal/inbox
-  // item already tagged with the old name over to the new one, so nothing silently
-  // falls back to a default color or drops out of a filter dropdown. If this was the
+  // Rename in place (keeps its color/order) AND carries every task/event/goal item
+  // already tagged with the old name over to the new one, so nothing silently falls
+  // back to a default color or drops out of a filter dropdown. If this was the
   // category currently playing the "School"/Education role, that tracking moves with
   // it too — see profile.educationCategory.
   const renameCategory = (oldKey, newKey) => {
@@ -711,7 +697,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     renameCategoryInTasks(oldKey, trimmed);
     renameCategoryInEvents(oldKey, trimmed);
     renameCategoryInGoals(oldKey, trimmed);
-    renameCategoryInInbox(oldKey, trimmed);
   };
   const addCategory = (name) => {
     const trimmed = name.trim();
@@ -895,9 +880,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onSetStart={setTaskStart}
             onUpdateGroupDueDate={updateGroupDueDate}
             onOpenFocus={openFocus}
-            inboxItems={otherInboxItems}
-            onTurnIntoTask={turnInboxIntoTask}
-            onDiscardInbox={removeInboxItem}
             eduItems={eduItems}
             onSetEduDone={setEduDone}
             onUpdateEduDeadline={updateEduDeadline}
@@ -961,8 +943,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onSetSessionNotes={setTaskNotes}
             onSetSessionDone={setTaskDone}
             onOpenFocus={openFocus}
-            inboxItems={eduInboxItems}
-            onDiscardInbox={removeInboxItem}
             educationCategory={profile.educationCategory}
             gradeClasses={gradeClasses}
           />
@@ -1123,8 +1103,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onClose={() => setShowLifeReset(false)}
         />
       )}
-
-      <StickyNoteCorner onCapture={handleQuickCapture} />
 
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
       {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
