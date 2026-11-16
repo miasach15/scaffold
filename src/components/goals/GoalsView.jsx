@@ -94,14 +94,11 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
       {!atGoalLimit && (
         <div data-tour="goals-add" style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 26px", marginBottom: 20 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 700, marginBottom: 6 }}>What's your goal?</div>
-          <div style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>
-            Big projects live here. Quick errands go on Tasks.
-          </div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, marginBottom: 16 }}>What's your goal?</div>
           <textarea
             value={outcome}
             onChange={(e) => setOutcome(e.target.value)}
-            placeholder="e.g. Launch a small tutoring business by the end of the school year"
+            placeholder="e.g. Build an art portfolio by the end of the school year"
             rows={3}
             style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff", padding: "12px 14px" }}
           />

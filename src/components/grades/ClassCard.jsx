@@ -187,46 +187,46 @@ export default function ClassCard({
       </div>
 
       {expanded && (
-        <div style={{ padding: "12px 14px" }}>
-          <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Categories</div>
+        <div style={{ padding: "16px 18px" }}>
+          <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>Categories</div>
               {categories.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#B4BCC5", marginBottom: 8 }}>Nothing set up — every assignment just counts by its own points for now. Add a category below (e.g. Assessments, Homework) to make a whole group count for more or less than its raw points, or give one assignment its own weight directly, further down.</div>
+                <div style={{ fontSize: 13.5, lineHeight: 1.5, color: "#B4BCC5", marginBottom: 10 }}>Nothing set up — every assignment just counts by its own points for now. Add a category below (e.g. Assessments, Homework) to make a whole group count for more or less than its raw points, or give one assignment its own weight directly, further down.</div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 10 }}>
                   {categories.map((cat) => {
                     const inCat = gradedItems.filter((i) => i.gradeCategoryId === cat.id && i.scoreEarned != null && i.scorePossible > 0);
                     const catPct = inCat.length > 0 ? pointsPercent(inCat) : null;
                     return (
                       <div key={cat.id}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <input
                             value={cat.name}
                             aria-label="Category name"
                             onChange={(e) => onRenameCategory(cls.id, cat.id, e.target.value)}
-                            style={{ ...inputStyle, flex: 1, fontSize: 12.5, padding: "5px 8px" }}
+                            style={{ ...inputStyle, flex: 1, fontSize: 14, padding: "7px 10px", minWidth: 100 }}
                           />
                           <input
                             type="number" min={0} max={100} value={cat.weight}
                             aria-label={`${cat.name} weight percent`}
                             onChange={(e) => onSetCategoryWeight(cls.id, cat.id, e.target.value)}
-                            style={{ ...inputStyle, width: 56, fontSize: 12.5, padding: "5px 8px" }}
+                            style={{ ...inputStyle, width: 64, fontSize: 14, padding: "7px 10px" }}
                           />
-                          <span style={{ fontSize: 11.5, color: "#93A0AD" }}>%</span>
-                          <span style={{ fontSize: 11, color: "#93A0AD", width: 90 }}>
+                          <span style={{ fontSize: 13, color: "#93A0AD" }}>%</span>
+                          <span style={{ fontSize: 12.5, color: "#93A0AD", width: 100 }}>
                             {catPct != null ? `${catPct}% (${inCat.length})` : "no scores yet"}
                           </span>
                           <button onClick={() => onRemoveCategory(cls.id, cat.id)} style={deleteBtn}>×</button>
                         </div>
                         {catPct != null && (
-                          <div style={{ height: 4, borderRadius: 2, background: "#EDEDED", marginTop: 5, overflow: "hidden" }}>
-                            <div style={{ width: `${Math.min(100, catPct)}%`, height: "100%", background: col.accent || col.text, borderRadius: 2 }} />
+                          <div style={{ height: 5, borderRadius: 3, background: "#EDEDED", marginTop: 6, overflow: "hidden" }}>
+                            <div style={{ width: `${Math.min(100, catPct)}%`, height: "100%", background: col.accent || col.text, borderRadius: 3 }} />
                           </div>
                         )}
                       </div>
                     );
                   })}
-                  <div style={{ fontSize: 10.5, color: "#93A0AD" }}>
+                  <div style={{ fontSize: 12, lineHeight: 1.5, color: "#93A0AD" }}>
                     Categories add up to {weightSum}%{itemWeightSum > 0 ? `, plus ${itemWeightSum}% in individually-weighted assignments` : ""}.{" "}
                     {totalWeightSum < 100
                       ? `Everything else counts by points for the remaining ${round1(100 - totalWeightSum)}%.`
@@ -234,26 +234,26 @@ export default function ClassCard({
                   </div>
                 </div>
               )}
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <input
                   placeholder="Category name..." aria-label="New category name" value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
-                  style={{ ...inputStyle, flex: "1 1 140px", fontSize: 12.5, minWidth: 0 }}
+                  style={{ ...inputStyle, flex: "1 1 140px", fontSize: 14, padding: "8px 11px", minWidth: 0 }}
                 />
                 <input
                   type="number" min={0} max={100} placeholder="weight %" aria-label="New category weight percent" value={newCatWeight}
                   onChange={(e) => setNewCatWeight(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
-                  style={{ ...inputStyle, width: 90, fontSize: 12.5 }}
+                  style={{ ...inputStyle, width: 100, fontSize: 14, padding: "8px 11px" }}
                 />
-                <button onClick={addCategory} style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <Plus size={12} strokeWidth={2.5} /> Add category
+                <button onClick={addCategory} style={{ ...ghostBtn, fontSize: 14, padding: "8px 13px", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <Plus size={13} strokeWidth={2.5} /> Add category
                 </button>
               </div>
           </div>
 
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Grades</div>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>Grades</div>
           {gradedItems.length === 0 ? (
             <EmptyState text="Nothing completed in this class yet. Finished assignments and tests will show up here to score, or add one below if it was never on the calendar to begin with." />
           ) : (
@@ -277,62 +277,62 @@ export default function ClassCard({
               posted to a portal — rather than requiring it to have gone through Education's
               "add an assignment" flow first. */}
           {addingGrade ? (
-            <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
               <input
                 placeholder="What was it? (e.g. Ch. 4 quiz)" aria-label="Assignment or test name" value={gradeTitle}
                 onChange={(e) => setGradeTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
-                style={{ ...inputStyle, flex: "1 1 160px", fontSize: 12.5 }}
+                style={{ ...inputStyle, flex: "1 1 160px", fontSize: 14, padding: "8px 11px" }}
                 autoFocus
               />
               <input
                 type="number" placeholder="Score" aria-label="Points earned" value={gradeEarned}
                 onChange={(e) => setGradeEarned(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
-                style={{ ...inputStyle, width: 70, fontSize: 12.5 }}
+                style={{ ...inputStyle, width: 76, fontSize: 14, padding: "8px 11px" }}
               />
-              <span style={{ alignSelf: "center", fontSize: 12.5, color: "#93A0AD" }}>out of</span>
+              <span style={{ alignSelf: "center", fontSize: 14, color: "#93A0AD" }}>out of</span>
               <input
                 type="number" placeholder="Total" aria-label="Points possible" value={gradePossible}
                 onChange={(e) => setGradePossible(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addManualGrade()}
-                style={{ ...inputStyle, width: 70, fontSize: 12.5 }}
+                style={{ ...inputStyle, width: 76, fontSize: 14, padding: "8px 11px" }}
               />
-              <button onClick={addManualGrade} className="btn-primary" style={{ ...primaryBtn, fontSize: 12.5, padding: "8px 14px" }}>Add</button>
-              <button onClick={() => { setAddingGrade(false); setGradeTitle(""); setGradeEarned(""); setGradePossible(""); }} style={{ ...ghostBtn, fontSize: 12.5 }}>Cancel</button>
+              <button onClick={addManualGrade} className="btn-primary" style={{ ...primaryBtn, fontSize: 14, padding: "9px 16px" }}>Add</button>
+              <button onClick={() => { setAddingGrade(false); setGradeTitle(""); setGradeEarned(""); setGradePossible(""); }} style={{ ...ghostBtn, fontSize: 14, padding: "9px 14px" }}>Cancel</button>
             </div>
           ) : (
             <button
               onClick={() => setAddingGrade(true)}
-              style={{ ...ghostBtn, fontSize: 12.5, marginTop: gradedItems.length > 0 ? 10 : 0, display: "inline-flex", alignItems: "center", gap: 4 }}
+              style={{ ...ghostBtn, fontSize: 14, padding: "8px 13px", marginTop: gradedItems.length > 0 ? 12 : 0, display: "inline-flex", alignItems: "center", gap: 5 }}
             >
-              <Plus size={12} strokeWidth={2.5} /> Add a grade
+              <Plus size={13} strokeWidth={2.5} /> Add a grade
             </button>
           )}
 
           {/* Categorizing upcoming work is real and saved, same as it is for completed items
               above — kept separate from What-if below, which is scratch-only. */}
           {pendingItems.length > 0 && (
-            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Upcoming — optionally pick a category, or give it its own weight</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ marginTop: 18, borderTop: "1px solid #F0F0F0", paddingTop: 16 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>Upcoming — optionally pick a category, or give it its own weight</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {pendingItems.map((it) => {
                   return (
-                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
+                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
                       {categories.length > 0 && (
                         <select
                           value={it.gradeCategoryId || ""}
                           onChange={(e) => onSetItemCategory(it.id, e.target.value || null)}
                           title="Which category this will count toward"
                           aria-label={`${it.title} category`}
-                          style={{ ...inputStyle, fontSize: 11.5, padding: "5px 7px", width: 108 }}
+                          style={{ ...inputStyle, fontSize: 13, padding: "7px 9px", width: 118 }}
                         >
                           <option value="">No category</option>
                           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       )}
-                      {categories.length > 0 && <span style={{ fontSize: 10.5, color: "#C2C9D1", flexShrink: 0 }}>or</span>}
+                      {categories.length > 0 && <span style={{ fontSize: 12, color: "#C2C9D1", flexShrink: 0 }}>or</span>}
                       <input
                         type="number" min={0} max={100}
                         value={it.itemWeight ?? ""}
@@ -340,7 +340,7 @@ export default function ClassCard({
                         placeholder="own wt %"
                         title="Give this one assignment its own weight instead of a category"
                         aria-label={`${it.title} own weight percent`}
-                        style={{ ...inputStyle, width: 64, fontSize: 11.5, padding: "5px 7px" }}
+                        style={{ ...inputStyle, width: 72, fontSize: 13, padding: "7px 9px" }}
                       />
                     </div>
                   );
@@ -354,27 +354,27 @@ export default function ClassCard({
               and the other needing its own separate click. Nothing in here is saved;
               it only exists to answer "what would it take". */}
           {pendingItems.length > 0 && (
-            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
+            <div style={{ marginTop: 18, borderTop: "1px solid #F0F0F0", paddingTop: 16 }}>
               <button
                 onClick={() => setScenarioOpen((x) => !x)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5, fontWeight: 700, color: col.text, display: "flex", alignItems: "center", gap: 4 }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 14, fontWeight: 700, color: col.text, display: "flex", alignItems: "center", gap: 5 }}
               >
-                {scenarioOpen ? <ChevronDown size={13} strokeWidth={2.3} /> : <ChevronRight size={13} strokeWidth={2.3} />}
+                {scenarioOpen ? <ChevronDown size={14} strokeWidth={2.3} /> : <ChevronRight size={14} strokeWidth={2.3} />}
                 Try a scenario
               </button>
               {scenarioOpen && (
-                <div style={{ marginTop: 8 }}>
+                <div style={{ marginTop: 10 }}>
                   {overallPct != null && (
-                    <div style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 12, padding: "10px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>To hit</div>
+                    <div style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>To hit</div>
                       <input
                         type="number" min={0} max={100} value={targetPct} placeholder={`${overallPct}`}
                         onChange={(e) => setTargetPct(e.target.value)}
                         aria-label="Target grade percent"
-                        style={{ ...inputStyle, width: 56, fontSize: 13, padding: "5px 7px", textAlign: "center" }}
+                        style={{ ...inputStyle, width: 62, fontSize: 14.5, padding: "7px 9px", textAlign: "center" }}
                       />
-                      <div style={{ fontSize: 11, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>% overall —</div>
-                      <div style={{ fontSize: 12.5, color: col.text, flex: 1, minWidth: 140 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: col.text, textTransform: "uppercase", letterSpacing: 0.3, flexShrink: 0 }}>% overall —</div>
+                      <div style={{ fontSize: 14, color: col.text, flex: 1, minWidth: 140 }}>
                         {requiredAvgPct == null
                           ? "type a target"
                           : targetUnreachable
@@ -383,40 +383,40 @@ export default function ClassCard({
                       </div>
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: "#93A0AD", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12.5, lineHeight: 1.5, color: "#93A0AD", marginBottom: 10 }}>
                     Or try a real score on anything still upcoming and see what the class grade would become.
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
                     {pendingItems.map((it) => {
                       const w = whatIfScores[it.id] || {};
                       return (
-                        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          <div style={{ flex: "1 1 140px", fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
-                          <div style={{ fontSize: 11, width: 110, color: "#93A0AD" }}>
+                        <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ flex: "1 1 140px", fontSize: 14, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
+                          <div style={{ fontSize: 12.5, width: 120, color: "#93A0AD" }}>
                             {it.itemWeight != null ? `own weight: ${it.itemWeight}%` : (categoryName(it.gradeCategoryId) || "by points")}
                           </div>
                           <input
                             type="number" placeholder="earned" aria-label={`${it.title} hypothetical score earned`} value={w.earned ?? ""}
                             onChange={(e) => setWhatIf(it.id, "earned", e.target.value)}
-                            style={{ ...inputStyle, width: 60, fontSize: 12, padding: "4px 6px" }}
+                            style={{ ...inputStyle, width: 66, fontSize: 13.5, padding: "6px 8px" }}
                           />
-                          <span style={{ fontSize: 12, color: "#93A0AD" }}>/</span>
+                          <span style={{ fontSize: 13.5, color: "#93A0AD" }}>/</span>
                           <input
                             type="number" placeholder="of" aria-label={`${it.title} hypothetical score possible`} value={w.possible ?? ""}
                             onChange={(e) => setWhatIf(it.id, "possible", e.target.value)}
-                            style={{ ...inputStyle, width: 60, fontSize: 12, padding: "4px 6px" }}
+                            style={{ ...inputStyle, width: 66, fontSize: 13.5, padding: "6px 8px" }}
                           />
                         </div>
                       );
                     })}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ fontSize: 13 }}>
+                    <div style={{ fontSize: 14.5 }}>
                       <span style={{ color: "#93A0AD" }}>Would become </span>
                       <span style={{ fontWeight: 700, color: col.text }}>{whatIfPct != null ? `${whatIfPct}%` : "–"}</span>
                     </div>
                     {hasWhatIfInput && (
-                      <button onClick={clearWhatIf} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "#93A0AD", textDecoration: "underline" }}>Clear</button>
+                      <button onClick={clearWhatIf} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12.5, color: "#93A0AD", textDecoration: "underline" }}>Clear</button>
                     )}
                   </div>
                 </div>
@@ -428,11 +428,11 @@ export default function ClassCard({
               from the page-level "End term" button in GradesView, not per class here.
               What's left is just the archive of past terms. */}
           {cls && cls.pastTerms?.length > 0 && (
-            <div style={{ marginTop: 14, borderTop: "1px solid #F0F0F0", paddingTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#93A0AD", marginBottom: 6 }}>Past terms</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ marginTop: 18, borderTop: "1px solid #F0F0F0", paddingTop: 16 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>Past terms</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {cls.pastTerms.map((t) => (
-                  <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "#4A5568" }}>
+                  <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 13.5, color: "#4A5568" }}>
                     <span>{t.label || `Ended ${formatShortDate(t.endedAt)}`}</span>
                     <span style={{ fontWeight: 700, color: col.text }}>{t.finalPercent}%</span>
                   </div>
