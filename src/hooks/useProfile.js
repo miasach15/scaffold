@@ -19,6 +19,7 @@ const fromRow = (row) => ({
   whatnowIntervalMinutes: row.whatnow_interval_minutes ?? 60,
   whatnowWindowStart: row.whatnow_window_start ?? 8,
   whatnowWindowEnd: row.whatnow_window_end ?? 21,
+  startReminders: !!row.start_reminders,
   // Covers both "I personally take longer to read/write" and formal extended-time
   // accommodations with one honest setting, rather than asking a student to untangle
   // which of the two applies — applied to a new session's own estimated duration and to
@@ -84,6 +85,7 @@ export function useProfile(userId) {
       if ("whatnowIntervalMinutes" in patch) dbPatch.whatnow_interval_minutes = patch.whatnowIntervalMinutes;
       if ("whatnowWindowStart" in patch) dbPatch.whatnow_window_start = patch.whatnowWindowStart;
       if ("whatnowWindowEnd" in patch) dbPatch.whatnow_window_end = patch.whatnowWindowEnd;
+      if ("startReminders" in patch) dbPatch.start_reminders = patch.startReminders;
       if ("paceMultiplier" in patch) dbPatch.pace_multiplier = patch.paceMultiplier;
       if ("afterSchoolBufferMinutes" in patch) dbPatch.after_school_buffer_minutes = patch.afterSchoolBufferMinutes;
       if ("transitionBufferMinutes" in patch) dbPatch.transition_buffer_minutes = patch.transitionBufferMinutes;

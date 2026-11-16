@@ -9,10 +9,14 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(fetch(e.request));
 });
 
-// "What now?" reminders — the server picks what's most worth doing right now and pushes
-// a plain { title, body } payload here; this just displays it.
+// Two kinds of reminder share this one handler — the server tells them apart with
+// `tag` ("whatnow" or "start-reminder") so a start-time ping never gets silently
+// swallowed by (or swallows) a periodic "what now" one. Vibration pattern plus
+// renotify is the only "louder" lever actually available here — Web Notifications has
+// no volume control of its own, that's entirely the phone's own ringer/notification
+// volume.
 self.addEventListener("push", (e) => {
-  let data = { title: "Scaffold", body: "Check what's next." };
+  let data = { title: "Scaffold", body: "Check what's next.", tag: "whatnow" };
   try {
     if (e.data) data = { ...data, ...e.data.json() };
   } catch {
@@ -23,7 +27,9 @@ self.addEventListener("push", (e) => {
       body: data.body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: "whatnow", // replaces any still-showing "what now" notification instead of stacking
+      tag: data.tag,
+      renotify: true, // re-alert (sound + vibrate) even when a same-tag notification is still showing
+      vibrate: [250, 120, 250],
       data: { url: "/" },
     })
   );

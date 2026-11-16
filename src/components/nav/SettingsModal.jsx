@@ -45,7 +45,7 @@ const TRANSITION_BUFFER_OPTIONS = [
   { value: 20, label: "20 min" },
 ];
 
-export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, startReminders, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -75,14 +75,26 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
     }
   };
 
+  // Both reminder kinds ride on the same underlying device subscription, so turning
+  // one off should only drop the subscription itself once neither kind still needs it.
   const toggleWhatnow = async () => {
     if (whatnowNotifications) {
-      await push.unsubscribe();
       onUpdateProfile({ whatnowNotifications: false });
+      if (!startReminders) await push.unsubscribe();
       return;
     }
     const ok = await push.subscribe();
     if (ok) onUpdateProfile({ whatnowNotifications: true });
+  };
+
+  const toggleStartReminders = async () => {
+    if (startReminders) {
+      onUpdateProfile({ startReminders: false });
+      if (!whatnowNotifications) await push.unsubscribe();
+      return;
+    }
+    const ok = await push.subscribe();
+    if (ok) onUpdateProfile({ startReminders: true });
   };
 
   const handleExport = async () => {
@@ -226,6 +238,34 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
                 </select>
               </div>
             )}
+          </div>
+        )}
+
+        {onUpdateProfile && (
+          <div style={{ marginTop: 22 }}>
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>"Time to start" reminders</div>
+            <button
+              onClick={toggleStartReminders}
+              disabled={push.busy}
+              style={{
+                ...ghostBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                opacity: push.busy ? 0.6 : 1,
+                border: `1px solid ${startReminders ? PRIMARY : "#E2E8F0"}`,
+                color: startReminders ? PRIMARY : "#4A5568",
+              }}
+            >
+              <Bell size={14} strokeWidth={2.3} />
+              {push.busy ? "Working on it..." : startReminders ? "Turn off start reminders" : "Notify me when it's time to start something"}
+            </button>
+            {!push.supported && (
+              <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
+                Not supported in this browser (or the app isn't set up for push yet).
+              </div>
+            )}
+            {push.error && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{push.error}</div>}
+            <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
+              A separate push right when something on your calendar with a set time begins — not the periodic nudge above.
+            </div>
           </div>
         )}
 

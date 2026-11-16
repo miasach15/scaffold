@@ -1008,6 +1008,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           whatnowIntervalMinutes={profile.whatnowIntervalMinutes}
           whatnowWindowStart={profile.whatnowWindowStart}
           whatnowWindowEnd={profile.whatnowWindowEnd}
+          startReminders={profile.startReminders}
           paceMultiplier={profile.paceMultiplier}
           afterSchoolBufferMinutes={profile.afterSchoolBufferMinutes}
           transitionBufferMinutes={profile.transitionBufferMinutes}

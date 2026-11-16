@@ -23,6 +23,9 @@ create table if not exists profiles (
   whatnow_interval_minutes integer not null default 60,
   whatnow_window_start integer not null default 8,
   whatnow_window_end integer not null default 21,
+  -- "Time to start" push — fires right when a timed task/event's start arrives, not on
+  -- an interval. See send-start-reminder-push / start_reminder_log.
+  start_reminders boolean not null default false,
   -- which of the user's own categories currently plays the "Education" role — tracks a
   -- rename so Education/Grades pages and priority sorting don't hardcode the name.
   education_category text not null default 'Education',
@@ -120,6 +123,18 @@ create table if not exists device_push_tokens (
   timezone text not null default 'UTC',
   last_sent_at timestamptz,
   created_at timestamptz not null default now()
+);
+
+-- ---------- start_reminder_log (dedupes "time to start" pushes — see send-start-reminder-push) ----------
+create table if not exists start_reminder_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null check (kind in ('task', 'event')),
+  item_id uuid not null,
+  scheduled_date date not null,
+  scheduled_start numeric not null,
+  sent_at timestamptz not null default now(),
+  unique (kind, item_id, scheduled_date, scheduled_start)
 );
 
 -- ---------- tasks ----------
@@ -336,6 +351,7 @@ alter table grade_categories enable row level security;
 alter table usage_events enable row level security;
 alter table push_subscriptions enable row level security;
 alter table device_push_tokens enable row level security;
+alter table start_reminder_log enable row level security;
 alter table journal_entries enable row level security;
 alter table watch_items enable row level security;
 alter table books enable row level security;
@@ -413,6 +429,10 @@ create policy "own push_subscriptions" on push_subscriptions for all
 
 drop policy if exists "own device_push_tokens" on device_push_tokens;
 create policy "own device_push_tokens" on device_push_tokens for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own start_reminder_log" on start_reminder_log;
+create policy "own start_reminder_log" on start_reminder_log for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "own journal_entries" on journal_entries;
