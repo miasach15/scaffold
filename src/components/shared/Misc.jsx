@@ -103,7 +103,7 @@ export function AddRow({ children }) {
   return <div style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>{children}</div>;
 }
 export function List({ children }) {
-  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>;
+  return <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>;
 }
 // `icon` is optional — a hand-drawn Freehand icon name (see FreehandIcon), only worth
 // passing for a page's one main empty state, not every small "nothing here" line in the

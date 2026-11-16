@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { BatteryLow } from "lucide-react";
+import { useState } from "react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
@@ -16,7 +15,6 @@ import WorkTitle from "../shared/WorkTitle";
 const OVERDUE_VISIBLE_CAP = 3;
 
 const VISIBLE_CAP = 5; // more than this and it stops being a glance — collapse the rest behind "Show more"
-const LOW_ENERGY_KEY = "scaffold-low-energy";
 
 // A deliberately calm, low-chrome view of what's on your plate — no category cycling,
 // just a checkbox, a title, and a delete button. How something ends up here,
@@ -54,23 +52,6 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
   // the whole backlog dumped on you. Plain component state: it's collapsed again the
   // next time this page loads, on purpose (no punishment for how big the pile looks).
   const [showAllOverdue, setShowAllOverdue] = useState(false);
-  // Persisted, not just session state — a low-energy day doesn't end when you close a
-  // tab, so this should still be on next time you open the app rather than silently
-  // reverting and putting the big stuff back in front of you.
-  const [lowEnergy, setLowEnergy] = useState(() => {
-    try {
-      return localStorage.getItem(LOW_ENERGY_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOW_ENERGY_KEY, lowEnergy ? "1" : "0");
-    } catch {
-      /* private-browsing or storage disabled — just won't persist across reloads */
-    }
-  }, [lowEnergy]);
   const todayISO = getLocalToday();
   const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   // The cap below never hides something genuinely urgent — overdue, due today, tomorrow,
@@ -238,11 +219,6 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
   const sortedAll = [...taskItems, ...groupItems, ...eduSessionItems, ...eduDeadlineItems, ...goalItems].sort((a, b) =>
     compareTaskPriority(a, b, todayISO)
   );
-  // Low energy mode hides multi-step projects specifically — a group is guaranteed 2+
-  // steps by construction (see confirmPlan), so it's the one category that's honestly
-  // never "quick." Nothing that's actually due gets hidden — this only trims what's
-  // heaviest, not what's real.
-  const allRelevant = lowEnergy ? sortedAll.filter((it) => !it.isGroup) : sortedAll;
   // Capped at VISIBLE_CAP, same as before — except a must-show item (see mustShowCutoff
   // above, and a breakdown's own row, which always represents real current work) is never
   // one of the ones trimmed off. The cap still limits how many less-pressing items pad the
@@ -250,19 +226,18 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
   // doesn't balloon past a plain glance.
   let shownCount = 0;
   const relevant = expanded
-    ? allRelevant
-    : allRelevant.filter((it) => {
+    ? sortedAll
+    : sortedAll.filter((it) => {
         const mustShow = it.isGroup || (it.date && it.date <= mustShowCutoff);
         if (mustShow) { shownCount++; return true; }
         if (shownCount < VISIBLE_CAP) { shownCount++; return true; }
         return false;
       });
-  const hiddenCount = allRelevant.length - relevant.length;
-  const hiddenForEnergy = lowEnergy ? sortedAll.length - allRelevant.length : 0;
+  const hiddenCount = sortedAll.length - relevant.length;
   // Items kept visible purely because they were just checked off (see justDone) don't
   // count as "still on your plate" — "What should I do right now?" should only ever
   // suggest something not actually done yet.
-  const actionable = allRelevant.filter((it) => !it.done);
+  const actionable = sortedAll.filter((it) => !it.done);
 
   return (
     <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 22 }}>
@@ -272,19 +247,6 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
           <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <button
-            onClick={() => setLowEnergy((x) => !x)}
-            className="hoverable"
-            title="Hides multi-step projects. Just the quick, one-shot stuff for a day when even small things feel big"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "7px 12px 7px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-              background: "#fff",
-              border: `1.5px solid ${lowEnergy ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-              color: lowEnergy ? "var(--primary-dark, #5849C4)" : "#93A0AD",
-            }}
-          >
-            <BatteryLow size={13} strokeWidth={2.3} /> Low energy
-          </button>
           {actionable.length > 0 && (
             <button
               onClick={() => setWhatNowOpen(true)}
@@ -361,16 +323,8 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
         </div>
       )}
 
-      {lowEnergy && hiddenForEnergy > 0 && (
-        <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: -14, marginBottom: 14 }}>
-          {hiddenForEnergy} bigger {hiddenForEnergy === 1 ? "project" : "projects"} hidden while low energy is on.
-        </div>
-      )}
-
-      {allRelevant.length === 0 ? (
-        <div style={{ fontSize: 15, color: sortedAll.length > 0 ? "#93A0AD" : "#8FCBA3", padding: "8px 0 4px" }}>
-          {sortedAll.length > 0 ? "Everything left today is a bigger project. Turn off Low energy to see it." : "Nothing on your plate. Nice work."}
-        </div>
+      {sortedAll.length === 0 ? (
+        <div style={{ fontSize: 15, color: "#8FCBA3", padding: "8px 0 4px" }}>Nothing on your plate. Nice work.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {relevant.map((it) => {
@@ -447,7 +401,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
               Show {hiddenCount} more
             </button>
           )}
-          {expanded && allRelevant.length > VISIBLE_CAP && (
+          {expanded && sortedAll.length > VISIBLE_CAP && (
             <button
               onClick={() => setExpanded(false)}
               style={{ alignSelf: "flex-start", background: "none", border: "none", padding: 0, fontSize: 12.5, color: "#93A0AD", fontWeight: 600, cursor: "pointer" }}

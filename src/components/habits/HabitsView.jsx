@@ -85,8 +85,12 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
 
           <div style={{ overflowX: "auto" }}>
             <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 3 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(120px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: `1px solid ${BORDER}` }}>
-                <div style={{ padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(168px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: `1px solid ${BORDER}` }}>
+                {/* Sticky so it's always the thing left on screen once you scroll right to see
+                    the later days, never the thing that scrolls away — a wide week of day
+                    columns on a narrow phone otherwise pushes the one column that actually
+                    says which habit this row is right off the edge. */}
+                <div style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
                 {weekDays.map((d) => {
                   const iso = toISO(d);
                   const isToday = iso === todayISO;
@@ -105,9 +109,9 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                   <div
                     key={h.id}
                     className="habit-row"
-                    style={{ display: "grid", gridTemplateColumns: "minmax(120px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${BORDER}` }}
+                    style={{ display: "grid", gridTemplateColumns: "minmax(168px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${BORDER}` }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
+                    <div style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
                       <button
                         onClick={() => setHistoryHabitId(h.id)}
                         title="View history"

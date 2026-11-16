@@ -534,68 +534,77 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           <div
                             ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
-                              display: "flex", alignItems: "center", gap: isTop ? 10 : 8, padding: "10px 12px", borderRadius: 14,
+                              display: "flex", alignItems: "center", flexWrap: "wrap", gap: isTop ? 10 : 8, rowGap: 8, padding: "10px 12px", borderRadius: 14,
                               background: "#fff",
                               border: isTop ? `1.5px solid ${PRIMARY}` : "none",
                               opacity: draggingId === t.id ? 0.4 : 1,
                             }}
                           >
-                            {onReorderTasks && (
-                              <div
-                                onPointerDown={startDrag(t.id)}
-                                title="Drag to reorder (the top spot is what Start launches)"
-                                style={{ display: "flex", flexShrink: 0, color: isTop ? PRIMARY_DARK : "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
-                              >
-                                <GripVertical size={14} strokeWidth={2} />
-                              </div>
-                            )}
-                            {onToggleDone && (
-                              <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
-                            )}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
-                              </div>
-                              <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
-                              {stuckOnThis && (
-                                <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
-                                  Been at this a few sessions now — maybe switch to something else for a bit.
+                            {/* Kept together, and never squeezed below 170px — on a narrow
+                                phone the trailing controls (badge/skip/Start) wrap to their
+                                own line below instead of all fighting the title for space on
+                                one line, which is what was cutting titles down to a few
+                                characters before the ellipsis. */}
+                            <div style={{ display: "flex", alignItems: "center", gap: isTop ? 10 : 8, flex: "1 1 170px", minWidth: 0 }}>
+                              {onReorderTasks && (
+                                <div
+                                  onPointerDown={startDrag(t.id)}
+                                  title="Drag to reorder (the top spot is what Start launches)"
+                                  style={{ display: "flex", flexShrink: 0, color: isTop ? PRIMARY_DARK : "#D1D5DB", cursor: "grab", touchAction: "none", padding: 5, margin: -5 }}
+                                >
+                                  <GripVertical size={14} strokeWidth={2} />
                                 </div>
                               )}
+                              {onToggleDone && (
+                                <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
+                                </div>
+                                <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
+                                {stuckOnThis && (
+                                  <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
+                                    Been at this a few sessions now — maybe switch to something else for a bit.
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            {t.date && (
-                              <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
-                            )}
-                            {onPushTomorrow && (
-                              <button
-                                onClick={() => onPushTomorrow(t.id)}
-                                title="Not getting to this tonight? Push it to tomorrow."
-                                style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
-                              >
-                                <SkipForward size={14} strokeWidth={2.2} />
-                              </button>
-                            )}
-                            {hasOtherSteps && (
-                              <button
-                                onClick={() => toggleBreakdownExpanded(t.id)}
-                                title={stepsExpanded ? "Hide the other steps" : "Show every step — check off any you already did"}
-                                style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
-                              >
-                                {stepsExpanded ? <ChevronUp size={15} strokeWidth={2.2} /> : <ChevronDown size={15} strokeWidth={2.2} />}
-                              </button>
-                            )}
-                            {isTop && onStartFocus && (
-                              <button
-                                onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
-                                className="hoverable"
-                                style={{
-                                  flexShrink: 0, padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
-                                  background: PRIMARY_DARK, color: "#fff", fontSize: 12, fontWeight: 700,
-                                }}
-                              >
-                                Start
-                              </button>
-                            )}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: "auto" }}>
+                              {t.date && (
+                                <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
+                              )}
+                              {onPushTomorrow && (
+                                <button
+                                  onClick={() => onPushTomorrow(t.id)}
+                                  title="Not getting to this tonight? Push it to tomorrow."
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
+                                >
+                                  <SkipForward size={14} strokeWidth={2.2} />
+                                </button>
+                              )}
+                              {hasOtherSteps && (
+                                <button
+                                  onClick={() => toggleBreakdownExpanded(t.id)}
+                                  title={stepsExpanded ? "Hide the other steps" : "Show every step — check off any you already did"}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
+                                >
+                                  {stepsExpanded ? <ChevronUp size={15} strokeWidth={2.2} /> : <ChevronDown size={15} strokeWidth={2.2} />}
+                                </button>
+                              )}
+                              {isTop && onStartFocus && (
+                                <button
+                                  onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
+                                  className="hoverable"
+                                  style={{
+                                    flexShrink: 0, padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                                    background: PRIMARY_DARK, color: "#fff", fontSize: 12, fontWeight: 700,
+                                  }}
+                                >
+                                  Start
+                                </button>
+                              )}
+                            </div>
                           </div>
                           {hasOtherSteps && stepsExpanded && (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6, marginLeft: 34, paddingLeft: 10, borderLeft: `2px solid ${BORDER}` }}>

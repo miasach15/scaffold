@@ -18,7 +18,7 @@ export default function EduItemRow({ item, col, onToggleDone, onRemove, onOpen, 
   return (
     <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
       <Checkbox checked={item.done} onClick={() => onToggleDone(item.id, !item.done)} color={col} />
-      <button onClick={onOpen} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+      <button onClick={onOpen} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", color: "#000000" }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}>{item.title}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
           <div style={{ fontSize: 10, color: col.text, fontWeight: 600 }}>{item.type}</div>
