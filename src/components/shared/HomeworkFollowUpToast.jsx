@@ -13,7 +13,8 @@ export default function HomeworkFollowUpToast({ title, onWholeThing, onJustToday
       <div
         className="hw-followup-mobile-lift"
         style={{
-          position: "fixed", bottom: "calc(22px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", zIndex: 200,
+          position: "fixed", bottom: "calc(22px + env(safe-area-inset-bottom))", left: "50%", zIndex: 200,
+          animation: "toastSlideIn 180ms ease-out both",
           display: "flex", alignItems: "center", gap: 10, background: "#232833", color: "#fff",
           padding: "10px 10px 10px 16px", borderRadius: 12, boxShadow: "0 12px 30px rgba(0,0,0,0.28)",
           fontSize: 13, fontFamily: "'DM Sans', sans-serif", maxWidth: "calc(100vw - 32px)",

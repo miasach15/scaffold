@@ -769,6 +769,19 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         .hoverable:hover .btn-delete, .hoverable:focus-within .btn-delete { opacity: 1; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
+        /* Every modal (ModalPortal wraps all of them) fades in instead of just snapping
+           into existence. Opacity only, deliberately no transform here — the overlay
+           inside is position:fixed, and a transformed ANCESTOR becomes that fixed
+           element's containing block per spec, which would break its full-viewport
+           sizing for as long as any modal is open. */
+        @keyframes modalPortalIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        .modal-portal-enter { animation: modalPortalIn 140ms ease-out both; }
+        /* Shared by every bottom-center toast (Undo, save-error, homework follow-up) —
+           slide+fade instead of popping into existence. Safe to put the transform right
+           on these toasts themselves (each is its own position:fixed element, not an
+           ancestor of one), unlike ModalPortal's wrapper above. */
+        @keyframes toastSlideIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastSlideOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(10px); } }
         /* Sidebar nav is a column (mobile top bar, then page content) below 861px, and a
            row (fixed-width rail beside content) at desktop widths — see Sidebar.jsx. */
         .app-shell { flex-direction: column; }

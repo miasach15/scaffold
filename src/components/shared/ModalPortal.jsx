@@ -7,5 +7,7 @@ import { useBackgroundInert } from "../../hooks/useBackgroundInert";
 // rest of the app unreachable by click OR keyboard for as long as it's mounted.
 export default function ModalPortal({ children }) {
   useBackgroundInert();
-  return createPortal(children, document.body);
+  // The fade-in itself lives in App.jsx's global stylesheet (.modal-portal-enter) so
+  // every modal gets it for free just by going through this one shared wrapper.
+  return createPortal(<div className="modal-portal-enter">{children}</div>, document.body);
 }
