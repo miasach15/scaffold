@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { Pencil, Check, X, ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
+import GoalCoachModal from "./GoalCoachModal";
 import MilestoneBlock from "./MilestoneBlock";
 
 const RING_TRACK = "#DDE1EE";
@@ -33,9 +34,11 @@ function CompletionRing({ pct, size = 48 }) {
   );
 }
 
-export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
+export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDeadline, onAddGoal, onAddMilestone, onRemoveMilestone, onRenameMilestone, onSetMilestoneDueDate, onAddAction, onMoveAction, onSetActionDone, onRemoveAction, onRenameAction, onSetActionDueDate }) {
   const CATEGORY_COLORS = useCategoryColors();
+  const categoryKeys = useCategoryKeys();
   const [milestoneTitle, setMilestoneTitle] = useState("");
+  const [coachOpen, setCoachOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(goal.title);
   const [editingDeadline, setEditingDeadline] = useState(false);
@@ -186,13 +189,21 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
           {goal.milestones.length === 0 ? (
             <div style={{ marginBottom: 10 }}>
               <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>No milestones yet. Add the first big step below, or let AI fill it in for you.</div>
-              <button
-                onClick={fillInForMe}
-                disabled={filling}
-                style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5, opacity: filling ? 0.6 : 1 }}
-              >
-                {filling ? "Filling it in..." : "Fill this in for me"}
-              </button>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  onClick={fillInForMe}
+                  disabled={filling}
+                  style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5, opacity: filling ? 0.6 : 1 }}
+                >
+                  {filling ? "Filling it in..." : "Fill this in for me"}
+                </button>
+                <button
+                  onClick={() => setCoachOpen(true)}
+                  style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+                >
+                  <Sparkles size={12} strokeWidth={2.3} /> Talk it through instead
+                </button>
+              </div>
               {fillError && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{fillError}</div>}
             </div>
           ) : (
@@ -219,8 +230,30 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
             <input placeholder="Add a milestone..." value={milestoneTitle} onChange={(e) => setMilestoneTitle(e.target.value)} style={{ ...inputStyle, flex: 1, fontSize: 13 }} onKeyDown={(e) => e.key === "Enter" && addMilestone()} />
             <button onClick={addMilestone} style={{ ...ghostBtn, fontSize: 13 }}>Add milestone</button>
           </div>
-          <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>Next actions with a due date show up on the Calendar automatically.</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6, flexWrap: "wrap", gap: 6 }}>
+            <div style={{ fontSize: 11, color: MUTED }}>Next actions with a due date show up on the Calendar automatically.</div>
+            {goal.milestones.length > 0 && (
+              <button
+                onClick={() => setCoachOpen(true)}
+                className="hoverable"
+                style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0, fontSize: 11.5, fontWeight: 600, color: MUTED, cursor: "pointer" }}
+              >
+                <Sparkles size={11} strokeWidth={2.3} /> Stuck? Talk through what's next
+              </button>
+            )}
+          </div>
         </div>
+      )}
+      {coachOpen && (
+        <GoalCoachModal
+          categoryKeys={categoryKeys}
+          defaultCategory={goal.category}
+          existingGoal={goal}
+          onAddGoal={onAddGoal}
+          onAddMilestone={onAddMilestone}
+          onAddAction={onAddAction}
+          onClose={() => setCoachOpen(false)}
+        />
       )}
     </div>
   );

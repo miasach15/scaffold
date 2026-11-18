@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ChevronUp, Plus } from "lucide-react";
+import { ChevronUp, Plus, Sparkles } from "lucide-react";
 import { BORDER, MUTED, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
 import { inputStyle, primaryBtn } from "../../lib/styles";
 import { DatePickerButton, EmptyState, FilterPill, SectionHeader } from "../shared/Misc";
 import GoalCard from "./GoalCard";
+import GoalCoachModal from "./GoalCoachModal";
 
 const toggleBtn = {
   display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
@@ -28,6 +29,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
   const [deadline, setDeadline] = useState("");
   const [planning, setPlanning] = useState(false);
   const [planError, setPlanError] = useState(null);
+  const [coachOpen, setCoachOpen] = useState(false);
   // Category + deadline stay tucked behind a toggle by default — one textarea and two
   // clear actions up front, not several decisions before you can start typing.
   const [showOptions, setShowOptions] = useState(false);
@@ -145,7 +147,31 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             </div>
           )}
           {planError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 8 }}>{planError}</div>}
+
+          <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 16, paddingTop: 12 }}>
+            <button
+              onClick={() => setCoachOpen(true)}
+              className="hoverable"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0,
+                fontSize: 12.5, fontWeight: 600, color: MUTED, cursor: "pointer",
+              }}
+            >
+              <Sparkles size={13} strokeWidth={2.3} /> Not sure yet? Talk it through with AI instead
+            </button>
+          </div>
         </div>
+      )}
+
+      {coachOpen && (
+        <GoalCoachModal
+          categoryKeys={categoryKeys}
+          defaultCategory={category}
+          onAddGoal={onAddGoal}
+          onAddMilestone={onAddMilestone}
+          onAddAction={onAddAction}
+          onClose={() => setCoachOpen(false)}
+        />
       )}
 
       {goals.length > 0 && (
@@ -170,6 +196,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
                 onRemoveGoal={onRemoveGoal}
                 onRenameGoal={onRenameGoal}
                 onSetGoalDeadline={onSetGoalDeadline}
+                onAddGoal={onAddGoal}
                 onAddMilestone={onAddMilestone}
                 onRemoveMilestone={onRemoveMilestone}
                 onRenameMilestone={onRenameMilestone}
