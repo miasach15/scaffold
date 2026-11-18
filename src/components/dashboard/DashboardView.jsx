@@ -13,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, inLeadWindow, meaningfulFocusPresets, pad, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, inLeadWindow, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -57,9 +57,6 @@ function greeting() {
 
 export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep }) {
   const CATEGORY_COLORS = useCategoryColors();
-  const [focusMinutes, setFocusMinutes] = useState(
-    profile?.workStyle === "Short focused bursts" ? 15 : profile?.workStyle === "Long deep sessions" ? 50 : 25
-  );
   // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
   // native drag doesn't work at all on touch in most mobile browsers, and gives no
   // feedback on where a card will land until you actually release it. This tracks the
@@ -339,15 +336,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
         return false;
       });
   const hiddenUntimedCount = displayUntimed.length - visibleUntimed.length;
-  // Defaults the picker to THIS task's own recommended length (see
-  // meaningfulFocusPresets) whenever the suggested task changes, instead of always
-  // landing on a generic pace-based number unrelated to what's actually being started.
-  // Only on an actual task change (not every render) so picking a different preset by
-  // hand isn't immediately overwritten.
-  useEffect(() => {
-    if (heroTask?.duration) setFocusMinutes(heroTask.duration);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heroTask?.id]);
   const startDrag = (id) => (e) => {
     if (!onReorderTasks) return;
     e.preventDefault();
@@ -655,7 +643,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               )}
                               {isTop && onStartFocus && (
                                 <button
-                                  onClick={() => onStartFocus(t.id, t.title, focusMinutes)}
+                                  onClick={() => onStartFocus(t.id, t.title)}
                                   className="hoverable"
                                   style={{
                                     flexShrink: 0, padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
@@ -744,16 +732,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               column, same as Habits/Done today below, is what actually settles that:
               Today's steps is the one real card on this page (see HERO_BG above, now
               with a bigger title and a stronger shadow on top of that). The bound task's
-              own category color is still the one accent used throughout (ring + picked
-              duration + Start outline), and the three durations are still scaled around
-              THIS task's own estimated length (see meaningfulFocusPresets) rather than a
-              flat 15/25/50. Pressing Start calls the exact same onStartFocus the row's
-              own Start button does — this is just a second way in. */}
+              own category color is still the one accent used throughout. No duration
+              picker here anymore — every round is a fixed 20 minutes (see
+              FocusTimerModal's BLOCK_MIN), auto-chained up to a budget that scales with
+              the task's own estimate, so there's nothing to choose up front. Pressing
+              Start calls the exact same onStartFocus the row's own Start button does —
+              this is just a second way in. */}
           {!hasActiveFocusSession && (() => {
             const col = heroTask ? CATEGORY_COLORS[heroTask.category] || CATEGORY_COLORS.Personal : null;
             const accent = col ? col.accent : MUTED;
-            const presets = meaningfulFocusPresets(heroTask?.duration);
-            const recommendedIdx = heroTask?.duration ? 1 : -1;
             return (
               <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>Focus session</div>
@@ -773,31 +760,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     <circle cx="53" cy="53" r="44" fill="none" stroke={accent} strokeWidth="6" opacity={0.85} />
                   </svg>
                   <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ fontFamily: serifFont, fontSize: 22, color: INK }}>{pad(focusMinutes)}:00</div>
+                    <div style={{ fontFamily: serifFont, fontSize: 22, color: INK }}>{pad(20)}:00</div>
                   </div>
                 </div>
-
-                <div style={{ display: "flex", gap: 5, justifyContent: "center", marginTop: 9, marginBottom: 9 }}>
-                  {presets.map((m, i) => (
-                    <button
-                      key={m}
-                      onClick={() => setFocusMinutes(m)}
-                      title={i === recommendedIdx ? `${heroTask.title}'s recommended length` : undefined}
-                      style={{
-                        flex: 1, padding: "4px 0", borderRadius: 999, fontSize: 10.5, fontWeight: 700, cursor: "pointer",
-                        border: `1px solid ${focusMinutes === m ? accent : BORDER}`,
-                        background: "#fff",
-                        color: focusMinutes === m ? accent : MUTED,
-                      }}
-                    >
-                      {m}m{i === recommendedIdx ? " ★" : ""}
-                    </button>
-                  ))}
-                </div>
+                <div style={{ textAlign: "center", fontSize: 10.5, color: MUTED, marginBottom: 9 }}>20-min rounds, automatic</div>
 
                 {heroTask && (
                   <button
-                    onClick={() => onStartFocus(heroTask.id, heroTask.title, focusMinutes)}
+                    onClick={() => onStartFocus(heroTask.id, heroTask.title)}
                     className="hoverable"
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 5, width: "100%",

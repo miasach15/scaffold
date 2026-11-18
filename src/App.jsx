@@ -342,13 +342,14 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const visibleTasks = tasks.filter((t) => t.id !== pendingDeleteTaskId && t.id !== pendingDoneStepId && !(t.eduId && pendingDeleteEduIds.includes(t.eduId)));
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
-  // down" breakdown) so the Focus Timer can show the whole checklist alongside it —
-  // most call sites just pass (id, title); Dashboard's own picker also passes a chosen
-  // duration as the third arg. Every focus session is tied to a real task now — there's
-  // no more taskless "Focus Session" option.
-  const openFocus = (id, title, minutes) => {
+  // down" breakdown) so the Focus Timer can show the whole checklist alongside it. Every
+  // focus session is tied to a real task now — there's no more taskless "Focus Session"
+  // option. `duration` (the task's own estimate, if any) is what FocusTimerModal uses to
+  // size its own 20-minute-round budget — there's no separate caller-chosen length
+  // anymore, every round is the same fixed size.
+  const openFocus = (id, title) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, category: full?.category || null, duration: full?.duration ?? null, minutes });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, category: full?.category || null, duration: full?.duration ?? null });
   };
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
@@ -1069,9 +1070,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           onToggleStepDone={setTaskDone}
           onClose={() => setFocusTask(null)}
           onComplete={(investedMin) => { if (focusTask.id) setTaskDone(focusTask.id, true, investedMin); }}
-          // The task's own estimated length beats a generic pace-based number whenever
-          // it has one — same "the time should mean something" fix as Dashboard's picker.
-          defaultMinutes={focusTask.minutes || focusTask.duration || (profile.workStyle === "Short focused bursts" ? 15 : profile.workStyle === "Long deep sessions" ? 50 : 25)}
           onOpenDetail={openTaskDetail}
           onSwitchTask={openFocus}
           portalTarget={view === "dashboard" ? dashboardFocusSlot : null}
