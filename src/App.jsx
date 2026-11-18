@@ -29,7 +29,6 @@ import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import { useDarkMode } from "./hooks/useDarkMode";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
-import LifeResetModal from "./components/shared/LifeResetModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
@@ -159,7 +158,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const [dashboardFocusSlot, setDashboardFocusSlot] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
-  const [showLifeReset, setShowLifeReset] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStarted, setTourStarted] = useState(false);
@@ -808,11 +806,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         view={view}
         setView={setView}
         onOpenWeeklyReview={() => setShowWeeklyReview(true)}
-        onOpenLifeReset={() => setShowLifeReset(true)}
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}
         onSignOut={onSignOut}
-        profile={profile}
       />
 
       <div
@@ -847,7 +843,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
             focusSlotRef={setDashboardFocusSlot}
-            suppressCheckin={!!focusTask || !!editingTask || showWeeklyReview || showLifeReset || showSettings || tourOpen || showSearch}
+            suppressCheckin={!!focusTask || !!editingTask || showWeeklyReview || showSettings || tourOpen || showSearch}
           />
         )}
         {view === "calendar" && monthView && (
@@ -1103,17 +1099,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           goals={goals}
           habits={habits}
           onClose={() => setShowWeeklyReview(false)}
-        />
-      )}
-
-      {showLifeReset && (
-        <LifeResetModal
-          tasks={visibleTasks}
-          events={events}
-          onAddTask={addTask}
-          onStartFocus={openFocus}
-          setView={setView}
-          onClose={() => setShowLifeReset(false)}
         />
       )}
 
