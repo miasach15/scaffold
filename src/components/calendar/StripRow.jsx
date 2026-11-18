@@ -10,7 +10,7 @@ import { chipBelongsOnDay, getLocalToday, toISO } from "../../lib/dateHelpers";
 // meant to do that day"), so it stays there and shows again in Tasks' "From earlier"
 // group instead of moving on the calendar — no special highlight either, same border a
 // normal task chip gets, on the day it actually belongs to.
-export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropItem, onAddClick, emphasis, rollOverdueToToday }) {
+export default function StripRow({ label, days, chips, chipStyle, chipLabel, onChipClick, onDropItem, onAddClick, emphasis, rollOverdueToToday, beginPress, guardClick, drag }) {
   const todayISO = getLocalToday();
   return (
     <div style={{
@@ -25,21 +25,19 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
         return (
           <div
             key={iso}
+            data-drop-iso={onDropItem ? iso : undefined}
             onClick={onAddClick ? () => onAddClick(iso) : undefined}
-            onDragOver={onDropItem ? (e) => e.preventDefault() : undefined}
-            onDrop={onDropItem ? (e) => {
-              e.preventDefault();
-              try {
-                const data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
-                if (data.id) onDropItem(data.kind, data.id, iso);
-              } catch {}
-            } : undefined}
-            style={{ borderLeft: "1px solid #F4F6F8", padding: emphasis ? "5px" : "3px", display: "flex", flexDirection: "column", gap: emphasis ? 4 : 3, cursor: onAddClick ? "pointer" : undefined, minWidth: 0 }}
+            style={{
+              borderLeft: "1px solid #F4F6F8", padding: emphasis ? "5px" : "3px", display: "flex", flexDirection: "column", gap: emphasis ? 4 : 3,
+              cursor: onAddClick ? "pointer" : undefined, minWidth: 0,
+              background: drag && drag.overIso === iso && drag.overHour == null ? "#EEF1FB" : undefined,
+            }}
           >
             {dayChips.map((c) => {
               const col = chipStyle(c);
               const overdue = c.kind !== "event" && c.kind !== "task" && !c.done && c.date < todayISO;
               const content = <>{chipLabel(c)}</>;
+              const draggable = onDropItem && (c.kind === "task" || c.kind === "event");
               // A done chip goes fully neutral gray instead of just fading its own
               // category color — a faded-but-still-saturated pill still reads as heavy
               // as an active one at a glance; plain gray + strikethrough reads as "over
@@ -50,17 +48,19 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 border: `${emphasis ? 1.5 : 1}px solid ${c.done ? "#E5E7EB" : overdue ? TONE.carried.border : col.border}`,
                 color: c.done ? "#9CA3AF" : col.text,
                 textDecoration: c.done ? "line-through" : "none", opacity: c.done ? 0.8 : 1, fontWeight: c.done ? 500 : 700,
-                cursor: c.kind === "task" || c.kind === "event" ? "grab" : onChipClick ? "pointer" : "default",
+                cursor: draggable ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
+                touchAction: draggable ? "none" : undefined,
               };
-              const dragProps = c.kind === "task" || c.kind === "event"
-                ? { draggable: true, onDragStart: (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ kind: c.kind, id: c.id })) }
-                : {};
               const fullLabel = chipLabel(c);
+              const tapAction = onChipClick ? (e) => { e.stopPropagation(); onChipClick(c); } : (e) => e.stopPropagation();
+              const dragProps = draggable
+                ? { onPointerDown: (e) => beginPress(e, { kind: c.kind, id: c.id, title: c.title }, () => tapAction(e)) }
+                : {};
               return onChipClick ? (
-                <button key={c.kind + c.id} title={fullLabel} onClick={(e) => { e.stopPropagation(); onChipClick(c); }} style={style} {...dragProps}>{content}</button>
+                <button key={c.kind + c.id} title={fullLabel} onClick={draggable ? guardClick(tapAction) : tapAction} style={style} {...dragProps}>{content}</button>
               ) : (
-                <div key={c.kind + c.id} title={fullLabel} onClick={(e) => e.stopPropagation()} style={style} {...dragProps}>{content}</div>
+                <div key={c.kind + c.id} title={fullLabel} onClick={draggable ? guardClick(tapAction) : tapAction} style={style} {...dragProps}>{content}</div>
               );
             })}
           </div>

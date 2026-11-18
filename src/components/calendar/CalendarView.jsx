@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
+import { useDragReschedule } from "../../hooks/useDragReschedule";
 import { addDays, dayLabel, dateLabel, decimalToTimeLabel, layoutOverlaps, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
@@ -9,7 +10,10 @@ import { ghostBtn } from "../../lib/styles";
 export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
-  const onDropItem = (kind, id, iso) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, null));
+  const onDropItem = (kind, id, iso, hour) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, hour ?? null));
+  // Pointer-based drag-to-reschedule (see the hook's own comment) — replaces native
+  // HTML5 drag/drop, which never fired from a touch gesture.
+  const { drag, beginPress, guardClick } = useDragReschedule(onDropItem);
   const todayISO = toISO(new Date());
   const now = new Date();
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
@@ -78,6 +82,20 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
 
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {/* Follows the pointer 1:1 while dragging a chip/task to reschedule it — pointer-
+          events:none so it never blocks the elementFromPoint hit-testing that figures out
+          what's underneath it (see useDragReschedule). */}
+      {drag && (
+        <div
+          style={{
+            position: "fixed", left: drag.x, top: drag.y, transform: "translate(-50%, -130%)", zIndex: 300, pointerEvents: "none",
+            background: PRIMARY, color: "#fff", fontSize: 12, fontWeight: 700, padding: "6px 11px", borderRadius: 8,
+            boxShadow: "0 8px 20px rgba(0,0,0,0.25)", whiteSpace: "nowrap", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis",
+          }}
+        >
+          {drag.title}
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500 }}>{monthLabel(days[0])}</div>
         <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -131,6 +149,9 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 onChipClick={(chip) => (chip.kind === "edu" ? onChipClick(chip) : onEditEvent({ id: chip.id, title: chip.title, date: chip.date, start: null, duration: null, category: chip.category }))}
                 onAddClick={(iso) => onCellClick(iso, null)}
                 onDropItem={onDropItem}
+                beginPress={beginPress}
+                guardClick={guardClick}
+                drag={drag}
                 rollOverdueToToday
               />
             </div>
@@ -139,7 +160,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                 the deadline-vs-work distinction, so splitting them into separate rows was
                 mostly redundant with that. */}
             <div data-tour="calendar-tasksrow" style={{ flexShrink: 0 }}>
-              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} rollOverdueToToday emphasis />
+              <StripRow label="Due" days={days} chips={dueChipsOnly} chipStyle={chipStyle} chipLabel={chipLabel} onChipClick={onChipClick} onDropItem={onDropItem} beginPress={beginPress} guardClick={guardClick} drag={drag} rollOverdueToToday emphasis />
             </div>
 
             <div ref={scrollRef} data-tour="calendar-grid" style={{ display: "grid", gridTemplateColumns: `56px 1fr`, flex: 1, minHeight: 0, overflowY: "auto" }}>
@@ -158,16 +179,13 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                       {Array.from({ length: 24 }, (_, h) => (
                         <div
                           key={h}
+                          data-drop-iso={iso}
+                          data-drop-hour={h}
                           onClick={() => onCellClick(iso, h)}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            try {
-                              const data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
-                              if (data.taskId) onRescheduleTask(data.taskId, iso, h);
-                            } catch {}
+                          style={{
+                            position: "absolute", top: h * ROW_H, left: 0, right: 0, height: ROW_H, borderTop: "1px solid #F4F6F8", cursor: "pointer",
+                            background: drag && drag.overIso === iso && drag.overHour === h ? "#EEF1FB" : undefined,
                           }}
-                          style={{ position: "absolute", top: h * ROW_H, left: 0, right: 0, height: ROW_H, borderTop: "1px solid #F4F6F8", cursor: "pointer" }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFBFC")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         />

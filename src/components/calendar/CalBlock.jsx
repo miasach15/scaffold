@@ -6,20 +6,24 @@ import Checkbox from "../shared/Checkbox";
 // else overlaps it at the same time, instead of every block defaulting to the full column
 // width and just stacking on top of each other. cols=1 (the normal, non-overlapping case)
 // renders exactly as before.
-export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent, col = 0, cols = 1 }) {
+export default function CalBlock({ item, color, done, isTask, onOpenFocus, onToggleDone, onEditEvent, col = 0, cols = 1, beginPress, guardClick }) {
   const top = item.start * ROW_H;
   const height = Math.max((item.duration / 60) * ROW_H, 18);
   const accent = color.accent || color.border;
   const widthPct = 100 / cols;
+  // Only tasks are draggable (same scope as before — events/due-chips here are
+  // click-only). See useDragReschedule: a plain tap still opens the focus timer, a real
+  // drag reschedules instead, via pointer events so this works with touch too.
+  const handleClick = isTask ? onOpenFocus : () => onEditEvent(item);
   return (
     <div
-      onClick={isTask ? onOpenFocus : () => onEditEvent(item)}
-      draggable={isTask}
-      onDragStart={isTask ? (e) => e.dataTransfer.setData("text/plain", JSON.stringify({ taskId: item.id })) : undefined}
+      onClick={isTask ? guardClick(handleClick) : handleClick}
+      onPointerDown={isTask ? (e) => beginPress(e, { kind: "task", id: item.id, title: item.title }, handleClick) : undefined}
       style={{
         position: "absolute", top, left: `calc(${col * widthPct}% + 3px)`, width: `calc(${widthPct}% - 6px)`, height,
         background: "#fff", border: `1.5px solid ${accent}`, borderRadius: 10,
         padding: "6px 10px 6px 9px", overflow: "hidden", cursor: isTask ? "grab" : "pointer", opacity: done ? 0.5 : 1,
+        touchAction: isTask ? "none" : undefined,
       }}
     >
       {isTask && (
