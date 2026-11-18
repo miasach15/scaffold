@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play, SkipForward } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, TONE, serifFont } from "../../lib/constants";
@@ -87,8 +87,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
-  const dragRef = useRef(null); // mutable { id, order } for the active gesture, so the move/up listeners don't need to resubscribe on every reflow
+  const dragRef = useRef(null); // mutable { id, order, grabOffsetY } for the active gesture, so the move/up listeners don't need to resubscribe on every reflow
   const rowElsRef = useRef({}); // task id -> row DOM node, for hit-testing during drag
+  // Every OTHER row's bounding-rect top right before a reorder actually happens, so the
+  // layout effect below can animate each one in from where it WAS instead of just
+  // snapping to its new slot (a "FLIP" — see apple-design's momentum/continuity notes).
+  const prevRowRectsRef = useRef({});
   const onReorderTasksRef = useRef(onReorderTasks);
   onReorderTasksRef.current = onReorderTasks;
 
@@ -107,12 +111,33 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       }
       others.splice(insertAt, 0, cur.id);
       if (others.length !== cur.order.length || !others.every((id, i) => id === cur.order[i])) {
+        const rects = {};
+        others.forEach((id) => {
+          if (id === cur.id) return;
+          const el = rowElsRef.current[id];
+          if (el) rects[id] = el.getBoundingClientRect().top;
+        });
+        prevRowRectsRef.current = rects;
         cur.order = others;
         setLiveOrder(others);
+      }
+      // The dragged row follows the pointer 1:1, respecting where it was actually
+      // grabbed (apple-design §2) — recomputed fresh against the row's CURRENT flow
+      // position every move (not a fixed drag-start baseline), so a mid-drag reorder
+      // above never causes it to visually jump.
+      const draggedEl = rowElsRef.current[cur.id];
+      if (draggedEl) {
+        draggedEl.style.transform = ""; // measure its flow position, not wherever last frame's transform put it
+        const flowTop = draggedEl.getBoundingClientRect().top;
+        draggedEl.style.transform = `translateY(${y - cur.grabOffsetY - flowTop}px)`;
       }
     };
     const handleUp = () => {
       const cur = dragRef.current;
+      if (cur) {
+        const el = rowElsRef.current[cur.id];
+        if (el) { el.style.transition = ""; el.style.transform = ""; el.style.zIndex = ""; }
+      }
       dragRef.current = null;
       setDraggingId(null);
       setLiveOrder(null);
@@ -125,6 +150,32 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       window.removeEventListener("pointerup", handleUp);
     };
   }, []);
+
+  // The "play" half of FLIP: right after liveOrder changes (so after React has already
+  // reflowed every row into its new slot, but before the browser paints), snap each
+  // non-dragged row back to where it visually WAS, then transition it to its real
+  // (identity) position — it reads as sliding into place instead of teleporting there.
+  useLayoutEffect(() => {
+    if (!liveOrder) return;
+    const prevRects = prevRowRectsRef.current;
+    liveOrder.forEach((id) => {
+      if (id === draggingId) return; // the dragged row is handled separately, via direct pointer tracking above
+      const el = rowElsRef.current[id];
+      const prevTop = prevRects[id];
+      if (!el || prevTop == null) return;
+      const newTop = el.getBoundingClientRect().top;
+      const delta = prevTop - newTop;
+      if (!delta) return;
+      el.style.transition = "none";
+      el.style.transform = `translateY(${delta}px)`;
+      // Forces a reflow so the browser registers the starting transform above before
+      // animating away from it.
+      // eslint-disable-next-line no-unused-expressions
+      el.offsetHeight;
+      el.style.transition = "transform 180ms ease";
+      el.style.transform = "";
+    });
+  }, [liveOrder, draggingId]);
 
   const todayISO = toISO(new Date());
 
@@ -301,7 +352,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     if (!onReorderTasks) return;
     e.preventDefault();
     const order = baseUntimedOrder.map((t) => t.id);
-    dragRef.current = { id, order };
+    // Where WITHIN the row it was actually grabbed — stays constant for the whole drag,
+    // so the row tracks the finger from that exact point instead of snapping its top
+    // edge to the pointer (apple-design §2).
+    const el = rowElsRef.current[id];
+    const grabOffsetY = el ? e.clientY - el.getBoundingClientRect().top : 0;
+    dragRef.current = { id, order, grabOffsetY };
     setDraggingId(id);
     setLiveOrder(order);
   };
@@ -534,10 +590,15 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                           <div
                             ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
-                              display: "flex", alignItems: "center", flexWrap: "wrap", gap: isTop ? 10 : 8, rowGap: 8, padding: "10px 12px", borderRadius: 14,
+                              display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: isTop ? 10 : 8, rowGap: 8, padding: "10px 12px", borderRadius: 14,
                               background: "#fff",
                               border: isTop ? `1.5px solid ${PRIMARY}` : "none",
-                              opacity: draggingId === t.id ? 0.4 : 1,
+                              // Lifted, not faded — it's being carried, not discarded. zIndex
+                              // keeps it drawn over whatever row it's currently passing over
+                              // while following the pointer (see startDrag/handleMove above).
+                              boxShadow: draggingId === t.id ? "0 10px 24px rgba(15,23,42,0.18)" : "none",
+                              zIndex: draggingId === t.id ? 2 : "auto",
+                              position: draggingId === t.id ? "relative" : undefined,
                             }}
                           >
                             {/* Kept together, and never squeezed below 170px — on a narrow
