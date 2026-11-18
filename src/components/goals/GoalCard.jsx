@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Check, X, ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
@@ -201,7 +201,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                   onClick={() => setCoachOpen(true)}
                   style={{ ...ghostBtn, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
                 >
-                  <Sparkles size={12} strokeWidth={2.3} /> Talk it through instead
+                  Talk it through instead
                 </button>
               </div>
               {fillError && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{fillError}</div>}
@@ -238,7 +238,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                 className="hoverable"
                 style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0, fontSize: 11.5, fontWeight: 600, color: MUTED, cursor: "pointer" }}
               >
-                <Sparkles size={11} strokeWidth={2.3} /> Stuck? Talk through what's next
+                Stuck? Talk through what's next
               </button>
             )}
           </div>

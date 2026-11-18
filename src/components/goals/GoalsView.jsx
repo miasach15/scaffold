@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronUp, Plus, Sparkles } from "lucide-react";
+import { ChevronUp, Plus } from "lucide-react";
 import { BORDER, MUTED, SURFACE } from "../../lib/constants";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { supabase } from "../../lib/supabase";
@@ -157,7 +157,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
                 fontSize: 12.5, fontWeight: 600, color: MUTED, cursor: "pointer",
               }}
             >
-              <Sparkles size={13} strokeWidth={2.3} /> Not sure yet? Talk it through with AI instead
+              Not sure yet? Talk it through with AI instead
             </button>
           </div>
         </div>

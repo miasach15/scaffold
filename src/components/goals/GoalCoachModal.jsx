@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Mic, Send, Square, Sparkles } from "lucide-react";
+import { Mic, Send, Square } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE } from "../../lib/constants";
@@ -143,7 +143,6 @@ export default function GoalCoachModal({ categoryKeys, defaultCategory, existing
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <Sparkles size={16} strokeWidth={2.2} color={PRIMARY_DARK} />
             <div style={{ fontSize: 14.5, fontWeight: 700, color: INK }}>{existingGoal ? "What's next" : "Talk through a goal"}</div>
             <div style={{ flex: 1 }} />
             <button onClick={onClose} title="Close" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, fontSize: 18, padding: "0 2px" }}>×</button>
