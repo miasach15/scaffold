@@ -32,6 +32,7 @@ import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
 import { CategoryColorsProvider } from "./hooks/CategoryColorsContext";
+import PullToRefresh from "./components/shared/PullToRefresh";
 
 // These pages aren't needed for first paint (the app opens on Calendar) — loading them
 // as separate chunks keeps the initial bundle smaller. Calendar/Tasks stay eager since
@@ -722,6 +723,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
   return (
     <CategoryColorsProvider value={resolvedCategoryColors} keys={categoryKeys}>
+    <PullToRefresh>
     <div
       className="app-shell"
       style={{
@@ -1131,11 +1133,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {tourOpen && (
         <TourOverlay
           setView={setView}
-          onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); setShowLifeReset(false); }}
+          onCloseModals={() => { setShowSettings(false); setShowWeeklyReview(false); }}
           onFinish={finishTour}
         />
       )}
     </div>
+    </PullToRefresh>
     </CategoryColorsProvider>
   );
 }
