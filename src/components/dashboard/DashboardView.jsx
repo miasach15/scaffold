@@ -642,8 +642,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 onClick={t.isGoalItem ? () => setView("goals") : undefined}
                               >
                                 <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {t.isGoalItem && <span style={{ color: col.text, fontWeight: 700 }}>Goal: </span>}
                                   <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
-                                  {t.goalKind === "milestone" && <span style={{ color: MUTED, fontWeight: 400 }}> · Milestone</span>}
                                 </div>
                                 <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
                                 {stuckOnThis && (
