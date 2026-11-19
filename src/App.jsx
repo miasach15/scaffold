@@ -742,11 +742,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap');
         * { box-sizing: border-box; }
         /* Apple's own buttons depress instantly, almost linearly (no perceptible lag
-           between touch-down and the visual response — apple-design §1), then release
-           back with a touch of spring overshoot rather than a flat ease — the :active
-           rule below overrides just the transform timing for that quick depress; this
-           base rule's slower, springier curve is what plays on release. */
-        button { font-family: inherit; cursor: pointer; transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
+           between touch-down and the visual response — apple-design §1), then settle
+           back smoothly with no overshoot — a plain tap isn't a momentum gesture, so
+           it stays critically damped rather than bouncy (apple-design §4: bounce is
+           reserved for a flick/drag release, never a static press). The :active rule
+           below overrides just the transform timing for the quick depress; this base
+           rule's slower exponential ease-out is what plays on release. */
+        button { font-family: inherit; cursor: pointer; transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
         button:active:not(:disabled) { transform: scale(0.96); transition: transform .08s cubic-bezier(0.4, 0, 0.2, 1); }
         button:disabled { cursor: default; }
         /* A click still leaves a button focused, which some browsers/webviews then draw
