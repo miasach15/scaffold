@@ -4,6 +4,17 @@ import { uid } from "../lib/id";
 import { dayBefore, distributeDatesByLoad, toISO } from "../lib/dateHelpers";
 import { reportSaveError } from "../lib/saveErrors";
 
+// Every write below used to call reportSaveError() bare on failure — the toast always
+// said the same generic "check your connection" regardless of what actually went wrong,
+// and the real Postgrest error was never logged anywhere, so a failure during something
+// like the AI goal coach's rapid-fire batch of inserts (a goal, several milestones,
+// a dozen+ actions) was impossible to diagnose after the fact. This logs the real error
+// and surfaces its message instead.
+function fail(label, error) {
+  console.error(`${label} failed:`, error);
+  reportSaveError(`Couldn't save that — ${error?.message || error?.code || "unknown error"}.`);
+}
+
 const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index });
 const milestoneFromRow = (row) => ({
   id: row.id,
@@ -38,11 +49,12 @@ export function useGoals(userId, tasks, events) {
   const load = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("goals")
       .select("*, milestones(*, goal_actions(*))")
       .eq("user_id", userId)
       .order("created_at");
+    if (error) console.error("useGoals load failed:", error);
     setGoals((data || []).map(goalFromRow));
     setLoading(false);
   }, [userId]);
@@ -57,7 +69,7 @@ export function useGoals(userId, tasks, events) {
       const row = { id: uid(), user_id: userId, title: title.trim(), category, deadline: deadline || null };
       setGoals((gs) => [...gs, { ...row, milestones: [] }]);
       const { error } = await supabase.from("goals").insert(row);
-      if (error) reportSaveError();
+      if (error) fail("addGoal", error);
       return row.id;
     },
     [userId]
@@ -66,14 +78,14 @@ export function useGoals(userId, tasks, events) {
   const removeGoal = useCallback(async (goalId) => {
     setGoals((gs) => gs.filter((g) => g.id !== goalId));
     const { error } = await supabase.from("goals").delete().eq("id", goalId);
-    if (error) reportSaveError();
+    if (error) fail("removeGoal", error);
   }, []);
 
   const renameGoal = useCallback(async (goalId, title) => {
     if (!title.trim()) return;
     setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, title: title.trim() })));
     const { error } = await supabase.from("goals").update({ title: title.trim() }).eq("id", goalId);
-    if (error) reportSaveError();
+    if (error) fail("renameGoal", error);
   }, []);
 
   const addMilestone = useCallback(
@@ -82,7 +94,7 @@ export function useGoals(userId, tasks, events) {
       const row = { id: uid(), user_id: userId, goal_id: goalId, title: title.trim() };
       setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, milestones: [...g.milestones, { ...row, actions: [] }] })));
       const { error } = await supabase.from("milestones").insert(row);
-      if (error) reportSaveError();
+      if (error) fail("addMilestone", error);
       return row.id;
     },
     [userId]
@@ -91,7 +103,7 @@ export function useGoals(userId, tasks, events) {
   const removeMilestone = useCallback(async (goalId, milestoneId) => {
     setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : { ...g, milestones: g.milestones.filter((m) => m.id !== milestoneId) })));
     const { error } = await supabase.from("milestones").delete().eq("id", milestoneId);
-    if (error) reportSaveError();
+    if (error) fail("removeMilestone", error);
   }, []);
 
   const renameMilestone = useCallback(async (goalId, milestoneId, title) => {
@@ -101,7 +113,7 @@ export function useGoals(userId, tasks, events) {
       milestones: g.milestones.map((m) => (m.id !== milestoneId ? m : { ...m, title: title.trim() })),
     })));
     const { error } = await supabase.from("milestones").update({ title: title.trim() }).eq("id", milestoneId);
-    if (error) reportSaveError();
+    if (error) fail("renameMilestone", error);
   }, []);
 
   // Setting/changing a milestone's target date auto-fills due dates on any of its
@@ -137,7 +149,8 @@ export function useGoals(userId, tasks, events) {
     for (const [actionId, d] of dateForAction) {
       results.push(await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId));
     }
-    if (results.some((r) => r.error)) reportSaveError();
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) fail("setMilestoneDueDate", firstError);
   }, [goals, tasks, events]);
 
   // One end date for the whole goal, and everything undated underneath cascades from it:
@@ -190,7 +203,8 @@ export function useGoals(userId, tasks, events) {
     for (const [actionId, d] of actionDateFor) {
       results.push(await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId));
     }
-    if (results.some((r) => r.error)) reportSaveError();
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) fail("setGoalDeadline", firstError);
   }, [goals, tasks, events]);
 
   const addAction = useCallback(
@@ -205,7 +219,7 @@ export function useGoals(userId, tasks, events) {
         milestones: g.milestones.map((m) => m.id !== milestoneId ? m : { ...m, actions: [...m.actions, actionFromRow(row)] }),
       }));
       const { error } = await supabase.from("goal_actions").insert(row);
-      if (error) reportSaveError();
+      if (error) fail("addAction", error);
     },
     [userId, goals]
   );
@@ -230,7 +244,8 @@ export function useGoals(userId, tasks, events) {
     }));
 
     const results = await Promise.all(reindexed.map((a) => supabase.from("goal_actions").update({ order_index: a.orderIndex }).eq("id", a.id)));
-    if (results.some((r) => r.error)) reportSaveError();
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) fail("moveAction", firstError);
   }, [goals]);
 
   const setActionDone = useCallback(async (goalId, milestoneId, actionId, done) => {
@@ -242,7 +257,7 @@ export function useGoals(userId, tasks, events) {
       }),
     }));
     const { error } = await supabase.from("goal_actions").update({ done }).eq("id", actionId);
-    if (error) reportSaveError();
+    if (error) fail("setActionDone", error);
   }, []);
 
   const removeAction = useCallback(async (goalId, milestoneId, actionId) => {
@@ -251,7 +266,7 @@ export function useGoals(userId, tasks, events) {
       milestones: g.milestones.map((m) => m.id !== milestoneId ? m : { ...m, actions: m.actions.filter((a) => a.id !== actionId) }),
     }));
     const { error } = await supabase.from("goal_actions").delete().eq("id", actionId);
-    if (error) reportSaveError();
+    if (error) fail("removeAction", error);
   }, []);
 
   const setActionDueDate = useCallback(async (goalId, milestoneId, actionId, dueDate) => {
@@ -263,7 +278,7 @@ export function useGoals(userId, tasks, events) {
       }),
     }));
     const { error } = await supabase.from("goal_actions").update({ due_date: dueDate || null }).eq("id", actionId);
-    if (error) reportSaveError();
+    if (error) fail("setActionDueDate", error);
   }, []);
 
   const renameAction = useCallback(async (goalId, milestoneId, actionId, title) => {
@@ -276,7 +291,7 @@ export function useGoals(userId, tasks, events) {
       }),
     }));
     const { error } = await supabase.from("goal_actions").update({ title: title.trim() }).eq("id", actionId);
-    if (error) reportSaveError();
+    if (error) fail("renameAction", error);
   }, []);
 
   // See useTasks' renameCategoryEverywhere — carries every goal already tagged with the
@@ -284,7 +299,7 @@ export function useGoals(userId, tasks, events) {
   const renameCategoryEverywhere = useCallback(async (oldKey, newKey) => {
     setGoals((gs) => gs.map((g) => (g.category === oldKey ? { ...g, category: newKey } : g)));
     const { error } = await supabase.from("goals").update({ category: newKey }).eq("user_id", userId).eq("category", oldKey);
-    if (error) reportSaveError();
+    if (error) fail("renameCategoryEverywhere", error);
   }, [userId]);
 
   return { goals, loading, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere };
