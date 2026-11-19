@@ -277,7 +277,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     }),
     ...groupItems,
     ...eduSessionItems,
-    ...goalUntimedItems,
     // A manually dragged order wins outright, regardless of which of these is due
     // sooner — dragging is how you say "I want to do this one first," not just a way
     // to break ties between two things due the same day. But that override only holds
@@ -289,6 +288,11 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     // studying, unless something's actually due today/tomorrow, which jumps the queue
     // regardless of kind.
   ].sort((a, b) => compareTaskPriority(a, b, todayISO));
+  // Goal items always trail behind every real task, regardless of how soon they're due —
+  // they're real work, but less urgent than today's actual to-do list by nature, so they
+  // never jump ahead of a task due later just because the goal action happens to be due
+  // today. Appended after the sort rather than folded into it.
+  todaysUntimed.push(...goalUntimedItems);
   const todaysEvents = events.filter((e) => e.date === todayISO && e.start != null).sort((a, b) => a.start - b.start);
 
   // "Do you have enough time today?" — free time left in your usual active window (the
@@ -337,7 +341,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const baseUntimedOrder = fitsInTime || topIsFreshDrag
     ? todaysUntimed
     : (() => {
-        const quick = [...todaysUntimed].sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
+        const quick = todaysUntimed.filter((t) => !t.isGoalItem).sort((a, b) => (a.duration ?? 30) - (b.duration ?? 30))[0];
         return quick ? [quick, ...todaysUntimed.filter((t) => t.id !== quick.id)] : todaysUntimed;
       })();
   const untimedById = new Map(todaysUntimed.map((t) => [t.id, t]));
@@ -618,7 +622,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 one line, which is what was cutting titles down to a few
                                 characters before the ellipsis. */}
                             <div style={{ display: "flex", alignItems: "center", gap: isTop ? 10 : 8, flex: "1 1 170px", minWidth: 0 }}>
-                              {onReorderTasks && !t.isGoalItem && (
+                              {onReorderTasks && (
                                 <div
                                   onPointerDown={startDrag(t.id)}
                                   title="Drag to reorder (the top spot is what Start launches)"
@@ -642,7 +646,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 onClick={t.isGoalItem ? () => setView("goals") : undefined}
                               >
                                 <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {t.isGoalItem && <span style={{ color: col.accent, fontWeight: 700 }}>Goal: </span>}
+                                  {t.isGoalItem && <span style={{ fontWeight: 400, color: isTop ? PRIMARY_DARK : MUTED }}>Goal: </span>}
                                   <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
                                 </div>
                                 <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
