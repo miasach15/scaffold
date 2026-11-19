@@ -212,9 +212,9 @@ export default function ClassCard({
                             onChange={(e) => onSetCategoryWeight(cls.id, cat.id, e.target.value)}
                             style={{ ...inputStyle, width: 64, fontSize: 14, padding: "7px 10px" }}
                           />
-                          <span style={{ fontSize: 13, color: "#93A0AD" }}>%</span>
-                          <span style={{ fontSize: 12.5, color: "#93A0AD", width: 100 }}>
-                            {catPct != null ? `${catPct}% (${inCat.length})` : "no scores yet"}
+                          <span style={{ fontSize: 13, color: "#93A0AD" }}>% weight</span>
+                          <span style={{ fontSize: 12.5, color: "#93A0AD", width: 120 }}>
+                            {catPct != null ? `${catPct}% avg (${inCat.length})` : "no scores yet"}
                           </span>
                           <button onClick={() => onRemoveCategory(cls.id, cat.id)} style={deleteBtn}>×</button>
                         </div>
