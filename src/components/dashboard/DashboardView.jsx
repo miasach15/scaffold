@@ -55,7 +55,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
   const CATEGORY_COLORS = useCategoryColors();
   // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
   // native drag doesn't work at all on touch in most mobile browsers, and gives no
@@ -371,6 +371,14 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     const dayEvents = events.filter((e) => e.date === iso).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
     return { iso, date, dayTasks, dueWithoutSession, dayEvents };
   });
+  // Same "only show up once actually due/overdue" rule TodaySection gives goal actions
+  // on the Tasks page — a goal action due next month has no business cluttering Dashboard
+  // today. A milestone's own deadline counts too (it's a real deadline, not a day-to-day
+  // step), but it has no independently-settable "done" (derived from its actions), so its
+  // row just opens Goals rather than offering a checkbox that would silently no-op.
+  const dueGoalActions = (goalActionChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
+  const dueGoalMilestones = (goalMilestoneChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
+
   const remainingStepCount = todaysTimedTasks.length + todaysUntimed.length;
   const scaffoldedTotalCount = remainingStepCount + doneTodayTasks.length;
   // "No free time left today" reads like the app assigning you a full evening of work —
@@ -812,6 +820,30 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             )}
           </div>
+
+          {(dueGoalActions.length > 0 || dueGoalMilestones.length > 0) && (
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, flexShrink: 0 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Goals</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {dueGoalMilestones.map((c) => (
+                  <div key={`m-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Checkbox checked={false} onClick={() => setView("goals")} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
+                    <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 12.5, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {c.title} <span style={{ color: MUTED }}>· Milestone</span>
+                    </button>
+                  </div>
+                ))}
+                {dueGoalActions.map((c) => (
+                  <div key={`a-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Checkbox checked={false} onClick={() => onToggleGoalChip?.(c)} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
+                    <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 12.5, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {c.title}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Wins stack up here as they happen — empty (and hidden) first thing in the
               morning, so there's nothing to scroll past before you've done anything yet. */}

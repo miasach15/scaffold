@@ -845,6 +845,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             hasActiveFocusSession={!!focusTask}
             focusSlotRef={setDashboardFocusSlot}
             suppressCheckin={!!focusTask || !!editingTask || showWeeklyReview || showSettings || tourOpen || showSearch}
+            goalActionChips={goalActionChips}
+            goalMilestoneChips={goalMilestoneChips}
+            onToggleGoalChip={onChipClick}
           />
         )}
         {view === "calendar" && monthView && (
