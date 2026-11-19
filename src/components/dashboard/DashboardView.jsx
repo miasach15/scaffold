@@ -506,7 +506,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
             {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               isFirstUse ? (
                 <div style={{ padding: "6px 0 4px" }}>
-                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
+                  <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet.</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setShowBrainDump(true)} className="hoverable" style={primaryBtn}>
                       Add something that's stressing you out
@@ -601,7 +601,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
                                 {stuckOnThis && (
                                   <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
-                                    Been at this a few sessions now — maybe switch to something else for a bit.
+                                    Stuck on this a while — maybe switch for a bit.
                                   </div>
                                 )}
                               </div>

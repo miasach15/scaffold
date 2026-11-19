@@ -374,7 +374,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
                   {it.subLabel && <div style={{ fontSize: 11, color: "#B4BCC5", marginTop: 1 }}>{it.subLabel}</div>}
                   {stuckOnThis && (
                     <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
-                      Been at this a few sessions now — maybe switch to something else for a bit.
+                      Stuck on this a while — maybe switch for a bit.
                     </div>
                   )}
                 </div>
