@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
-import { BORDER, INK, LIST_COLOR, MUTED, serifFont } from "../../lib/constants";
+import { BORDER, INK, LIST_COLOR, MUTED, SURFACE, serifFont } from "../../lib/constants";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 
@@ -42,7 +42,7 @@ export default function ListCard({ list, onRename, onRemove, onAddItem, onSetIte
   };
 
   return (
-    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: "#fff" }}>
+    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: SURFACE }}>
       <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", gap: 8 }}>
         {editingTitle ? (
           <input

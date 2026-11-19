@@ -4,13 +4,14 @@ import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import WorkTitle from "../shared/WorkTitle";
 import StepNotes from "../shared/StepNotes";
+import { INK, SURFACE } from "../../lib/constants";
 
 export default function WorkItemRow({ item }) {
   const col = item.col;
   const tinted = !item.done;
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, marginBottom: 10, background: "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, marginBottom: 10, background: SURFACE, border: `1px solid ${tinted ? col.border : "#EDEDED"}` }}>
       <Checkbox
         checked={item.done}
         onClick={item.onToggleDone}
@@ -19,7 +20,7 @@ export default function WorkItemRow({ item }) {
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         {item.onFocus ? (
-          <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: "#000000" }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></button>
+          <button onClick={item.onFocus} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, color: INK }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></button>
         ) : (
           <div style={{ fontSize: 13.5, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1 }}><WorkTitle title={item.title} mutedColor="#93A0AD" /></div>
         )}

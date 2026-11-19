@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { TONE } from "../../lib/constants";
+import { SURFACE, TONE } from "../../lib/constants";
 import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlayStyle, primaryBtn } from "../../lib/styles";
 import ModalPortal from "../shared/ModalPortal";
@@ -69,7 +69,7 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
             <button
               onClick={() => setEditingDate(true)}
               style={{
-                display: "inline-flex", alignItems: "center", gap: 3, background: "#fff", border: "1.5px dashed #D1D5DB",
+                display: "inline-flex", alignItems: "center", gap: 3, background: SURFACE, border: "1.5px dashed #D1D5DB",
                 borderRadius: 999, padding: "4px 10px 4px 7px", fontSize: 12, fontWeight: 700, color: "#93A0AD", cursor: "pointer",
               }}
             >

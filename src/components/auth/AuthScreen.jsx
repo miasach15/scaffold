@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthProvider";
-import { INK, MUTED, PAPER_BG, THEME_PRESETS, serifFont } from "../../lib/constants";
+import { INK, MUTED, PAPER_BG, SURFACE, THEME_PRESETS, serifFont } from "../../lib/constants";
 import { Monogram } from "../shared/Misc";
 import IntroSplash from "./IntroSplash";
 
@@ -16,7 +16,7 @@ const SKY = THEME_PRESETS.sky.primary;
 // one. The form just sits directly on the page instead, same instinct as the rest of
 // the app's recent move away from stacking boxes on boxes.
 const fieldLabel = { fontSize: 12, fontWeight: 600, color: MUTED, display: "block", marginBottom: 6 };
-const fieldInput = { width: "100%", padding: "13px 16px", borderRadius: 14, border: "1.5px solid #E5E0EE", fontSize: 15, outline: "none", background: "#fff", color: INK, transition: "border-color .15s" };
+const fieldInput = { width: "100%", padding: "13px 16px", borderRadius: 14, border: "1.5px solid #E5E0EE", fontSize: 15, outline: "none", background: SURFACE, color: INK, transition: "border-color .15s" };
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();

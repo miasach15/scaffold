@@ -555,7 +555,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                             ref={(el) => { if (el) rowElsRef.current[t.id] = el; else delete rowElsRef.current[t.id]; }}
                             style={{
                               display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: isTop ? 10 : 8, rowGap: 8, padding: "10px 12px", borderRadius: 14,
-                              background: "#fff",
+                              background: SURFACE,
                               border: isTop ? `1.5px solid ${PRIMARY}` : "none",
                               // Lifted, not faded — it's being carried, not discarded. zIndex
                               // keeps it drawn over whatever row it's currently passing over
@@ -772,7 +772,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     className="hoverable"
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 5, width: "100%",
-                      padding: "7px", borderRadius: 999, border: `1px solid ${accent}`, background: "#fff", color: accent,
+                      padding: "7px", borderRadius: 999, border: `1px solid ${accent}`, background: SURFACE, color: accent,
                       fontSize: 11.5, fontWeight: 700, cursor: "pointer",
                     }}
                   >

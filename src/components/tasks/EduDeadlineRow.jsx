@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { BORDER } from "../../lib/constants";
+import { BORDER, INK, SURFACE } from "../../lib/constants";
 import { decimalToTimeLabel, formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -26,7 +26,7 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
 
   return (
     <div>
-      <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
+      <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: SURFACE, border: `1px solid ${BORDER}` }}>
         <Checkbox checked={item.done} onClick={() => onToggleItemDone(item.id, !item.done)} color={col} />
         {/* The subject ("Chemistry", "Calc") is more useful at a glance than the
             Homework/Assignment/Assessment type — falls back to type only for the rare
@@ -38,7 +38,7 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
           style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: expandable ? "pointer" : "default" }}
         >
           {expandable && (expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />)}
-          <span style={{ minWidth: 0, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span style={{ minWidth: 0, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {item.title}
           </span>
         </button>
@@ -86,7 +86,7 @@ export default function EduDeadlineRow({ item, col, sessions, doneCount, total, 
                 onClick={onAddSession}
                 className="hoverable"
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                  display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE, border: "1.5px dashed #D1D5DB",
                   borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer", marginTop: 2,
                 }}
               >

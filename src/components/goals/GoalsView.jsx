@@ -9,7 +9,7 @@ import GoalCard from "./GoalCard";
 import GoalCoachModal from "./GoalCoachModal";
 
 const toggleBtn = {
-  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+  display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE,
   border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "5px 11px 5px 8px",
   fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
 };
@@ -102,7 +102,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
             onChange={(e) => setOutcome(e.target.value)}
             placeholder="e.g. Build an art portfolio by the end of the school year"
             rows={3}
-            style={{ ...inputStyle, width: "100%", resize: "vertical", background: "#fff", padding: "12px 14px" }}
+            style={{ ...inputStyle, width: "100%", resize: "vertical", background: SURFACE, padding: "12px 14px" }}
           />
 
           <div style={{ display: "flex", gap: 8, marginTop: 16, alignItems: "center", flexWrap: "wrap" }}>
@@ -135,7 +135,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
 
           {showOptions && (
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130, background: "#fff" }}>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, width: 130, background: SURFACE }}>
                 {categoryKeys.map((c) => <option key={c}>{c}</option>)}
               </select>
               <DatePickerButton

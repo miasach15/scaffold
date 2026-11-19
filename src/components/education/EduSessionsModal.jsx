@@ -5,6 +5,7 @@ import { deleteBtn, ghostBtn, inputStyle, modalStyle, noTypeDateProps, overlaySt
 import { EmptyState } from "../shared/Misc";
 import Checkbox from "../shared/Checkbox";
 import ModalPortal from "../shared/ModalPortal";
+import { SURFACE } from "../../lib/constants";
 
 // Opened by clicking a deadline row on Education — see which sessions are done, rename
 // or remove any of them, add another, or hand the whole thing to AI to re-plan. The
@@ -164,7 +165,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
                 onClick={() => setShowAI(true)}
                 className="hoverable"
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                  display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE, border: "1.5px dashed #D1D5DB",
                   borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                 }}
               >

@@ -1,4 +1,4 @@
-import { ROW_H } from "../../lib/constants";
+import { ROW_H, SURFACE } from "../../lib/constants";
 import { decimalToTimeLabel } from "../../lib/dateHelpers";
 import Checkbox from "../shared/Checkbox";
 
@@ -25,7 +25,7 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
       onPointerDown={canDrag ? (e) => beginPress(e, { kind: dragKind || (isTask ? "task" : "event"), id: item.id, title: item.title }, handleClick) : undefined}
       style={{
         position: "absolute", top, left: `calc(${col * widthPct}% + 3px)`, width: `calc(${widthPct}% - 6px)`, height,
-        background: "#fff", border: `1.5px solid ${accent}`, borderRadius: 10,
+        background: SURFACE, border: `1.5px solid ${accent}`, borderRadius: 10,
         padding: "6px 10px 6px 9px", overflow: "hidden", cursor: canDrag ? "grab" : "pointer", opacity: done ? 0.5 : 1,
         touchAction: canDrag ? "none" : undefined,
         userSelect: canDrag ? "none" : undefined, WebkitUserSelect: canDrag ? "none" : undefined,

@@ -5,6 +5,7 @@ import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal 
 import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import TaskRow from "./TaskRow";
+import { INK, SURFACE } from "../../lib/constants";
 
 // A "break it down" task collapses to one row here — the Tasks list should show one
 // task, not one row per day you're working on it. Click to expand and see (and check
@@ -26,7 +27,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
         className="hoverable"
         style={{
           display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, width: "100%",
-          background: "#fff", border: `1px solid ${col.border}`,
+          background: SURFACE, border: `1px solid ${col.border}`,
         }}
       >
         <button
@@ -35,7 +36,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
           style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}
         >
           {expanded ? <ChevronDown size={15} strokeWidth={2.3} color="#93A0AD" /> : <ChevronRight size={15} strokeWidth={2.3} color="#93A0AD" />}
-          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "#000000", textDecoration: allDone ? "line-through" : "none", opacity: allDone ? 0.5 : 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupTitle}</div>
+          <div style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: INK, textDecoration: allDone ? "line-through" : "none", opacity: allDone ? 0.5 : 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupTitle}</div>
         </button>
         {onSetGroupDeadline && editingDue ? (
           <div
@@ -87,7 +88,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
               onClick={onAddStep}
               className="hoverable"
               style={{
-                display: "inline-flex", alignItems: "center", gap: 5, alignSelf: "flex-start", background: "#fff", border: "1.5px dashed #D1D5DB",
+                display: "inline-flex", alignItems: "center", gap: 5, alignSelf: "flex-start", background: SURFACE, border: "1.5px dashed #D1D5DB",
                 borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer", marginTop: 2,
               }}
             >

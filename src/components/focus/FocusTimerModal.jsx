@@ -552,7 +552,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     const ringRadius = compact ? 44 : 64;
     const ringStroke = compact ? 6 : 9;
     const card = (
-      <div style={{ background: "#fff", borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
+      <div style={{ background: SURFACE, borderRadius: 20, border: `1px solid ${BORDER}`, boxShadow: portalTarget ? "0 4px 24px rgba(26,26,46,0.05)" : "0 20px 50px rgba(26,26,46,0.18)", padding: compact ? "14px 16px" : "18px 20px", height: portalTarget ? undefined : "100%", overflowY: portalTarget ? undefined : "auto", boxSizing: "border-box" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 12.5, color: PRIMARY, fontWeight: 700 }}>
               {phase === "work" ? (maxBlocks > 1 ? `Focus Session · Round ${blocksCompleted + 1} of ${maxBlocks}` : "Focus Session") : "Break"}
@@ -640,7 +640,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                   onClick={() => onSwitchTask?.(otherTask.id, otherTask.title)}
                   style={{
                     display: "block", width: "100%", textAlign: "center", marginBottom: compact ? 8 : 12,
-                    padding: compact ? "8px" : "10px", borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", color: PRIMARY_DARK,
+                    padding: compact ? "8px" : "10px", borderRadius: 14, border: `1px solid ${BORDER}`, background: SURFACE, color: PRIMARY_DARK,
                     fontSize: 12.5, fontWeight: 600, cursor: "pointer",
                   }}
                 >
@@ -685,14 +685,14 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
               <div style={{ display: "flex", gap: 8, marginBottom: compact ? 8 : 10 }}>
                 <button
                   onClick={addMoreTime}
-                  style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
+                  style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: SURFACE }}
                 >
                   Not done — add {roundMinutes}m
                 </button>
                 <button
                   onClick={reset}
                   title="Restart this round"
-                  style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 >
                   <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
                 </button>
@@ -732,7 +732,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                 <button
                   onClick={reset}
                   title="Reset"
-                  style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 48, flexShrink: 0, borderRadius: 14, border: `1px solid ${BORDER}`, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 >
                   <RotateCcw size={16} color={MUTED} strokeWidth={2.2} />
                 </button>
@@ -784,7 +784,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
           title="Drag to resize"
           style={{
             position: "absolute", top: -6, left: -6, width: 16, height: 16, borderRadius: "50%",
-            background: "#fff", border: `1.5px solid ${BORDER}`, cursor: "nwse-resize", zIndex: 1,
+            background: SURFACE, border: `1.5px solid ${BORDER}`, cursor: "nwse-resize", zIndex: 1,
             boxShadow: "0 1px 4px rgba(15,23,42,0.15)",
           }}
         />
@@ -846,14 +846,14 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </div>
 
             {nextTask && (
-              <div style={{ textAlign: "left", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+              <div style={{ textAlign: "left", background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 3 }}>Up next</div>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTask.title}</div>
               </div>
             )}
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={takeBreak} style={{ ...ghostBtn, flex: 1, background: "#fff", fontWeight: 700 }}>Take a short break</button>
+              <button onClick={takeBreak} style={{ ...ghostBtn, flex: 1, background: SURFACE, fontWeight: 700 }}>Take a short break</button>
               <button onClick={continueToDashboard} style={{ ...primaryBtn, flex: 1 }}>Continue to Dashboard</button>
             </div>
           </div>

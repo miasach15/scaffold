@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BORDER } from "../../lib/constants";
+import { BORDER, SURFACE } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 
@@ -40,7 +40,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "16px 18px", marginBottom: 12, background: "#fff" }}>
+    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 14, padding: "16px 18px", marginBottom: 12, background: SURFACE }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 140 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>{item.title}</div>

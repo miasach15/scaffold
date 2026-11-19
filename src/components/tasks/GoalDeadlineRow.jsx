@@ -1,5 +1,5 @@
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER } from "../../lib/constants";
+import { BORDER, INK, SURFACE } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -12,13 +12,13 @@ export default function GoalDeadlineRow({ item, onToggle, onOpen }) {
   const col = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal;
 
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${BORDER}` }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: SURFACE, border: `1px solid ${BORDER}` }}>
       <Checkbox checked={item.done} onClick={onToggle} color={col} />
       <div style={{ fontSize: 10, color: col.text, fontWeight: 700, flexShrink: 0 }}>Milestone</div>
       <button
         onClick={onOpen}
         title="Go to Goals"
-        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: item.done ? "line-through" : "none", opacity: item.done ? 0.5 : 1, fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
       >
         {item.title}
       </button>

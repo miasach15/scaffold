@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 
 const KEY = "scaffold-dark-mode";
 
-// A lightweight, whole-page dark mode via a CSS invert filter on <html> rather than a
-// per-component color-token rewrite (the app's styling is all one-off inline hex values,
-// not theme variables, so a "real" dark palette would mean touching every component).
-// invert(1) flips every rendered pixel; hue-rotate(180deg) rotates hues back so blues
-// stay blue-ish and reds stay red-ish instead of swapping to their opposites. The app
-// has no photos/images to worry about un-inverting.
+// A real dark theme: toggles a data-theme attribute on <html>, which index.css uses to
+// swap the five neutral CSS vars (paper-bg/surface/ink/muted/border — see
+// lib/constants.js) for dark values. Replaces the old CSS invert(1) + hue-rotate(180deg)
+// filter hack, which flipped every pixel on the page (including the user's own chosen
+// accent/category colors) instead of giving them a real, designed dark palette.
 export function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -18,7 +17,7 @@ export function useDarkMode() {
   });
 
   useEffect(() => {
-    document.documentElement.style.filter = darkMode ? "invert(1) hue-rotate(180deg)" : "";
+    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
     try {
       localStorage.setItem(KEY, darkMode ? "1" : "0");
     } catch {

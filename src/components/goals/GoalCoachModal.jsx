@@ -189,7 +189,7 @@ export default function GoalCoachModal({ categoryKeys, defaultCategory, existing
               placeholder="Type your reply..."
               rows={1}
               autoFocus
-              style={{ ...inputStyle, flex: 1, resize: "none", background: "#fff", fontFamily: "inherit", maxHeight: 90 }}
+              style={{ ...inputStyle, flex: 1, resize: "none", background: SURFACE, fontFamily: "inherit", maxHeight: 90 }}
             />
             {speechSupported && (
               <button
@@ -264,7 +264,7 @@ function ProposalCard({ goals, categoryKeys, created, creating, onSetGoalField, 
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {goals.map((g, gi) => (
-          <div key={gi} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>
+          <div key={gi} style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
               <input
                 value={g.title}

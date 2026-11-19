@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { overlayStyle } from "../../lib/styles";
 import ModalPortal from "./ModalPortal";
+import { INK, SURFACE } from "../../lib/constants";
 
 const TYPE_LABEL = { task: "Task", edu: "School", goal: "Goal", milestone: "Milestone", action: "Goal step", habit: "Habit", event: "Calendar" };
 
@@ -50,7 +51,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
     <ModalPortal>
     <div style={{ ...overlayStyle, alignItems: "flex-start", paddingTop: "12dvh" }} onClick={onClose}>
       <div
-        style={{ background: "#fff", borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68dvh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ background: SURFACE, borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68dvh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid #EFEFEF", flexShrink: 0 }}>
@@ -83,7 +84,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
               >
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#93A0AD", flexShrink: 0, whiteSpace: "nowrap" }}>{TYPE_LABEL[r.type]}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.title}</div>
+                  <div style={{ fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.title}</div>
                   {r.sub && <div style={{ fontSize: 11.5, color: "#B4BCC5", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.sub}</div>}
                 </div>
               </button>

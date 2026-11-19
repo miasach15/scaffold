@@ -1,6 +1,9 @@
-import { BORDER, MUTED, PRIMARY_DARK, SURFACE } from "./constants";
+import { BORDER, INK, MUTED, PRIMARY_DARK, SURFACE } from "./constants";
 
-export const inputStyle = { padding: "9px 11px", borderRadius: 12, border: `1px solid ${BORDER}`, fontSize: 14, outline: "none" };
+// Explicit background/color — without them a native <input>/<select> just falls back
+// to the browser's own white-box rendering, which stands out as a flat white hole once
+// the rest of the page has a real dark theme (see useDarkMode).
+export const inputStyle = { padding: "9px 11px", borderRadius: 12, border: `1px solid ${BORDER}`, background: SURFACE, color: INK, fontSize: 14, outline: "none" };
 export const labelStyle = { fontSize: 11.5, fontWeight: 600, color: MUTED, display: "block", marginBottom: 4 };
 // Bigger, rounder hit targets than a typical web button — minHeight matches the ~40-44px
 // touch-target floor the rest of the app already uses for anything tappable (see

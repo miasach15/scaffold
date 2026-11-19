@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
-import { PRIMARY, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
+import { PRIMARY, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
@@ -152,7 +152,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "12px 8px", borderRadius: 12, border: `1.5px solid ${active ? theme.primary : "#E5E7EB"}`,
-                  background: "#fff",
+                  background: SURFACE,
                 }}
               >
                 <div style={{ width: 28, height: 28, borderRadius: "50%", background: theme.primaryDark }} />
@@ -172,7 +172,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   padding: "12px 8px", borderRadius: 12, border: `1.5px solid ${isCustom ? customHex : "#E5E7EB"}`,
-                  background: "#fff", cursor: "pointer",
+                  background: SURFACE, cursor: "pointer",
                 }}
               >
                 <div

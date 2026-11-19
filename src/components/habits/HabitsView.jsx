@@ -9,7 +9,7 @@ import HabitHistoryModal from "./HabitHistoryModal";
 const SUGGESTIONS_CAP = 8; // the full list is 30+ — a wall of chips isn't a suggestion, it's a chore
 
 const navBtnStyle = {
-  width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
+  width: 26, height: 26, borderRadius: 8, border: `1px solid ${BORDER}`, background: SURFACE,
   display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, flexShrink: 0,
 };
 

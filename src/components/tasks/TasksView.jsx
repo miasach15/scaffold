@@ -14,6 +14,7 @@ import GroupedTaskRow from "./GroupedTaskRow";
 import EduDeadlineRow from "./EduDeadlineRow";
 import GoalDeadlineRow from "./GoalDeadlineRow";
 import TaskRow from "./TaskRow";
+import { SURFACE } from "../../lib/constants";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
@@ -354,7 +355,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
               onClick={() => setShowMore((x) => !x)}
               className="hoverable"
               style={{
-                display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+                display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE,
                 border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "6px 12px 6px 9px",
                 fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                 marginBottom: showMore ? 10 : 16,
@@ -368,7 +369,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       </div>
 
       {showMore && (
-        <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: SURFACE, border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={fieldLabelStyle}>Due by</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -409,7 +410,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                   onClick={() => setUseAI(true)}
                   className="hoverable"
                   style={{
-                    display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                    display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE, border: "1.5px dashed #D1D5DB",
                     borderRadius: 999, padding: "5px 11px 5px 8px", fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                   }}
                 >
@@ -421,7 +422,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                     <div
                       style={{
                         padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
-                        border: "1px solid var(--primary, #7B6EF0)", background: "#fff", color: "var(--primary-dark, #5849C4)",
+                        border: "1px solid var(--primary, #7B6EF0)", background: SURFACE, color: "var(--primary-dark, #5849C4)",
                       }}
                       title="Splits it into named steps leading up to this date, collapsed into one row you can expand"
                     >
@@ -443,7 +444,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                         style={{
                           padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                           border: `1px solid ${scheduleMode === "every" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                          background: "#fff",
+                          background: SURFACE,
                           color: scheduleMode === "every" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
                         title="Steps can land on any day between now and the due date"
@@ -455,7 +456,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                         style={{
                           padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                           border: `1px solid ${scheduleMode === "pick" ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                          background: "#fff",
+                          background: SURFACE,
                           color: scheduleMode === "pick" ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                         }}
                         title="Only use a set number of your least-busy days (this figures out which ones)"
@@ -488,7 +489,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                             style={{
                               padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
                               border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                              background: "#fff",
+                              background: SURFACE,
                               color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                             }}
                           >
@@ -536,7 +537,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
                 onClick={() => setShowLater((x) => !x)}
                 className="hoverable"
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1.5px dashed #D1D5DB",
+                  display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE, border: "1.5px dashed #D1D5DB",
                   borderRadius: 999, padding: "6px 12px 6px 9px", fontSize: 12, fontWeight: 700, color: "#7B8794", cursor: "pointer",
                   marginTop: 14, marginBottom: showLater ? 10 : 0,
                 }}

@@ -12,3 +12,34 @@ body,
 body {
   font-family: 'DM Sans', -apple-system, sans-serif;
 }
+
+/* The app's neutral tokens (PAPER_BG/SURFACE/INK/MUTED/BORDER in lib/constants.js)
+   resolve through these — same var(--x, fallback) pattern already used for the
+   user's accent color, just extended to the five neutrals so dark mode can swap
+   them for real values instead of running a CSS invert filter over everything.
+   Defined here (not inside App.jsx's own <style>) so auth/onboarding screens,
+   which mount before ScaffoldApp does, still pick it up. Accent/category/theme
+   colors are untouched by this — same hex in both modes. */
+:root {
+  --paper-bg: #FDFCFB;
+  --surface: #FAFAF9;
+  --ink: #1A1A2E;
+  --muted: #6B7280;
+  --border: #D9D3E6;
+}
+html[data-theme="dark"] {
+  --paper-bg: #121018;
+  --surface: #1C1A24;
+  --ink: #F2F1F5;
+  --muted: #9B9AA8;
+  --border: #332F40;
+}
+/* Theme changes (and the dark/light swap in particular) ease instead of snapping,
+   per the design system's "ease dark<->light theme changes, avoid abrupt
+   brightness jumps" rule — skipped for anyone who's asked for less motion. */
+body, #root {
+  transition: background-color .25s ease, color .25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body, #root { transition: none; }
+}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { inputStyle, noTypeDateProps } from "../../lib/styles";
-import { INK, MUTED, PRIMARY_DARK } from "../../lib/constants";
+import { INK, MUTED, PRIMARY_DARK, SURFACE } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -79,7 +79,7 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
   return (
     <div
       style={{
-        borderRadius: 14, padding: "12px 14px", background: "#fff",
+        borderRadius: 14, padding: "12px 14px", background: SURFACE,
         border: `1px solid ${milestoneDone ? PRIMARY_DARK + "40" : CURRENT_BORDER}`,
         borderLeftWidth: milestoneDone ? 1 : 3,
       }}

@@ -5,6 +5,7 @@ import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDat
 import { deleteBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
 import UrgencyBadge from "../shared/UrgencyBadge";
+import { INK, SURFACE } from "../../lib/constants";
 
 // Notion-plain by design: a checkbox and the title, nothing decorative competing for
 // attention. Category is still there (border tint, and still assignable from Task
@@ -33,14 +34,14 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
   const overdue = showDate && isOverdueTask(t);
 
   return (
-    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", borderRadius: 14, background: "#fff", border: `1px solid ${tinted ? col.border : "#EDEDED"}`, flexWrap: "wrap", rowGap: 8 }}>
+    <div className="hoverable" style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", borderRadius: 14, background: SURFACE, border: `1px solid ${tinted ? col.border : "#EDEDED"}`, flexWrap: "wrap", rowGap: 8 }}>
       <div style={{ width: 44, height: 44, margin: "-13px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
       </div>
       <button
         onClick={() => (onOpenFocus ? onOpenFocus(t.id, t.title) : onOpenDetail(t.id))}
         title="Click to start a focus session on this"
-        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
       >
         {t.title}
       </button>
@@ -107,7 +108,7 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
           onClick={() => setEditingDate(true)}
           title="Add a due date"
           style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 3, background: "#fff", border: "1.5px dashed #D1D5DB",
+            display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 3, background: SURFACE, border: "1.5px dashed #D1D5DB",
             borderRadius: 999, padding: "0 9px 0 6px", minHeight: 44, minWidth: 44, fontSize: 11.5, fontWeight: 700, color: "#93A0AD", cursor: "pointer", whiteSpace: "nowrap",
           }}
         >

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Calendar } from "lucide-react";
-import { PRIMARY, BORDER, MUTED, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, SURFACE, serifFont } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { noTypeDateProps } from "../../lib/styles";
 import FreehandIcon from "./FreehandIcon";
@@ -58,7 +58,7 @@ export function DatePickerButton({ value, onChange, title, placeholder = "Add da
       title={title}
       style={{
         position: "relative", display: "inline-flex", alignItems: "center", gap: 6,
-        padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, background: "#fff",
+        padding: "8px 10px", borderRadius: 8, border: `1px solid ${BORDER}`, background: SURFACE,
         fontSize: 13, color: value ? "#1A1A2E" : MUTED, cursor: "pointer", whiteSpace: "nowrap",
         ...style,
       }}
@@ -92,7 +92,7 @@ export function SectionHeader({ title, subtitle, right }) {
   return (
     <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
       <div>
-        <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 400, color: "#000000", letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
+        <div style={{ fontFamily: serifFont, fontSize: 34, fontWeight: 400, color: INK, letterSpacing: -0.3, lineHeight: 1.1 }}>{title}</div>
         <div style={{ fontSize: 13.5, color: "#8B95A1", marginTop: 4 }}>{subtitle}</div>
       </div>
       {right && <div style={{ flexShrink: 0 }}>{right}</div>}
@@ -164,7 +164,7 @@ export function Switch({ on, onChange, disabled }) {
       <span
         style={{
           position: "absolute", top: 2, left: on ? 21 : 2, width: 23, height: 23, borderRadius: "50%",
-          background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.28)",
+          background: SURFACE, boxShadow: "0 1px 3px rgba(0,0,0,0.28)",
           transition: "left .22s cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       />

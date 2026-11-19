@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GripHorizontal, MonitorSmartphone } from "lucide-react";
-import { PRIMARY } from "../../lib/constants";
+import { PRIMARY, SURFACE } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 import FreehandIcon from "../shared/FreehandIcon";
 
@@ -96,8 +96,8 @@ export default function TourOverlay({ setView, onCloseModals, onFinish }) {
       className={dragPos ? undefined : "tour-box-mobile-lift"}
       style={
         dragPos
-          ? { position: "fixed", top: dragPos.top, left: dragPos.left, zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
-          : { position: "fixed", bottom: "calc(28px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "#fff", borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
+          ? { position: "fixed", top: dragPos.top, left: dragPos.left, zIndex: 200, background: SURFACE, borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
+          : { position: "fixed", bottom: "calc(28px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", zIndex: 200, background: SURFACE, borderRadius: 16, boxShadow: "0 12px 40px rgba(15,23,42,0.18)", padding: "18px 22px", width: 340, maxWidth: "calc(100vw - 32px)", border: "1px solid #E2E8F0" }
       }
     >
       <div

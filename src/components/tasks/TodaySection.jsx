@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, TONE, serifFont } from "../../lib/constants";
+import { BORDER, INK, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { addDays, defaultLeadDays, formatShortDate, urgencyInfo, getLocalToday, isOverdueTask, sortOverdueOldestFirst, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import { deleteBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
@@ -243,7 +243,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
     <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 400, color: "#000000" }}>Today</div>
+          <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 400, color: INK }}>Today</div>
           <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -252,7 +252,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
               onClick={() => setWhatNowOpen(true)}
               className="hoverable"
               style={{
-                display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1.5px solid #E5E9ED",
+                display: "inline-flex", alignItems: "center", gap: 6, background: SURFACE, border: "1.5px solid #E5E9ED",
                 borderRadius: 999, padding: "7px 13px 7px 10px", fontSize: 12.5, fontWeight: 700, color: "var(--primary-dark, #5849C4)", cursor: "pointer",
               }}
               title="Picks the one most pressing thing and hides everything else"
@@ -276,7 +276,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
                 </div>
                 <button
                   onClick={it.onOpen}
-                  style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 15, color: "#000000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                  style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, fontSize: 15, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
                 >
                   {it.title}
                 </button>

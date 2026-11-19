@@ -3,7 +3,7 @@ import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react"
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn, noTypeDateProps } from "../../lib/styles";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import GoalCoachModal from "./GoalCoachModal";
@@ -100,7 +100,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
   };
 
   return (
-    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: "#fff", transition: "box-shadow .15s ease, transform .15s ease" }}>
+    <div className="hoverable" style={{ border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", background: SURFACE, transition: "box-shadow .15s ease, transform .15s ease" }}>
       <style>{`
         /* At the 32px serif size below, a narrow phone-width column (title's flex sibling,
            the completed-count/ring/expand/delete cluster, is flexShrink:0 and claims its

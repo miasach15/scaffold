@@ -10,9 +10,10 @@ import BreakdownPreviewModal from "../shared/BreakdownPreviewModal";
 import EduItemRow from "./EduItemRow";
 import EduSessionsModal from "./EduSessionsModal";
 import WorkItemRow from "./WorkItemRow";
+import { SURFACE } from "../../lib/constants";
 
 const toggleBtn = {
-  display: "inline-flex", alignItems: "center", gap: 5, background: "#fff",
+  display: "inline-flex", alignItems: "center", gap: 5, background: SURFACE,
   border: "1.5px dashed #D1D5DB", borderRadius: 999, padding: "5px 11px 5px 8px",
   fontSize: 11.5, fontWeight: 700, color: "#7B8794", cursor: "pointer",
 };
@@ -388,7 +389,7 @@ export default function EducationView({
                 style={{
                   padding: "8px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
                   border: `1px solid ${type === t ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                  background: "#fff",
+                  background: SURFACE,
                   color: type === t ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                 }}
               >
@@ -441,7 +442,7 @@ export default function EducationView({
         {addError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: -2, marginBottom: 8 }}>{addError}</div>}
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: SURFACE, border: "1px solid #ECECEC", borderRadius: 14, padding: "16px 18px", marginBottom: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           {type === "Homework" && (
             <div style={{ fontSize: 12.5, color: "#93A0AD" }}>Homework shows up every day until it's due, skipping a day only if it's already crowded. For something bigger that needs its own spread of sessions, use Assignment instead.</div>
           )}
@@ -458,7 +459,7 @@ export default function EducationView({
                     style={{
                       padding: "5px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700,
                       border: `1px solid ${workMode === m ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                      background: "#fff",
+                      background: SURFACE,
                       color: workMode === m ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                     }}
                   >
@@ -486,7 +487,7 @@ export default function EducationView({
                       style={{
                         padding: "4px 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize",
                         border: `1px solid ${startFrom === f ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
-                        background: "#fff",
+                        background: SURFACE,
                         color: startFrom === f ? "var(--primary-dark, #5849C4)" : "#93A0AD",
                       }}
                     >

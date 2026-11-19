@@ -154,15 +154,16 @@ export const CATEGORY_COLORS = {
 // MUTED is secondary text, BORDER is the standard hairline. PAPER_BG is the one
 // background color for the whole app — every page, the sidebar, auth/onboarding, all of
 // it. SURFACE is the layer that sits just above it — cards, modals, chips — a hair
-// warmer/grayer than pure white so it reads as a distinct plane, not a cutout. All four
-// hex-sampled from the Figma kit's neutrals palette (Background/Surface/Ink Black/Muted
-// Gray/Border Light) — re-checked directly in Figma, only BORDER had actually drifted
-// from its real "Border Light" value (a faint brand lavender, not a plain neutral gray).
-export const PAPER_BG = "#FDFCFB";
-export const SURFACE = "#FAFAF9";
-export const INK = "#1A1A2E";
-export const MUTED = "#6B7280";
-export const BORDER = "#D9D3E6";
+// warmer/grayer than pure white so it reads as a distinct plane, not a cutout. Light-mode
+// values below are the Figma kit's real neutrals (Background/Surface/Ink Black/Muted
+// Gray/Border Light); each resolves through a CSS var (see index.css) so dark mode can
+// swap in real dark values instead of running a CSS invert filter over the whole page —
+// same pattern PRIMARY/PRIMARY_DARK/PRIMARY_TINT already use for the accent color.
+export const PAPER_BG = "var(--paper-bg, #FDFCFB)";
+export const SURFACE = "var(--surface, #FAFAF9)";
+export const INK = "var(--ink, #1A1A2E)";
+export const MUTED = "var(--muted, #6B7280)";
+export const BORDER = "var(--border, #D9D3E6)";
 export const TONE = {
   danger: { bg: "#FBEAEA", border: "#EFB4B4", text: "#B03A3A" },
   warn: { bg: "#FBE6D9", border: "#F0B685", text: "#8A5424" },
