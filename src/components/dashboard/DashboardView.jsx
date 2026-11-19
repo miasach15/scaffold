@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Flame, GripVertical, MessageCircle, NotebookPen, Play, SkipForward } from "lucide-react";
+import { ChevronDown, ChevronUp, Flame, GripVertical, NotebookPen, Play, SkipForward } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
@@ -20,11 +20,8 @@ import Checkbox from "../shared/Checkbox";
 import { EmptyState } from "../shared/Misc";
 import FreehandIcon from "../shared/FreehandIcon";
 import BrainDumpModal from "./BrainDumpModal";
-import CheckinModal from "./CheckinModal";
 import WorkTitle from "../shared/WorkTitle";
 import StepNotes from "../shared/StepNotes";
-
-const CHECKIN_INTERVAL_MS = 60 * 60 * 1000;
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
@@ -55,7 +52,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onAddEvents, onSetDate, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, suppressCheckin, onCheckOffStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, onCheckOffStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
   const CATEGORY_COLORS = useCategoryColors();
   // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
   // native drag doesn't work at all on touch in most mobile browsers, and gives no
@@ -449,32 +446,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     }
   }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
 
-  // A schedule nobody's checked in on since this morning is just a guess by afternoon —
-  // this is what keeps "done around X" honest instead of quietly going stale. Fires on
-  // its own every hour Dashboard's actually open; the header button next to it covers
-  // checking in early instead of waiting the full hour out.
-  const [showCheckin, setShowCheckin] = useState(false);
-  const openTodayItems = [...todaysTimedTasks, ...todaysUntimed].filter((t) => t.id);
-  // Whether there's anything to check in ABOUT today — not just open tasks, since a day
-  // with only an event left (tutoring, practice) is still worth checking in on. Tasks
-  // alone being empty used to hide the button/skip the auto-prompt even with an event
-  // still ahead.
-  const hasCheckinWorthyItems = openTodayItems.length > 0 || todaysEvents.length > 0;
-  // Refs so the interval (set up once) always reads the CURRENT values instead of
-  // whatever they were on the render that first mounted it — otherwise an hour from now
-  // it'd still be checking against an empty "today" list from this exact moment, or
-  // popping up on top of a modal that happened to open later.
-  const hasCheckinWorthyItemsRef = useRef(hasCheckinWorthyItems);
-  hasCheckinWorthyItemsRef.current = hasCheckinWorthyItems;
-  const suppressCheckinRef = useRef(suppressCheckin);
-  suppressCheckinRef.current = suppressCheckin;
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!hasCheckinWorthyItemsRef.current || suppressCheckinRef.current) return;
-      setShowCheckin(true);
-    }, CHECKIN_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
   const firstName = (profile?.name || "").trim().split(" ")[0];
 
   return (
@@ -496,32 +467,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
           >
             <NotebookPen size={16} strokeWidth={1.8} /> Brain dump
           </button>
-          {hasCheckinWorthyItems && (
-            <button
-              onClick={() => setShowCheckin(true)}
-              className="hoverable"
-              style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, border: "none", background: "none", cursor: "pointer", color: INK, fontSize: 13.5, fontWeight: 500, padding: 0 }}
-              title="Say what you got done (updates the rest of today's plan to match)"
-            >
-              <MessageCircle size={16} strokeWidth={1.8} /> Check in
-            </button>
-          )}
         </div>
       </div>
 
       {showBrainDump && <BrainDumpModal onClose={() => setShowBrainDump(false)} onAddTask={onAddTask} tasks={tasks} events={events} />}
-      {showCheckin && (
-        <CheckinModal
-          openItems={openTodayItems}
-          tasks={tasks}
-          events={events}
-          onClose={() => setShowCheckin(false)}
-          onMarkDone={(ids) => ids.forEach((id) => onToggleDone(id, true))}
-          onChangeDates={(changes) => changes.forEach(({ id, newDate }) => onSetDate(id, newDate))}
-          onAddTasks={(newTasks) => newTasks.forEach((t) => onAddTask(t))}
-          onAddEvents={onAddEvents}
-        />
-      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
         <style>{`
