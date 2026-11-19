@@ -83,19 +83,24 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
             <button onClick={() => setWeekStart((w) => addDays(w, 7))} title="Next week" style={navBtnStyle}><ChevronRight size={14} /></button>
           </div>
 
+          {/* Below 640px the table fits entirely on-screen instead of needing a sideways
+              scroll to see the rest of the week — the habit-name column shrinks (still
+              enough room for a short title before it ellipsizes) and the day columns lose
+              their fixed minimum width and just divide up whatever's left, rather than
+              each claiming 44px and pushing the row wider than the phone. */}
           <div style={{ overflowX: "auto" }}>
             <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 3 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(168px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: `1px solid ${BORDER}` }}>
+              <div className="habits-grid-row" style={{ display: "grid", gridTemplateColumns: "minmax(168px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: `1px solid ${BORDER}` }}>
                 {/* Sticky so it's always the thing left on screen once you scroll right to see
                     the later days, never the thing that scrolls away — a wide week of day
                     columns on a narrow phone otherwise pushes the one column that actually
                     says which habit this row is right off the edge. */}
-                <div style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
+                <div className="habits-name-cell" style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, padding: "12px 18px", fontFamily: serifFont, fontSize: 12.5, fontStyle: "italic", color: MUTED }}>Habit</div>
                 {weekDays.map((d) => {
                   const iso = toISO(d);
                   const isToday = iso === todayISO;
                   return (
-                    <div key={iso} style={{ textAlign: "center", padding: "10px 4px", borderLeft: `1px solid ${BORDER}` }}>
+                    <div key={iso} className="habits-day-cell" style={{ textAlign: "center", padding: "10px 4px", borderLeft: `1px solid ${BORDER}` }}>
                       <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: 0.4, color: isToday ? INK : MUTED, textTransform: "uppercase" }}>{dayLabel(d).slice(0, 2)}</div>
                       <div style={{ fontFamily: serifFont, fontSize: 14, color: isToday ? INK : MUTED, marginTop: 1 }}>{d.getDate()}</div>
                     </div>
@@ -108,18 +113,18 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
                 return (
                   <div
                     key={h.id}
-                    className="habit-row"
+                    className="habit-row habits-grid-row"
                     style={{ display: "grid", gridTemplateColumns: "minmax(168px, 2fr) repeat(7, minmax(44px, 1fr))", borderBottom: i === habits.length - 1 ? "none" : `1px solid ${BORDER}` }}
                   >
-                    <div style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
+                    <div className="habits-name-cell" style={{ position: "sticky", left: 0, zIndex: 1, background: SURFACE, display: "flex", alignItems: "center", gap: 8, padding: "10px 10px 10px 18px", minWidth: 0 }}>
                       <button
                         onClick={() => setHistoryHabitId(h.id)}
                         title="View history"
                         style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "baseline", gap: 7 }}
                       >
-                        <span style={{ fontFamily: serifFont, fontSize: 15, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</span>
+                        <span style={{ flex: "0 1 auto", minWidth: 0, fontFamily: serifFont, fontSize: 15, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</span>
                         {streak > 0 && (
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                          <span className="habit-streak-badge" style={{ display: "inline-flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
                             <Flame size={9} color={MUTED} fill={MUTED} strokeWidth={0} />
                             <span style={{ fontSize: 10, fontStyle: "italic", color: MUTED, fontFamily: serifFont }}>{streak}d</span>
                           </span>
@@ -165,6 +170,20 @@ export default function HabitsView({ habits, onAddHabit, onRemoveHabit, onSetDon
           <style>{`
             .habit-row:hover .habit-row-delete { opacity: 1 !important; }
             .habit-dot-btn:focus-visible span { box-shadow: 0 0 0 2px ${SURFACE}, 0 0 0 3.5px ${INK}; }
+            @media (max-width: 640px) {
+              .habits-grid-row { grid-template-columns: minmax(92px, 1.3fr) repeat(7, minmax(0, 1fr)) !important; }
+              .habits-name-cell { padding-left: 10px !important; padding-right: 2px !important; gap: 4px !important; }
+              .habits-day-cell { padding-left: 1px !important; padding-right: 1px !important; }
+              /* The streak flame badge is a nice-to-have next to the title, not essential
+                 (the history modal still shows a total day count) — on a narrow column it
+                 was crowding the title down to just a couple of characters, so it's
+                 dropped here in favor of actually being able to read the habit's name. */
+              .habit-streak-badge { display: none !important; }
+              /* Hover-to-reveal doesn't exist on touch, so without this the delete button
+                 was invisible AND undiscoverable on a phone — it needs to just stay
+                 visible here instead of only showing up on a hover that will never fire. */
+              .habit-row-delete { opacity: 1 !important; padding: 4px 6px !important; }
+            }
           `}</style>
         </>
       )}

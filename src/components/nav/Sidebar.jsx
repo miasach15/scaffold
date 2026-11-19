@@ -138,14 +138,18 @@ export default function Sidebar({ view, setView, onOpenWeeklyReview, onOpenSetti
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
-          <button onClick={onOpenSearch} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
+          {/* Each of these closes the mobile drawer before opening its own modal — left
+              open, the drawer's full-screen backdrop (z-index 190) sits on top of a modal
+              (z-index 100), so on a phone Settings/Search/Weekly Review would open
+              underneath it, effectively invisible. */}
+          <button onClick={() => { setOpen(false); onOpenSearch(); }} title="Search everything (⌘K or /)" className="sb-icon-btn" style={iconBtnStyle}>
             <Search size={16} />
           </button>
-          <button data-tour="nav-weekly-review" onClick={onOpenWeeklyReview} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
+          <button data-tour="nav-weekly-review" onClick={() => { setOpen(false); onOpenWeeklyReview(); }} title="Weekly Review" className="sb-icon-btn" style={iconBtnStyle}>
             <ListChecks size={16} />
           </button>
           <div style={{ flex: 1 }} />
-          <button data-tour="nav-settings" onClick={onOpenSettings} title="Settings" className="sb-icon-btn" style={iconBtnStyle}>
+          <button data-tour="nav-settings" onClick={() => { setOpen(false); onOpenSettings(); }} title="Settings" className="sb-icon-btn" style={iconBtnStyle}>
             <Settings size={16} />
           </button>
           <button onClick={onSignOut} title="Sign out" className="sb-icon-btn" style={iconBtnStyle}>
