@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { RotateCw } from "lucide-react";
-import { MUTED, PRIMARY_DARK, SURFACE } from "../../lib/constants";
+import { MUTED, PRIMARY_DARK } from "../../lib/constants";
 
 // How far you have to pull before letting go actually reloads — short of that it just
 // springs back, same as the native gesture this stands in for.
@@ -113,25 +113,23 @@ export default function PullToRefresh({ children }) {
   return (
     <>
       {visible && (
+        // Just a bare spinner, no pill/label — the same plain "a wheel appears up top
+        // and spins" an iOS/Mac app gives you, not a custom banner announcing itself.
         <div
           style={{
-            position: "fixed", top: 10, left: "50%", transform: `translateX(-50%) translateY(${Math.min(pull, MAX_PULL) * 0.5}px)`,
-            zIndex: 9999, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999,
-            background: SURFACE, boxShadow: "0 4px 14px rgba(15,23,42,0.12)", pointerEvents: "none",
-            opacity: Math.min(1, progress + 0.2), transition: refreshing ? "none" : "opacity 120ms ease",
+            position: "fixed", top: 14, left: "50%", transform: `translateX(-50%) translateY(${Math.min(pull, MAX_PULL) * 0.5}px)`,
+            zIndex: 9999, pointerEvents: "none",
+            opacity: Math.min(1, progress + 0.15), transition: refreshing ? "none" : "opacity 120ms ease",
           }}
         >
           <RotateCw
-            size={14}
+            size={18}
             color={progress >= 1 || refreshing ? PRIMARY_DARK : MUTED}
             style={{
-              transform: `rotate(${progress * 220}deg)`,
+              transform: refreshing ? "none" : `rotate(${progress * 220}deg)`,
               animation: refreshing ? "ptr-spin 0.7s linear infinite" : "none",
             }}
           />
-          <span style={{ fontSize: 11.5, fontWeight: 600, color: progress >= 1 || refreshing ? PRIMARY_DARK : MUTED }}>
-            {refreshing ? "Refreshing…" : progress >= 1 ? "Release to refresh" : "Pull to refresh"}
-          </span>
         </div>
       )}
       <style>{`@keyframes ptr-spin { to { transform: rotate(360deg); } }`}</style>
