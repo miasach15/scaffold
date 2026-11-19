@@ -31,6 +31,23 @@ function pullDistance(rawDelta) {
   if (rawDelta <= THRESHOLD) return rawDelta;
   return THRESHOLD + rubberband(rawDelta - THRESHOLD, MAX_PULL - THRESHOLD);
 }
+// A small movement threshold before a touch actually commits to the gesture (apple-
+// design §10) — a tap's own couple-pixel jitter shouldn't visibly tug the indicator.
+const HYSTERESIS = 8;
+// Momentum projection (apple-design §6): a fast flick that let go a bit short of
+// THRESHOLD should still trigger if its OWN velocity would have carried it past —
+// exactly how a quick flick triggers native pull-to-refresh even without a full drag.
+// 0.99 (the "snappier" rate the skill names as the alternative to 0.998) rather than
+// the scroll-view default — this gesture's whole range is ~150px, not a full page of
+// momentum scroll, so the heavier rate would wildly overshoot the projection.
+const PROJECTION_DECEL = 0.99;
+function project(velocityPxPerSec) {
+  return (velocityPxPerSec / 1000) * (PROJECTION_DECEL / (1 - PROJECTION_DECEL));
+}
+// How recent a touch sample has to be to count toward release velocity — long enough to
+// smooth out single-frame jitter, short enough that a flick-then-hold reads as the hold
+// (≈0 velocity) rather than the flick that preceded it.
+const VELOCITY_WINDOW_MS = 100;
 
 // A critically-damped spring (damping ratio 1 — settles smoothly, no bounce, same
 // default §4 of apple-design calls for on anything that isn't a momentum-carrying
@@ -130,18 +147,33 @@ export default function PullToRefresh({ children }) {
 
   useEffect(() => {
     const wheelState = wheelRef.current;
-    const setDirect = (v) => { pullRef.current = v; setPull(v); }; // 1:1 while actively dragging — no spring fighting the finger
-    const release = () => {
-      if (pullRef.current >= THRESHOLD) {
+    // 1:1 while actively dragging — no spring fighting the finger. Keeps the spring's own
+    // notion of "current value" in lockstep too (not just pullRef/React state), so when a
+    // spring actually starts on release it animates from the real live position instead
+    // of whatever stale value the spring object was last left at.
+    const setDirect = (v) => {
+      pullRef.current = v;
+      spring.current.value = v;
+      spring.current.target = v;
+      setPull(v);
+    };
+    // `velocity` (px/s, positive = still moving down) is the release's actual momentum —
+    // handed straight to the spring as its initial velocity (apple-design §5, "no seam
+    // between dragging and animating") and fed into the projection below (§6) so a fast
+    // flick that let go short of THRESHOLD can still trigger, same as native.
+    const release = (velocity = 0) => {
+      const projected = pullRef.current + project(velocity);
+      if (projected >= THRESHOLD) {
         setRefreshing(true);
         // Settles at the resting height instead of snapping there, so the spinner
         // arrives rather than teleporting — then reload once it's actually visible.
         if (reducedMotionRef.current) spring.setImmediate(THRESHOLD);
-        else spring.springTo(THRESHOLD, 0.28);
+        else { spring.current.velocity = velocity; spring.springTo(THRESHOLD, 0.28); }
         setTimeout(() => window.location.reload(), 160);
       } else if (reducedMotionRef.current) {
         spring.setImmediate(0);
       } else {
+        spring.current.velocity = velocity;
         spring.springTo(0, 0.32);
       }
     };
@@ -149,38 +181,53 @@ export default function PullToRefresh({ children }) {
     const onTouchStart = (e) => {
       if (refreshing || e.touches.length !== 1) return;
       spring.stop(); // grabbing it again mid-spring-back takes over from wherever it is
-      touchRef.current = { startY: e.touches[0].clientY, armed: atTop(e.target), dragging: false };
+      // Offsetting startY by the CURRENT pull (rather than assuming it's 0) means a grab
+      // mid-spring-back continues smoothly from the live value instead of jumping —
+      // exact whenever the live value is still under THRESHOLD, which it always is here
+      // (the only thing ever springing back toward 0 is a sub-threshold release).
+      touchRef.current = { startY: e.touches[0].clientY - pullRef.current, armed: atTop(e.target), dragging: false, history: [] };
     };
     const onTouchMove = (e) => {
       const st = touchRef.current;
       if (!st.armed || refreshing) return;
-      const delta = e.touches[0].clientY - st.startY;
+      const y = e.touches[0].clientY;
+      const delta = y - st.startY;
       if (delta <= 0) { st.dragging = false; setDirect(0); return; }
       if (!atTop(e.target)) { st.armed = false; st.dragging = false; setDirect(0); return; }
+      if (!st.dragging && delta < HYSTERESIS) return; // not committed yet — a tap's own jitter shouldn't tug the indicator
       st.dragging = true;
+      const now = performance.now();
+      st.history = [...st.history, { y, t: now }].filter((p) => now - p.t < VELOCITY_WINDOW_MS);
       setDirect(pullDistance(delta));
       e.preventDefault();
     };
     const onTouchEnd = () => {
-      if (touchRef.current.dragging) release();
-      touchRef.current.armed = false;
-      touchRef.current.dragging = false;
+      const st = touchRef.current;
+      if (st.dragging) {
+        const h = st.history;
+        const velocity = h.length >= 2 ? (h[h.length - 1].y - h[0].y) / ((h[h.length - 1].t - h[0].t) / 1000 || 1) : 0;
+        release(velocity);
+      }
+      st.armed = false;
+      st.dragging = false;
     };
 
     const onWheel = (e) => {
       if (refreshing || e.deltaY >= 0 || !atTop(e.target)) {
         clearTimeout(wheelState.decayTimer);
         if (pullRef.current > 0 && e.deltaY >= 0) release();
-        wheelState.rawAccum = 0;
+        wheelState.rawAccum = null;
         return;
       }
       spring.stop();
       // rawAccum tracks the raw (pre-resistance) total, same role touch's `delta` plays,
       // so pullDistance's "1:1 up to THRESHOLD" curve applies identically to both inputs.
-      wheelState.rawAccum = (wheelState.rawAccum || 0) + -e.deltaY * 0.6;
+      // Starting fresh (null) picks up from the current live pull rather than 0, for the
+      // same mid-spring-continuity reason as touch above.
+      wheelState.rawAccum = (wheelState.rawAccum ?? pullRef.current) + -e.deltaY * 0.6;
       setDirect(pullDistance(wheelState.rawAccum));
       clearTimeout(wheelState.decayTimer);
-      wheelState.decayTimer = setTimeout(() => { wheelState.rawAccum = 0; release(); }, WHEEL_DECAY_MS);
+      wheelState.decayTimer = setTimeout(() => { wheelState.rawAccum = null; release(); }, WHEEL_DECAY_MS);
     };
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
