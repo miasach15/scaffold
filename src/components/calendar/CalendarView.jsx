@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { PRIMARY, ROW_H, cardStyle, serifFont } from "../../lib/constants";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MUTED, PRIMARY, PRIMARY_DARK, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { useDragReschedule } from "../../hooks/useDragReschedule";
 import { addDays, dayLabel, dateLabel, decimalToTimeLabel, layoutOverlaps, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
@@ -73,12 +74,14 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));
   const goNext = () => (isDay ? onSetDayView(toISO(addDays(days[0], 1))) : setWeekStart(addDays(weekStart, 7)));
   const goToday = () => (isDay ? onSetDayView(todayISO) : setWeekStart(startOfWeek(new Date())));
-  const modeBtnStyle = (active) => ({
-    ...ghostBtn, padding: "5px 10px", fontSize: 12,
-    background: "#fff",
-    borderColor: active ? "var(--primary, #7B6EF0)" : ghostBtn.border,
-    color: active ? "var(--primary-dark, #5849C4)" : ghostBtn.color,
+  // A real segmented control (one pill, a solid-filled active segment) instead of three
+  // separately bordered buttons that only changed border color when active — closer to
+  // how both iOS's UISegmentedControl and Google Calendar's own view switcher read.
+  const segmentBtnStyle = (active) => ({
+    border: "none", borderRadius: 10, padding: "6px 12px", fontSize: 12.5, fontWeight: 600,
+    background: active ? PRIMARY_DARK : "transparent", color: active ? "#fff" : MUTED,
   });
+  const iconNavBtnStyle = { ...ghostBtn, width: 36, height: 36, minHeight: 0, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" };
 
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
@@ -99,14 +102,18 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500 }}>{monthLabel(days[0])}</div>
         <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 4 }}>
-            <button onClick={() => onSetDayView(null)} className="btn-ghost" style={modeBtnStyle(!isDay)}>Week</button>
-            <button onClick={() => onSetDayView(dayView || todayISO)} className="btn-ghost" style={modeBtnStyle(isDay)}>Day</button>
-            <button onClick={onEnterMonth} className="btn-ghost" style={modeBtnStyle(false)}>Month</button>
+          <div style={{ display: "flex", gap: 2, background: "#F1F2F6", borderRadius: 12, padding: 3 }}>
+            <button onClick={() => onSetDayView(null)} className="btn-ghost" style={segmentBtnStyle(!isDay)}>Week</button>
+            <button onClick={() => onSetDayView(dayView || todayISO)} className="btn-ghost" style={segmentBtnStyle(isDay)}>Day</button>
+            <button onClick={onEnterMonth} className="btn-ghost" style={segmentBtnStyle(false)}>Month</button>
           </div>
           <button onClick={goToday} className="btn-ghost" style={ghostBtn}>Today</button>
-          <button onClick={goPrev} className="btn-ghost" style={ghostBtn}>‹</button>
-          <button onClick={goNext} className="btn-ghost" style={ghostBtn}>›</button>
+          <button onClick={goPrev} className="btn-ghost" style={iconNavBtnStyle} title="Previous" aria-label="Previous">
+            <ChevronLeft size={16} strokeWidth={2.2} />
+          </button>
+          <button onClick={goNext} className="btn-ghost" style={iconNavBtnStyle} title="Next" aria-label="Next">
+            <ChevronRight size={16} strokeWidth={2.2} />
+          </button>
         </div>
       </div>
 
