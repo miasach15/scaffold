@@ -113,8 +113,8 @@ export default function BrainDumpModal({ onClose, onAddTask, tasks, events }) {
 
   return (
     <ModalPortal>
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, width: 460, maxHeight: "82dvh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
+    <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="sheet-surface" style={{ ...modalStyle, width: 460, maxHeight: "82dvh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 4, flexShrink: 0 }}>Brain dump</div>
 
         {drafts === null ? (

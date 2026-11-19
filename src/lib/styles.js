@@ -17,7 +17,12 @@ export const primaryBtn = { padding: "11px 20px", borderRadius: 14, border: "non
 export const suggestionChip = { padding: "7px 13px", borderRadius: 999, border: `1px dashed ${BORDER}`, background: SURFACE, fontSize: 12, fontWeight: 600, color: MUTED };
 export const deleteBtn = { border: "none", background: "none", fontSize: 16, color: "#9CA3AF", padding: "6px 8px", borderRadius: 8, cursor: "pointer" };
 export const rowStyle = { display: "flex", alignItems: "center", gap: 10, padding: "9px 4px", borderBottom: `1px solid ${BORDER}` };
-export const overlayStyle = { position: "fixed", inset: 0, background: "rgba(26,26,46,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 };
+// backdropFilter turns the scrim into a real translucent material (content blurring
+// through it) instead of a flat tinted rectangle — every modal gets this for free since
+// they all share overlayStyle. Falls back gracefully (no blur, just the tint) on browsers
+// without backdrop-filter support, and index.css raises the opacity / drops it entirely
+// under prefers-reduced-transparency.
+export const overlayStyle = { position: "fixed", inset: 0, background: "rgba(26,26,46,0.35)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 };
 export const modalStyle = { background: SURFACE, borderRadius: 14, padding: 20, width: 360, maxWidth: "100%", boxShadow: "0 20px 50px rgba(26,26,46,0.18)" };
 
 // Spread onto every native `<input type="date">` — blocks typing a date out by hand (no

@@ -795,8 +795,8 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
 
   return (
     <ModalPortal>
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, width: 440, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+    <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="sheet-surface" style={{ ...modalStyle, width: 440, maxWidth: "94vw", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
         <div>
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: PRIMARY_DARK, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
               <Check size={28} color="#fff" strokeWidth={2.5} />

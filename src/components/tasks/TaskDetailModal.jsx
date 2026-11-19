@@ -22,8 +22,8 @@ export default function TaskDetailModal({ task, onClose, onRename, onToggleDone,
 
   return (
     <ModalPortal>
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="sheet-surface" style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 13, color: "#93A0AD", fontWeight: 700, marginBottom: 10 }}>Task</div>
         <textarea
           autoFocus

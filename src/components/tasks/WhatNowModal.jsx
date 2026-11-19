@@ -18,8 +18,9 @@ export default function WhatNowModal({ items, onClose, onOpenFocus }) {
 
   return (
     <ModalPortal>
-    <div style={overlayStyle} onClick={onClose}>
+    <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
       <div
+        className="sheet-surface"
         style={{ ...modalStyle, padding: "24px 26px 26px", width: 380 }}
         onClick={(e) => e.stopPropagation()}
       >

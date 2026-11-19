@@ -137,8 +137,9 @@ export default function GoalCoachModal({ categoryKeys, defaultCategory, existing
 
   return (
     <ModalPortal>
-      <div style={overlayStyle} onClick={onClose}>
+      <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
         <div
+          className="sheet-surface"
           style={{ ...modalStyle, width: 560, padding: 0, display: "flex", flexDirection: "column", height: "min(680px, 88dvh)" }}
           onClick={(e) => e.stopPropagation()}
         >

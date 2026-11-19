@@ -784,6 +784,32 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
            sizing for as long as any modal is open. */
         @keyframes modalPortalIn { 0% { opacity: 0; } 100% { opacity: 1; } }
         .modal-portal-enter { animation: modalPortalIn 140ms ease-out both; }
+        /* Below the same ~860px breakpoint Sidebar switches to its mobile layout at, every
+           modal that opts in (.sheet-overlay on the backdrop, .sheet-surface on the dialog
+           box itself — see lib/styles.js's overlayStyle/modalStyle consumers) becomes a
+           real bottom sheet instead of a centered dialog: full width, flush to the bottom
+           edge, rounded top corners only, and it slides up into place rather than just
+           fading — the single biggest "this feels like a native app, not a website" cue on
+           a phone. .sheet-surface's own transform lives entirely on a descendant of the
+           fixed overlay, never on an ancestor of it, so it can't disturb the overlay's own
+           fixed-position containing block (see modalPortalIn's note above). Desktop widths
+           are untouched — same centered dialog as before. */
+        @keyframes sheetSlideUp { from { transform: translateY(28px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+        @media (max-width: 860px) {
+          .sheet-overlay { align-items: flex-end !important; padding: 0 !important; }
+          .sheet-surface {
+            width: 100% !important; max-width: 100% !important; margin: 0 !important;
+            border-radius: 20px 20px 0 0 !important;
+            max-height: 90dvh !important; overflow-y: auto !important;
+            animation: sheetSlideUp 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+          .sheet-overlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(26,26,46,0.6) !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sheet-surface { animation: none !important; }
+        }
         /* Shared by every bottom-center toast (Undo, save-error, homework follow-up) —
            slide+fade instead of popping into existence. Safe to put the transform right
            on these toasts themselves (each is its own position:fixed element, not an

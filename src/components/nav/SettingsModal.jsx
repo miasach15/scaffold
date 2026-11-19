@@ -135,8 +135,8 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
 
   return (
     <ModalPortal>
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, width: 440, maxHeight: "85dvh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+    <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="sheet-surface" style={{ ...modalStyle, width: 440, maxHeight: "85dvh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
           <SettingsIcon size={19} color={PRIMARY} strokeWidth={2} /> Settings
         </div>
