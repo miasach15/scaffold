@@ -82,7 +82,7 @@ export function useGrades(userId) {
               .maybeSingle();
             if (fetchError || !data) {
               console.error("ensureClass recovery fetch failed:", fetchError);
-              reportSaveError(`Couldn't save that — ${error.message || error.code || "unknown error"}.`);
+              reportSaveError(`Couldn't save that — recovered-row lookup failed (${fetchError?.message || "no row found"}).`);
               return null;
             }
             const recovered = classFromRow(data);
