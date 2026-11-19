@@ -36,6 +36,11 @@ export function useDragReschedule(onDrop) {
   const beginPress = useCallback(
     (e, item, onTap) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      // Without this, moving the mouse even a pixel before the drag threshold kicks in
+      // starts the browser's native text-selection drag on the block's own label —
+      // preventDefault on the down event itself (not just once dragging is confirmed)
+      // stops that selection from ever starting.
+      e.preventDefault();
       pointerHandledRef.current = true;
       const startX = e.clientX;
       const startY = e.clientY;

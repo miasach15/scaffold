@@ -51,6 +51,7 @@ export default function StripRow({ label, days, chips, chipStyle, chipLabel, onC
                 cursor: draggable ? "grab" : onChipClick ? "pointer" : "default",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%", maxWidth: "100%",
                 touchAction: draggable ? "none" : undefined,
+                userSelect: draggable ? "none" : undefined, WebkitUserSelect: draggable ? "none" : undefined,
               };
               const fullLabel = chipLabel(c);
               const tapAction = onChipClick ? (e) => { e.stopPropagation(); onChipClick(c); } : (e) => e.stopPropagation();

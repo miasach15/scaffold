@@ -118,11 +118,13 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
       </div>
 
       <div style={{ ...cardStyle, overflow: "hidden", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        {/* On narrow screens the day grid would get crushed unreadably — this wrapper
-            scrolls horizontally as one synced unit (header + strip rows + hourly grid
-            all move together) instead of squishing each day column down. */}
-        <div style={{ overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-          <div style={{ minWidth: isDay ? 320 : 760, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        {/* Day view keeps a horizontal-scroll floor so its single column stays readable
+            on a narrow phone. Week view deliberately has none — all 7 days need to stay
+            visible together rather than sliding off to the side, so its columns just
+            compress with the viewport (minmax(0, 1fr) below lets them shrink instead of
+            forcing a scroll). */}
+        <div style={{ overflowX: isDay ? "auto" : "hidden", overflowY: "hidden", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ minWidth: isDay ? 320 : 0, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "grid", gridTemplateColumns: `56px repeat(${days.length}, minmax(0, 1fr))`, borderBottom: "1px solid #EDF0F3", flexShrink: 0 }}>
               <div />
               {days.map((d) => {

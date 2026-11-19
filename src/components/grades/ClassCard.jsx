@@ -318,8 +318,8 @@ export default function ClassCard({
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {pendingItems.map((it) => {
                   return (
-                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.title}</div>
+                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 140px", minWidth: 0, fontSize: 14, wordBreak: "break-word" }}>{it.title}</div>
                       {categories.length > 0 && (
                         <select
                           value={it.gradeCategoryId || ""}

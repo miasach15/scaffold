@@ -28,6 +28,7 @@ export default function CalBlock({ item, color, done, isTask, onOpenFocus, onTog
         background: "#fff", border: `1.5px solid ${accent}`, borderRadius: 10,
         padding: "6px 10px 6px 9px", overflow: "hidden", cursor: canDrag ? "grab" : "pointer", opacity: done ? 0.5 : 1,
         touchAction: canDrag ? "none" : undefined,
+        userSelect: canDrag ? "none" : undefined, WebkitUserSelect: canDrag ? "none" : undefined,
       }}
     >
       {isTask && (
