@@ -129,10 +129,11 @@ export default function CategoryEditor({ categoryKeys, categoryColors, onRename,
   );
 }
 
-// The actual swatch grid — same 10 presets + 1 custom-color-wheel slot the old always-
-// visible per-category row used to show, just tucked behind a click now instead of
-// sitting on the page for every category at once. Renders inline, right below the pill
-// row (see the comment above CategoryEditor), rather than floating over nearby content.
+// The actual swatch grid — every preset plus a trailing custom-color-wheel slot, same
+// order SettingsModal's own accent-color grid already uses (every preset, then Custom
+// last), tucked behind a click now instead of sitting on the page for every category at
+// once. Renders inline, right below the pill row (see the comment above CategoryEditor),
+// rather than floating over nearby content.
 function ColorSwatchGrid({ label, labelColor, activeColorKey, onPick }) {
   const isCustom = typeof activeColorKey === "string" && activeColorKey.startsWith("custom:");
   const customHex = isCustom ? activeColorKey.slice(7) : "#8290D8";
@@ -146,31 +147,6 @@ function ColorSwatchGrid({ label, labelColor, activeColorKey, onPick }) {
       <div style={{ fontSize: 11, fontWeight: 700, color: labelColor }}>{label}'s color</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, width: "fit-content" }}>
         {Object.entries(CATEGORY_COLOR_SWATCHES).map(([key, swatch]) => {
-          // The custom swatch takes over the Peach slot (rather than tacking on a 12th
-          // dot) so the grid stays a clean 6x2 instead of an awkward leftover row.
-          if (key === "peach") {
-            return (
-              <label
-                key="custom"
-                title="Custom color"
-                style={{
-                  position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background: isCustom ? customHex : "#F3F4F6",
-                  border: `2px solid ${isCustom ? customHex : "transparent"}`,
-                  boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
-                }}
-              >
-                {!isCustom && <ColorWheelIcon size={14} />}
-                <input
-                  type="color"
-                  value={customHex}
-                  onChange={(e) => onPick(`custom:${e.target.value}`)}
-                  style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-                />
-              </label>
-            );
-          }
           const active = activeColorKey === key;
           return (
             <button
@@ -185,6 +161,24 @@ function ColorSwatchGrid({ label, labelColor, activeColorKey, onPick }) {
             />
           );
         })}
+        <label
+          title="Custom color"
+          style={{
+            position: "relative", width: 26, height: 26, borderRadius: "50%", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: isCustom ? customHex : "#F3F4F6",
+            border: `2px solid ${isCustom ? customHex : "transparent"}`,
+            boxShadow: isCustom ? `0 0 0 2px ${customHex}33` : "none",
+          }}
+        >
+          {!isCustom && <ColorWheelIcon size={14} />}
+          <input
+            type="color"
+            value={customHex}
+            onChange={(e) => onPick(`custom:${e.target.value}`)}
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          />
+        </label>
       </div>
     </div>
   );
