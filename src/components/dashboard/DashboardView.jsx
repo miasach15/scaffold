@@ -138,7 +138,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       dragRef.current = null;
       setDraggingId(null);
       setLiveOrder(null);
-      if (cur) onReorderTasksRef.current?.(cur.order);
+      // Goal rows (synthetic "goal-" ids) can ride along in the drag for visual
+      // positioning, but they aren't real tasks — only the real task ids get persisted.
+      if (cur) onReorderTasksRef.current?.(cur.order.filter((id) => !String(id).startsWith("goal-")));
     };
     window.addEventListener("pointermove", handleMove);
     window.addEventListener("pointerup", handleUp);
@@ -175,6 +177,24 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   }, [liveOrder, draggingId]);
 
   const todayISO = toISO(new Date());
+
+  // Same "only show up once actually due/overdue" rule TodaySection gives goal actions
+  // on the Tasks page — a goal action due next month has no business cluttering
+  // Dashboard today. A milestone's own deadline counts too (it's a real deadline, not a
+  // day-to-day step), but it has no independently-settable "done" (derived from its
+  // actions), so its row just opens Goals rather than offering a checkbox that would
+  // silently no-op.
+  const dueGoalActions = (goalActionChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
+  const dueGoalMilestones = (goalMilestoneChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
+  // Folded into "Anytime today" as plain rows (not a separate labeled section) — same
+  // synthetic-item trick TodaySection already uses to merge goal chips into its own
+  // unified list. `goalKind` distinguishes the two for the checkbox handler below; a
+  // "goal-" id prefix is also how the drag-persist filter (see handleUp) knows to leave
+  // these out of what actually gets saved as a task order.
+  const goalUntimedItems = [
+    ...dueGoalMilestones.map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, duration: null, notes: null, category: c.category, isGoalItem: true, goalKind: "milestone", goalChip: c })),
+    ...dueGoalActions.map((c) => ({ id: `goal-${c.id}`, title: c.title, date: c.date, duration: null, notes: null, category: c.category, isGoalItem: true, goalKind: "action", goalChip: c })),
+  ];
 
   // Tasks always come first and are ordered by how urgent they are — a timed task is
   // more pressing the sooner today it's due, so those sort by start time ascending;
@@ -257,6 +277,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     }),
     ...groupItems,
     ...eduSessionItems,
+    ...goalUntimedItems,
     // A manually dragged order wins outright, regardless of which of these is due
     // sooner — dragging is how you say "I want to do this one first," not just a way
     // to break ties between two things due the same day. But that override only holds
@@ -322,8 +343,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   const untimedById = new Map(todaysUntimed.map((t) => [t.id, t]));
   const displayUntimed = liveOrder ? liveOrder.map((id) => untimedById.get(id)).filter(Boolean) : baseUntimedOrder;
   // The same task the top "Anytime today" row highlights — the Focus Session widget
-  // below is tied to this one task, same as that row's own Start button.
-  const heroTask = displayUntimed[0] || null;
+  // below is tied to this one task, same as that row's own Start button. A goal item
+  // has no real task behind it (no Focus Timer target, nothing to drag), so it never
+  // becomes the hero even if it happens to sort first.
+  const heroTask = displayUntimed.find((t) => !t.isGoalItem) || null;
   const UNTIMED_VISIBLE_CAP = 5;
   const untimedMustShowCutoff = toISO(addDays(new Date(todayISO + "T00:00:00"), 2));
   let untimedShownCount = 0;
@@ -371,14 +394,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
     const dayEvents = events.filter((e) => e.date === iso).sort((a, b) => (a.start ?? 99) - (b.start ?? 99));
     return { iso, date, dayTasks, dueWithoutSession, dayEvents };
   });
-  // Same "only show up once actually due/overdue" rule TodaySection gives goal actions
-  // on the Tasks page — a goal action due next month has no business cluttering Dashboard
-  // today. A milestone's own deadline counts too (it's a real deadline, not a day-to-day
-  // step), but it has no independently-settable "done" (derived from its actions), so its
-  // row just opens Goals rather than offering a checkbox that would silently no-op.
-  const dueGoalActions = (goalActionChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
-  const dueGoalMilestones = (goalMilestoneChips || []).filter((c) => !c.done && c.date && c.date <= todayISO);
-
   const remainingStepCount = todaysTimedTasks.length + todaysUntimed.length;
   const scaffoldedTotalCount = remainingStepCount + doneTodayTasks.length;
   // "No free time left today" reads like the app assigning you a full evening of work —
@@ -535,7 +550,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 )}
               </div>
             </div>
-            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 && dueGoalActions.length === 0 && dueGoalMilestones.length === 0 ? (
+            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
               isFirstUse ? (
                 <div style={{ padding: "6px 0 4px" }}>
                   <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
@@ -572,8 +587,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   <div style={{ marginTop: todaysTimedTasks.length > 0 ? 10 : 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Anytime today</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {visibleUntimed.map((t, i) => {
-                        const isTop = i === 0;
+                      {visibleUntimed.map((t) => {
+                        const isTop = !!heroTask && t.id === heroTask.id;
                         const col = CATEGORY_COLORS[t.category] || CATEGORY_COLORS.Personal;
                         const hasOtherSteps = t.carriedOver && t.otherSteps?.length > 0;
                         const stepsExpanded = expandedBreakdowns.has(t.id);
@@ -603,7 +618,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 one line, which is what was cutting titles down to a few
                                 characters before the ellipsis. */}
                             <div style={{ display: "flex", alignItems: "center", gap: isTop ? 10 : 8, flex: "1 1 170px", minWidth: 0 }}>
-                              {onReorderTasks && (
+                              {onReorderTasks && !t.isGoalItem && (
                                 <div
                                   onPointerDown={startDrag(t.id)}
                                   title="Drag to reorder (the top spot is what Start launches)"
@@ -612,12 +627,23 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                   <GripVertical size={14} strokeWidth={2} />
                                 </div>
                               )}
-                              {onToggleDone && (
+                              {t.isGoalItem ? (
+                                <Checkbox
+                                  checked={false}
+                                  onClick={() => (t.goalKind === "milestone" ? setView("goals") : onToggleGoalChip?.(t.goalChip))}
+                                  color={isTop ? { border: PRIMARY_DARK } : col}
+                                  size={isTop ? undefined : 16}
+                                />
+                              ) : onToggleDone && (
                                 <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
                               )}
-                              <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{ flex: 1, minWidth: 0, cursor: t.isGoalItem ? "pointer" : undefined }}
+                                onClick={t.isGoalItem ? () => setView("goals") : undefined}
+                              >
                                 <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
+                                  {t.goalKind === "milestone" && <span style={{ color: MUTED, fontWeight: 400 }}> · Milestone</span>}
                                 </div>
                                 <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
                                 {stuckOnThis && (
@@ -631,7 +657,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                               {t.date && (
                                 <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                               )}
-                              {onPushTomorrow && (
+                              {onPushTomorrow && !t.isGoalItem && (
                                 <button
                                   onClick={() => onPushTomorrow(t.id)}
                                   title="Not getting to this tonight? Push it to tomorrow."
@@ -707,31 +733,8 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     )}
                   </div>
                 )}
-                {(dueGoalActions.length > 0 || dueGoalMilestones.length > 0) && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Goals</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {dueGoalMilestones.map((c) => (
-                        <div key={`m-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <Checkbox checked={false} onClick={() => setView("goals")} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
-                          <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {c.title} <span style={{ color: MUTED }}>· Milestone</span>
-                          </button>
-                        </div>
-                      ))}
-                      {dueGoalActions.map((c) => (
-                        <div key={`a-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <Checkbox checked={false} onClick={() => onToggleGoalChip?.(c)} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
-                          <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {c.title}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {todaysEvents.length > 0 && (
-                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 || dueGoalActions.length > 0 || dueGoalMilestones.length > 0 ? 4 : 0 }}>
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
