@@ -73,7 +73,14 @@ export function DatePickerButton({ value, onChange, title, placeholder = "Add da
         {...noTypeDateProps}
         tabIndex={-1}
         aria-hidden="true"
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none", border: "none", padding: 0 }}
+        // Sized to cover the whole button (not a 1x1px speck) — showPicker() needs a
+        // real, rendered anchor to position its popup against, and on iOS Safari it
+        // silently no-ops instead of throwing when the input it's called on is
+        // effectively zero-size, which is why tapping this button did nothing on phone.
+        // pointerEvents stays "none" so the tap is still handled by the button itself
+        // (and opens the picker from anywhere in it, not just wherever a real date
+        // input's own tiny calendar-icon hit area happens to be).
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", margin: 0, opacity: 0, pointerEvents: "none", border: "none", padding: 0 }}
       />
     </button>
   );
