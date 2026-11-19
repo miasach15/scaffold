@@ -8,6 +8,19 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import CategoryEditor from "../shared/CategoryEditor";
 import ModalPortal from "../shared/ModalPortal";
+import { Switch } from "../shared/Misc";
+
+function ToggleRow({ icon, label, on, onToggle, disabled }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 600, color: "#2D3339" }}>
+        {icon}
+        {label}
+      </div>
+      <Switch on={on} onChange={onToggle} disabled={disabled} />
+    </div>
+  );
+}
 
 const HOUR_LABEL = (h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`);
 
@@ -45,7 +58,7 @@ const TRANSITION_BUFFER_OPTIONS = [
   { value: 20, label: "20 min" },
 ];
 
-export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, startReminders, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, startReminders, morningPush, morningPushHour, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -75,12 +88,12 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
     }
   };
 
-  // Both reminder kinds ride on the same underlying device subscription, so turning
-  // one off should only drop the subscription itself once neither kind still needs it.
+  // All three reminder kinds ride on the same underlying device subscription, so
+  // turning one off should only drop the subscription itself once none still need it.
   const toggleWhatnow = async () => {
     if (whatnowNotifications) {
       onUpdateProfile({ whatnowNotifications: false });
-      if (!startReminders) await push.unsubscribe();
+      if (!startReminders && !morningPush) await push.unsubscribe();
       return;
     }
     const ok = await push.subscribe();
@@ -90,11 +103,21 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
   const toggleStartReminders = async () => {
     if (startReminders) {
       onUpdateProfile({ startReminders: false });
-      if (!whatnowNotifications) await push.unsubscribe();
+      if (!whatnowNotifications && !morningPush) await push.unsubscribe();
       return;
     }
     const ok = await push.subscribe();
     if (ok) onUpdateProfile({ startReminders: true });
+  };
+
+  const toggleMorningPush = async () => {
+    if (morningPush) {
+      onUpdateProfile({ morningPush: false });
+      if (!whatnowNotifications && !startReminders) await push.unsubscribe();
+      return;
+    }
+    const ok = await push.subscribe();
+    if (ok) onUpdateProfile({ morningPush: true });
   };
 
   const handleExport = async () => {
@@ -189,83 +212,72 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
 
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>"What now?" reminders</div>
-            <button
-              onClick={toggleWhatnow}
-              disabled={push.busy}
-              style={{
-                ...ghostBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                opacity: push.busy ? 0.6 : 1,
-                border: `1px solid ${whatnowNotifications ? PRIMARY : "#E2E8F0"}`,
-                color: whatnowNotifications ? PRIMARY : "#4A5568",
-              }}
-            >
-              <Bell size={14} strokeWidth={2.3} />
-              {push.busy ? "Working on it..." : whatnowNotifications ? "Turn off reminders" : "Turn on reminders"}
-            </button>
-            {!push.supported && (
-              <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
-                Not supported in this browser (or the app isn't set up for push yet).
+            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>Notifications</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <ToggleRow icon={<Bell size={14} strokeWidth={2.3} color={morningPush ? PRIMARY : "#8A94A0"} />} label="Good morning plan" on={morningPush} onToggle={toggleMorningPush} disabled={push.busy} />
+                {morningPush && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 12, color: "#5A6472" }}>Every day at</span>
+                    <select
+                      value={morningPushHour}
+                      onChange={(e) => onUpdateProfile({ morningPushHour: Number(e.target.value) })}
+                      style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                    >
+                      {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-            {push.error && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{push.error}</div>}
 
-            {whatnowNotifications && (
-              <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12, color: "#5A6472" }}>Every</span>
-                <select
-                  value={whatnowIntervalMinutes}
-                  onChange={(e) => onUpdateProfile({ whatnowIntervalMinutes: Number(e.target.value) })}
-                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
-                >
-                  {[30, 60, 90, 120].map((m) => <option key={m} value={m}>{m < 60 ? `${m} min` : `${m / 60}h`}</option>)}
-                </select>
-                <span style={{ fontSize: 12, color: "#5A6472" }}>between</span>
-                <select
-                  value={whatnowWindowStart}
-                  onChange={(e) => onUpdateProfile({ whatnowWindowStart: Number(e.target.value) })}
-                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
-                >
-                  {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
-                </select>
-                <span style={{ fontSize: 12, color: "#5A6472" }}>and</span>
-                <select
-                  value={whatnowWindowEnd}
-                  onChange={(e) => onUpdateProfile({ whatnowWindowEnd: Number(e.target.value) })}
-                  style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
-                >
-                  {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
-                </select>
+              <div>
+                <ToggleRow icon={<Bell size={14} strokeWidth={2.3} color={whatnowNotifications ? PRIMARY : "#8A94A0"} />} label="What now? nudges" on={whatnowNotifications} onToggle={toggleWhatnow} disabled={push.busy} />
+                {whatnowNotifications && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, color: "#5A6472" }}>Every</span>
+                    <select
+                      value={whatnowIntervalMinutes}
+                      onChange={(e) => onUpdateProfile({ whatnowIntervalMinutes: Number(e.target.value) })}
+                      style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                    >
+                      {[30, 60, 90, 120].map((m) => <option key={m} value={m}>{m < 60 ? `${m} min` : `${m / 60}h`}</option>)}
+                    </select>
+                    <span style={{ fontSize: 12, color: "#5A6472" }}>between</span>
+                    <select
+                      value={whatnowWindowStart}
+                      onChange={(e) => onUpdateProfile({ whatnowWindowStart: Number(e.target.value) })}
+                      style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                    >
+                      {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
+                    </select>
+                    <span style={{ fontSize: 12, color: "#5A6472" }}>and</span>
+                    <select
+                      value={whatnowWindowEnd}
+                      onChange={(e) => onUpdateProfile({ whatnowWindowEnd: Number(e.target.value) })}
+                      style={{ ...inputStyle, fontSize: 12, padding: "5px 7px" }}
+                    >
+                      {Array.from({ length: 24 }, (_, h) => h).map((h) => <option key={h} value={h}>{HOUR_LABEL(h)}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
 
-        {onUpdateProfile && (
-          <div style={{ marginTop: 22 }}>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>"Time to start" reminders</div>
-            <button
-              onClick={toggleStartReminders}
-              disabled={push.busy}
-              style={{
-                ...ghostBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                opacity: push.busy ? 0.6 : 1,
-                border: `1px solid ${startReminders ? PRIMARY : "#E2E8F0"}`,
-                color: startReminders ? PRIMARY : "#4A5568",
-              }}
-            >
-              <Bell size={14} strokeWidth={2.3} />
-              {push.busy ? "Working on it..." : startReminders ? "Turn off start reminders" : "Notify me when it's time to start something"}
-            </button>
-            {!push.supported && (
-              <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
-                Not supported in this browser (or the app isn't set up for push yet).
+              <div>
+                <ToggleRow icon={<Bell size={14} strokeWidth={2.3} color={startReminders ? PRIMARY : "#8A94A0"} />} label="Time to start" on={startReminders} onToggle={toggleStartReminders} disabled={push.busy} />
+                {startReminders && (
+                  <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
+                    Right when something on your calendar with a set time begins.
+                  </div>
+                )}
               </div>
-            )}
-            {push.error && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 6 }}>{push.error}</div>}
-            <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 6 }}>
-              A separate push right when something on your calendar with a set time begins — not the periodic nudge above.
             </div>
+
+            {!push.supported && (
+              <div style={{ fontSize: 11.5, color: "#B4BCC5", marginTop: 12 }}>
+                Not supported in this browser (or the app isn't set up for push yet).
+              </div>
+            )}
+            {push.error && <div style={{ fontSize: 11.5, color: "#B03A3A", marginTop: 12 }}>{push.error}</div>}
           </div>
         )}
 
@@ -309,13 +321,14 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
         )}
 
         {onToggleDarkMode && (
-          <button
-            onClick={onToggleDarkMode}
-            style={{ ...ghostBtn, width: "100%", marginTop: 22, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
-          >
-            {darkMode ? <Sun size={14} strokeWidth={2.3} /> : <Moon size={14} strokeWidth={2.3} />}
-            {darkMode ? "Switch to light mode" : "Switch to dark mode"}
-          </button>
+          <div style={{ marginTop: 22 }}>
+            <ToggleRow
+              icon={darkMode ? <Moon size={14} strokeWidth={2.3} color={PRIMARY} /> : <Sun size={14} strokeWidth={2.3} color="#8A94A0" />}
+              label="Dark mode"
+              on={darkMode}
+              onToggle={onToggleDarkMode}
+            />
+          </div>
         )}
         <button onClick={onReplayTour} style={{ ...ghostBtn, width: "100%", marginTop: 8 }}>Replay page tour</button>
         <button

@@ -136,3 +136,31 @@ export function FilterPill({ label, active, color, onClick }) {
     </button>
   );
 }
+
+// An iOS-style toggle switch — a label-plus-switch row reads as one settings item at a
+// glance, where a full-width "Turn on/off X" button makes the viewer read the whole
+// label just to find out which state it's already in.
+export function Switch({ on, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => !disabled && onChange(!on)}
+      disabled={disabled}
+      style={{
+        position: "relative", width: 46, height: 27, borderRadius: 14, border: "none", padding: 0, flexShrink: 0,
+        background: on ? PRIMARY : "#D9DEE4",
+        transition: "background-color .2s ease", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.55 : 1,
+      }}
+    >
+      <span
+        style={{
+          position: "absolute", top: 2, left: on ? 21 : 2, width: 23, height: 23, borderRadius: "50%",
+          background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.28)",
+          transition: "left .22s cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      />
+    </button>
+  );
+}
