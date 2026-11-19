@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { GripHorizontal } from "lucide-react";
+import { GripHorizontal, MonitorSmartphone } from "lucide-react";
 import { PRIMARY } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 import FreehandIcon from "../shared/FreehandIcon";
 
-// Four steps, each explaining what Scaffold actually DOES for you rather than walking
-// through pages one by one (the old 11-step version was a page-by-page tour and read
-// like a feature list, not the reason the app exists).
+// Each step explains what Scaffold actually DOES for you rather than walking through
+// pages one by one (the old 11-step version was a page-by-page tour and read like a
+// feature list, not the reason the app exists). A step uses either `icon` (a FreehandIcon
+// name — the hand-drawn set) or `lucideIcon` (a plain lucide-react component), never both;
+// only the "install it" step below needs the latter, since no freehand phone/desktop
+// icon exists in that set.
 const STEPS = [
   {
     view: "dashboard", title: "Capture everything", icon: "notes-add",
@@ -25,8 +28,15 @@ const STEPS = [
     bullets: ["Don't know where to start? One button picks the next thing for you, every time."],
   },
   {
+    view: "dashboard", title: "Make it a real app", lucideIcon: MonitorSmartphone,
+    bullets: [
+      "On your phone: open this site in Safari (iPhone) or Chrome (Android), tap the share or menu button, then \"Add to Home Screen.\" It opens full-screen from your home screen, no browser bar.",
+      "On a computer: look for an install icon in the address bar (Chrome/Edge), or \"Install Scaffold\" in the browser's menu. It opens in its own window, like any other app.",
+    ],
+  },
+  {
     view: "dashboard", title: "One more thing worth doing now", icon: "alert-alarm-bell",
-    bullets: ["Tap your initial in the bottom-left corner to open Settings, then turn on reminders so Scaffold can nudge you toward what's next, even when the app isn't open."],
+    bullets: ["Tap the gear icon in the sidebar to open Settings, then turn on reminders so Scaffold can nudge you toward what's next, even when the app isn't open."],
   },
 ];
 
@@ -111,7 +121,11 @@ export default function TourOverlay({ setView, onCloseModals, onFinish }) {
           }}
         />
       </div>
-      <FreehandIcon name={step.icon} size={36} color={PRIMARY} style={{ marginBottom: 8 }} />
+      {step.lucideIcon ? (
+        <step.lucideIcon size={34} color={PRIMARY} strokeWidth={1.6} style={{ marginBottom: 8 }} />
+      ) : (
+        <FreehandIcon name={step.icon} size={36} color={PRIMARY} style={{ marginBottom: 8 }} />
+      )}
       <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>{step.title}</div>
       <ul style={{ margin: 0, marginBottom: 18, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
         {step.bullets.map((b, idx) => (

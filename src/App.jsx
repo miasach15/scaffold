@@ -880,7 +880,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onCellClick={(date, hour) => setModal({ date, hour })}
             onChipClick={onChipClick}
             onRescheduleTask={rescheduleTask}
-            onRescheduleEvent={(id, date) => updateEvent(id, { date })}
+            onRescheduleEvent={(id, date, hour) => updateEvent(id, hour != null ? { date, start: hour } : { date })}
             onEditEvent={setEditingEvent}
             educationCategory={profile.educationCategory}
           />

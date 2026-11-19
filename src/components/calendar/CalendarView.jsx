@@ -10,7 +10,7 @@ import { ghostBtn } from "../../lib/styles";
 export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
-  const onDropItem = (kind, id, iso, hour) => (kind === "event" ? onRescheduleEvent(id, iso) : onRescheduleTask(id, iso, hour ?? null));
+  const onDropItem = (kind, id, iso, hour) => (kind === "event" ? onRescheduleEvent(id, iso, hour) : onRescheduleTask(id, iso, hour ?? null));
   // Pointer-based drag-to-reschedule (see the hook's own comment) — replaces native
   // HTML5 drag/drop, which never fired from a touch gesture.
   const { drag, beginPress, guardClick } = useDragReschedule(onDropItem);
@@ -198,7 +198,17 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                         ...timedDueChips.filter((c) => c.date === iso).map((c) => ({ kind: "chip", start: c.start, duration: 30, data: c })),
                       ]).map((block) =>
                         block.kind === "event" ? (
-                          <CalBlock key={block.data.id} item={block.data} color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal} onEditEvent={onEditEvent} col={block.col} cols={block.cols} />
+                          <CalBlock
+                            key={block.data.id}
+                            item={block.data}
+                            color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal}
+                            onEditEvent={onEditEvent}
+                            col={block.col} cols={block.cols}
+                            draggable
+                            dragKind="event"
+                            beginPress={beginPress}
+                            guardClick={guardClick}
+                          />
                         ) : (
                           <CalBlock
                             key={block.data.kind + block.data.id}
@@ -222,18 +232,6 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
             </div>
           </div>
         </div>
-      </div>
-      <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: 6, flexShrink: 0 }}>
-        {/* Click vs. tap wording for desktop vs. touch. */}
-        <span className="cal-hint-desktop">Click any cell to add an event or task.</span>
-        <span className="cal-hint-mobile">Tap any cell to add an event or task.</span>
-        <style>{`
-          .cal-hint-mobile { display: none; }
-          @media (max-width: 640px) {
-            .cal-hint-desktop { display: none; }
-            .cal-hint-mobile { display: inline; }
-          }
-        `}</style>
       </div>
     </div>
   );

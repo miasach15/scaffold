@@ -710,7 +710,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               timers visible at once. Leaving Dashboard unmounts this slot, which is
               exactly what lets the timer reappear as the normal floating bottom-right
               card everywhere else. */}
-          {hasActiveFocusSession && <div ref={focusSlotRef} style={{ flexShrink: 0 }} />}
+          {hasActiveFocusSession && (
+            <div
+              ref={(node) => {
+                focusSlotRef(node);
+                // This div only ever mounts the instant a session starts (it's gated on
+                // hasActiveFocusSession), so a fresh ref callback firing with a real node
+                // IS "Start was just pressed." On the stacked single-column mobile layout
+                // the right column — and this slot with it — sits well below "Today's
+                // steps," so the newly-running timer would otherwise land off-screen with
+                // no sign anything happened. "nearest" makes this a no-op on desktop's
+                // two-column layout, where the slot is already in view.
+                if (node) requestAnimationFrame(() => node.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+              }}
+              style={{ flexShrink: 0 }}
+            />
+          )}
 
           {/* No card at all — border+background were still reading as an equal peer to
               Today's steps no matter how much the content inside shrank, since two
