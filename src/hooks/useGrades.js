@@ -32,11 +32,16 @@ export function useGrades(userId) {
   const load = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("grade_classes")
       .select("*, grade_categories(*), grade_terms(*)")
       .eq("user_id", userId)
       .order("subject");
+    // This used to fail silently (data came back null/undefined and just rendered as "no
+    // classes set up yet", indistinguishable from genuinely having none) — e.g. the
+    // grade_terms table/relationship not existing yet (see migration_grade_terms.sql)
+    // would break this exact query with no visible sign anything was wrong.
+    if (error) console.error("useGrades load failed:", error);
     setClasses((data || []).map(classFromRow));
     setLoading(false);
   }, [userId]);
