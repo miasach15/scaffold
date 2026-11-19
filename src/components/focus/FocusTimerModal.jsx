@@ -776,7 +776,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
       <div
         style={{
           position: "fixed", bottom: "calc(20px + env(safe-area-inset-bottom))", right: 20, zIndex: 150,
-          width: boxSize?.width ?? 340, height: boxSize?.height, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 40px)",
+          width: boxSize?.width ?? 340, height: boxSize?.height, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100dvh - 40px)",
         }}
       >
         <div

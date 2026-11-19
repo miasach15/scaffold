@@ -48,9 +48,9 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
 
   return (
     <ModalPortal>
-    <div style={{ ...overlayStyle, alignItems: "flex-start", paddingTop: "12vh" }} onClick={onClose}>
+    <div style={{ ...overlayStyle, alignItems: "flex-start", paddingTop: "12dvh" }} onClick={onClose}>
       <div
-        style={{ background: "#fff", borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68vh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ background: "#fff", borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68dvh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid #EFEFEF", flexShrink: 0 }}>
