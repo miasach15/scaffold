@@ -642,7 +642,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 onClick={t.isGoalItem ? () => setView("goals") : undefined}
                               >
                                 <div style={{ fontSize: 13, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {t.isGoalItem && <span style={{ color: col.text, fontWeight: 700 }}>Goal: </span>}
+                                  {t.isGoalItem && <span style={{ color: col.accent, fontWeight: 700 }}>Goal: </span>}
                                   <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
                                 </div>
                                 <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
@@ -781,7 +781,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 {heroTask ? (
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{heroTask.title}</div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}>
                       {heroTask.category}
                     </div>
                   </div>

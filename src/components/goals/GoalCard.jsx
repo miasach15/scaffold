@@ -116,7 +116,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
       <div style={{ padding: "20px 22px 14px" }}>
         <div className="goal-card-head" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: col.text, textTransform: "uppercase", marginBottom: 8 }}>{goal.category}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: col.accent, textTransform: "uppercase", marginBottom: 8 }}>{goal.category}</div>
             {editingTitle ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <input
