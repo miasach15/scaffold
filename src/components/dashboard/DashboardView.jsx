@@ -535,7 +535,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 )}
               </div>
             </div>
-            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 ? (
+            {todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0 && dueGoalActions.length === 0 && dueGoalMilestones.length === 0 ? (
               isFirstUse ? (
                 <div style={{ padding: "6px 0 4px" }}>
                   <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Nothing here yet. Start with whatever's actually on your mind.</div>
@@ -707,8 +707,31 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     )}
                   </div>
                 )}
-                {todaysEvents.length > 0 && (
+                {(dueGoalActions.length > 0 || dueGoalMilestones.length > 0) && (
                   <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 ? 4 : 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Goals</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {dueGoalMilestones.map((c) => (
+                        <div key={`m-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Checkbox checked={false} onClick={() => setView("goals")} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
+                          <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {c.title} <span style={{ color: MUTED }}>· Milestone</span>
+                          </button>
+                        </div>
+                      ))}
+                      {dueGoalActions.map((c) => (
+                        <div key={`a-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Checkbox checked={false} onClick={() => onToggleGoalChip?.(c)} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
+                          <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {c.title}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {todaysEvents.length > 0 && (
+                  <div style={{ marginTop: todaysTimedTasks.length > 0 || todaysUntimed.length > 0 || dueGoalActions.length > 0 || dueGoalMilestones.length > 0 ? 4 : 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
@@ -820,30 +843,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             )}
           </div>
-
-          {(dueGoalActions.length > 0 || dueGoalMilestones.length > 0) && (
-            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, flexShrink: 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 8 }}>Goals</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {dueGoalMilestones.map((c) => (
-                  <div key={`m-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Checkbox checked={false} onClick={() => setView("goals")} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
-                    <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 12.5, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.title} <span style={{ color: MUTED }}>· Milestone</span>
-                    </button>
-                  </div>
-                ))}
-                {dueGoalActions.map((c) => (
-                  <div key={`a-${c.id}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Checkbox checked={false} onClick={() => onToggleGoalChip?.(c)} color={CATEGORY_COLORS[c.category] || CATEGORY_COLORS.Personal} size={15} />
-                    <button onClick={() => setView("goals")} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 12.5, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.title}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Wins stack up here as they happen — empty (and hidden) first thing in the
               morning, so there's nothing to scroll past before you've done anything yet. */}
