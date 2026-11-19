@@ -54,11 +54,11 @@ export default function ListCard({ list, onRename, onRemove, onAddItem, onSetIte
               if (e.key === "Enter") saveTitle();
               if (e.key === "Escape") setEditingTitle(false);
             }}
-            style={{ ...inputStyle, fontFamily: serifFont, fontSize: 20, fontWeight: 400, padding: "4px 8px", flex: 1, minWidth: 0 }}
+            style={{ ...inputStyle, fontFamily: serifFont, fontSize: 20, fontWeight: 400, letterSpacing: -0.2, padding: "4px 8px", flex: 1, minWidth: 0 }}
           />
         ) : (
           <div onClick={startEditTitle} title="Click to rename" style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6, cursor: "text" }}>
-            <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{list.title}</div>
+            <div style={{ fontFamily: serifFont, fontSize: 20, color: INK, letterSpacing: -0.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{list.title}</div>
             <Pencil size={12} strokeWidth={2.3} color={MUTED} style={{ flexShrink: 0 }} />
           </div>
         )}

@@ -137,7 +137,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
     <ModalPortal>
     <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
       <div className="sheet-surface" style={{ ...modalStyle, width: 440, maxHeight: "85dvh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -0.2, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}>
           <SettingsIcon size={19} color={PRIMARY} strokeWidth={2} /> Settings
         </div>
         <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 18 }}>Accent color</div>

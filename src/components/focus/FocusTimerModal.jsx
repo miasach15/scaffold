@@ -804,7 +804,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             <div style={{ color: PRIMARY_DARK, fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
               Task completed
             </div>
-            <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, marginBottom: 6, lineHeight: 1.15 }}>
+            <div style={{ fontFamily: serifFont, fontSize: 28, color: INK, letterSpacing: -0.3, marginBottom: 6, lineHeight: 1.15 }}>
               Fantastic effort{firstName ? `, ${firstName}` : ""}
             </div>
             <div style={{ fontFamily: serifFont, fontStyle: "italic", fontSize: 16, color: "#FF9286", marginBottom: 20 }}>

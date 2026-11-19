@@ -100,7 +100,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0, flexWrap: "wrap", gap: 8 }}>
-        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500 }}>{monthLabel(days[0])}</div>
+        <div style={{ fontFamily: serifFont, fontSize: 22, fontWeight: 500, letterSpacing: -0.2 }}>{monthLabel(days[0])}</div>
         <div data-tour="calendar-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 2, background: "#F1F2F6", borderRadius: 12, padding: 3 }}>
             <button onClick={() => onSetDayView(null)} className="btn-ghost" style={segmentBtnStyle(!isDay)}>Week</button>

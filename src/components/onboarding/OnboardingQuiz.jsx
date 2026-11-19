@@ -86,7 +86,7 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 0 && (
           <div>
-            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>What should we call you?</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.25, marginBottom: 6 }}>What should we call you?</div>
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Just for a personal touch, totally optional.</div>
             <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" style={{ ...inputStyle, width: "100%" }} onKeyDown={(e) => e.key === "Enter" && setStep(1)} />
           </div>
@@ -94,7 +94,7 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 1 && (
           <div>
-            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Your categories</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.25, marginBottom: 6 }}>Your categories</div>
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Rename, add, or remove: these are yours. School can be renamed, just not removed.</div>
             <CategoryEditor categoryKeys={categoryKeys} categoryColors={categoryColorMap} onRename={renameCategory} onAdd={addCategory} onRemove={removeCategory} protectedKey={eduKey} />
           </div>
@@ -102,7 +102,7 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 2 && (
           <div>
-            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>Any habits you want to start with?</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.25, marginBottom: 6 }}>Any habits you want to start with?</div>
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>These'll already be in your Habits list. You can always add more later.</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {ONBOARDING_HABIT_SUGGESTIONS.map((h) => (
@@ -125,7 +125,7 @@ export default function OnboardingQuiz({ onComplete }) {
 
         {step === 3 && (
           <div>
-            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
+            <div style={{ fontFamily: serifFont, fontSize: 24, color: INK, letterSpacing: -0.25, marginBottom: 6 }}>{name ? `You're all set, ${name}.` : "You're all set."}</div>
             {habitPicks.length > 0 && (
               <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6 }}>
                 Starting with {habitPicks.length} habit{habitPicks.length === 1 ? "" : "s"}.

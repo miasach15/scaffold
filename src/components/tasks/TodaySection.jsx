@@ -243,7 +243,7 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
     <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24, marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 400, color: INK }}>Today</div>
+          <div style={{ fontFamily: serifFont, fontSize: 26, fontWeight: 400, color: INK, letterSpacing: -0.25 }}>Today</div>
           <div style={{ fontSize: 13, color: "#93A0AD", marginBottom: 20 }}>{dateLabel}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

@@ -115,7 +115,7 @@ export default function WeeklyReviewModal({ tasks, goals, habits, onClose }) {
     <div className="sheet-overlay" style={overlayStyle} onClick={onClose}>
       {isSunday && <Confetti />}
       <div className="sheet-surface" style={{ ...modalStyle, width: 420, maxHeight: "80dvh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 500, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
+        <div style={{ fontFamily: serifFont, fontSize: 24, fontWeight: 500, letterSpacing: -0.25, marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><ListChecks size={20} color={PRIMARY} strokeWidth={2} /> Weekly Review</div>
         <div style={{ fontSize: 12.5, color: "#93A0AD" }}>{weekStart} to {weekEnd}</div>
         <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 16 }}>No streaks, no score, just what actually happened.</div>
 
