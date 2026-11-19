@@ -13,7 +13,7 @@ import FreehandIcon from "../shared/FreehandIcon";
 const STEPS = [
   {
     view: "dashboard", title: "Capture everything", icon: "notes-add",
-    bullets: ["Brain dump or the sticky note catches whatever's on your mind (a task, a test, an errand) the moment you think of it. Sort it out later, not right now."],
+    bullets: ["Brain dump catches whatever's on your mind (a task, a test, an errand) the moment you think of it. Sort it out later, not right now."],
   },
   {
     view: "education", title: "Scaffold breaks it down", icon: "stairs-ascend",
@@ -30,8 +30,9 @@ const STEPS = [
   {
     view: "dashboard", title: "Make it a real app", lucideIcon: MonitorSmartphone,
     bullets: [
-      "On your phone: open this site in Safari (iPhone) or Chrome (Android), tap the share or menu button, then \"Add to Home Screen.\" It opens full-screen from your home screen, no browser bar.",
-      "On a computer: look for an install icon in the address bar (Chrome/Edge), or \"Install Scaffold\" in the browser's menu. It opens in its own window, like any other app.",
+      "iPhone: open this site in Safari, tap the Share icon in the toolbar, then tap \"Add to Home Screen.\" It opens full-screen from your home screen, no browser bar.",
+      "Android: open this site in Chrome, tap the ⋮ menu in the top right, then tap \"Add to Home screen\" (it may say \"Install app\" instead).",
+      "Computer: in Chrome or Edge, click the install icon at the right edge of the address bar, or open the browser's menu and choose \"Install Scaffold.\" It opens in its own window, like any other app.",
     ],
   },
   {
