@@ -36,8 +36,11 @@ const PROPOSE_GOALS_TOOL = {
                     type: "array",
                     items: {
                       type: "object",
-                      properties: { title: { type: "string" } },
-                      required: ["title"],
+                      properties: {
+                        title: { type: "string" },
+                        daysNeeded: { type: "integer", description: "Realistic calendar days this needs end to end, not minutes of focused work — see the prompt." },
+                      },
+                      required: ["title", "daysNeeded"],
                       additionalProperties: false,
                     },
                   },
@@ -81,6 +84,8 @@ Your job, through short back-and-forth chat (not a wall of text):
 ${categoryLine}
 
 When you call propose_goals: 3-5 milestones per goal, in order, each with 2-3 concrete actions (things that could go on a to-do list). HARD FLOOR: every action must represent at least 45 minutes of real, focused work — most should land closer to 1-1.5 hours. Fold anything smaller ("send a message", "look something up", "pick a date") into a bigger adjacent action instead of listing it alone. Titles are short: milestone titles under ~6 words, action titles under ~5 words / 30 characters, leading with a verb ("Book flights", not "Consider booking flights").
+
+For each action, also give daysNeeded — your honest estimate of how many real calendar days it needs end to end, not how long one focused sitting on it takes. Most multi-step or wait-on-someone/something actions (drafting something that needs revision, recruiting/outreach, building a guide or handbook, running a multi-day thing) realistically span several days even if no single session is long — don't default everything to 1. A same-day, one-sitting action (send a form, host an event, make a decision) is genuinely 1. Be honest and varied here; this directly controls how far apart due dates land, so calling everything 1 day crowds a real project's actions on top of each other.
 
 When you're just chatting (not proposing yet), reply with plain text only — no tool call.`;
 }

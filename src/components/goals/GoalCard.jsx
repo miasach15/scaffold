@@ -86,7 +86,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
         if (!m.title) continue;
         const milestoneId = await onAddMilestone(goal.id, m.title);
         for (const a of m.actions || []) {
-          if (a.title) await onAddAction(goal.id, milestoneId, a.title, null);
+          if (a.title) await onAddAction(goal.id, milestoneId, a.title, null, a.daysNeeded);
         }
       }
       // The goal already has an end date — spread it across everything that just got

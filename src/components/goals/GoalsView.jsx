@@ -66,7 +66,7 @@ export default function GoalsView({ goals, defaultCategory, onAddGoal, onRemoveG
         if (!m.title) continue;
         const milestoneId = await onAddMilestone(goalId, m.title);
         for (const a of m.actions || []) {
-          if (a.title) await onAddAction(goalId, milestoneId, a.title, null);
+          if (a.title) await onAddAction(goalId, milestoneId, a.title, null, a.daysNeeded);
         }
       }
       // With an end date given, spread dates across every milestone and action that

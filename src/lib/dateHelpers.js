@@ -257,7 +257,14 @@ export const distributeDates = (startISO, endISO, count) => {
 // with this figuring out which N — not "only ever on Mondays." Omitted, 0, or >= the
 // window size all fall back to using every day in the window ("every day" mode — also the
 // original, pre-existing behavior when this param is unused).
-export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, maxDays) => {
+// weights: optional, one positive number per item (same length as count) — how big a
+// share of the window that item's own due date should land proportionally further out
+// by, instead of every item claiming an equal slice. A goal action that genuinely needs
+// several days (see goal_actions.days_needed) gets proportionally more runway before its
+// due date than a one-day action, so the two don't both land squeezed into the same
+// couple of days. Omitted (every other caller) is identical to every item weighing 1 —
+// the exact original even spread.
+export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, existingEvents, maxDays, weights) => {
   if (count <= 0) return [];
   const start = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
@@ -289,17 +296,29 @@ export const distributeDatesByLoad = (startISO, endISO, count, existingTasks, ex
       .sort((a, b) => a - b);
   }
   const availableSlots = pool.length;
+  // Normalized once — null when unused (or malformed) so every bit of math below reduces
+  // to exactly its original, unweighted form.
+  const w = weights && weights.length === count ? weights.map((x) => (x > 0 ? x : 1)) : null;
+  const totalWeight = w ? w.reduce((s, x) => s + x, 0) : count;
 
   if (count > availableSlots) {
-    // Not enough distinct eligible days — pack multiple items onto the same days, evenly,
-    // but never past endISO or off the chosen days (load-balancing doesn't apply here
-    // since every eligible day in the window is going to get used regardless).
-    return Array.from({ length: count }, (_, i) => toISO(addDays(start, pool[Math.min(pool.length - 1, Math.floor((i * availableSlots) / count))])));
+    // Not enough distinct eligible days — pack multiple items onto the same days, evenly
+    // (by weight, if given), but never past endISO or off the chosen days (load-balancing
+    // doesn't apply here since every eligible day in the window is going to get used
+    // regardless).
+    let cumBefore = 0;
+    return Array.from({ length: count }, (_, i) => {
+      const idx = Math.min(pool.length - 1, Math.floor((cumBefore * availableSlots) / totalWeight));
+      cumBefore += w ? w[i] : 1;
+      return toISO(addDays(start, pool[idx]));
+    });
   }
 
   let idxs = [];
-  for (let i = 1; i <= count; i++) {
-    let idx = Math.round(((availableSlots - 1) * i) / count);
+  let cum = 0;
+  for (let i = 0; i < count; i++) {
+    cum += w ? w[i] : 1;
+    let idx = Math.round(((availableSlots - 1) * cum) / totalWeight);
     if (idxs.length && idx <= idxs[idxs.length - 1]) idx = idxs[idxs.length - 1] + 1;
     idxs.push(Math.min(idx, availableSlots - 1));
   }

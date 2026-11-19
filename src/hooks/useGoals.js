@@ -15,7 +15,7 @@ function fail(label, error) {
   reportSaveError(`Couldn't save that — ${error?.message || error?.code || "unknown error"}.`);
 }
 
-const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index });
+const actionFromRow = (row) => ({ id: row.id, title: row.title, dueDate: row.due_date, done: row.done, orderIndex: row.order_index, daysNeeded: row.days_needed });
 const milestoneFromRow = (row) => ({
   id: row.id,
   title: row.title,
@@ -132,7 +132,11 @@ export function useGoals(userId, tasks, events) {
       // still be working the day it's due.
       const lastWorkDay = dayBefore(dueDate);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDatesByLoad(startISO, endISO, undated.length, tasks, events);
+      // A bigger action (see goal_actions.days_needed) claims proportionally more of the
+      // runway before its own due date instead of every action getting an equal slice —
+      // keeps a multi-day action's due date from landing right on top of the next one's.
+      const weights = undated.map((a) => a.daysNeeded || 1);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undated.length, tasks, events, null, weights);
       undated.forEach((a, i) => dateForAction.set(a.id, autoDates[i]));
     }
 
@@ -182,7 +186,8 @@ export function useGoals(userId, tasks, events) {
       const startISO = mDueDate > todayISO ? todayISO : mDueDate;
       const lastWorkDay = dayBefore(mDueDate);
       const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const autoDates = distributeDatesByLoad(startISO, endISO, undatedActions.length, tasks, events);
+      const weights = undatedActions.map((a) => a.daysNeeded || 1);
+      const autoDates = distributeDatesByLoad(startISO, endISO, undatedActions.length, tasks, events, null, weights);
       undatedActions.forEach((a, i) => actionDateFor.set(a.id, autoDates[i]));
     });
 
@@ -208,12 +213,15 @@ export function useGoals(userId, tasks, events) {
   }, [goals, tasks, events]);
 
   const addAction = useCallback(
-    async (goalId, milestoneId, title, dueDate) => {
+    async (goalId, milestoneId, title, dueDate, daysNeeded) => {
       if (!userId || !title.trim()) return;
       const goal = goals.find((g) => g.id === goalId);
       const milestone = goal?.milestones.find((m) => m.id === milestoneId);
       const orderIndex = milestone ? milestone.actions.length : 0;
-      const row = { id: uid(), user_id: userId, milestone_id: milestoneId, title: title.trim(), due_date: dueDate || null, done: false, order_index: orderIndex };
+      const row = {
+        id: uid(), user_id: userId, milestone_id: milestoneId, title: title.trim(), due_date: dueDate || null, done: false, order_index: orderIndex,
+        days_needed: daysNeeded > 0 ? Math.round(daysNeeded) : null,
+      };
       setGoals((gs) => gs.map((g) => g.id !== goalId ? g : {
         ...g,
         milestones: g.milestones.map((m) => m.id !== milestoneId ? m : { ...m, actions: [...m.actions, actionFromRow(row)] }),

@@ -109,7 +109,7 @@ export default function GoalCoachModal({ categoryKeys, defaultCategory, existing
           if (!m.title) continue;
           const milestoneId = await onAddMilestone(goalId, m.title);
           for (const a of m.actions || []) {
-            if (a.title) await onAddAction(goalId, milestoneId, a.title, null);
+            if (a.title) await onAddAction(goalId, milestoneId, a.title, null, a.daysNeeded);
           }
         }
         createdTitles.push(g.title);

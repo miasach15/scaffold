@@ -21,8 +21,11 @@ const PLAN_SCHEMA = {
             type: "array",
             items: {
               type: "object",
-              properties: { title: { type: "string" } },
-              required: ["title"],
+              properties: {
+                title: { type: "string" },
+                daysNeeded: { type: "integer", description: "Realistic calendar days this needs end to end, not minutes of focused work — see the prompt." },
+              },
+              required: ["title", "daysNeeded"],
               additionalProperties: false,
             },
           },
@@ -60,6 +63,8 @@ Break this into 3-5 concrete milestones that build toward the outcome in order. 
 If this is a substantial undertaking — starting a business, building and shipping an app, launching a nonprofit or club, a real research or portfolio project — lean toward the upper end of both ranges (5 milestones, 3 actions each) and make the milestones read like real project phases in order (e.g. validate the idea, build the first version, launch, grow/sustain it), not a flat checklist. A goal that size deserves a real plan, not a to-do list pretending to be one.
 
 HARD FLOOR: every action must represent at least 45 minutes of real, substantial focused work by itself — most should land closer to 1-1.5 hours. This is a strict minimum, not a suggestion. Before finalizing each action, sanity-check it: "could a person plausibly spend 45+ minutes doing just this?" If the honest answer is no — if it's something you'd actually finish in 5-15 minutes — it is too small and must be merged into a bigger, adjacent piece of work, not listed on its own. Concretely too-small on their own: "check email", "look something up", "make a list", "read the instructions", "send a message", "set a reminder", "pick a date". Fold every one of those into whichever real chunk of work they support instead of giving them their own line.
+
+For each action, also give daysNeeded — your honest estimate of how many real CALENDAR days it needs end to end, not how long one focused sitting on it takes. Most multi-step or wait-on-someone/something actions (drafting something that needs revision, recruiting/outreach, building a guide or handbook, running a multi-day thing) realistically span several days even if no single session is long — don't default everything to 1. A same-day, one-sitting action (send a form, host an event, make a decision) is genuinely 1. Be honest and varied here; this directly controls how far apart due dates land, so calling everything 1 day crowds a real project's actions on top of each other.
 
 Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
 - Milestone titles: max ~6 words.

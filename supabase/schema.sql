@@ -195,6 +195,11 @@ create table if not exists goal_actions (
   due_date date,
   done boolean not null default false,
   order_index integer,
+  -- How many calendar days this realistically needs (not focused-work minutes) — used to
+  -- give a bigger action proportionally more runway when due dates are auto-spread up to
+  -- a deadline. Null (manually-added actions, or anything from before this existed)
+  -- counts as 1 day. See migration_action_days_needed.sql.
+  days_needed integer,
   created_at timestamptz not null default now()
 );
 
