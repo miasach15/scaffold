@@ -42,13 +42,19 @@ async function notifySessionDone(title) {
   }
 }
 
-// Every work block is the same fixed length — no more drag-to-pick-a-duration. Blocks
-// chain automatically on the same task (see the countdown effect below) until the
-// session's own time budget runs out, at which point the app actually asks you to
-// switch — the budget scales with how big the task's own estimate says it is, not a
-// one-size-fits-all number, so a quick task doesn't get over-chained and a real project
-// isn't cut off after one round.
-const BLOCK_MIN = 20;
+// Each round defaults to 20 minutes, but the dial below still lets you drag it to
+// whatever length you actually want — same editable dial as before, just defaulting to
+// 20 now instead of 25. Rounds chain automatically on the same task (see the countdown
+// effect below) at whatever length you set, until the session's own time budget runs
+// out — at which point the app actually asks you to switch. The budget scales with how
+// big the task's own estimate is (see computeMaxBlocks), not a one-size-fits-all number,
+// so a quick task doesn't get over-chained and a real project isn't cut off after one
+// round.
+const DEFAULT_ROUND_MIN = 20;
+const DIAL_MIN = 5;
+const DIAL_MAX = 60;
+const DIAL_STEP = 5;
+const snapToDial = (mins) => Math.min(DIAL_MAX, Math.max(DIAL_MIN, Math.round(mins / DIAL_STEP) * DIAL_STEP));
 // No estimate on the task at all — plan for a couple of rounds rather than assuming
 // either extreme.
 const DEFAULT_ESTIMATE_MIN = 40;
@@ -56,28 +62,137 @@ const DEFAULT_ESTIMATE_MIN = 40;
 // than two hours straight without the app actually checking in.
 const MAX_SESSION_MIN_CAP = 120;
 const BREAK_MIN = 10;
-const ADD_TIME_MIN = BLOCK_MIN;
 
-function computeMaxBlocks(estimateMin) {
+function computeMaxBlocks(estimateMin, blockMin) {
   const base = estimateMin && estimateMin > 0 ? estimateMin : DEFAULT_ESTIMATE_MIN;
-  const capBlocks = Math.floor(MAX_SESSION_MIN_CAP / BLOCK_MIN);
-  return Math.max(1, Math.min(capBlocks, Math.ceil(base / BLOCK_MIN)));
+  const capBlocks = Math.floor(MAX_SESSION_MIN_CAP / blockMin);
+  return Math.max(1, Math.min(capBlocks, Math.ceil(base / blockMin)));
+}
+
+// The drag-to-set duration dial a work round starts on — minutes map to a clock face
+// (60/0 at top, 15 right, 30 bottom, 45 left, going clockwise), same convention an
+// analog clock's minute hand already uses, so there's nothing new to learn about which
+// way it turns. Center shows the whole-minute number, not a running countdown — this
+// only ever renders before a round has started (see its one call site below).
+function DurationDial({ minutes, onChange, size, color }) {
+  const trackRef = useRef(null);
+  const stroke = Math.round(size * 0.075);
+  const r = (size - stroke) / 2;
+  // The tick marks and clock-number labels draw OUTSIDE the ring (see `ticks`/`labels`
+  // below), reaching out to r + stroke/2 + 16. Sizing the wrapper box to just `size` left
+  // no room for that — the labels landed on top of whatever sat above/below the dial
+  // (the task title, the Start button). `box` reserves that space so the dial's real
+  // footprint, including labels, is what pushes neighboring elements away.
+  const pad = Math.max(28, Math.round(size * 0.2));
+  const box = size + pad * 2;
+  const cx = box / 2;
+  const cy = box / 2;
+  const fraction = minutes / 60;
+  const circumference = 2 * Math.PI * r;
+
+  // Clockwise-from-top angle (degrees) -> screen position, and the reverse for turning a
+  // pointer position back into minutes. Kept as plain sin/cos here (not the SVG
+  // rotate(-90deg)-plus-dashoffset trick the running countdown ring below uses) because
+  // the handle dot and the four clock numbers need real x/y points, not just a stroke
+  // length.
+  const pointAt = (deg) => {
+    const rad = (deg * Math.PI) / 180;
+    return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+  };
+  const minutesFromClient = (clientX, clientY) => {
+    const rect = trackRef.current.getBoundingClientRect();
+    const dx = clientX - (rect.left + rect.width / 2);
+    const dy = clientY - (rect.top + rect.height / 2);
+    let deg = (Math.atan2(dx, -dy) * 180) / Math.PI;
+    deg = ((deg % 360) + 360) % 360;
+    const raw = (deg / 360) * 60 || 60; // dead-on-top (deg=0) reads as a full 60, not 0
+    return snapToDial(raw);
+  };
+
+  const handleMove = (e) => {
+    const p = "touches" in e ? e.touches[0] : e;
+    if (!p) return;
+    onChange(minutesFromClient(p.clientX, p.clientY));
+  };
+  const startDrag = (e) => {
+    e.preventDefault();
+    handleMove(e);
+    const onMove = (ev) => handleMove(ev);
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  };
+
+  const handlePos = pointAt(fraction * 360);
+  const ticks = Array.from({ length: 12 }, (_, i) => i * 30); // every 5 minutes
+  const labels = [[15, 90], [30, 180], [45, 270], [60, 0]];
+
+  return (
+    <div style={{ position: "relative", width: box, height: box, margin: "0 auto", touchAction: "none" }}>
+      <svg
+        ref={trackRef}
+        width={box} height={box} viewBox={`0 0 ${box} ${box}`}
+        onMouseDown={startDrag} onTouchStart={startDrag}
+        style={{ cursor: "grab", display: "block" }}
+      >
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color.bg} strokeWidth={stroke} />
+        <circle
+          cx={cx} cy={cy} r={r} fill="none" stroke={color.accent} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={circumference * (1 - fraction)}
+          transform={`rotate(-90 ${cx} ${cy})`}
+        />
+        {ticks.map((deg) => {
+          const inner = pointAt(deg);
+          const outer = { x: cx + (r + stroke / 2 + 5) * Math.sin((deg * Math.PI) / 180), y: cy - (r + stroke / 2 + 5) * Math.cos((deg * Math.PI) / 180) };
+          const onFilled = ((deg / 360) * 60 || 60) <= minutes;
+          return <line key={deg} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={onFilled ? "#fff" : color.border} strokeWidth={1.5} strokeLinecap="round" />;
+        })}
+        <circle cx={handlePos.x} cy={handlePos.y} r={stroke * 0.62} fill={color.accent} stroke="#fff" strokeWidth={2.5} style={{ cursor: "grab" }} />
+      </svg>
+      {labels.map(([m, deg]) => {
+        const p = pointAt(deg);
+        const labelR = r + stroke / 2 + 16;
+        const lx = cx + labelR * Math.sin((deg * Math.PI) / 180);
+        const ly = cy - labelR * Math.cos((deg * Math.PI) / 180);
+        return (
+          <div key={m} style={{ position: "absolute", left: lx, top: ly, transform: "translate(-50%, -50%)", fontSize: 11.5, fontWeight: 600, color: MUTED, pointerEvents: "none" }}>
+            {m}
+          </div>
+        );
+      })}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        <div style={{ fontFamily: serifFont, fontSize: size * 0.24, color: INK, lineHeight: 1 }}>{minutes}</div>
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 1, color: MUTED, marginTop: 4 }}>MINS</div>
+      </div>
+    </div>
+  );
 }
 
 export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
-  const initial = BLOCK_MIN * 60;
-  // How many 20-minute rounds this task gets before the app actually asks you to switch
-  // — scaled to the task's own estimate (see computeMaxBlocks), not a flat number.
-  const maxBlocks = useMemo(() => computeMaxBlocks(task.duration), [task.duration]);
-  const maxSessionMin = maxBlocks * BLOCK_MIN;
+  // Adjustable via the dial below (idle, before a round starts) — this is just the
+  // starting default, not a cap on what any one round can be.
+  const [roundMinutes, setRoundMinutes] = useState(DEFAULT_ROUND_MIN);
+  const initial = roundMinutes * 60;
+  // How many rounds this task gets before the app actually asks you to switch — scaled
+  // to the task's own estimate AND whatever round length is set (see computeMaxBlocks),
+  // not a flat number.
+  const maxBlocks = useMemo(() => computeMaxBlocks(task.duration, roundMinutes), [task.duration, roundMinutes]);
+  const maxSessionMin = maxBlocks * roundMinutes;
   const [totalSeconds, setTotalSeconds] = useState(initial);
   const [remaining, setRemaining] = useState(initial);
   const [running, setRunning] = useState(false);
-  // Whether the timer's currently running the work block or a break — `totalSeconds`/
-  // `remaining` above are reused for both. Every work round is the same fixed length
-  // (`initial`), so resuming after a break just restores that directly.
+  // Whether the timer's currently running the work round or a break — `totalSeconds`/
+  // `remaining` above are reused for both. Every work round is the same length
+  // (`roundMinutes`), so resuming after a break just restores that directly.
   const [phase, setPhase] = useState("work"); // "work" | "break"
   // How many full work rounds have already chained on this task this session — a ref
   // (read inside the countdown tick below, which shouldn't re-subscribe every round)
@@ -188,16 +303,16 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // chime so the two moments don't sound the same.
   const playSuccessChime = () => playNotes([{ freq: 523.25, start: 0 }, { freq: 659.25, start: 0.1 }, { freq: 783.99, start: 0.2 }]);
 
-  // What happens when a countdown hits 0 — on a work block with rounds still left in the
-  // budget, this chains straight into the next one with no prompt at all (see BLOCK_MIN/
-  // computeMaxBlocks above); everything else (the budget's actually exhausted, or a
-  // break ending) stops for real and lets the render below ask what's next.
+  // What happens when a countdown hits 0 — on a work round with rounds still left in the
+  // budget, this chains straight into the next one (same roundMinutes length) with no
+  // prompt at all; everything else (the budget's actually exhausted, or a break ending)
+  // stops for real and lets the render below ask what's next.
   const resolveZero = () => {
     if (phase === "work" && !task.done && blocksCompletedRef.current + 1 < maxBlocks) {
       blocksCompletedRef.current += 1;
       setBlocksCompleted(blocksCompletedRef.current);
       playCheckpointChime();
-      const secs = BLOCK_MIN * 60;
+      const secs = roundMinutes * 60;
       endTimeRef.current = Date.now() + secs * 1000;
       setTotalSeconds(secs);
       setRemaining(secs);
@@ -244,6 +359,17 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     setRunning((r) => !r);
   };
 
+  // Dragging the dial while idle — sets this round's (and every round after it, unless
+  // dragged again) length. Only meaningful before a round's actually running, same as
+  // the dial itself only rendering then.
+  const setPreset = (mins) => {
+    setRunning(false);
+    setRoundMinutes(mins);
+    setTotalSeconds(mins * 60);
+    setRemaining(mins * 60);
+    prevRemainingRef.current = mins * 60;
+    endTimeRef.current = null;
+  };
   const reset = () => {
     setRunning(false);
     setRemaining(totalSeconds);
@@ -261,7 +387,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     ensureAudioCtx();
     blocksCompletedRef.current += 1;
     setBlocksCompleted(blocksCompletedRef.current);
-    const addSecs = ADD_TIME_MIN * 60;
+    const addSecs = roundMinutes * 60;
     setTotalSeconds(addSecs);
     setRemaining(addSecs);
     prevRemainingRef.current = addSecs;
@@ -453,27 +579,35 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </div>
           </div>
 
-          <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
-            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
-              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
-              <circle
-                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={phase === "work" ? PRIMARY_DARK : TONE.soon.text} strokeWidth={ringStroke} strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * ringRadius}
-                strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
-                style={{ transition: "stroke-dashoffset 1s linear" }}
-              />
-            </svg>
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
-                {pad(mm)}:{pad(ss)}
+          {phase === "work" && !running && !finished ? (
+            // Idle — drag the dial to change this round's length (and every round after
+            // it, until dragged again). Defaults to 20, same as every new round picks up.
+            <div style={{ margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
+              <DurationDial minutes={Math.round(totalSeconds / 60)} onChange={(m) => setPreset(m)} size={compact ? 140 : 190} color={catColor} />
+            </div>
+          ) : (
+            <div style={{ position: "relative", width: ringSize, height: ringSize, margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
+              <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={BORDER} strokeWidth={ringStroke} />
+                <circle
+                  cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke={phase === "work" ? PRIMARY_DARK : TONE.soon.text} strokeWidth={ringStroke} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * ringRadius}
+                  strokeDashoffset={2 * Math.PI * ringRadius * (1 - (totalSeconds > 0 ? remaining / totalSeconds : 0))}
+                  style={{ transition: "stroke-dashoffset 1s linear" }}
+                />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ fontFamily: serifFont, fontSize: compact ? 22 : 34, color: INK, letterSpacing: 0.5 }}>
+                  {pad(mm)}:{pad(ss)}
+                </div>
               </div>
             </div>
-          </div>
-          {phase === "work" && !running && !finished && blocksCompleted === 0 && (
+          )}
+          {phase === "work" && !running && !finished && blocksCompleted === 0 && maxBlocks > 1 && (
             // Said up front, before the first round even starts, rather than leaving it a
             // mystery — the actual plan this session has for this task.
             <div style={{ textAlign: "center", fontSize: 11.5, color: MUTED, marginTop: -4, marginBottom: compact ? 8 : 10 }}>
-              {maxBlocks > 1 ? `${BLOCK_MIN}-min rounds · up to ${maxSessionMin}m on this before switching` : `One ${BLOCK_MIN}-min round`}
+              up to {maxSessionMin}m on this before switching
             </div>
           )}
           {!compact && (task.notes ? (
@@ -553,7 +687,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                   onClick={addMoreTime}
                   style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fff" }}
                 >
-                  Not done — add {ADD_TIME_MIN}m
+                  Not done — add {roundMinutes}m
                 </button>
                 <button
                   onClick={reset}

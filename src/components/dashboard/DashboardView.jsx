@@ -755,7 +755,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                   <div style={{ fontSize: 13, color: MUTED }}>Nothing to start yet.</div>
                 )}
 
-                <div style={{ position: "relative", width: 106, height: 106, margin: "10px auto 2px" }}>
+                <div style={{ position: "relative", width: 106, height: 106, margin: "10px auto 9px" }}>
                   <svg width="106" height="106" viewBox="0 0 106 106">
                     <circle cx="53" cy="53" r="44" fill="none" stroke={accent} strokeWidth="6" opacity={0.85} />
                   </svg>
@@ -763,7 +763,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     <div style={{ fontFamily: serifFont, fontSize: 22, color: INK }}>{pad(20)}:00</div>
                   </div>
                 </div>
-                <div style={{ textAlign: "center", fontSize: 10.5, color: MUTED, marginBottom: 9 }}>20-min rounds, automatic</div>
 
                 {heroTask && (
                   <button
