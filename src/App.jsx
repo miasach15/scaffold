@@ -824,13 +824,17 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         .hoverable:hover .btn-delete, .hoverable:focus-within .btn-delete { opacity: 1; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
-        /* Every modal (ModalPortal wraps all of them) fades in instead of just snapping
-           into existence. Opacity only, deliberately no transform here — the overlay
-           inside is position:fixed, and a transformed ANCESTOR becomes that fixed
-           element's containing block per spec, which would break its full-viewport
-           sizing for as long as any modal is open. */
-        @keyframes modalPortalIn { 0% { opacity: 0; } 100% { opacity: 1; } }
-        .modal-portal-enter { animation: modalPortalIn 140ms ease-out both; }
+        /* The backdrop itself (.sheet-overlay) now appears at full strength instantly,
+           with no fade of its own — only the card (.sheet-surface, below) animates in.
+           It used to be the other way around: this WRAPPER faded in as one unit,
+           backdrop and card together, which means for that whole ~140ms the backdrop
+           was partially transparent too, letting whatever's behind it (bright, busy
+           calendar content especially) show through more than intended — easy to catch
+           mid-fade in a screenshot and read as "this is rendering on top of the modal,"
+           even though it resolves correctly a frame later. A backdrop that blocks the
+           view is a functional requirement, not a cosmetic one, so it shouldn't be the
+           thing fading. */
+        .modal-portal-enter { }
         /* Below the same ~860px breakpoint Sidebar switches to its mobile layout at, every
            modal that opts in (.sheet-overlay on the backdrop, .sheet-surface on the dialog
            box itself — see lib/styles.js's overlayStyle/modalStyle consumers) becomes a
@@ -851,6 +855,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
            modalPortalIn's note above). Desktop widths are untouched — same centered
            dialog as before. */
         @keyframes sheetSlideUp { from { transform: translateY(28px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+        /* Desktop's own, subtler entrance for the same card — a small settle rather than
+           the mobile sheet's full slide-up. Applies everywhere by default; the mobile
+           media query below overrides it with sheetSlideUp via !important. */
+        @keyframes modalCardIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .sheet-surface, .modal-card-fade { animation: modalCardIn 160ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         @media (max-width: 860px) {
           .sheet-overlay { display: block !important; padding: 0 !important; }
           .sheet-surface {
@@ -867,7 +876,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           .sheet-overlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(26,26,46,0.6) !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .sheet-surface { animation: none !important; }
+          .sheet-surface, .modal-card-fade { animation: none !important; }
         }
         /* Shared by every bottom-center toast (Undo, save-error, homework follow-up) —
            slide+fade instead of popping into existence. Safe to put the transform right

@@ -51,6 +51,7 @@ export default function SearchModal({ tasks, eduItems, goals, habits, events, on
     <ModalPortal>
     <div style={{ ...overlayStyle, alignItems: "flex-start", paddingTop: "12dvh" }} onClick={onClose}>
       <div
+        className="modal-card-fade"
         style={{ background: SURFACE, borderRadius: 16, width: 540, maxWidth: "100%", maxHeight: "68dvh", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}
       >
