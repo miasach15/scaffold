@@ -8,7 +8,7 @@ import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, educationCategory }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, tasks, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, onOpenFocus, onSetTaskDone, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const onDropItem = (kind, id, iso, hour) => (kind === "event" ? onRescheduleEvent(id, iso, hour) : onRescheduleTask(id, iso, hour ?? null));
@@ -199,26 +199,54 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         />
                       ))}
-                      {/* Everything timed on this day — events and due-chips alike — gets
-                          laid out together so two things scheduled at overlapping times
-                          land side by side instead of stacking on top of each other. */}
+                      {/* Everything timed on this day — events, due-chips, and any task
+                          you've actually given a specific start time — gets laid out
+                          together so two things scheduled at overlapping times land side
+                          by side instead of stacking on top of each other. A timed task
+                          is the one exception to "Calendar shows deadlines, not day-to-day
+                          to-dos" above: giving it a specific slot makes it event-like
+                          enough that it belongs here too, same as it already shows up at
+                          that time on Dashboard's own timeline — an UNtimed task still
+                          doesn't appear here at all. */}
                       {layoutOverlaps([
                         ...events.filter((e) => e.date === iso && e.start != null).map((e) => ({ kind: "event", start: e.start, duration: e.duration, data: e })),
                         ...timedDueChips.filter((c) => c.date === iso).map((c) => ({ kind: "chip", start: c.start, duration: 30, data: c })),
-                      ]).map((block) =>
-                        block.kind === "event" ? (
-                          <CalBlock
-                            key={block.data.id}
-                            item={block.data}
-                            color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal}
-                            onEditEvent={onEditEvent}
-                            col={block.col} cols={block.cols}
-                            draggable
-                            dragKind="event"
-                            beginPress={beginPress}
-                            guardClick={guardClick}
-                          />
-                        ) : (
+                        ...(tasks || []).filter((t) => t.date === iso && t.start != null && !t.done).map((t) => ({ kind: "task", start: t.start, duration: t.duration, data: t })),
+                      ]).map((block) => {
+                        if (block.kind === "event") {
+                          return (
+                            <CalBlock
+                              key={block.data.id}
+                              item={block.data}
+                              color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal}
+                              onEditEvent={onEditEvent}
+                              col={block.col} cols={block.cols}
+                              draggable
+                              dragKind="event"
+                              beginPress={beginPress}
+                              guardClick={guardClick}
+                            />
+                          );
+                        }
+                        if (block.kind === "task") {
+                          return (
+                            <CalBlock
+                              key={`task-${block.data.id}`}
+                              item={block.data}
+                              color={CATEGORY_COLORS[block.data.category] || CATEGORY_COLORS.Personal}
+                              isTask
+                              done={block.data.done}
+                              onOpenFocus={() => onOpenFocus(block.data.id, block.data.title)}
+                              onToggleDone={() => onSetTaskDone(block.data.id, true)}
+                              col={block.col} cols={block.cols}
+                              draggable
+                              dragKind="task"
+                              beginPress={beginPress}
+                              guardClick={guardClick}
+                            />
+                          );
+                        }
+                        return (
                           <CalBlock
                             key={block.data.kind + block.data.id}
                             item={{ ...block.data, title: `${chipLabel(block.data)} · ${decimalToTimeLabel(block.data.start)}`, duration: 30 }}
@@ -226,8 +254,8 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                             onEditEvent={() => onChipClick(block.data)}
                             col={block.col} cols={block.cols}
                           />
-                        )
-                      )}
+                        );
+                      })}
                       {iso === todayISO && (
                         <div style={{ position: "absolute", top: nowDecimal * ROW_H, left: 0, right: 0, height: 0, zIndex: 5, pointerEvents: "none" }}>
                           <div style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "#C0685E" }} />

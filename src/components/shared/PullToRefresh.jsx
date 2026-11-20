@@ -3,17 +3,17 @@ import { RotateCw } from "lucide-react";
 import { MUTED, PRIMARY_DARK } from "../../lib/constants";
 
 // How far you have to pull before letting go actually reloads — short of that it springs
-// back, same as the native gesture this stands in for. Deliberately a bit more than a
-// token flick needs, so it doesn't trigger from an incidental overscroll. Raised from 110
-// — a reload is a hard window.location.reload() (full state loss, not just a refetch), so
-// an accidental trigger is far more costly here than in a typical pull-to-refresh, and
-// it was firing off ordinary scroll-boundary wiggles that were never meant as a pull.
-const THRESHOLD = 150;
+// back, same as the native gesture this stands in for. Raised twice now (110 -> 150 ->
+// 190) — a reload is a hard window.location.reload() (full state loss, not just a
+// refetch), so an accidental trigger is far more costly here than in a typical pull-to-
+// refresh, and the lower values were still firing off ordinary scroll-boundary wiggles
+// that were never meant as a deliberate pull.
+const THRESHOLD = 190;
 // The resistance curve (see rubberband below) asymptotes toward this instead of a hard
 // cap — a flick shouldn't be able to drag the icon halfway down the screen, but it still
 // keeps following the finger a little the whole way, never just stopping dead. Comfortably
 // above THRESHOLD so there's real room to feel the pull get harder before it lets go.
-const MAX_PULL = 220;
+const MAX_PULL = 260;
 // A trackpad's two-finger "swipe down" fires as a burst of wheel events with negative
 // deltaY (same sign as scrolling content up) — there's no separate gesture to listen
 // for, so this just treats "still getting negative deltaY after scrollTop already hit
@@ -37,16 +37,6 @@ function pullDistance(rawDelta) {
 // A small movement threshold before a touch actually commits to the gesture (apple-
 // design §10) — a tap's own couple-pixel jitter shouldn't visibly tug the indicator.
 const HYSTERESIS = 8;
-// Momentum projection (apple-design §6): a fast flick that let go a bit short of
-// THRESHOLD should still trigger if its OWN velocity would have carried it past —
-// exactly how a quick flick triggers native pull-to-refresh even without a full drag.
-// 0.99 (the "snappier" rate the skill names as the alternative to 0.998) rather than
-// the scroll-view default — this gesture's whole range is ~150px, not a full page of
-// momentum scroll, so the heavier rate would wildly overshoot the projection.
-const PROJECTION_DECEL = 0.99;
-function project(velocityPxPerSec) {
-  return (velocityPxPerSec / 1000) * (PROJECTION_DECEL / (1 - PROJECTION_DECEL));
-}
 // How recent a touch sample has to be to count toward release velocity — long enough to
 // smooth out single-frame jitter, short enough that a flick-then-hold reads as the hold
 // (≈0 velocity) rather than the flick that preceded it.
@@ -170,17 +160,16 @@ export default function PullToRefresh({ children }) {
     };
     // `velocity` (px/s, positive = still moving down) is the release's actual momentum —
     // handed straight to the spring as its initial velocity (apple-design §5, "no seam
-    // between dragging and animating") and fed into the projection below (§6) so a fast
-    // flick that let go short of THRESHOLD can still trigger, same as native.
-    // A flick is only allowed to trigger early (via projected momentum, below) once
-    // there's already a real, deliberate pull behind it — otherwise a quick incidental
-    // downward wiggle right at the scroll boundary (very easy to produce by accident
-    // while just scrolling a list near its top) could rack up enough velocity alone to
-    // fire a reload without the drag itself ever having gone anywhere.
-    const MIN_DRAG_FOR_PROJECTION = THRESHOLD * 0.45;
+    // between dragging and animating") purely for how the snap-forward/snap-back motion
+    // FEELS, never for whether it triggers. Triggering requires the raw dragged distance
+    // itself to have actually reached THRESHOLD — no velocity-based shortcut that lets a
+    // fast flick finish the job from a shorter drag. That shortcut used to be exactly how
+    // an ordinary scroll-boundary wiggle (no real pull behind it, just some incidental
+    // speed) could fire a reload by accident; removing it entirely, rather than gating it
+    // more carefully, is the only way to make that structurally impossible instead of
+    // just less likely.
     const release = (velocity = 0) => {
-      const projected = pullRef.current + project(velocity);
-      if (projected >= THRESHOLD && pullRef.current >= MIN_DRAG_FOR_PROJECTION) {
+      if (pullRef.current >= THRESHOLD) {
         setRefreshing(true);
         // Settles at the resting height instead of snapping there, so the spinner
         // arrives rather than teleporting — then reload once it's actually visible.

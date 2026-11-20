@@ -45,7 +45,20 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
       >
         {t.title}
       </button>
-      {t.notes && <FileText size={13} strokeWidth={2.2} color="#B4BCC5" style={{ flexShrink: 0 }} title={`Notes: ${t.notes}`} />}
+      {/* Used to be a bare icon with only a hover title — invisible on touch, so tapping
+          it on a phone did nothing and there was no way to find out what it meant. Now
+          it actually opens the same place the note is visible (the comment above already
+          says Focus Timer shows notes "right there alongside" the task). */}
+      {t.notes && (
+        <button
+          onClick={() => (onOpenFocus ? onOpenFocus(t.id, t.title) : onOpenDetail(t.id))}
+          title={`Notes: ${t.notes}`}
+          aria-label="This task has notes — tap to view them"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}
+        >
+          <FileText size={13} strokeWidth={2.2} color="#B4BCC5" />
+        </button>
+      )}
       {onOpenFocus && (
         <button onClick={() => onOpenDetail(t.id)} title="Edit this task" className="hoverable" style={{ background: "none", border: "none", color: "#B4BCC5", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}>
           <Pencil size={13} strokeWidth={2.2} />

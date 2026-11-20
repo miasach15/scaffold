@@ -971,11 +971,14 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onEnterMonth={enterMonth}
             events={events}
             dueChips={dueChips}
+            tasks={visibleTasks}
             onCellClick={(date, hour) => setModal({ date, hour })}
             onChipClick={onChipClick}
             onRescheduleTask={rescheduleTask}
             onRescheduleEvent={(id, date, hour) => updateEvent(id, hour != null ? { date, start: hour } : { date })}
             onEditEvent={setEditingEvent}
+            onOpenFocus={openFocus}
+            onSetTaskDone={setTaskDone}
             educationCategory={profile.educationCategory}
           />
         )}
