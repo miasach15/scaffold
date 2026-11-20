@@ -129,6 +129,14 @@ function findScroller(el) {
 function atTop(el) {
   return findScroller(el).scrollTop <= 0;
 }
+// Quick re-check against an ALREADY-resolved scroller — no DOM walk, no
+// getComputedStyle. Touch's own `target` never changes for the life of one gesture
+// (unlike mouse events, a touchmove's target stays whatever the touch started on), so
+// the scroller behind it can't change mid-gesture either — resolving it once at
+// touchstart and reusing it here is exact, not an approximation.
+function scrollTopOf(scroller) {
+  return scroller.scrollTop <= 0;
+}
 
 // A pull-down-to-reload gesture for the whole app — standing in for the native one,
 // which an installed PWA (standalone display mode) doesn't get on iOS/Android, and which
@@ -190,11 +198,16 @@ export default function PullToRefresh({ children }) {
     const onTouchStart = (e) => {
       if (refreshing || e.touches.length !== 1) return;
       spring.stop(); // grabbing it again mid-spring-back takes over from wherever it is
+      // Resolved ONCE per gesture (see scrollTopOf above) — this used to re-walk the DOM
+      // and call getComputedStyle on every single touchmove, which is exactly the kind
+      // of main-thread work that shows up as scroll/gesture jank on a phone, and this
+      // listener runs on every touch-drag in the whole app, not just real pull attempts.
+      const scroller = findScroller(e.target);
       // Offsetting startY by the CURRENT pull (rather than assuming it's 0) means a grab
       // mid-spring-back continues smoothly from the live value instead of jumping —
       // exact whenever the live value is still under THRESHOLD, which it always is here
       // (the only thing ever springing back toward 0 is a sub-threshold release).
-      touchRef.current = { startY: e.touches[0].clientY - pullRef.current, armed: atTop(e.target), dragging: false, history: [] };
+      touchRef.current = { startY: e.touches[0].clientY - pullRef.current, armed: scrollTopOf(scroller), scroller, dragging: false, history: [] };
     };
     const onTouchMove = (e) => {
       const st = touchRef.current;
@@ -202,7 +215,7 @@ export default function PullToRefresh({ children }) {
       const y = e.touches[0].clientY;
       const delta = y - st.startY;
       if (delta <= 0) { st.dragging = false; setDirect(0); return; }
-      if (!atTop(e.target)) { st.armed = false; st.dragging = false; setDirect(0); return; }
+      if (!scrollTopOf(st.scroller)) { st.armed = false; st.dragging = false; setDirect(0); return; }
       if (!st.dragging && delta < HYSTERESIS) return; // not committed yet — a tap's own jitter shouldn't tug the indicator
       st.dragging = true;
       const now = performance.now();

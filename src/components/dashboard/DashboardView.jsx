@@ -483,12 +483,23 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                real scroll container. */
             .dv-root, .dv-col { flex: none !important; min-height: 0 !important; overflow: visible !important; }
           }
+          /* The hero card's generous 26px padding reads fine with a wide desktop column
+             next to it, but on a narrow phone it's real width taken away from every row
+             inside — two gutters' worth, on top of the page's own 16px margin — which is
+             exactly the kind of thing that makes a screen feel cramped rather than just
+             cozy. Pulled in (not removed) below 640px; the card itself, title size, and
+             spacing all step down together instead of just the padding shrinking oddly
+             on its own. */
+          @media (max-width: 640px) {
+            .dv-hero { padding: 16px 16px 14px !important; }
+            .dv-hero-title { font-size: 24px !important; }
+          }
         `}</style>
 
         <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0, flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <div style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px", flexShrink: 0 }}>
+          <div className="dv-hero" style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
-              <div style={{ fontFamily: serifFont, fontSize: 29, color: INK, letterSpacing: -0.4 }}>Today's steps</div>
+              <div className="dv-hero-title" style={{ fontFamily: serifFont, fontSize: 29, color: INK, letterSpacing: -0.4 }}>Today's steps</div>
               <div style={{ fontSize: 11.5, color: MUTED, flexShrink: 0 }}>
                 {scaffoldedTotalCount > 0 && (
                   remainingStepCount > 0
