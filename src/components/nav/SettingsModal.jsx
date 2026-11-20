@@ -5,7 +5,6 @@ import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, modalStyle, overlayStyle } from "../../lib/styles";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { usePushNotifications } from "../../hooks/usePushNotifications";
 import CategoryEditor from "../shared/CategoryEditor";
 import ModalPortal from "../shared/ModalPortal";
 import { Switch } from "../shared/Misc";
@@ -58,11 +57,10 @@ const TRANSITION_BUFFER_OPTIONS = [
   { value: 20, label: "20 min" },
 ];
 
-export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, startReminders, morningPush, morningPushHour, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
+export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryColor, categoryKeys, onRenameCategory, onAddCategory, onRemoveCategory, protectedCategory, onReplayTour, darkMode, onToggleDarkMode, userId, push, whatnowNotifications, whatnowIntervalMinutes, whatnowWindowStart, whatnowWindowEnd, startReminders, morningPush, morningPushHour, paceMultiplier, afterSchoolBufferMinutes, transitionBufferMinutes, onUpdateProfile, onSignOut, onDeleteAccount, onClose }) {
   const resolvedColors = useCategoryColors();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
-  const push = usePushNotifications(userId);
   // iOS Safari only ever delivers a web push to a copy of the site added to the Home
   // Screen (display-mode: standalone) — a regular browser tab can request permission and
   // even create a subscription, but it can never actually show a notification. Detected
@@ -83,7 +81,7 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
   // itself receives nothing — exactly the confusing case that needs calling out, since
   // nothing else in the UI would ever reveal it.
   const anyPushSettingOn = morningPush || whatnowNotifications || startReminders;
-  const deviceNotActuallySubscribed = push.supported && !needsHomeScreenInstall && anyPushSettingOn && !push.subscribed && !push.busy;
+  const deviceNotActuallySubscribed = push.checked && push.supported && !needsHomeScreenInstall && anyPushSettingOn && !push.subscribed && !push.busy;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);

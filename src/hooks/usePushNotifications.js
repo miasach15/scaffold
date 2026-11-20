@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "../lib/supabase";
@@ -18,14 +18,30 @@ function urlBase64ToUint8Array(base64url) {
 // for real APNs push and stores a device token in device_push_tokens; a browser/PWA
 // install uses the standard Web Push API and stores a subscription in
 // push_subscriptions. Either way, subscribe/unsubscribe/subscribed behave the same.
-export function usePushNotifications(userId) {
+//
+// `shouldBeSubscribed` — whether ANY of the profile's own reminder toggles (morning
+// plan, what-now nudges, time-to-start) is on — lets this hook self-heal instead of
+// just reporting a mismatch for someone else to notice: a saved setting turned on from
+// a different device, a subscription that silently went stale, or its database row
+// disappearing all used to leave this device reading "on" while quietly receiving
+// nothing until someone manually toggled it off and back on. Now it just reconnects on
+// its own the moment that becomes knowable. Instantiate this ONCE per session, high up
+// (ScaffoldApp), not separately inside Settings — two independent instances racing their
+// own subscribe() calls is exactly the kind of bug this is meant to prevent.
+export function usePushNotifications(userId, shouldBeSubscribed = false) {
   const [supported] = useState(() => NATIVE || ("serviceWorker" in navigator && "PushManager" in window && !!VAPID_PUBLIC_KEY));
   const [subscribed, setSubscribed] = useState(false);
+  // True once refresh() has actually resolved at least once — guards the auto-heal
+  // effect below from firing on the initial `subscribed === false` default before the
+  // real state is even known, which would otherwise attempt a needless resubscribe on
+  // every single mount.
+  const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const autoHealedRef = useRef(false);
 
   const refresh = useCallback(async () => {
-    if (!supported) return;
+    if (!supported) { setChecked(true); return; }
     try {
       if (NATIVE) {
         const status = await PushNotifications.checkPermissions();
@@ -33,10 +49,21 @@ export function usePushNotifications(userId) {
       } else {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
-        setSubscribed(!!sub);
+        if (!sub) {
+          setSubscribed(false);
+        } else {
+          // The browser remembering a subscription doesn't guarantee the matching row
+          // is still in the database (it can be deleted independently, or an earlier
+          // upsert could have failed silently) — confirm the row the server would
+          // actually send to is really there, not just that this device once subscribed.
+          const { data } = await supabase.from("push_subscriptions").select("id").eq("endpoint", sub.endpoint).maybeSingle();
+          setSubscribed(!!data);
+        }
       }
     } catch {
       setSubscribed(false);
+    } finally {
+      setChecked(true);
     }
   }, [supported]);
 
@@ -153,5 +180,18 @@ export function usePushNotifications(userId) {
     }
   }, [supported, busy, userId]);
 
-  return { supported, subscribed, busy, error, subscribe, unsubscribe };
+  // The actual self-heal: once this device's real state is known (checked) and a
+  // mismatch is found (a setting wants push on, but this device isn't the one actually
+  // subscribed), reconnect automatically. Permission was presumably already granted the
+  // first time someone turned any of these on, so re-requesting it here is a silent
+  // no-op — no new prompt, no visible interruption. Attempted at most once per session;
+  // if it fails (e.g. permission was later revoked), `error` carries the reason and this
+  // won't loop retrying it.
+  useEffect(() => {
+    if (!checked || !shouldBeSubscribed || !supported || subscribed || busy || autoHealedRef.current) return;
+    autoHealedRef.current = true;
+    subscribe();
+  }, [checked, shouldBeSubscribed, supported, subscribed, busy, subscribe]);
+
+  return { supported, subscribed, checked, busy, error, subscribe, unsubscribe };
 }

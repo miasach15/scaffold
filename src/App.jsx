@@ -28,6 +28,7 @@ import SaveErrorToast from "./components/shared/SaveErrorToast";
 import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import { useDarkMode } from "./hooks/useDarkMode";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 import WeeklyReviewModal from "./components/review/WeeklyReviewModal";
 import SettingsModal from "./components/nav/SettingsModal";
 import TourOverlay from "./components/nav/TourOverlay";
@@ -77,6 +78,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
+  // One instance for the whole session (not one inside Settings, which would only exist
+  // while that modal happens to be open) — so a stale/missing subscription self-heals as
+  // soon as the profile loads, not only on the rare occasion someone opens Settings and
+  // notices. Covers all three reminder kinds, not just one of them.
+  const push = usePushNotifications(userId, !!(profile && (profile.whatnowNotifications || profile.startReminders || profile.morningPush)));
 
   // Checking off the last "Work on:"/"Study:" session for an assignment finishes the
   // assignment itself, too — without this, the sessions disappear (see EducationView's
@@ -1082,6 +1088,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           darkMode={darkMode}
           onToggleDarkMode={onToggleDarkMode}
           userId={userId}
+          push={push}
           whatnowNotifications={profile.whatnowNotifications}
           whatnowIntervalMinutes={profile.whatnowIntervalMinutes}
           whatnowWindowStart={profile.whatnowWindowStart}
