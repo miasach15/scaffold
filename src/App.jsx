@@ -377,9 +377,6 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           const doneCount = m.actions.filter((a) => a.done).length;
           chips.push({ id: m.id, kind: "goal-milestone", title: m.title, date: m.dueDate, done: total > 0 && doneCount === total, category: g.category, goalId: g.id, milestoneId: m.id });
         }
-        m.actions.forEach((a) => {
-          if (a.dueDate) chips.push({ id: a.id, kind: "goal", title: a.title, date: a.dueDate, done: a.done, category: g.category, goalId: g.id, milestoneId: m.id });
-        });
       });
     });
     eduItems.forEach((e) => {
@@ -399,8 +396,52 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const groupDone = groupTasks.length > 0 && groupTasks.every((x) => x.done);
       chips.push({ id: t.groupId, kind: "task-group-due", title: t.groupTitle || t.title, date: t.groupDueDate, start: t.groupDueStart, done: groupDone, category: t.category });
     });
+
+    // A multi-day action (goal_actions.days_needed > 1) shouldn't just silently appear
+    // the single day it's due — a 3-day action deserves to show up as something to work
+    // on for those 3 days, not land as a surprise on the last one. This reuses the SAME
+    // "shows once due, then rolls forward every day until done" behavior every other chip
+    // already gets (see TodaySection/DashboardView's `<= todayISO` filters) — the only
+    // change is WHICH day counts as "due" for a multi-day action: not the deadline
+    // itself, but the day its work window should actually open. Still exactly one chip
+    // per action, so none of that existing rollover/collapsing logic has to change.
+    //
+    // That work-window-open day isn't picked blindly, though: a day that's already
+    // carrying real load (DAY_LOAD_LIMIT+ other due items/events), or that sits right
+    // before something genuinely big (a goal deadline, a milestone, an assessment), gets
+    // skipped in favor of the next day closer to the real due date — which always shows
+    // regardless of how loaded it is, since it's a real deadline, not a suggestion.
+    const DAY_LOAD_LIMIT = 5;
+    const isBig = (c) => c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "task-group-due" || (c.kind === "edu" && c.type === "Assessment");
+    const dayLoad = new Map();
+    const bigDays = new Set();
+    const bump = (date) => dayLoad.set(date, (dayLoad.get(date) || 0) + 1);
+    chips.forEach((c) => { bump(c.date); if (isBig(c)) bigDays.add(c.date); });
+    events.forEach((e) => { if (e.date) bump(e.date); });
+
+    goals.forEach((g) => {
+      g.milestones.forEach((m) => {
+        m.actions.forEach((a) => {
+          if (!a.dueDate) return;
+          const daysNeeded = Math.max(1, a.daysNeeded || 1);
+          let effectiveDate = a.dueDate;
+          // Walk backward from the due date, opening the work window earlier day by day —
+          // stops at the first day (nearest the due date) that isn't viable, so the
+          // window is always one contiguous stretch ending on the due date, never a gap
+          // followed by an earlier reappearance.
+          for (let back = 1; back < daysNeeded; back++) {
+            const candidate = toISO(addDays(new Date(a.dueDate + "T00:00:00"), -back));
+            const nextDay = toISO(addDays(new Date(candidate + "T00:00:00"), 1));
+            if ((dayLoad.get(candidate) || 0) >= DAY_LOAD_LIMIT || bigDays.has(nextDay)) break;
+            effectiveDate = candidate;
+          }
+          chips.push({ id: a.id, kind: "goal", title: a.title, date: effectiveDate, done: a.done, category: g.category, goalId: g.id, milestoneId: m.id });
+        });
+      });
+    });
+
     return chips;
-  }, [goals, eduItems, visibleTasks]);
+  }, [goals, eduItems, visibleTasks, events]);
 
   // Only individual goal actions have an independently-settable "done" — a goal deadline
   // or milestone's done state is derived from whether all its actions are done, so those

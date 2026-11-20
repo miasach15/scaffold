@@ -63,6 +63,17 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const push = usePushNotifications(userId);
+  // iOS Safari only ever delivers a web push to a copy of the site added to the Home
+  // Screen (display-mode: standalone) — a regular browser tab can request permission and
+  // even create a subscription, but it can never actually show a notification. Detected
+  // once per mount rather than reactively, since whether the app is installed doesn't
+  // change while it's open.
+  const [needsHomeScreenInstall] = useState(() => {
+    if (typeof navigator === "undefined") return false;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true || window.matchMedia?.("(display-mode: standalone)").matches;
+    return isIOS && !isStandalone;
+  });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -213,6 +224,18 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
         {onUpdateProfile && (
           <div style={{ marginTop: 22 }}>
             <div style={{ fontSize: 12.5, color: "#9CA3AF", marginBottom: 10 }}>Notifications</div>
+            {needsHomeScreenInstall && (
+              // On iPhone/iPad, Safari itself can never deliver a push notification — only
+              // an installed, Home-Screen-opened copy of the site can (this is an iOS
+              // platform restriction, not something the app can work around). Toggling
+              // these on from a regular Safari tab can still "succeed" (create a
+              // subscription), but nothing will ever actually arrive — exactly the
+              // confusing "I turned it on but nothing shows up, and it's not even in
+              // Settings" symptom this is meant to head off before it happens.
+              <div style={{ fontSize: 12, lineHeight: 1.5, color: "#8A5424", background: "#FBE6D9", border: "1px solid #F0B685", borderRadius: 10, padding: "9px 11px", marginBottom: 14 }}>
+                Add Scaffold to your Home Screen first — tap the Share icon in Safari, then "Add to Home Screen." On iPhone, notifications only work from the installed app, not from a Safari tab. Open it from your Home Screen, then come back here to turn these on.
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <ToggleRow icon={<Bell size={14} strokeWidth={2.3} color={morningPush ? PRIMARY : "#8A94A0"} />} label="Good morning plan" on={morningPush} onToggle={toggleMorningPush} disabled={push.busy} />
