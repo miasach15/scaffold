@@ -71,7 +71,12 @@ function pickWhatNow(items: Item[], nowHour: number, today: string, eduCat: stri
   // Only an item actually scheduled for today has a start time worth trusting — a
   // carried-over item's old start time was relative to a day that's already gone.
   const happeningNow = items
-    .filter((it) => it.date === today && it.start != null && nowHour >= it.start! && nowHour < it.start! + (it.duration ?? 0.5))
+    // duration is stored in MINUTES everywhere in this app (tasks/events alike — see
+    // QuickAddModal's totalDuration) — this was adding it to an hour-decimal start time
+    // as if it were already hours, inflating every item's "end time" by roughly 60x. A
+    // task starting at 14 (2pm) with a 60-minute duration looked like it ran until 74,
+    // i.e. for the rest of every day it had started — not a 3pm end time.
+    .filter((it) => it.date === today && it.start != null && nowHour >= it.start! && nowHour < it.start! + (it.duration ?? 30) / 60)
     .sort((a, b) => CATEGORY_RANK(a.category, eduCat) - CATEGORY_RANK(b.category, eduCat));
   if (happeningNow.length > 0) return { title: "Right now", body: happeningNow[0].title };
 
@@ -192,8 +197,15 @@ serve(async (_req) => {
       // (in class, at practice, whatever it is), so a "what now" nudge is pointless at
       // best and an interruption at worst. Doesn't touch the interval/last_sent_at, so
       // the very next tick after the event ends is free to notify normally.
+      // Same minutes-vs-hours bug as itemsForUser's happeningNow filter above: this was
+      // the real reason "What now?" nudges silently stopped for the rest of a day after
+      // the first calendar event on it — once an event's own start time passed, its
+      // inflated "end time" (start + duration treated as hours instead of minutes) was
+      // always some huge number past 24, so inEventNow stayed true until midnight, and
+      // `due()` returns null whenever it's true. Every event on a day was quietly
+      // blocking every nudge after it, for the rest of that day, for everyone.
       const inEventNow = (events || []).some(
-        (ev) => ev.user_id === userId && ev.date === today && ev.start != null && hourDecimal >= ev.start && hourDecimal < ev.start + (ev.duration ?? 0.5)
+        (ev) => ev.user_id === userId && ev.date === today && ev.start != null && hourDecimal >= ev.start && hourDecimal < ev.start + (ev.duration ?? 30) / 60
       );
       if (inEventNow) return null;
       const eduCat = profile.education_category || "Education";
