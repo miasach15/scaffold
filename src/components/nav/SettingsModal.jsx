@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Download, LogOut, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { Bell, Download, LogOut, Mail, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { PRIMARY, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
@@ -376,6 +376,18 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
           {exporting ? "Gathering everything..." : "Download a backup of everything"}
         </button>
         {exportError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6, textAlign: "center" }}>{exportError}</div>}
+
+        {/* Same contact address already published on the Terms/Privacy pages — not a
+            new exposure, just a way to reach it without having to go find those pages
+            first. There was previously no in-app way to ask for help or report a bug at
+            all. */}
+        <a
+          href="mailto:miasachdev15@gmail.com?subject=Scaffold%20feedback"
+          style={{ ...ghostBtn, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, textDecoration: "none", boxSizing: "border-box" }}
+        >
+          <Mail size={14} strokeWidth={2.3} />
+          Help &amp; feedback
+        </a>
 
         {onSignOut && (
           <button

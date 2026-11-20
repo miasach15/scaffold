@@ -24,6 +24,7 @@ export default function AuthScreen() {
   const [mode, setMode] = useState("sign-in"); // 'sign-in' | 'sign-up' | 'forgot'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,6 +58,10 @@ export default function AuthScreen() {
 
     if (!email.trim() || !password) {
       setError("Enter an email and password.");
+      return;
+    }
+    if (mode === "sign-up" && !ageConfirmed) {
+      setError("Confirm you're 13 or older to create an account.");
       return;
     }
     setBusy(true);
@@ -126,6 +131,18 @@ export default function AuthScreen() {
               style={fieldInput}
             />
           </div>
+        )}
+
+        {mode === "sign-up" && (
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginTop: 14, fontSize: 12.5, color: MUTED, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
+              style={{ marginTop: 2, flexShrink: 0 }}
+            />
+            I'm 13 years of age or older.
+          </label>
         )}
 
         {mode === "sign-in" && (
