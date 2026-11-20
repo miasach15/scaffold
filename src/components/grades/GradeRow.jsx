@@ -84,7 +84,7 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
           )}
 
           {editing ? (
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <input
                 type="number" placeholder="earned" aria-label="Points earned" value={earned}
                 onChange={(e) => setEarned(e.target.value)}

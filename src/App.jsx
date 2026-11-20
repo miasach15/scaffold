@@ -792,17 +792,27 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
            reads as a deliberate floating surface, not a layout that just ran out of room),
            rounded on every corner, and it slides up into place rather than just fading —
            the single biggest "this feels like a native app, not a website" cue on a phone.
-           .sheet-surface's own transform lives entirely on a descendant of the fixed
-           overlay, never on an ancestor of it, so it can't disturb the overlay's own
-           fixed-position containing block (see modalPortalIn's note above). Desktop widths
-           are untouched — same centered dialog as before. */
+           .sheet-surface is pinned with its own left/right/bottom instead of a flex-
+           centered percentage width — width:100% of a flex item that's centered in a row
+           whose own width can be thrown off by backdrop-filter's containing-block effects
+           (a real iOS Safari issue, not reproducible in every browser) risks the box
+           ending up wider than the screen and clipped symmetrically on both edges. Pinned
+           insets can't produce that: the browser always solves width as exactly
+           "container − left − right", never more. .sheet-surface's own transform lives
+           entirely on a descendant of the fixed overlay, never on an ancestor of it, so it
+           can't disturb the overlay's own fixed-position containing block (see
+           modalPortalIn's note above). Desktop widths are untouched — same centered
+           dialog as before. */
         @keyframes sheetSlideUp { from { transform: translateY(28px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
         @media (max-width: 860px) {
-          .sheet-overlay { align-items: flex-end !important; padding: 10px !important; padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; }
+          .sheet-overlay { display: block !important; padding: 0 !important; }
           .sheet-surface {
-            width: 100% !important; max-width: 100% !important; margin: 0 !important;
+            position: fixed !important;
+            left: 10px !important; right: 10px !important; top: auto !important;
+            bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+            width: auto !important; max-width: none !important; margin: 0 !important;
             border-radius: 20px !important;
-            max-height: 88dvh !important; overflow-y: auto !important;
+            max-height: 80dvh !important; overflow-y: auto !important;
             animation: sheetSlideUp 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
           }
         }
