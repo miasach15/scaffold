@@ -74,6 +74,16 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
     const isStandalone = window.navigator.standalone === true || window.matchMedia?.("(display-mode: standalone)").matches;
     return isIOS && !isStandalone;
   });
+  // The toggles below reflect the PROFILE's saved setting, not whether THIS device has
+  // actually completed its own push subscription — those are different things, since a
+  // profile is shared across every device someone's used, but a push subscription is
+  // per-browser. If the setting is on but this device was never the one that subscribed
+  // (e.g. it was originally turned on from a different phone/computer, or this device's
+  // subscription silently went stale), every toggle here looks "on" while this device
+  // itself receives nothing — exactly the confusing case that needs calling out, since
+  // nothing else in the UI would ever reveal it.
+  const anyPushSettingOn = morningPush || whatnowNotifications || startReminders;
+  const deviceNotActuallySubscribed = push.supported && !needsHomeScreenInstall && anyPushSettingOn && !push.subscribed && !push.busy;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -234,6 +244,11 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
               // Settings" symptom this is meant to head off before it happens.
               <div style={{ fontSize: 12, lineHeight: 1.5, color: "#8A5424", background: "#FBE6D9", border: "1px solid #F0B685", borderRadius: 10, padding: "9px 11px", marginBottom: 14 }}>
                 Add Scaffold to your Home Screen first — tap the Share icon in Safari, then "Add to Home Screen." On iPhone, notifications only work from the installed app, not from a Safari tab. Open it from your Home Screen, then come back here to turn these on.
+              </div>
+            )}
+            {deviceNotActuallySubscribed && (
+              <div style={{ fontSize: 12, lineHeight: 1.5, color: "#8A5424", background: "#FBE6D9", border: "1px solid #F0B685", borderRadius: 10, padding: "9px 11px", marginBottom: 14 }}>
+                These are on, but this device hasn't actually finished connecting — the one that's set up is a different phone or computer. Turn any toggle below off, then back on, right here to connect this device too.
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
