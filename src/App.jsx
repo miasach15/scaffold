@@ -329,19 +329,31 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // a mini-step is easy to tap by accident underneath its parent task, and unlike a
   // single plain task finishing, there's no "it's just sitting there done" moment to
   // notice and fix; it should be just as reversible as deleting something.
+  //
+  // Unlike a real delete, the done write itself happens RIGHT AWAY, not after the undo
+  // window — a delete can safely wait to commit because re-creating the row from the
+  // same in-memory data if the window just lapses is trivial, but waiting here meant a
+  // reload (switching devices, say) inside that few-second window silently lost the
+  // "done" write entirely, since nothing had actually reached the database yet — it'd
+  // show done on the device that checked it off right up until reload, then quietly
+  // revert everywhere. Undo instead reverses an already-real write (sets it back to not
+  // done), which is just as cheap and never loses data to a mistimed reload.
   const [pendingDoneStepId, setPendingDoneStepId] = useState(null);
   const stepDoneUndo = useUndoableDelete();
   const requestStepDone = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
+    setTaskDone(id, true);
     setPendingDoneStepId(id);
     stepDoneUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" checked off`, () => {
-      setTaskDone(id, true);
       setPendingDoneStepId((cur) => (cur === id ? null : cur));
     });
   };
   const undoStepDone = () => {
-    if (stepDoneUndo.undo()) setPendingDoneStepId(null);
+    if (stepDoneUndo.undo() && pendingDoneStepId) {
+      setTaskDone(pendingDoneStepId, false);
+      setPendingDoneStepId(null);
+    }
   };
   // A pending-deleted assignment's own sessions shouldn't keep showing elsewhere for the
   // few seconds before the delete actually commits — the deadline would already be gone
