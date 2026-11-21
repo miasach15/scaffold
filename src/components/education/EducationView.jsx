@@ -29,6 +29,7 @@ export default function EducationView({
   onRemoveSession,
   onSetSessionNotes,
   onSetSessionDone,
+  onCheckOffStep,
   onUpdateDeadline,
   onSetFlexible,
   onSetSubject,
@@ -309,7 +310,15 @@ export default function EducationView({
       // fixed one, same treatment Dashboard's own Today list gives it.
       sortDate: parent?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate,
       col: eduCol, eduId: t.eduId,
-      onToggleDone: () => { if (!t.done) markJustDone(t.id); onSetSessionDone(t.id, !t.done); }, onFocus: () => onOpenFocus(t.id, t.title),
+      // A session is a mini-task underneath its assignment — checking it off gets the
+      // same undo window as a delete (see App.jsx's requestStepDone) instead of
+      // committing instantly. Unchecking one back off stays instant, nothing to protect there.
+      onToggleDone: () => {
+        if (t.done) { onSetSessionDone(t.id, false); return; }
+        if (onCheckOffStep) onCheckOffStep(t.id);
+        else { markJustDone(t.id); onSetSessionDone(t.id, true); }
+      },
+      onFocus: () => onOpenFocus(t.id, t.title),
       onRemove: () => onRemoveSession(t.id),
       // The deadline row (where steps were previously edited) no longer shows once an
       // assignment has sessions — this is the only remaining way to reach the same
@@ -599,7 +608,7 @@ export default function EducationView({
             col={eduCol}
             sessions={tasks.filter((t) => t.eduId === editingEduId)}
             onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
-            onToggleSession={onSetSessionDone}
+            onToggleSession={(id, done) => (done && onCheckOffStep ? onCheckOffStep(id) : onSetSessionDone(id, done))}
             onSetSessionNotes={onSetSessionNotes}
             onRemoveSession={onRemoveSession}
             onAddSession={quickAddSession}

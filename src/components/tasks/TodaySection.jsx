@@ -35,7 +35,7 @@ const VISIBLE_CAP = 5; // more than this and it stops being a glance — collaps
 //      slipped by undone, only the most recent shows — never a pile of identically-
 //      titled rows for the days you missed.
 // The full Tasks list below has all the editing controls; this is just the glance one.
-export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocus, onSetDate, onRescheduleTask, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TodaySection({ tasks, onToggleDone, onCheckOffStep, onRemove, onOpenFocus, onSetDate, onRescheduleTask, eduItems, onSetEduDone, onGoToEducation, goalChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [whatNowOpen, setWhatNowOpen] = useState(false);
@@ -139,7 +139,15 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
       orderIndex: next.orderIndex, orderSetDate: next.orderSetDate,
       category: next.category || "Personal",
       col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
-      onToggle: () => { if (!next.done) markJustDone(next.id); onToggleDone(next.id, !next.done); }, onOpen: () => onOpenFocus(next.id, next.title),
+      // A session is a mini-step of the assignment it belongs to, same as a breakdown
+      // step below — checking it off gets the same undo window instead of committing
+      // the instant it's tapped (see App.jsx's requestStepDone).
+      onToggle: () => {
+        if (next.done) { onToggleDone(next.id, false); return; }
+        if (onCheckOffStep) onCheckOffStep(next.id);
+        else { markJustDone(next.id); onToggleDone(next.id, true); }
+      },
+      onOpen: () => onOpenFocus(next.id, next.title),
       onRemove: onRemove ? () => onRemove(next.id) : null,
     }];
   });
@@ -175,7 +183,11 @@ export default function TodaySection({ tasks, onToggleDone, onRemove, onOpenFocu
         col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
         onToggle: allDone
           ? () => onToggleDone(next.id, false)
-          : () => { markJustDone(`group-${groupId}`); onToggleDone(next.id, true); },
+          : () => {
+              markJustDone(`group-${groupId}`);
+              if (onCheckOffStep) onCheckOffStep(next.id);
+              else onToggleDone(next.id, true);
+            },
         onOpen: () => onOpenFocus(next.id, next.title),
         // Only the one step this row is actually standing in for — same scope the
         // checkbox above already has, not "delete the whole project" from a collapsed

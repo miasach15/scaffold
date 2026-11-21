@@ -13,7 +13,7 @@ import { INK, SURFACE } from "../../lib/constants";
 // is its own click target (not the expand toggle) — click it to change it, same native
 // date/time inputs every other due-date editor in the app uses; the not-done steps
 // automatically reflow to the new date (see TasksView's reflowGroupDueDate).
-export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onSetGroupDeadline, onAddStep }) {
+export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onCheckOffStep, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onSetGroupDeadline, onAddStep }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [editingDue, setEditingDue] = useState(false);
@@ -81,7 +81,22 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
       {expanded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4, marginLeft: 22 }}>
           {remainingItems.map((t) => (
-            <TaskRow key={t.id} t={t} onToggleDone={onToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenDetail} onOpenFocus={onOpenFocus} onSetDate={onSetDate} onSetStart={onSetStart} showDate />
+            <TaskRow
+              key={t.id}
+              t={t}
+              // Checking off one of an assignment's own steps gets the same undo window
+              // as a delete (see App.jsx's requestStepDone) instead of committing the
+              // instant it's tapped — unchecking one back off (done -> not done) stays
+              // instant, same as ever, since there's nothing to protect there.
+              onToggleDone={(id, done) => (done && onCheckOffStep ? onCheckOffStep(id) : onToggleDone(id, done))}
+              onSetCategory={onSetCategory}
+              onRemove={onRemove}
+              onOpenDetail={onOpenDetail}
+              onOpenFocus={onOpenFocus}
+              onSetDate={onSetDate}
+              onSetStart={onSetStart}
+              showDate
+            />
           ))}
           {onAddStep && (
             <button

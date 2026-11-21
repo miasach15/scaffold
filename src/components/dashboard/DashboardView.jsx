@@ -599,7 +599,19 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                   size={isTop ? undefined : 16}
                                 />
                               ) : onToggleDone && (
-                                <Checkbox checked={false} onClick={() => onToggleDone(t.id, true)} color={isTop ? { border: PRIMARY_DARK } : col} size={isTop ? undefined : 16} />
+                                // A breakdown step or education session is a mini-task
+                                // underneath a bigger assignment/project — checking it
+                                // off gets the same undo window as the "other steps"
+                                // list below instead of committing instantly, since it's
+                                // easy to tap by accident and there's no later moment to
+                                // notice and fix it. A plain one-off task still commits
+                                // right away, same as always.
+                                <Checkbox
+                                  checked={false}
+                                  onClick={() => ((t.groupId || t.eduId) && onCheckOffStep ? onCheckOffStep(t.id) : onToggleDone(t.id, true))}
+                                  color={isTop ? { border: PRIMARY_DARK } : col}
+                                  size={isTop ? undefined : 16}
+                                />
                               )}
                               <div
                                 style={{ flex: 1, minWidth: 0, cursor: t.isGoalItem ? "pointer" : undefined }}

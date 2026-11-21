@@ -18,7 +18,7 @@ import { SURFACE } from "../../lib/constants";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onCheckOffStep, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -287,6 +287,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
         doneCount={item.group.doneCount}
         total={item.group.total}
         onToggleDone={handleToggleDone}
+        onCheckOffStep={onCheckOffStep}
         onSetCategory={onSetCategory}
         onRemove={onRemove}
         onOpenDetail={onOpenTaskDetail}
@@ -319,6 +320,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onSe
       <TodaySection
         tasks={tasks}
         onToggleDone={handleToggleDone}
+        onCheckOffStep={onCheckOffStep}
         onRemove={onRemove}
         onOpenFocus={onOpenFocus}
         onSetDate={onSetDate}

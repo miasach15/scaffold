@@ -323,10 +323,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const undoEduDelete = () => {
     if (eduDeleteUndo.undo()) setPendingDeleteEduIds([]);
   };
-  // Checking off a step from a carried-over breakdown's expanded "other steps" list (see
-  // DashboardView's groupItems/otherSteps) gets the same undo window as a delete — these
-  // are steps you're saying you ALREADY did while the view was only ever showing one at a
-  // time, so an accidental tap shouldn't be permanent.
+  // Checking off a mini-step of a multi-step assignment/breakdown gets the same undo
+  // window as a delete, everywhere that can happen (Dashboard's groupItems/otherSteps,
+  // Tasks' GroupedTaskRow/TodaySection, Education's session rows and its steps editor) —
+  // a mini-step is easy to tap by accident underneath its parent task, and unlike a
+  // single plain task finishing, there's no "it's just sitting there done" moment to
+  // notice and fix; it should be just as reversible as deleting something.
   const [pendingDoneStepId, setPendingDoneStepId] = useState(null);
   const stepDoneUndo = useUndoableDelete();
   const requestStepDone = (id) => {
@@ -988,6 +990,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             events={events}
             onAddTask={addTask}
             onToggleDone={setTaskDone}
+            onCheckOffStep={requestStepDone}
             onSetCategory={setTaskCategory}
             onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}
@@ -1058,6 +1061,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onRemoveSession={requestRemoveTask}
             onSetSessionNotes={setTaskNotes}
             onSetSessionDone={setTaskDone}
+            onCheckOffStep={requestStepDone}
             onOpenFocus={openFocus}
             educationCategory={profile.educationCategory}
             gradeClasses={gradeClasses}
