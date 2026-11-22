@@ -634,10 +634,13 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                 <div style={{ flexShrink: 0 }}><UrgencyBadge iso={t.date} done={t.done} leadDays={t.groupId || t.eduId ? null : defaultLeadDays(t)} /></div>
                               )}
                               {onPushTomorrow && !t.isGoalItem && (
+                                // padding+negative-margin enlarges the tap target well past the
+                                // visible icon (same trick the drag handle above uses) — at 14px
+                                // + 2px padding this was an 18x18 hit box, easy to miss on a phone.
                                 <button
                                   onClick={() => onPushTomorrow(t.id)}
                                   title="Not getting to this tonight? Push it to tomorrow."
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 2, display: "flex", flexShrink: 0 }}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: MUTED, padding: 9, margin: -9, display: "flex", flexShrink: 0 }}
                                 >
                                   <SkipForward size={14} strokeWidth={2.2} />
                                 </button>
