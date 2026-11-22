@@ -49,6 +49,7 @@ import { applyOverdueSessionOps, planOverdueSessionReflow, planPushTaskToNextDay
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
 import { shouldAutoCompleteEduItem } from "./lib/eduAutoComplete";
+import { loadFocusSession, clearFocusSession } from "./lib/focusSessionStore";
 
 export default function App() {
   const { user, loading: authLoading, signOut, passwordRecovery } = useAuth();
@@ -413,10 +414,27 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // option. `duration` (the task's own estimate, if any) is what FocusTimerModal uses to
   // size its own 20-minute-round budget — there's no separate caller-chosen length
   // anymore, every round is the same fixed size.
-  const openFocus = (id, title) => {
+  const openFocus = (id, title, resumeState) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, checkedSteps: full?.checkedSteps || [], category: full?.category || null, duration: full?.duration ?? null });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, checkedSteps: full?.checkedSteps || [], category: full?.category || null, duration: full?.duration ?? null, resumeState: resumeState || null });
   };
+  // Picks a still-running focus session back up after the browser itself reloaded the
+  // page — mobile Safari (and Chrome under memory pressure) routinely discards a
+  // backgrounded tab and reloads it fresh when you switch back, which would otherwise
+  // silently drop the floating timer along with the rest of in-memory state. Runs once,
+  // right after tasks have loaded; a session for a task that's been deleted or finished
+  // some other way in the meantime is just discarded instead of reopened.
+  const focusSessionRestoredRef = useRef(false);
+  useEffect(() => {
+    if (tasksLoading || focusSessionRestoredRef.current) return;
+    focusSessionRestoredRef.current = true;
+    const saved = loadFocusSession();
+    if (!saved) return;
+    const t = tasks.find((x) => x.id === saved.taskId);
+    if (!t || t.done) { clearFocusSession(); return; }
+    openFocus(saved.taskId, t.title, saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasksLoading, tasks]);
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (t) setEditingTask(t);
@@ -1241,7 +1259,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           setView={setView}
           onToggleStepDone={setTaskDone}
           onCheckOffNoteStep={requestNoteStepDone}
-          onClose={() => setFocusTask(null)}
+          resumeState={focusTask.resumeState}
+          onClose={() => { clearFocusSession(); setFocusTask(null); }}
           onComplete={(investedMin) => { if (focusTask.id) setTaskDone(focusTask.id, true, investedMin); }}
           onOpenDetail={openTaskDetail}
           onSwitchTask={openFocus}

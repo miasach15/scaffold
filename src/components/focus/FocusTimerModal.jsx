@@ -9,6 +9,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
 import ModalPortal from "../shared/ModalPortal";
 import StepNotes from "../shared/StepNotes";
+import { saveFocusSession, clearFocusSession } from "../../lib/focusSessionStore";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
 // celebration screen's quote below already uses) — only a FALLBACK now, for a task
@@ -175,30 +176,40 @@ function DurationDial({ minutes, onChange, size, color }) {
   );
 }
 
-export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onCheckOffNoteStep, onClose, onComplete, onOpenDetail, onSwitchTask, portalTarget }) {
+export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onCheckOffNoteStep, onClose, onComplete, onOpenDetail, onSwitchTask, portalTarget, resumeState }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   // Adjustable via the dial below (idle, before a round starts) — this is just the
-  // starting default, not a cap on what any one round can be.
-  const [roundMinutes, setRoundMinutes] = useState(DEFAULT_ROUND_MIN);
+  // starting default, not a cap on what any one round can be. A `resumeState` (see
+  // focusSessionStore.js) means the tab got reloaded mid-session — App.jsx found a saved
+  // session for this same task and is handing it back here instead of starting fresh.
+  const [roundMinutes, setRoundMinutes] = useState(() => resumeState?.roundMinutes ?? DEFAULT_ROUND_MIN);
   const initial = roundMinutes * 60;
   // How many rounds this task gets before the app actually asks you to switch — scaled
   // to the task's own estimate AND whatever round length is set (see computeMaxBlocks),
   // not a flat number.
   const maxBlocks = useMemo(() => computeMaxBlocks(task.duration, roundMinutes), [task.duration, roundMinutes]);
   const maxSessionMin = maxBlocks * roundMinutes;
-  const [totalSeconds, setTotalSeconds] = useState(initial);
-  const [remaining, setRemaining] = useState(initial);
-  const [running, setRunning] = useState(false);
+  const [totalSeconds, setTotalSeconds] = useState(() => resumeState?.totalSeconds ?? initial);
+  // A resumed session that was actively running recomputes its true remaining time from
+  // the real clock against the saved end timestamp (same math the tick/visibility-change
+  // handlers below already use) rather than trusting a stale saved "seconds left" — that's
+  // what makes it correct no matter how long the tab was actually gone.
+  const [remaining, setRemaining] = useState(() => {
+    if (!resumeState) return initial;
+    if (resumeState.running && resumeState.endTime) return Math.max(0, Math.round((resumeState.endTime - Date.now()) / 1000));
+    return resumeState.remaining ?? initial;
+  });
+  const [running, setRunning] = useState(() => !!resumeState?.running);
   // Whether the timer's currently running the work round or a break — `totalSeconds`/
   // `remaining` above are reused for both. Every work round is the same length
   // (`roundMinutes`), so resuming after a break just restores that directly.
-  const [phase, setPhase] = useState("work"); // "work" | "break"
+  const [phase, setPhase] = useState(() => resumeState?.phase ?? "work"); // "work" | "break"
   // How many full work rounds have already chained on this task this session — a ref
   // (read inside the countdown tick below, which shouldn't re-subscribe every round)
   // mirrored into state purely so the render can show "Round 2 of 3".
-  const blocksCompletedRef = useRef(0);
-  const [blocksCompleted, setBlocksCompleted] = useState(0);
+  const blocksCompletedRef = useRef(resumeState?.blocksCompleted ?? 0);
+  const [blocksCompleted, setBlocksCompleted] = useState(() => resumeState?.blocksCompleted ?? 0);
   // The floating card is anchored bottom-right, so its one resize handle sits at the
   // opposite (top-left) corner — pulling it away from the anchor grows the card, same
   // direction the cursor actually moves. `null` means "default size, not resized yet".
@@ -233,15 +244,18 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // it up front and just resuming it later is far more reliable than creating it fresh
   // at that point.
   const audioCtxRef = useRef(null);
-  const prevRemainingRef = useRef(initial);
+  const prevRemainingRef = useRef(remaining);
   // The wall-clock moment the countdown should hit 0 — set whenever running starts (or
   // resumes). Background/inactive tabs get their setInterval throttled by the browser
   // (sometimes down to once a minute or less), so counting down by decrementing once per
   // tick would drift or stall while the tab isn't in front. Deriving `remaining` from
   // real elapsed time against this fixed timestamp means whatever tick DOES get through
   // — even a late one — snaps the displayed time (and the end-of-session chime/
-  // notification below, which fires off `remaining` reaching 0) back to correct.
-  const endTimeRef = useRef(null);
+  // notification below, which fires off `remaining` reaching 0) back to correct. Seeded
+  // from `resumeState` when this mount is itself a resume (see above) — a restored
+  // session that was actively running needs this set from the first tick, not just from
+  // the next toggleRunning.
+  const endTimeRef = useRef(resumeState?.running && resumeState?.endTime ? resumeState.endTime : null);
 
   const ensureAudioCtx = () => {
     if (!audioCtxRef.current) {
@@ -303,6 +317,18 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // chime so the two moments don't sound the same.
   const playSuccessChime = () => playNotes([{ freq: 523.25, start: 0 }, { freq: 659.25, start: 0.1 }, { freq: 783.99, start: 0.2 }]);
 
+  // Saves just enough to reconstruct this session if the tab gets reloaded while running
+  // (see focusSessionStore.js) — reads whatever hasn't changed from render-scope state,
+  // with `overrides` supplying exactly the fields the calling handler just set, so it
+  // never reflects a setter that hasn't actually taken effect yet.
+  const persistSession = (overrides) => {
+    saveFocusSession(task.id, {
+      phase, roundMinutes, totalSeconds, blocksCompleted: blocksCompletedRef.current,
+      running, endTime: endTimeRef.current, remaining,
+      ...overrides,
+    });
+  };
+
   // What happens when a countdown hits 0 — on a work round with rounds still left in the
   // budget, this chains straight into the next one (same roundMinutes length) with no
   // prompt at all; everything else (the budget's actually exhausted, or a break ending)
@@ -316,10 +342,12 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
       endTimeRef.current = Date.now() + secs * 1000;
       setTotalSeconds(secs);
       setRemaining(secs);
+      persistSession({ totalSeconds: secs, blocksCompleted: blocksCompletedRef.current, running: true, endTime: endTimeRef.current, remaining: secs });
       return;
     }
     setRemaining(0);
     setRunning(false);
+    persistSession({ running: false, endTime: null, remaining: 0 });
   };
 
   useEffect(() => {
@@ -352,16 +380,19 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   }, [running]);
 
   const toggleRunning = () => {
-    if (!running) {
+    const next = !running;
+    if (next) {
       ensureAudioCtx();
       endTimeRef.current = Date.now() + remaining * 1000;
     }
-    setRunning((r) => !r);
+    setRunning(next);
+    persistSession({ running: next, endTime: next ? endTimeRef.current : null });
   };
 
   // Dragging the dial while idle — sets this round's (and every round after it, unless
   // dragged again) length. Only meaningful before a round's actually running, same as
-  // the dial itself only rendering then.
+  // the dial itself only rendering then — nothing to resume yet, so this just clears
+  // whatever stale entry a previous round on this task might have left.
   const setPreset = (mins) => {
     setRunning(false);
     setRoundMinutes(mins);
@@ -369,12 +400,14 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     setRemaining(mins * 60);
     prevRemainingRef.current = mins * 60;
     endTimeRef.current = null;
+    clearFocusSession();
   };
   const reset = () => {
     setRunning(false);
     setRemaining(totalSeconds);
     prevRemainingRef.current = totalSeconds;
     endTimeRef.current = null;
+    persistSession({ running: false, endTime: null, remaining: totalSeconds });
   };
   // The budget's exhausted but you're not done — rather than treating this the same as
   // genuinely needing a break, this is the explicit "no, let me finish it" override: one
@@ -393,6 +426,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     prevRemainingRef.current = addSecs;
     endTimeRef.current = Date.now() + addSecs * 1000;
     setRunning(true);
+    persistSession({ totalSeconds: addSecs, blocksCompleted: blocksCompletedRef.current, running: true, endTime: endTimeRef.current, remaining: addSecs });
   };
   // A work block just ended (or you chose to step away) — hand off to a break instead of
   // straight back to the same countdown.
@@ -404,6 +438,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     prevRemainingRef.current = BREAK_MIN * 60;
     endTimeRef.current = Date.now() + BREAK_MIN * 60 * 1000;
     setRunning(true);
+    persistSession({ phase: "break", totalSeconds: BREAK_MIN * 60, running: true, endTime: endTimeRef.current, remaining: BREAK_MIN * 60 });
   };
   // Break's over (or skipped) — back to the same task, a fresh 20-minute round.
   const backToWork = () => {
@@ -415,6 +450,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     prevRemainingRef.current = secs;
     endTimeRef.current = Date.now() + secs * 1000;
     setRunning(true);
+    persistSession({ phase: "work", totalSeconds: secs, running: true, endTime: endTimeRef.current, remaining: secs });
   };
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
@@ -469,6 +505,8 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     setCompletedAt(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
     onComplete(investedMin);
     setCelebrating(true);
+    // Task's done — nothing left to resume if the tab reloads from here.
+    clearFocusSession();
   };
 
   const takeBreak = () => {
@@ -579,9 +617,14 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
             </div>
           </div>
 
-          {phase === "work" && !running && !finished ? (
+          {phase === "work" && !running && !finished && remaining === totalSeconds ? (
             // Idle — drag the dial to change this round's length (and every round after
             // it, until dragged again). Defaults to 20, same as every new round picks up.
+            // `remaining === totalSeconds` (not just `!running`) is what actually means
+            // "nothing's elapsed yet" — pausing partway through a round also sets
+            // `running` false but leaves `remaining` short of `totalSeconds`, and should
+            // show the paused ring at its frozen time, not snap back to this picker as if
+            // the round had never started (which it used to, before this check).
             <div style={{ margin: compact ? "10px auto 2px" : "16px auto 4px" }}>
               <DurationDial minutes={Math.round(totalSeconds / 60)} onChange={(m) => setPreset(m)} size={compact ? 140 : 190} color={catColor} />
             </div>
