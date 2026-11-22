@@ -26,7 +26,7 @@ import StepNotes from "../shared/StepNotes";
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
 // next row, per category color. Figma's dashboard mockup carries this same treatment.
-function TimelineRow({ item, col, isFirst, isLast, isPast }) {
+function TimelineRow({ item, col, isFirst, isLast, isPast, onCheckOffNoteStep }) {
   return (
     <div style={{ display: "flex", gap: 12, paddingBottom: isLast ? 0 : 14, opacity: isPast ? 0.45 : 1 }}>
       <div style={{ width: 62, fontSize: 11.5, color: MUTED, flexShrink: 0, paddingTop: 8 }}>{decimalToTimeLabel(item.start)}</div>
@@ -39,7 +39,7 @@ function TimelineRow({ item, col, isFirst, isLast, isPast }) {
         <div style={{ fontSize: 13.5, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           <WorkTitle title={item.title} mutedColor={MUTED} />
         </div>
-        <StepNotes notes={item.notes} title={item.title} taskId={item.id} />
+        <StepNotes notes={item.notes} title={item.title} taskId={item.id} checkedSteps={item.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(item.id, step) : undefined} />
       </div>
     </div>
   );
@@ -52,7 +52,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, onCheckOffStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, onCheckOffStep, onCheckOffNoteStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
   const CATEGORY_COLORS = useCategoryColors();
   // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
   // native drag doesn't work at all on touch in most mobile browsers, and gives no
@@ -543,7 +543,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 {todaysTimedTasks.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {todaysTimedTasks.map((item, i) => (
-                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
+                      <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysTimedTasks.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} onCheckOffNoteStep={onCheckOffNoteStep} />
                     ))}
                   </div>
                 )}
@@ -621,7 +621,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                                   {t.isGoalItem && <span style={{ fontWeight: 400, color: isTop ? PRIMARY_DARK : MUTED }}>Goal: </span>}
                                   <WorkTitle title={t.title} mutedColor={isTop ? PRIMARY_DARK : MUTED} />
                                 </div>
-                                <StepNotes notes={t.notes} title={t.title} taskId={t.id} color={isTop ? PRIMARY_DARK : undefined} />
+                                <StepNotes notes={t.notes} title={t.title} taskId={t.id} checkedSteps={t.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(t.id, step) : undefined} color={isTop ? PRIMARY_DARK : undefined} />
                                 {stuckOnThis && (
                                   <div style={{ fontSize: 11, color: TONE.warn.text, marginTop: 1 }}>
                                     Stuck on this a while — maybe switch for a bit.
@@ -714,7 +714,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>Today's events</div>
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       {todaysEvents.map((item, i) => (
-                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} />
+                        <TimelineRow key={item.id} item={item} col={CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Personal} isFirst={i === 0} isLast={i === todaysEvents.length - 1} isPast={item.start + (item.duration || 60) / 60 <= nowDecimal} onCheckOffNoteStep={onCheckOffNoteStep} />
                       ))}
                     </div>
                   </div>

@@ -72,7 +72,7 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, loading: eventsLoading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
+  const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
@@ -355,6 +355,51 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       setPendingDoneStepId(null);
     }
   };
+
+  // Same real-commit-plus-reversible-undo treatment, but for crossing off one of a single
+  // packed task's own notes-based mini-steps (see StepNotes.jsx — "Work on: latin project"
+  // with "Choose and research passage, Scan the Latin meter, ..." all in one task's notes).
+  // That one used to only write to localStorage, which is why it could look checked off on
+  // one device/browser and then still show up unchecked on another, or "come back" later in
+  // a different browser profile — nothing had actually reached the database. This commits
+  // to the real checked_steps column right away; Undo reverses that one write.
+  const [pendingNoteStep, setPendingNoteStep] = useState(null); // { taskId, step } | null
+  const noteStepDoneUndo = useUndoableDelete();
+  const requestNoteStepDone = (taskId, step) => {
+    toggleCheckedStep(taskId, step, true);
+    setPendingNoteStep({ taskId, step });
+    noteStepDoneUndo.requestDelete(`"${step.length > 40 ? step.slice(0, 40) + "…" : step}" checked off`, () => {
+      setPendingNoteStep((cur) => (cur && cur.taskId === taskId && cur.step === step ? null : cur));
+    });
+  };
+  const undoNoteStepDone = () => {
+    if (noteStepDoneUndo.undo() && pendingNoteStep) {
+      toggleCheckedStep(pendingNoteStep.taskId, pendingNoteStep.step, false);
+      setPendingNoteStep(null);
+    }
+  };
+  // One-time, per-device cleanup: carries over anything already crossed off under the old
+  // localStorage-only scheme (see StepNotes.jsx's previous STORAGE_KEY) into the new synced
+  // column, then retires that key for good — otherwise upgrading would look like every
+  // already-crossed-off mini-step on this device suddenly came back.
+  const noteStepsMigratedRef = useRef(false);
+  useEffect(() => {
+    if (tasksLoading || noteStepsMigratedRef.current) return;
+    noteStepsMigratedRef.current = true;
+    try {
+      const raw = localStorage.getItem("scaffold-checked-ministeps");
+      if (raw) {
+        const all = JSON.parse(raw);
+        Object.entries(all).forEach(([taskId, steps]) => {
+          if (Array.isArray(steps)) steps.forEach((step) => toggleCheckedStep(taskId, step, true));
+        });
+      }
+      localStorage.removeItem("scaffold-checked-ministeps");
+    } catch {
+      // worst case, this device's old locally-crossed-off steps just don't carry over
+    }
+  }, [tasksLoading, toggleCheckedStep]);
+
   // A pending-deleted assignment's own sessions shouldn't keep showing elsewhere for the
   // few seconds before the delete actually commits — the deadline would already be gone
   // while "Study: X" still sat in Today with nothing to point back to. A step just
@@ -370,7 +415,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // anymore, every round is the same fixed size.
   const openFocus = (id, title) => {
     const full = tasks.find((t) => t.id === id);
-    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, category: full?.category || null, duration: full?.duration ?? null });
+    setFocusTask({ id, title, groupId: full?.groupId || null, notes: full?.notes || null, checkedSteps: full?.checkedSteps || [], category: full?.category || null, duration: full?.duration ?? null });
   };
   const openTaskDetail = (id) => {
     const t = tasks.find((x) => x.id === id);
@@ -955,6 +1000,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onPushTomorrow={pushTaskForward}
             onReorderTasks={reorderTasks}
             onCheckOffStep={requestStepDone}
+            onCheckOffNoteStep={requestNoteStepDone}
             autoOpenBrainDump={autoOpenBrainDump}
             onAutoOpenBrainDumpHandled={() => setAutoOpenBrainDump(false)}
             hasActiveFocusSession={!!focusTask}
@@ -1074,6 +1120,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onSetSessionNotes={setTaskNotes}
             onSetSessionDone={setTaskDone}
             onCheckOffStep={requestStepDone}
+            onCheckOffNoteStep={requestNoteStepDone}
             onOpenFocus={openFocus}
             educationCategory={profile.educationCategory}
             gradeClasses={gradeClasses}
@@ -1193,6 +1240,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           profile={profile}
           setView={setView}
           onToggleStepDone={setTaskDone}
+          onCheckOffNoteStep={requestNoteStepDone}
           onClose={() => setFocusTask(null)}
           onComplete={(investedMin) => { if (focusTask.id) setTaskDone(focusTask.id, true, investedMin); }}
           onOpenDetail={openTaskDetail}
@@ -1228,6 +1276,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       {taskDeleteUndo.pending && <UndoToast label={taskDeleteUndo.pending.label} onUndo={undoTaskDelete} />}
       {eduDeleteUndo.pending && <UndoToast label={eduDeleteUndo.pending.label} onUndo={undoEduDelete} />}
       {stepDoneUndo.pending && <UndoToast label={stepDoneUndo.pending.label} onUndo={undoStepDone} />}
+      {noteStepDoneUndo.pending && <UndoToast label={noteStepDoneUndo.pending.label} onUndo={undoNoteStepDone} />}
       {hwFollowUp && (
         <HomeworkFollowUpToast
           title={hwFollowUp.title}

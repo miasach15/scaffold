@@ -19,6 +19,7 @@ const fromRow = (row) => ({
   groupDueStart: row.group_due_start == null ? null : Number(row.group_due_start),
   leadDays: row.lead_days == null ? null : Number(row.lead_days),
   notes: row.notes || null,
+  checkedSteps: row.checked_steps || [],
   orderIndex: row.order_index == null ? null : Number(row.order_index),
   orderSetDate: row.order_set_date || null,
   actualMinutes: row.actual_minutes == null ? null : Number(row.actual_minutes),
@@ -151,6 +152,22 @@ export function useTasks(userId) {
     if (error) reportSaveError();
   }, []);
 
+  // Crossing off one of the comma-joined mini-steps packed into a single task's own notes
+  // (see StepNotes.jsx) — a real, synced column instead of the localStorage-only tally it
+  // used to be, so it follows the task across devices/reloads like everything else here.
+  const toggleCheckedStep = useCallback(async (id, step, checkedVal) => {
+    let nextArr = null;
+    setTasks((ts) => ts.map((t) => {
+      if (t.id !== id) return t;
+      const cur = t.checkedSteps || [];
+      nextArr = checkedVal ? (cur.includes(step) ? cur : [...cur, step]) : cur.filter((s) => s !== step);
+      return { ...t, checkedSteps: nextArr };
+    }));
+    if (nextArr === null) return;
+    const { error } = await supabase.from("tasks").update({ checked_steps: nextArr }).eq("id", id);
+    if (error) reportSaveError();
+  }, []);
+
   // Persists a manual order for whatever set of tasks is currently on screen (e.g.
   // Dashboard's "Anytime today" list) — same order_index pattern goal_actions already
   // uses. Takes the FULL list of ids in their new order (not a single move + direction)
@@ -194,5 +211,5 @@ export function useTasks(userId) {
     if (error) reportSaveError();
   }, [userId]);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };
 }

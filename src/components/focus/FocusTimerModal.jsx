@@ -175,7 +175,7 @@ function DurationDial({ minutes, onChange, size, color }) {
   );
 }
 
-export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onClose, onComplete, onOpenDetail, onSwitchTask, portalTarget }) {
+export default function FocusTimerModal({ task, tasks, eduItems, profile, setView, onToggleStepDone, onCheckOffNoteStep, onClose, onComplete, onOpenDetail, onSwitchTask, portalTarget }) {
   const CATEGORY_COLORS = useCategoryColors();
   const catColor = CATEGORY_COLORS[task.category] || ACCENT;
   // Adjustable via the dial below (idle, before a round starts) — this is just the
@@ -612,7 +612,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
           )}
           {!compact && (task.notes ? (
             <div style={{ marginBottom: 14 }}>
-              <StepNotes notes={task.notes} title={task.title} taskId={task.id} color={MUTED} fontSize={12.5} align="center" />
+              <StepNotes notes={task.notes} title={task.title} taskId={task.id} checkedSteps={task.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(task.id, step) : undefined} color={MUTED} fontSize={12.5} align="center" />
             </div>
           ) : (
             <div style={{ marginBottom: 14 }} />

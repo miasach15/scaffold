@@ -30,6 +30,7 @@ export default function EducationView({
   onSetSessionNotes,
   onSetSessionDone,
   onCheckOffStep,
+  onCheckOffNoteStep,
   onUpdateDeadline,
   onSetFlexible,
   onSetSubject,
@@ -304,6 +305,8 @@ export default function EducationView({
     const dueDate = parent?.dueDate || t.date;
     return {
       id: t.id, key: `s-${t.id}`, title: t.title, subtitle: t.notes || null, duration: t.duration,
+      checkedSteps: t.checkedSteps,
+      onCheckOffNoteStep: onCheckOffNoteStep ? (step) => onCheckOffNoteStep(t.id, step) : undefined,
       done: t.done, date: t.date, dueDate, timeLabel: t.start != null ? decimalToTimeLabel(t.start) : null,
       // A flexible deadline (see the "This deadline can move if it needs to" checkbox
       // above) sorts as if it were a day later — it shouldn't outrank an equally-close
