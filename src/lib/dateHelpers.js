@@ -211,8 +211,21 @@ export const assessmentStudyDates = (dueISO, count, existingTasks, existingEvent
   const earliestCandidate = toISO(addDays(new Date(lastWorkDay + "T00:00:00"), -(MAX_LEAD_DAYS - 1)));
   const windowStart = earliestCandidate < todayISOStr ? todayISOStr : earliestCandidate;
   const candidates = dateRangeISO(windowStart, lastWorkDay); // ascending; lastWorkDay is always the final entry
-  const wanted = Math.min(Math.max(1, count), candidates.length);
-  if (wanted >= candidates.length) return candidates;
+  const wanted = Math.max(1, count);
+
+  if (wanted === candidates.length) return candidates;
+
+  if (wanted > candidates.length) {
+    // More sessions asked for (an AI breakdown can land here — it sizes its own step
+    // count off the assignment's scope, not this week-out ceiling) than there are
+    // distinct days within the ceiling — pack the extras onto existing days instead of
+    // ever reaching back further, spread as evenly as the day count allows. Every
+    // eligible day is getting used regardless, so load-balancing doesn't apply here
+    // (same reasoning as distributeDatesByLoad's own over-count branch); the final one
+    // still always lands on the night before.
+    const totalDays = candidates.length;
+    return Array.from({ length: wanted }, (_, i) => candidates[Math.min(totalDays - 1, Math.floor((i * totalDays) / wanted))]);
+  }
 
   const loadOf = (d) =>
     (existingTasks || []).filter((t) => t.date === d).reduce((s, t) => s + (t.duration ?? 30), 0) +

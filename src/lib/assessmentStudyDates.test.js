@@ -18,12 +18,12 @@ describe("assessmentStudyDates", () => {
     expect(dates[dates.length - 1]).toBe("2026-09-09");
   });
 
-  it("never schedules more than a week (7 days) before the test, even when a much bigger count is requested", () => {
+  it("never uses a distinct day more than a week before the test, even when a much bigger count is requested (packs extras instead)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-01T12:00:00"));
     const dates = assessmentStudyDates("2026-09-30", 20, [], []);
-    expect(dates.length).toBe(7);
-    expect(dates[0]).toBe("2026-09-23"); // 7 days before 9/29 (the day before due)
+    expect(dates.length).toBe(20); // every requested session still gets a real date
+    expect(dates.every((d) => d >= "2026-09-23")).toBe(true); // never earlier than 7 days before 9/29 (ISO strings sort chronologically)
     expect(dates[dates.length - 1]).toBe("2026-09-29");
   });
 
@@ -53,10 +53,19 @@ describe("assessmentStudyDates", () => {
     expect(dates).toEqual(["2026-09-08", "2026-09-09"]);
   });
 
-  it("uses the whole available window (no load-based trimming) when the count meets or exceeds it", () => {
+  it("uses the whole available window (no load-based trimming) when the count exactly matches it", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-01T12:00:00"));
     const dates = assessmentStudyDates("2026-09-10", 7, [], []);
     expect(dates).toEqual(["2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06", "2026-09-07", "2026-09-08", "2026-09-09"]);
+  });
+
+  it("packs extra sessions onto existing days (never fewer dates than requested) when an AI breakdown asks for more steps than the week allows", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-01T12:00:00"));
+    const dates = assessmentStudyDates("2026-09-10", 10, [], []);
+    expect(dates.length).toBe(10); // never silently returns fewer dates than were asked for
+    expect(dates[dates.length - 1]).toBe("2026-09-09"); // still ends on the night before
+    expect(new Set(dates).size).toBeLessThanOrEqual(7); // packed within the same week-out window, not spilling earlier
   });
 });

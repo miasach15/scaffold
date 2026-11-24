@@ -35,7 +35,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { title, details, dueDate, stepHint } = await req.json();
+    const { title, type, details, dueDate, stepHint } = await req.json();
     if (!details || !details.trim()) {
       return new Response(JSON.stringify({ error: "missing assignment details" }), { status: 400, headers: corsHeaders });
     }
@@ -43,7 +43,31 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not set" }), { status: 500, headers: corsHeaders });
     }
 
-    const prompt = `A student has this assignment${title ? ` titled "${title}"` : ""}${dueDate ? `, due ${dueDate}` : ""}. Here are the assignment details/instructions:
+    // An Assessment (studying for a test) gets a materially different prompt than an
+    // Assignment (producing and turning in a deliverable) — the risk here isn't pacing,
+    // it's the model confidently inventing specific exam content (topics, formulas,
+    // chapter numbers) it has no real basis for, which could send a student studying the
+    // wrong thing entirely. The anti-hallucination instruction below is the point of
+    // this whole branch; everything else just carries over the same sizing/title rules.
+    const isAssessment = type === "Assessment";
+    const prompt = isAssessment ? `A student is studying for${title ? ` "${title}"` : " a test"}${dueDate ? `, on ${dueDate}` : ""}. Here's what they gave as context:
+
+"""
+${details.trim()}
+"""
+
+Break this into an ordered list of study sessions leading up to the test.
+
+Ground every session strictly in what's actually in the context above — if it names real topics, chapters, problem types, or material to review, build the sessions around THAT content specifically. But if what's there is thin (e.g. just the test's name/subject, or a vague one-liner with no real content to go on), do NOT guess or invent what might be covered — never fabricate specific topics, formulas, chapter numbers, or content the student didn't actually give you. In that case, fall back to plain, generic session titles instead (e.g. "Study session 1", "Review notes", "Practice problems", "Final review") rather than confidently-sounding but made-up specifics. When in doubt, be more generic, not more specific.
+
+Each session should be sized as ONE real sitting, roughly 30 minutes for an early/light review session up to 90 minutes for the night-before cram — sessions should genuinely intensify as the test gets closer, not stay flat.
+${stepHint ? `\nThe student has about ${stepHint} day${stepHint === 1 ? "" : "s"} of runway before it, so aim for around ${stepHint} sessions if that genuinely fits — but never pad the list with filler just to hit that number.` : ""}
+
+For EACH session, also give a realistic "minutes" estimate (30-90) for that specific session, ramping up as the test approaches — don't reuse the same number for every one.
+
+Titles matter a lot here because they get shown as small chips on a calendar, so keep them short:
+- Max ~4-5 words, under 30 characters. Lead with a verb (e.g. "Review chapter 3", "Practice problems", "Final review") — no filler words like "consider" or "try to", no sub-clauses, no trailing detail after a comma or "for"/"about".
+- Never use a comma anywhere in a title — that reads as several separate items elsewhere in the app, not one. Pick the single most important verb+object instead, and drop the rest.` : `A student has this assignment${title ? ` titled "${title}"` : ""}${dueDate ? `, due ${dueDate}` : ""}. Here are the assignment details/instructions:
 
 """
 ${details.trim()}

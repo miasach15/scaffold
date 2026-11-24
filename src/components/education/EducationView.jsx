@@ -161,7 +161,7 @@ export default function EducationView({
     setBreakdownError(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
-        body: { title: title.trim(), details: assignmentDetails.trim(), dueDate, stepHint: scheduleDayCount() },
+        body: { title: title.trim(), type, details: assignmentDetails.trim(), dueDate, stepHint: scheduleDayCount() },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -221,22 +221,34 @@ export default function EducationView({
     setSessionBreakdownError(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
-        body: { title: item.title, details: details.trim(), dueDate: item.dueDate, stepHint: null },
+        body: { title: item.title, type: item.type, details: details.trim(), dueDate: item.dueDate, stepHint: null },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const steps = (data?.steps || []).filter((s) => s.title).map((s) => ({ ...s, title: sanitizeStepTitle(s.title) }));
       if (steps.length === 0) throw new Error("No steps came back. Try adding more detail.");
-      const todayISOForPlan = toISO(new Date());
-      const startISO = item.dueDate > todayISOForPlan ? todayISOForPlan : item.dueDate;
-      const lastWorkDay = dayBefore(item.dueDate);
-      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-      const dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
+      // An assessment keeps the same cram-before-the-test, never-more-than-a-week,
+      // load-balanced-within-that rule a freshly-scheduled one gets (see
+      // assessmentStudyDates) — re-planning with AI shouldn't fall back to spreading
+      // evenly across the whole window just because this is a re-plan, not a fresh add.
+      let dates;
+      let minutesRange;
+      if (item.type === "Assessment") {
+        dates = assessmentStudyDates(item.dueDate, steps.length, tasks, events);
+        minutesRange = { min: 30, max: 90 };
+      } else {
+        const todayISOForPlan = toISO(new Date());
+        const startISO = item.dueDate > todayISOForPlan ? todayISOForPlan : item.dueDate;
+        const lastWorkDay = dayBefore(item.dueDate);
+        const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+        dates = distributeDatesByLoad(startISO, endISO, steps.length, tasks, events);
+        minutesRange = { min: 45, max: 90 };
+      }
       tasks.filter((t) => t.eduId === item.id).forEach((t) => onRemoveSession(t.id));
       // Each step's own minutes estimate (see generate-assignment-plan), clamped to the
       // same real-sitting range the prompt itself asks for.
       steps.forEach((s, i) => {
-        const minutes = Math.round(Math.min(90, Math.max(45, s.minutes ?? 60)) / 5) * 5;
+        const minutes = Math.round(Math.min(minutesRange.max, Math.max(minutesRange.min, s.minutes ?? 60)) / 5) * 5;
         onAddSession(item.id, s.title, dates[i], "17:00", minutes, true);
       });
     } catch (e) {
