@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronUp, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, dateRangeISO, daysBeforeDue, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, assessmentStudyDates, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { sanitizeStepTitle } from "../../lib/text";
 import { inputStyle, primaryBtn } from "../../lib/styles";
@@ -150,7 +150,7 @@ export default function EducationView({
     // An assessment crams into the days right before it, not spread thin across however
     // far off it is; an assignment still spreads across your least-busy days either way.
     const dates = type === "Assessment"
-      ? daysBeforeDue(dueDate, schedule)
+      ? assessmentStudyDates(dueDate, schedule, tasks, events)
       : schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
     return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
   };
@@ -480,13 +480,13 @@ export default function EducationView({
                 ))}
                 {(type === "Assessment" || workMode === "days") && (
                   <input
-                    type="number" min={1} max={30} value={workDays}
+                    type="number" min={1} max={type === "Assessment" ? 7 : 30} value={workDays}
                     onChange={(e) => setWorkDays(Math.max(1, Number(e.target.value) || 1))}
-                    title={type === "Assessment" ? `We'll schedule that many '${workVerb}' sessions across the days right before the assessment` : `We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
+                    title={type === "Assessment" ? `We'll schedule that many '${workVerb}' sessions in the week right before the assessment (always including the day before, no matter what)` : `We'll spread that many '${workVerb}' tasks across your least-busy days between today and the due date`}
                     style={{ ...inputStyle, width: 55, padding: "6px 8px" }}
                   />
                 )}
-                {type === "Assessment" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the assessment</span>}
+                {type === "Assessment" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days before the assessment (max a week out)</span>}
                 {type !== "Assessment" && workMode === "days" && <span style={{ fontSize: 12, color: "#93A0AD" }}>days to spread it across</span>}
               </div>
               {workMode === "everyday" && (
@@ -611,6 +611,7 @@ export default function EducationView({
             col={eduCol}
             sessions={tasks.filter((t) => t.eduId === editingEduId)}
             onClose={() => { setEditingEduId(null); setSessionBreakdownError(null); }}
+            onMarkDone={() => { onSetEduDone(editingItem.id, true); setEditingEduId(null); }}
             onToggleSession={(id, done) => (done && onCheckOffStep ? onCheckOffStep(id) : onSetSessionDone(id, done))}
             onSetSessionNotes={onSetSessionNotes}
             onRemoveSession={onRemoveSession}

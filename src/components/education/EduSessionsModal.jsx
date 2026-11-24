@@ -14,7 +14,7 @@ import { SURFACE } from "../../lib/constants";
 // Subject can be left unset at creation and picked up here later — same free-text
 // field, same "No subject" default, just not locked in at add-time. `col` is your
 // actual School category color (see EducationView).
-export default function EduSessionsModal({ item, col, sessions, onClose, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onSetFlexible, onSetSubject, knownSubjects, onBreakDown, breakingDown, breakdownError }) {
+export default function EduSessionsModal({ item, col, sessions, onClose, onMarkDone, onToggleSession, onSetSessionNotes, onRemoveSession, onAddSession, onUpdateDeadline, onSetFlexible, onSetSubject, knownSubjects, onBreakDown, breakingDown, breakdownError }) {
   const todayISOlocal = toISO(new Date());
   const dateOptions = useMemo(() => dateRangeISO(todayISOlocal, item.dueDate), [item.dueDate, todayISOlocal]);
   const [newDate, setNewDate] = useState(dateOptions[0] || todayISOlocal);
@@ -121,42 +121,57 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onToggl
           </label>
         )}
 
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>
-          {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
-        </div>
-        {item.type === "Homework" && (
-          <div style={{ fontSize: 11.5, color: "#93A0AD", marginTop: -4, marginBottom: 8 }}>Shows up every day until it's due, skipping a crowded day. Add more below if you need extra time on this one.</div>
-        )}
-        {sorted.length === 0 ? (
-          <EmptyState text={`No ${actionLabel}s scheduled yet.`} />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-            {sorted.map((s) => (
-              <div key={s.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
-                <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} title="Marks this session done, not the whole assignment" />
-                <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
-                <input
-                  value={drafts[s.id] ?? ""}
-                  onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
-                  onBlur={() => commitNotes(s.id)}
-                  onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                  placeholder="What's this session for? (optional)"
-                  style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1 }}
-                />
-                <button onClick={() => onRemoveSession(s.id)} className="btn-delete" style={deleteBtn}>×</button>
-              </div>
-            ))}
+        {item.type === "Homework" ? (
+          // No sub-task list here on purpose — a homework item is one thing, not a
+          // checklist. It just shows up again each day until the due date (one tap away,
+          // on Dashboard/Tasks, to push a night you're not getting to it forward), and
+          // this is the one place to say you're done with it entirely rather than
+          // leaving that to guesswork off a single day's checkbox.
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: "#93A0AD", marginBottom: 10 }}>
+              Shows up every day until {formatShortDate(item.dueDate)}. Checking off a day's reminder only clears that day — once you're completely finished, mark the whole thing done here.
+            </div>
+            <button onClick={onMarkDone} className="btn-primary" style={primaryBtn}>
+              Mark completely done
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#93A0AD", marginBottom: 8 }}>
+              {item.type === "Assessment" ? "Study sessions" : "Sub-tasks"}
+            </div>
+            {sorted.length === 0 ? (
+              <EmptyState text={`No ${actionLabel}s scheduled yet.`} />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                {sorted.map((s) => (
+                  <div key={s.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 4px 4px 10px", borderRadius: 10, border: "1px solid #ECECEC", background: s.done ? "#fff" : "#FDFCFA" }}>
+                    <Checkbox checked={s.done} onClick={() => onToggleSession(s.id, !s.done)} color={col} title="Marks this session done, not the whole assignment" />
+                    <div style={{ fontSize: 11, color: "#93A0AD", whiteSpace: "nowrap" }}>{formatShortDate(s.date)}</div>
+                    <input
+                      value={drafts[s.id] ?? ""}
+                      onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
+                      onBlur={() => commitNotes(s.id)}
+                      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                      placeholder="What's this session for? (optional)"
+                      style={{ ...inputStyle, flex: 1, border: "none", background: "transparent", padding: "6px 2px", fontSize: 13.5, textDecoration: s.done ? "line-through" : "none", opacity: s.done ? 0.5 : 1 }}
+                    />
+                    <button onClick={() => onRemoveSession(s.id)} className="btn-delete" style={deleteBtn}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
 
-        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-          <select value={newDate} onChange={(e) => setNewDate(e.target.value)} style={{ ...inputStyle, fontSize: 12, flex: 1, padding: "6px 8px" }}>
-            {dateOptions.map((d) => <option key={d} value={d}>{formatShortDate(d)}</option>)}
-          </select>
-          <button onClick={() => onAddSession(item.id, newDate)} className="btn-ghost" style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}>
-            + Add {actionLabel}
-          </button>
-        </div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              <select value={newDate} onChange={(e) => setNewDate(e.target.value)} style={{ ...inputStyle, fontSize: 12, flex: 1, padding: "6px 8px" }}>
+                {dateOptions.map((d) => <option key={d} value={d}>{formatShortDate(d)}</option>)}
+              </select>
+              <button onClick={() => onAddSession(item.id, newDate)} className="btn-ghost" style={{ ...ghostBtn, fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}>
+                + Add {actionLabel}
+              </button>
+            </div>
+          </>
+        )}
 
         {item.type !== "Homework" && (
           <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 12, marginBottom: 14 }}>

@@ -191,6 +191,40 @@ export const studyRampMinutes = (i, count) => {
   if (count <= 1) return 90;
   return Math.round((30 + (90 - 30) * (i / (count - 1))) / 5) * 5;
 };
+// An assessment's actual study dates: the day right before it is never optional — that's
+// the one session that always has to be there, test or no test, however busy that day
+// already looks — and studying never starts more than a week (MAX_LEAD_DAYS) out, however
+// big a count was asked for, since cramming further back than that just front-loads time
+// that would otherwise go to other classes' own work without actually helping this one.
+// Within that same-week ceiling, if fewer sessions are needed than the full week allows,
+// the rest go on whichever of the remaining candidate days are carrying the least
+// already (same minutes-based load accounting as distributeDatesByLoad) — distributing
+// the workload evenly matters more here than exactly which day inside an already-short,
+// already-close-to-the-test window a given session lands on, so load wins ties, with the
+// day nearer the test preferred only when two candidates are equally loaded.
+export const assessmentStudyDates = (dueISO, count, existingTasks, existingEvents) => {
+  const todayISOStr = toISO(new Date());
+  const lastWorkDay = dayBefore(dueISO);
+  if (lastWorkDay < todayISOStr) return [todayISOStr];
+
+  const MAX_LEAD_DAYS = 7;
+  const earliestCandidate = toISO(addDays(new Date(lastWorkDay + "T00:00:00"), -(MAX_LEAD_DAYS - 1)));
+  const windowStart = earliestCandidate < todayISOStr ? todayISOStr : earliestCandidate;
+  const candidates = dateRangeISO(windowStart, lastWorkDay); // ascending; lastWorkDay is always the final entry
+  const wanted = Math.min(Math.max(1, count), candidates.length);
+  if (wanted >= candidates.length) return candidates;
+
+  const loadOf = (d) =>
+    (existingTasks || []).filter((t) => t.date === d).reduce((s, t) => s + (t.duration ?? 30), 0) +
+    (existingEvents || []).filter((e) => e.date === d).reduce((s, e) => s + (e.duration ?? 60), 0);
+  const others = candidates.slice(0, -1); // every candidate except the non-negotiable night before
+  const rest = others
+    .slice()
+    .sort((a, b) => loadOf(a) - loadOf(b) || b.localeCompare(a))
+    .slice(0, wanted - 1)
+    .sort((a, b) => a.localeCompare(b));
+  return [...rest, lastWorkDay];
+};
 export const formatShortDate = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 // customDays: array of day-of-week ints (0=Sun..6=Sat), only used when repeat === "Custom"

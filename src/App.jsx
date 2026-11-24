@@ -44,7 +44,7 @@ const ListsView = lazy(() => import("./components/lists/ListsView"));
 const EducationView = lazy(() => import("./components/education/EducationView"));
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
-import { addDays, dateRangeISO, dayBefore, daysBeforeDue, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, studyRampMinutes, timeToDecimal, toISO } from "./lib/dateHelpers";
+import { addDays, assessmentStudyDates, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, studyRampMinutes, timeToDecimal, toISO } from "./lib/dateHelpers";
 import { applyOverdueSessionOps, planOverdueSessionReflow, planPushTaskToNextDay } from "./lib/overdueSessions";
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
@@ -697,7 +697,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
           // night before (see studyRampMinutes). The usual load adjustment still applies
           // on top of that ramped base, just with the wider 30-90 range this calls for
           // instead of a single sitting's 45-90.
-          const dates = daysBeforeDue(row.dueDate, effectiveSchedule);
+          const dates = assessmentStudyDates(row.dueDate, effectiveSchedule, tasks, events);
           const rampBase = dates.map((_, i) => studyRampMinutes(i, dates.length));
           const minutes = sessionMinutesByLoad(dates, tasks, events, rampBase, { min: 30, max: 90 });
           dates.forEach((d, i) => {
@@ -727,11 +727,20 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     if (!dateChanged) return;
     const linked = tasks.filter((t) => t.eduId === id && !t.done).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     if (linked.length === 0) return;
-    const todayISO = toISO(new Date());
-    const startISO = dueDate > todayISO ? todayISO : dueDate;
-    const lastWorkDay = dayBefore(dueDate);
-    const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
-    const dates = distributeDatesByLoad(startISO, endISO, linked.length, tasks, events);
+    let dates;
+    if (item.type === "Assessment") {
+      // Same cram-before-the-test, never-more-than-a-week, load-balanced-within-that
+      // rule a newly-added Assessment's sessions get (see assessmentStudyDates) — a
+      // rescheduled one shouldn't fall back to spreading evenly across the whole new
+      // window just because this is a move instead of a fresh add.
+      dates = assessmentStudyDates(dueDate, linked.length, tasks, events);
+    } else {
+      const todayISO = toISO(new Date());
+      const startISO = dueDate > todayISO ? todayISO : dueDate;
+      const lastWorkDay = dayBefore(dueDate);
+      const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+      dates = distributeDatesByLoad(startISO, endISO, linked.length, tasks, events);
+    }
     linked.forEach((t, i) => setTaskDate(t.id, dates[i]));
   };
 
