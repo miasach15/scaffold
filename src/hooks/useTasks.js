@@ -189,6 +189,44 @@ export function useTasks(userId) {
     if (error) reportSaveError();
   }, []);
 
+  // Re-inserts the exact rows a delete removed, same ids and all — how an undoable
+  // delete is actually reversed now that the delete itself commits immediately (see
+  // App.jsx's requestRemoveTask/requestRemoveEduItem): there's no "pending" state left
+  // in the database to just cancel, so Undo has to be a real write of its own.
+  const restoreTasks = useCallback(
+    async (items) => {
+      if (!userId || items.length === 0) return;
+      const rows = items.map((t) => ({
+        id: t.id,
+        user_id: userId,
+        title: t.title,
+        date: t.date,
+        start: t.start,
+        duration: t.duration,
+        done: t.done,
+        edu_id: t.eduId,
+        category: t.category,
+        group_id: t.groupId,
+        group_title: t.groupTitle,
+        group_due_date: t.groupDueDate,
+        group_due_start: t.groupDueStart,
+        lead_days: t.leadDays,
+        notes: t.notes,
+        checked_steps: t.checkedSteps,
+        order_index: t.orderIndex,
+        order_set_date: t.orderSetDate,
+        actual_minutes: t.actualMinutes,
+      }));
+      setTasks((ts) => [...ts, ...rows.map(fromRow)]);
+      const { error } = await supabase.from("tasks").insert(rows);
+      if (error) {
+        reportSaveError();
+        setTasks((ts) => ts.filter((t) => !rows.some((r) => r.id === t.id)));
+      }
+    },
+    [userId]
+  );
+
   const removeTasksByEduId = useCallback(async (eduId) => {
     setTasks((ts) => ts.filter((t) => t.eduId !== eduId));
     // handled server-side too via ON DELETE CASCADE on edu_id
@@ -211,5 +249,5 @@ export function useTasks(userId) {
     if (error) reportSaveError();
   }, [userId]);
 
-  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };
+  return { tasks, loading, addTask, setTaskDone, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, restoreTasks, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere, setGroupDueDate };
 }

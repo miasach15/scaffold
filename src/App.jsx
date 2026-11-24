@@ -73,11 +73,11 @@ function FullScreenMessage({ text }) {
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, loading: eventsLoading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
-  const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
+  const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, restoreTasks, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
-  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
+  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
   const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   // One instance for the whole session (not one inside Settings, which would only exist
   // while that modal happens to be open) — so a stale/missing subscription self-heals as
@@ -283,46 +283,63 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     setView("dashboard");
   };
 
-  // Deleting a task doesn't happen instantly anymore — it disappears from the UI right
-  // away, but the actual delete is held for a few seconds so a misclick (or change of
-  // mind) can be undone. Only one delete is "in flight" at a time; starting another
-  // commits the previous one immediately rather than juggling multiple toasts.
-  const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState(null);
+  // The delete itself commits right away (not held for a few seconds first) — it used to
+  // be deferred, optimistically hidden in the meantime, but a deferred commit only ever
+  // reaches the database if the tab stays open and foregrounded for the whole undo
+  // window. Backgrounding the tab or closing it right after tapping delete (an entirely
+  // normal thing to do on a phone) meant the commit's setTimeout just never fired — the
+  // item looked deleted, then silently reappeared once the page next loaded fresh from
+  // the database, with nothing telling you it hadn't actually gone. Undo now reverses an
+  // already-real delete by re-inserting the exact same row(s) (see restoreTasks/
+  // restoreEduItems) — same fix, and same reasoning, as requestStepDone below already
+  // applied to checking off a mini-step.
+  const [pendingDeleteTask, setPendingDeleteTask] = useState(null);
   const taskDeleteUndo = useUndoableDelete();
   const requestRemoveTask = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
-    setPendingDeleteTaskId(id);
+    removeTask(id);
+    setPendingDeleteTask(t);
     taskDeleteUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" deleted`, () => {
-      removeTask(id);
-      setPendingDeleteTaskId((cur) => (cur === id ? null : cur));
+      setPendingDeleteTask((cur) => (cur && cur.id === id ? null : cur));
     });
   };
   const undoTaskDelete = () => {
-    if (taskDeleteUndo.undo()) setPendingDeleteTaskId(null);
+    if (taskDeleteUndo.undo() && pendingDeleteTask) {
+      restoreTasks([pendingDeleteTask]);
+      setPendingDeleteTask(null);
+    }
   };
 
-  // Same undoable-delete treatment for an Education deadline — it's a heavier delete
-  // than a plain task (removing "following" occurrences of a repeating item wipes
-  // several at once), so the safety net matters even more here.
-  const [pendingDeleteEduIds, setPendingDeleteEduIds] = useState([]);
+  // Same real-commit-plus-reversible-undo treatment for an Education deadline — it's a
+  // heavier delete than a plain task (removing "following" occurrences of a repeating
+  // item wipes several at once, and deleting the edu_item itself cascades to every
+  // linked work-session task server-side), so the snapshot to restore on Undo has to
+  // carry the edu_item row(s) AND their linked session rows, not just one task.
+  const [pendingDeleteEdu, setPendingDeleteEdu] = useState(null); // { items, sessions } | null
   const eduDeleteUndo = useUndoableDelete();
-  const visibleEduItems = pendingDeleteEduIds.length > 0 ? eduItems.filter((e) => !pendingDeleteEduIds.includes(e.id)) : eduItems;
   const requestRemoveEduItem = (id, mode = "one") => {
     const item = eduItems.find((e) => e.id === id);
     if (!item) return;
     const ids = mode === "following"
       ? eduItems.filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate).map((e) => e.id)
       : [id];
-    setPendingDeleteEduIds(ids);
+    const snapshot = { items: eduItems.filter((e) => ids.includes(e.id)), sessions: tasks.filter((t) => t.eduId && ids.includes(t.eduId)) };
+    ids.forEach((eid) => removeEduItem(eid, "one"));
+    setPendingDeleteEdu(snapshot);
     const label = ids.length > 1 ? `"${item.title}" and ${ids.length - 1} more deleted` : `"${item.title}" deleted`;
     eduDeleteUndo.requestDelete(label, () => {
-      ids.forEach((eid) => removeEduItem(eid, "one"));
-      setPendingDeleteEduIds((cur) => (cur === ids ? [] : cur));
+      setPendingDeleteEdu((cur) => (cur === snapshot ? null : cur));
     });
   };
-  const undoEduDelete = () => {
-    if (eduDeleteUndo.undo()) setPendingDeleteEduIds([]);
+  const undoEduDelete = async () => {
+    if (eduDeleteUndo.undo() && pendingDeleteEdu) {
+      // Parent row(s) first — tasks.edu_id references edu_items(id), so a session can't
+      // be re-inserted until the edu_item it points at exists again.
+      await restoreEduItems(pendingDeleteEdu.items);
+      await restoreTasks(pendingDeleteEdu.sessions);
+      setPendingDeleteEdu(null);
+    }
   };
   // Checking off a mini-step of a multi-step assignment/breakdown gets the same undo
   // window as a delete, everywhere that can happen (Dashboard's groupItems/otherSteps,
@@ -401,12 +418,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     }
   }, [tasksLoading, toggleCheckedStep]);
 
-  // A pending-deleted assignment's own sessions shouldn't keep showing elsewhere for the
-  // few seconds before the delete actually commits — the deadline would already be gone
-  // while "Study: X" still sat in Today with nothing to point back to. A step just
-  // checked off from the carried-over "other steps" list hides the same way, right up
-  // until its undo window actually commits it done.
-  const visibleTasks = tasks.filter((t) => t.id !== pendingDeleteTaskId && t.id !== pendingDoneStepId && !(t.eduId && pendingDeleteEduIds.includes(t.eduId)));
+  // A task or an assignment's sessions delete from `tasks`/`eduItems` immediately now
+  // (see requestRemoveTask/requestRemoveEduItem above), so there's nothing left to filter
+  // out here on their account. A step just checked off from the carried-over "other
+  // steps" list still hides for the length of its own undo window, though — that one
+  // commits `done: true` immediately but stays visually present in the list underneath
+  // until the window either confirms it or Undo reverses it.
+  const visibleTasks = tasks.filter((t) => t.id !== pendingDoneStepId);
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
   // down" breakdown) so the Focus Timer can show the whole checklist alongside it. Every
@@ -1124,7 +1142,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         )}
         {view === "education" && (
           <EducationView
-            eduItems={visibleEduItems}
+            eduItems={eduItems}
             tasks={visibleTasks}
             events={events}
             onAddEduItem={addEduItem}

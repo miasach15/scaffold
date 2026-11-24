@@ -101,6 +101,39 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
+  // Re-inserts the exact rows a delete removed, same ids and all — see useTasks.js's
+  // restoreTasks for why: the delete itself now commits right away, so Undo has to be a
+  // real write of its own rather than just cancelling a pending one. Caller inserts these
+  // before any linked task rows (see App.jsx's undoEduDelete) — tasks.edu_id references
+  // edu_items(id), so the parent row has to exist first.
+  const restoreItems = useCallback(
+    async (items) => {
+      if (!userId || items.length === 0) return;
+      const rows = items.map((it) => ({
+        id: it.id,
+        user_id: userId,
+        title: it.title,
+        type: it.type,
+        subject: it.subject,
+        due_date: it.dueDate,
+        due_start: it.dueStart,
+        done: it.done,
+        score_earned: it.scoreEarned,
+        score_possible: it.scorePossible,
+        grade_category_id: it.gradeCategoryId,
+        item_weight: it.itemWeight,
+        flexible: it.flexible,
+      }));
+      setEduItems((e) => [...e, ...rows.map(fromRow)]);
+      const { error } = await supabase.from("edu_items").insert(rows);
+      if (error) {
+        reportSaveError();
+        setEduItems((e) => e.filter((x) => !rows.some((r) => r.id === x.id)));
+      }
+    },
+    [userId]
+  );
+
   // Either value can be null to clear it — e.g. entering just "18" out of nothing yet,
   // or clearing a mis-entered score back to blank.
   const setScore = useCallback(async (id, scoreEarned, scorePossible) => {
@@ -146,5 +179,5 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible, setSubject };
+  return { eduItems, loading, addEduItems, setDone, removeItem, restoreItems, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible, setSubject };
 }
