@@ -48,12 +48,15 @@ function formatTime(decimal: number) {
 
 // Same "carry it forward, don't let it go quiet" scope as send-whatnow-push's
 // itemsForUser — overdue-but-still-open items count as part of today, same as the
-// in-app Today list.
-function itemsForUser(userId: string, today: string, tasks: any[], eduItems: any[], goalActions: any[], events: any[]): Item[] {
+// in-app Today list. `doneEduIds` keeps a leftover Education work-session row (its
+// assignment already marked done, but the session itself never individually checked
+// off) from getting summarized every morning forever — see send-whatnow-push's
+// itemsForUser for the full story.
+function itemsForUser(userId: string, today: string, tasks: any[], eduItems: any[], goalActions: any[], events: any[], doneEduIds: Set<string>): Item[] {
   return [
-    ...tasks.filter((t) => t.user_id === userId && t.date && t.date <= today)
+    ...tasks.filter((t) => t.user_id === userId && t.date && t.date <= today && (!t.edu_id || !doneEduIds.has(t.edu_id)))
       .map((t) => ({ title: t.title, start: t.date === today ? t.start : null })),
-    ...eduItems.filter((e) => e.user_id === userId && e.due_date && e.due_date <= today)
+    ...eduItems.filter((e) => e.user_id === userId && !e.done && e.due_date && e.due_date <= today)
       .map((e) => ({ title: `${e.title} (${e.type})`, start: null })),
     ...goalActions.filter((a) => a.user_id === userId && a.due_date && a.due_date <= today && !a.done)
       .map((a) => ({ title: a.title, start: null })),
@@ -126,13 +129,14 @@ serve(async (_req) => {
       admin.from("push_subscriptions").select("*"),
       admin.from("device_push_tokens").select("*"),
       admin.from("profiles").select("id,morning_push,morning_push_hour,morning_push_last_sent"),
-      admin.from("tasks").select("user_id,title,date,start").eq("done", false),
-      admin.from("edu_items").select("user_id,title,type,due_date,done").eq("done", false),
+      admin.from("tasks").select("user_id,title,date,start,edu_id").eq("done", false),
+      admin.from("edu_items").select("id,user_id,title,type,due_date,done"),
       admin.from("goal_actions").select("user_id,title,due_date,done"),
       admin.from("events").select("user_id,title,date,start"),
     ]);
 
     const profileById = new Map((profiles || []).map((p) => [p.id, p]));
+    const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
     // One timezone per user — whichever subscribed device reports one first; a user
     // notifying across several devices in different zones is not a case worth handling.
     const timezoneByUser = new Map<string, string>();
@@ -154,7 +158,7 @@ serve(async (_req) => {
 
     for (const userId of dueUsers) {
       const { dateISO: today } = localParts(timezoneByUser.get(userId) || "UTC");
-      const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || []);
+      const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || [], doneEduIds);
       const msg = buildMessage(items);
       if (!msg) continue;
 

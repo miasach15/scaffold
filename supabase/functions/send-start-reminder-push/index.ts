@@ -97,15 +97,20 @@ serve(async (_req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    const [{ data: webSubs }, { data: deviceTokens }, { data: profiles }, { data: tasks }, { data: events }] = await Promise.all([
+    const [{ data: webSubs }, { data: deviceTokens }, { data: profiles }, { data: tasks }, { data: eduItems }, { data: events }] = await Promise.all([
       admin.from("push_subscriptions").select("*"),
       admin.from("device_push_tokens").select("*"),
       admin.from("profiles").select("id,start_reminders"),
-      admin.from("tasks").select("id,user_id,title,date,start").eq("done", false).not("start", "is", null),
+      admin.from("tasks").select("id,user_id,title,date,start,edu_id").eq("done", false).not("start", "is", null),
+      admin.from("edu_items").select("id,done"),
       admin.from("events").select("id,user_id,title,date,start").not("start", "is", null),
     ]);
 
     const startReminderUsers = new Set((profiles || []).filter((p) => p.start_reminders).map((p) => p.id));
+    // A timed Education work-session row whose assignment is already marked done (but
+    // never individually checked off) shouldn't still ring a "time to start" alarm —
+    // same leftover-row problem send-whatnow-push's itemsForUser guards against.
+    const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
     // One timezone per user — whichever subscribed device reports one first; a user
     // notifying across several devices in different zones is not a case worth handling.
     const timezoneByUser = new Map<string, string>();
@@ -124,7 +129,7 @@ serve(async (_req) => {
       const { dateISO: today, hourDecimal: now } = localParts(timezoneByUser.get(userId) || "UTC");
       const due: Item[] = [
         ...(tasks || [])
-          .filter((t) => t.user_id === userId && t.date === today && now >= t.start && now < t.start + 1 / 30)
+          .filter((t) => t.user_id === userId && t.date === today && now >= t.start && now < t.start + 1 / 30 && (!t.edu_id || !doneEduIds.has(t.edu_id)))
           .map((t) => ({ kind: "task" as const, id: t.id, userId, title: t.title, start: t.start })),
         ...(events || [])
           .filter((e) => e.user_id === userId && e.date === today && now >= e.start && now < e.start + 1 / 30)

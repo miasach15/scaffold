@@ -44,6 +44,11 @@ export function planOverdueSessionReflow(tasks, eduItems, todayISO = getLocalTod
   }
 
   for (const item of eduItems) {
+    // An assignment marked done has nothing left to reflow — without this, a session
+    // nobody ever individually checked off (the assignment got marked done some other
+    // way, or this is a leftover row from before it was) gets walked forward onto
+    // today forever, one day at a time, with no due date left to stop it.
+    if (item.done) continue;
     const working = sessionsByEdu.get(item.id);
     if (!working || working.length === 0) continue;
     const dueISO = item.dueDate || toISO(addDays(parseISO(todayISO), 7));

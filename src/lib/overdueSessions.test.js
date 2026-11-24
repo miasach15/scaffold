@@ -106,6 +106,15 @@ describe("planOverdueSessionReflow — completed sessions never move", () => {
   });
 });
 
+describe("planOverdueSessionReflow — assignment already marked done", () => {
+  it("leaves an orphaned leftover session alone instead of walking it forward onto today forever", () => {
+    const tasks = [session("orphan", "2026-09-08")];
+    const eduItems = [{ id: "e1", dueDate: "2026-09-10", done: true }];
+    const ops = planOverdueSessionReflow(tasks, eduItems, "2026-09-15");
+    expect(ops).toEqual([]);
+  });
+});
+
 describe("planOverdueSessionReflow — due date already past", () => {
   it("absorbs into today's session when one exists", () => {
     const tasks = [session("old", "2026-09-08", { notes: "step one" }), session("today-sess", "2026-09-15", { notes: "step two" })];

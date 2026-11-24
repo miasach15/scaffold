@@ -99,11 +99,16 @@ function pickWhatNow(items: Item[], nowHour: number, today: string, eduCat: stri
 
 // Includes anything still open from before today, not just today's own items — same
 // "carry it forward, don't let it go quiet" rule the in-app Today list applies.
-function itemsForUser(userId: string, today: string, tasks: any[], eduItems: any[], goalActions: any[], events: any[], eduCat: string): Item[] {
+// `doneEduIds`: an Education work session whose assignment is already marked done stays
+// `done: false` on its own task row forever if nobody individually checks it off (see
+// planOverdueSessionReflow in src/lib/overdueSessions.js, which now skips these for the
+// same reason) — without this, that leftover row keeps getting pushed as something to
+// do every day, long after the assignment itself is finished.
+function itemsForUser(userId: string, today: string, tasks: any[], eduItems: any[], goalActions: any[], events: any[], eduCat: string, doneEduIds: Set<string>): Item[] {
   return [
-    ...tasks.filter((t) => t.user_id === userId && t.date && t.date <= today)
+    ...tasks.filter((t) => t.user_id === userId && t.date && t.date <= today && (!t.edu_id || !doneEduIds.has(t.edu_id)))
       .map((t) => ({ title: t.title, category: t.category, start: t.start, duration: t.duration, date: t.date })),
-    ...eduItems.filter((e) => e.user_id === userId && e.due_date && e.due_date <= today)
+    ...eduItems.filter((e) => e.user_id === userId && !e.done && e.due_date && e.due_date <= today)
       .map((e) => ({ title: `${e.title} (${e.type})`, category: eduCat, start: null, duration: null, date: e.due_date })),
     ...goalActions.filter((a) => a.user_id === userId && a.due_date && a.due_date <= today && !a.done)
       .map((a) => ({ title: a.title, category: null, start: null, duration: null, date: a.due_date })),
@@ -170,13 +175,14 @@ serve(async (_req) => {
       admin.from("push_subscriptions").select("*"),
       admin.from("device_push_tokens").select("*"),
       admin.from("profiles").select("id,whatnow_notifications,whatnow_interval_minutes,whatnow_window_start,whatnow_window_end,education_category"),
-      admin.from("tasks").select("user_id,title,date,start,duration,category,done").eq("done", false),
-      admin.from("edu_items").select("user_id,title,type,subject,due_date,done").eq("done", false),
+      admin.from("tasks").select("user_id,title,date,start,duration,category,done,edu_id").eq("done", false),
+      admin.from("edu_items").select("id,user_id,title,type,subject,due_date,done"),
       admin.from("goal_actions").select("user_id,title,due_date,done"),
       admin.from("events").select("user_id,title,date,start,duration,category"),
     ]);
 
     const profileById = new Map((profiles || []).map((p) => [p.id, p]));
+    const doneEduIds = new Set((eduItems || []).filter((e) => e.done).map((e) => e.id));
     let sent = 0;
     const skipped: string[] = [];
     const errors: string[] = [];
@@ -209,7 +215,7 @@ serve(async (_req) => {
       );
       if (inEventNow) return null;
       const eduCat = profile.education_category || "Education";
-      const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || [], eduCat);
+      const items = itemsForUser(userId, today, tasks || [], eduItems || [], goalActions || [], events || [], eduCat, doneEduIds);
       return pickWhatNow(items, hourDecimal, today, eduCat);
     }
 
