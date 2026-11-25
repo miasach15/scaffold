@@ -22,11 +22,22 @@ export default function BreakdownPreviewModal({ heading, items, onChangeItems, o
     next[i] = { ...next[i], notes };
     onChangeItems(next);
   };
+  // Re-sorts by date right after the edit, not just whenever the list happens to
+  // re-render — position in this array is what an Assessment's study-session duration
+  // ramps against (see App.jsx's addEduItem: index 0 is the lightest/earliest session,
+  // the last index is the heaviest, night-before one), so picking a date that puts a row
+  // out of calendar order has to re-settle its position too, or the ramp ends up
+  // pointing the wrong way — a date near the due date landing in an early array slot
+  // would get treated as the lightest session instead of the heaviest.
   const updateDate = (i, date) => {
     if (!date) return;
     const next = items.slice();
     next[i] = { ...next[i], date };
+    next.sort((a, b) => a.date.localeCompare(b.date));
     onChangeItems(next);
+    // The edited row likely just moved to a new index — close the date editor rather
+    // than leave it pinned to the old index, which could now be showing a different row.
+    setEditingDateIdx(null);
   };
   const removeItem = (i) => onChangeItems(items.filter((_, idx) => idx !== i));
 
