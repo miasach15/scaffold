@@ -25,6 +25,8 @@ import TaskDetailModal from "./components/tasks/TaskDetailModal";
 import UndoToast from "./components/shared/UndoToast";
 import HomeworkFollowUpToast from "./components/shared/HomeworkFollowUpToast";
 import SaveErrorToast from "./components/shared/SaveErrorToast";
+import CompletionToast from "./components/shared/CompletionToast";
+import { reportCompletion } from "./lib/completionCelebration";
 import SearchModal from "./components/shared/SearchModal";
 import { useUndoableDelete } from "./hooks/useUndoableDelete";
 import { useDarkMode } from "./hooks/useDarkMode";
@@ -77,7 +79,21 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
-  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setNextTerm: setEduNextTerm, clearNextTermFlags, setSubject: setEduSubject } = useEduItems(userId);
+  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDoneRaw, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setNextTerm: setEduNextTerm, clearNextTermFlags, setSubject: setEduSubject } = useEduItems(userId);
+  // A little celebration the moment a whole assignment actually finishes — not a mini-
+  // step, not a session, the deadline itself going from not-done to done, however that
+  // happens (the deadline row's own checkbox, the auto-complete cascade once every
+  // session is done, Homework's "mark completely done", a Calendar chip tap). Checked
+  // against the CURRENT eduItems snapshot, not whatever the caller already believed, so
+  // re-marking something already done (or a brand-new already-done manual grade entry,
+  // see addManualGradeItem) never fires a confetti burst for nothing.
+  const setEduDone = (id, done) => {
+    if (done) {
+      const item = eduItems.find((e) => e.id === id);
+      if (item && !item.done) reportCompletion(item.title);
+    }
+    return setEduDoneRaw(id, done);
+  };
   const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTermRaw, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, setCategoryScoreMode: setGradeCategoryScoreMode, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
   // Ending a term moves that class's active-term boundary to today, so anything flagged
   // "next term" for THIS class no longer needs the flag — the boundary itself now
@@ -1377,6 +1393,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
         />
       )}
       <SaveErrorToast />
+      <CompletionToast />
 
       {showSearch && (
         <SearchModal

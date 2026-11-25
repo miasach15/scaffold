@@ -5,6 +5,7 @@ import { addDays, formatDuration, startOfWeek, toISO } from "../../lib/dateHelpe
 import { ghostBtn, modalStyle, overlayStyle } from "../../lib/styles";
 import { EmptyState } from "../shared/Misc";
 import ModalPortal from "../shared/ModalPortal";
+import Confetti from "../shared/Confetti";
 
 function StatTile({ value, label }) {
   return (
@@ -20,39 +21,6 @@ function InsightCard({ title, body }) {
     <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: "10px 12px", marginBottom: 8 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: PRIMARY_DARK, marginBottom: 2 }}>{title}</div>
       <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>{body}</div>
-    </div>
-  );
-}
-
-const CONFETTI_COLORS = ["#7B6EF0", "#F0923B", "#34A870", "#E8608F", "#2CAFA0", "#3E7BFA"];
-
-function Confetti() {
-  const pieces = Array.from({ length: 46 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 0.35,
-    duration: 1.6 + Math.random() * 1.1,
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-    size: 6 + Math.random() * 5,
-  }));
-  return (
-    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 200 }}>
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
-      {pieces.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            position: "absolute", top: 0, left: `${p.left}%`, width: p.size, height: p.size * 0.6,
-            background: p.color, borderRadius: 2,
-            animation: `confetti-fall ${p.duration}s ease-in ${p.delay}s forwards`,
-          }}
-        />
-      ))}
     </div>
   );
 }
