@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Download, LogOut, Mail, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
+import { Bell, Download, LogOut, MessageSquare, Moon, Settings as SettingsIcon, Sun } from "lucide-react";
 import { PRIMARY, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { downloadJSON, exportAllData } from "../../lib/exportData";
 import { toISO } from "../../lib/dateHelpers";
@@ -377,15 +377,15 @@ export default function SettingsModal({ themeColor, onSetTheme, onSetCategoryCol
         </button>
         {exportError && <div style={{ fontSize: 12, color: "#B03A3A", marginTop: 6, textAlign: "center" }}>{exportError}</div>}
 
-        {/* Same contact address already published on the Terms/Privacy pages — not a
-            new exposure, just a way to reach it without having to go find those pages
-            first. There was previously no in-app way to ask for help or report a bug at
-            all. */}
+        {/* Opens the real feedback form (Tally) in a new tab instead of a mailto link —
+            a proper form instead of requiring an email client to be set up at all. */}
         <a
-          href="mailto:miasachdev15@gmail.com?subject=Scaffold%20feedback"
+          href="https://tally.so/r/GevbB2"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{ ...ghostBtn, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, textDecoration: "none", boxSizing: "border-box" }}
         >
-          <Mail size={14} strokeWidth={2.3} />
+          <MessageSquare size={14} strokeWidth={2.3} />
           Help &amp; feedback
         </a>
 
