@@ -43,11 +43,17 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
     setEndTime(decimalToTimeInput(timeToDecimal(newTime) + keptDuration));
   };
 
+  // An end time numerically before the start (e.g. starts 11pm, ends 1am) means the
+  // event actually runs past midnight, not that it's 23 hours short of zero — treating
+  // that gap as having wrapped past midnight (add a full day) matches what someone
+  // typing those two times together almost always means, instead of silently clamping
+  // to the 5-minute floor below and turning a 2-hour overnight event into a 5-minute one.
   const save = () => {
+    const rawMinutes = (timeToDecimal(endTime) - timeToDecimal(time)) * 60;
     const payload = {
       title: title.trim(), date, category,
       start: allDay ? null : timeToDecimal(time),
-      duration: allDay ? null : Math.max(5, Math.round((timeToDecimal(endTime) - timeToDecimal(time)) * 60)),
+      duration: allDay ? null : Math.max(5, Math.round(rawMinutes <= 0 ? rawMinutes + 24 * 60 : rawMinutes)),
     };
     if (isEdit) onUpdate({ id: event.id, ...payload, repeat, customDays });
     else onSave({ kind: "event", ...payload, repeat, customDays });

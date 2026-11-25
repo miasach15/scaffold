@@ -166,17 +166,6 @@ export const dateRangeISO = (startISO, endISO) => {
   return arr.length ? arr : [startISO];
 };
 export const dayBefore = (iso) => toISO(addDays(new Date(iso + "T00:00:00"), -1));
-// The `count` consecutive days leading right up to (not including) the due date — study
-// sessions crammed just before a test, rather than spread thin across however long the
-// window happens to be. Clamped so it never reaches back before today.
-export const daysBeforeDue = (dueISO, count) => {
-  const todayISOStr = toISO(new Date());
-  const lastWorkDay = dayBefore(dueISO);
-  if (lastWorkDay < todayISOStr) return [todayISOStr];
-  const startCandidate = toISO(addDays(new Date(lastWorkDay + "T00:00:00"), -(Math.max(1, count) - 1)));
-  const startISO = startCandidate < todayISOStr ? todayISOStr : startCandidate;
-  return dateRangeISO(startISO, lastWorkDay);
-};
 // A study session right after you start reviewing for a test is lighter — just getting
 // oriented — than one the night before it. This ramps linearly from a brief 30-minute
 // session at the start of a study run up to a full 90-minute one by the last session
@@ -184,7 +173,7 @@ export const daysBeforeDue = (dueISO, count) => {
 // study time has already gone in) instead of every night getting the same flat length
 // regardless of how close it actually is. `i` is the session's position counting from
 // the START of the run (0 = earliest/furthest from the test), `count` the total sessions
-// in the run (see daysBeforeDue, which this is meant to pair with — same date order).
+// in the run (see assessmentStudyDates, which this is meant to pair with — same date order).
 // A single-session run (the test is basically tomorrow) goes straight to the top of the
 // range, since that one session IS the night-before cram.
 export const studyRampMinutes = (i, count) => {

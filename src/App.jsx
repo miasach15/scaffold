@@ -85,7 +85,8 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // would keep getting excluded forever, from the very term it was flagged for.
   const endGradeTerm = async (classId, payload) => {
     await endGradeTermRaw(classId, payload);
-    const flaggedIds = eduItems.filter((e) => e.nextTerm && gradeClasses.find((c) => c.id === classId)?.subject === e.subject).map((e) => e.id);
+    const subject = gradeClasses.find((c) => c.id === classId)?.subject;
+    const flaggedIds = eduItems.filter((e) => e.nextTerm && e.subject === subject).map((e) => e.id);
     if (flaggedIds.length > 0) await clearNextTermFlags(flaggedIds);
   };
   // One instance for the whole session (not one inside Settings, which would only exist
@@ -303,18 +304,23 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // restoreEduItems) — same fix, and same reasoning, as requestStepDone below already
   // applied to checking off a mini-step.
   const [pendingDeleteTask, setPendingDeleteTask] = useState(null);
+  // The actual DELETE's own in-flight network round-trip — undo has to wait for it to
+  // land before restoring, or a slow delete arriving at the server after a fast restore's
+  // INSERT would just delete the just-restored row right back out from under it again.
+  const pendingDeleteTaskPromiseRef = useRef(null);
   const taskDeleteUndo = useUndoableDelete();
   const requestRemoveTask = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
-    removeTask(id);
+    pendingDeleteTaskPromiseRef.current = removeTask(id);
     setPendingDeleteTask(t);
     taskDeleteUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" deleted`, () => {
       setPendingDeleteTask((cur) => (cur && cur.id === id ? null : cur));
     });
   };
-  const undoTaskDelete = () => {
+  const undoTaskDelete = async () => {
     if (taskDeleteUndo.undo() && pendingDeleteTask) {
+      await pendingDeleteTaskPromiseRef.current;
       restoreTasks([pendingDeleteTask]);
       setPendingDeleteTask(null);
     }
@@ -326,6 +332,9 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // linked work-session task server-side), so the snapshot to restore on Undo has to
   // carry the edu_item row(s) AND their linked session rows, not just one task.
   const [pendingDeleteEdu, setPendingDeleteEdu] = useState(null); // { items, sessions } | null
+  // Same race the plain-task version above guards against, for every delete this one
+  // kicks off (one "following" delete can be several).
+  const pendingDeleteEduPromiseRef = useRef(null);
   const eduDeleteUndo = useUndoableDelete();
   const requestRemoveEduItem = (id, mode = "one") => {
     const item = eduItems.find((e) => e.id === id);
@@ -334,7 +343,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       ? eduItems.filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate).map((e) => e.id)
       : [id];
     const snapshot = { items: eduItems.filter((e) => ids.includes(e.id)), sessions: tasks.filter((t) => t.eduId && ids.includes(t.eduId)) };
-    ids.forEach((eid) => removeEduItem(eid, "one"));
+    pendingDeleteEduPromiseRef.current = Promise.all(ids.map((eid) => removeEduItem(eid, "one")));
     setPendingDeleteEdu(snapshot);
     const label = ids.length > 1 ? `"${item.title}" and ${ids.length - 1} more deleted` : `"${item.title}" deleted`;
     eduDeleteUndo.requestDelete(label, () => {
@@ -343,6 +352,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   };
   const undoEduDelete = async () => {
     if (eduDeleteUndo.undo() && pendingDeleteEdu) {
+      await pendingDeleteEduPromiseRef.current;
       // Parent row(s) first — tasks.edu_id references edu_items(id), so a session can't
       // be re-inserted until the edu_item it points at exists again.
       await restoreEduItems(pendingDeleteEdu.items);
@@ -429,10 +439,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
   // A task or an assignment's sessions delete from `tasks`/`eduItems` immediately now
   // (see requestRemoveTask/requestRemoveEduItem above), so there's nothing left to filter
-  // out here on their account. A step just checked off from the carried-over "other
-  // steps" list still hides for the length of its own undo window, though — that one
-  // commits `done: true` immediately but stays visually present in the list underneath
-  // until the window either confirms it or Undo reverses it.
+  // out here on their account. A step just checked off (see requestStepDone) still hides
+  // here for the length of its own undo window, though — same "the real write already
+  // happened, hiding is cosmetic" reasoning as a delete above, just reversible by
+  // flipping `done` back instead of restoring a deleted row.
   const visibleTasks = tasks.filter((t) => t.id !== pendingDoneStepId);
 
   // Enriched with the task's own groupId/groupTitle (if it's one step of a "break it
@@ -577,6 +587,10 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // A group's due chip represents several rows at once — no single task to open, so
     // just jump to the Tasks page where the collapsed group row lives (expand it there).
     else if (chip.kind === "task-group-due") setView("tasks");
+    // Same idea for a goal's own deadline or a milestone's due date — no single task to
+    // toggle done inline the way an edu/task chip can, so jump to where it actually lives
+    // instead of silently doing nothing when clicked.
+    else if (chip.kind === "goal-deadline" || chip.kind === "goal-milestone") setView("goals");
   };
 
   const completeOnboarding = async (answers) => {

@@ -398,7 +398,7 @@ export default function ClassCard({
               — this is the one place it still shows, so flagging it isn't a one-way trip
               into invisibility. Ending the term clears the flag automatically (see
               App.jsx's endGradeTerm) once the boundary itself correctly covers it. */}
-          {nextTermItems.length > 0 && (
+          {nextTermItems.length > 0 && onSetItemNextTerm && (
             <div style={{ marginTop: 18, borderTop: "1px solid #F0F0F0", paddingTop: 16 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>Flagged for next term — not counted yet</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

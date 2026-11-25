@@ -127,6 +127,7 @@ export function useEduItems(userId) {
         grade_category_id: it.gradeCategoryId,
         item_weight: it.itemWeight,
         flexible: it.flexible,
+        next_term: it.nextTerm,
       }));
       setEduItems((e) => [...e, ...rows.map(fromRow)]);
       const { error } = await supabase.from("edu_items").insert(rows);

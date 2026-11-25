@@ -220,8 +220,20 @@ export default function EducationView({
     setSessionBreakingDown(true);
     setSessionBreakdownError(null);
     try {
+      // A real stepHint matters even more here than at creation (see scheduleDayCount)
+      // — for an Assessment specifically, it's the only thing telling the model to stay
+      // within the same week-out ceiling assessmentStudyDates enforces when placing the
+      // dates. Without it, the model can freely suggest more steps than that window has
+      // room for, which assessmentStudyDates would then have to pack multiple onto the
+      // same day instead of placing one per day.
+      const todayISOForHint = toISO(new Date());
+      const lastWorkDayForHint = dayBefore(item.dueDate);
+      const startISOForHint = item.dueDate > todayISOForHint ? todayISOForHint : item.dueDate;
+      const endISOForHint = lastWorkDayForHint < startISOForHint ? startISOForHint : lastWorkDayForHint;
+      const rawDayCount = dateRangeISO(startISOForHint, endISOForHint).length;
+      const stepHint = item.type === "Assessment" ? Math.min(rawDayCount, 7) : rawDayCount;
       const { data, error } = await supabase.functions.invoke("generate-assignment-plan", {
-        body: { title: item.title, type: item.type, details: details.trim(), dueDate: item.dueDate, stepHint: null },
+        body: { title: item.title, type: item.type, details: details.trim(), dueDate: item.dueDate, stepHint },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
