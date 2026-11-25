@@ -671,6 +671,19 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const stepMinutesOpts = { min: 45, max: 90 };
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
+          // An Assessment's preview never carries AI steps (that option's Assignment-only
+          // at creation — see EducationView), so every item here is a plain ramped study
+          // session with no per-item minutes estimate of its own; ramp it the same way
+          // the non-preview branch below does, in the same 30-90 range, instead of
+          // falling through to the Assignment-style flat 60/45-90 default below.
+          if (type === "Assessment") {
+            const rampBase = previewItems.map((_, i) => studyRampMinutes(i, previewItems.length));
+            const minutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, rampBase, { min: 30, max: 90 });
+            previewItems.forEach((it, i) => {
+              addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: it.notes || null });
+            });
+            return;
+          }
           // A day that only ever had one real step on it still gets the usual load-aware
           // adjustment (see stepMinutesOpts). A day multiple steps got packed onto (not
           // enough runway before the deadline to give each its own day — see
