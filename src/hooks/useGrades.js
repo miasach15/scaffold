@@ -4,7 +4,7 @@ import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
 import { toISO } from "../lib/dateHelpers";
 
-const categoryFromRow = (row) => ({ id: row.id, name: row.name, weight: Number(row.weight) || 0, orderIndex: row.order_index });
+const categoryFromRow = (row) => ({ id: row.id, name: row.name, weight: Number(row.weight) || 0, orderIndex: row.order_index, scoreMode: row.score_mode || "sum" });
 const termFromRow = (row) => ({ id: row.id, classId: row.class_id, label: row.label, finalPercent: Number(row.final_percent), startedAt: row.started_at, endedAt: row.ended_at });
 const classFromRow = (row) => ({
   id: row.id,
@@ -138,7 +138,7 @@ export function useGrades(userId) {
       if (!name.trim()) return;
       const cls = await ensureClass(subject);
       if (!cls) return; // ensureClass already reported the save error
-      const row = { id: uid(), user_id: userId, class_id: cls.id, name: name.trim(), weight: Number(weight) || 0, order_index: cls.categories.length };
+      const row = { id: uid(), user_id: userId, class_id: cls.id, name: name.trim(), weight: Number(weight) || 0, order_index: cls.categories.length, score_mode: "sum" };
       const { error } = await supabase.from("grade_categories").insert(row);
       if (error) {
         console.error("addCategory insert failed:", error);
@@ -164,6 +164,14 @@ export function useGrades(userId) {
     if (error) reportSaveError();
   }, []);
 
+  // 'sum' (the default) counts a category by adding its items' points up; 'average'
+  // counts it as the mean of each item's own percentage instead — see classPercent.
+  const setCategoryScoreMode = useCallback(async (classId, categoryId, scoreMode) => {
+    setClasses((cs) => cs.map((c) => (c.id !== classId ? c : { ...c, categories: c.categories.map((cat) => (cat.id === categoryId ? { ...cat, scoreMode } : cat)) })));
+    const { error } = await supabase.from("grade_categories").update({ score_mode: scoreMode }).eq("id", categoryId);
+    if (error) reportSaveError();
+  }, []);
+
   const removeCategory = useCallback(async (classId, categoryId) => {
     setClasses((cs) => cs.map((c) => (c.id !== classId ? c : { ...c, categories: c.categories.filter((cat) => cat.id !== categoryId) })));
     const { error } = await supabase.from("grade_categories").delete().eq("id", categoryId); // edu_items.grade_category_id nulls out server-side
@@ -180,5 +188,5 @@ export function useGrades(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { classes, loading, ensureClass, endTerm, addCategory, renameCategory, setCategoryWeight, removeCategory, removeClass };
+  return { classes, loading, ensureClass, endTerm, addCategory, renameCategory, setCategoryWeight, setCategoryScoreMode, removeCategory, removeClass };
 }

@@ -11,7 +11,7 @@ import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
 // nothing picked, the item just counts by its own points (see ClassCard's classPercent).
 // `col` comes from the class card above (the user's actual School category color), same
 // live color Education's own rows already use — not a fixed color that ignores it.
-export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onSetItemWeight, onRemove }) {
+export default function GradeRow({ item, col, categories, onSetScore, onSetCategory, onSetItemWeight, onSetNextTerm, onRemove }) {
   const [editing, setEditing] = useState(false);
   const [earned, setEarned] = useState(item.scoreEarned ?? "");
   const [possible, setPossible] = useState(item.scorePossible ?? "");
@@ -112,6 +112,15 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
             <button onClick={() => setEditing(true)} style={{ ...ghostBtn, fontSize: 13, padding: "7px 12px", whiteSpace: "nowrap" }}>+ Add score</button>
           )}
 
+          {onSetNextTerm && (
+            <button
+              onClick={() => onSetNextTerm(item.id, true)}
+              title="This is actually for next term — don't count it toward this one yet"
+              style={{ background: "none", border: "1px solid #E5E9ED", borderRadius: 999, cursor: "pointer", color: "#93A0AD", padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
+            >
+              Next term
+            </button>
+          )}
           <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>
         </div>
       </div>

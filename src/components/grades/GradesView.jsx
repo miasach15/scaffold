@@ -15,11 +15,13 @@ export default function GradesView({
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
+  onSetCategoryScoreMode,
   onRemoveCategory,
   onRemoveClass,
   onSetScore,
   onSetItemCategory,
   onSetItemWeight,
+  onSetItemNextTerm,
   onRemoveItem,
   onEnsureClass,
 }) {
@@ -36,9 +38,10 @@ export default function GradesView({
   // to lock in, and endTerm requires a finalPercent.
   const classPercents = {};
   classes.forEach((c) => {
+    const subjectItems = itemsBySubject(c.subject).filter((i) => !i.nextTerm);
     const currentTermItems = c.currentTermStartedAt
-      ? itemsBySubject(c.subject).filter((i) => !i.dueDate || i.dueDate >= c.currentTermStartedAt)
-      : itemsBySubject(c.subject);
+      ? subjectItems.filter((i) => !i.dueDate || i.dueDate >= c.currentTermStartedAt)
+      : subjectItems;
     classPercents[c.id] = classPercent(currentTermItems.filter((i) => i.done), c.categories || []);
   });
   const classesWithGrades = classes.filter((c) => classPercents[c.id] != null);
@@ -75,7 +78,6 @@ export default function GradesView({
     <div>
       <SectionHeader
         title="Grades"
-        subtitle="Every class just counts by points, until you give a category or an assignment its own weight."
         right={
           classesWithGrades.length > 0 && !endingTerm && (
             <button
@@ -131,11 +133,13 @@ export default function GradesView({
             onAddCategory={onAddCategory}
             onRenameCategory={onRenameCategory}
             onSetCategoryWeight={onSetCategoryWeight}
+            onSetCategoryScoreMode={onSetCategoryScoreMode}
             onRemoveCategory={onRemoveCategory}
             onRemoveClass={onRemoveClass}
             onSetScore={onSetScore}
             onSetItemCategory={onSetItemCategory}
             onSetItemWeight={onSetItemWeight}
+            onSetItemNextTerm={onSetItemNextTerm}
             onRemoveItem={onRemoveItem}
           />
         ))

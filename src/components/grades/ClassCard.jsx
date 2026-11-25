@@ -9,9 +9,18 @@ import { SURFACE } from "../../lib/constants";
 
 const round1 = (n) => Math.round(n * 10) / 10;
 
-function pointsPercent(items) {
+// mode "sum" (the default, and the only option before per-category modes existed): adds
+// every item's points up first, THEN divides — sum(earned)/sum(possible). mode
+// "average": the mean of each item's OWN percentage instead. These diverge whenever
+// items carry unequal point totals — a 1/1 plus a 99/100 is 100/101 = 99.0% by sum, but
+// (100%+99%)/2 = 99.5% by average.
+function pointsPercent(items, mode = "sum") {
   const scored = items.filter((i) => i.scoreEarned != null && i.scorePossible > 0);
   if (scored.length === 0) return null;
+  if (mode === "average") {
+    const pcts = scored.map((i) => (i.scoreEarned / i.scorePossible) * 100);
+    return round1(pcts.reduce((s, p) => s + p, 0) / pcts.length);
+  }
   const earned = scored.reduce((s, i) => s + i.scoreEarned, 0);
   const possible = scored.reduce((s, i) => s + i.scorePossible, 0);
   return possible > 0 ? round1((earned / possible) * 100) : null;
@@ -32,9 +41,8 @@ export function classPercent(items, categories) {
     .map((cat) => {
       const inCat = scored.filter((i) => i.gradeCategoryId === cat.id && i.itemWeight == null);
       if (inCat.length === 0) return null;
-      const earned = inCat.reduce((s, i) => s + i.scoreEarned, 0);
-      const possible = inCat.reduce((s, i) => s + i.scorePossible, 0);
-      return possible > 0 ? { weight: cat.weight, pct: (earned / possible) * 100 } : null;
+      const pct = pointsPercent(inCat, cat.scoreMode);
+      return pct != null ? { weight: cat.weight, pct } : null;
     })
     .filter(Boolean);
   const ownWeightStats = scored
@@ -68,11 +76,13 @@ export default function ClassCard({
   onAddCategory,
   onRenameCategory,
   onSetCategoryWeight,
+  onSetCategoryScoreMode,
   onRemoveCategory,
   onRemoveClass,
   onSetScore,
   onSetItemCategory,
   onSetItemWeight,
+  onSetItemNextTerm,
   onRemoveItem,
 }) {
   const CATEGORY_COLORS = useCategoryColors();
@@ -101,9 +111,14 @@ export default function ClassCard({
   // Only items from the ACTIVE term count toward the current grade — see useGrades' endTerm,
   // called from GradesView's page-level "End term" button. No boundary ever set means every
   // item still counts, same as before terms existed.
+  // An item flagged "next term" (see onSetItemNextTerm below) is excluded the same way
+  // one dated before the boundary is — it's showing up early, before the class's current
+  // term has actually been ended.
+  const activeItems = items.filter((i) => !i.nextTerm);
+  const nextTermItems = items.filter((i) => i.nextTerm).sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
   const currentTermItems = cls?.currentTermStartedAt
-    ? items.filter((i) => !i.dueDate || i.dueDate >= cls.currentTermStartedAt)
-    : items;
+    ? activeItems.filter((i) => !i.dueDate || i.dueDate >= cls.currentTermStartedAt)
+    : activeItems;
   const gradedItems = currentTermItems.filter((i) => i.done).sort((a, b) => b.dueDate.localeCompare(a.dueDate));
   const pendingItems = currentTermItems.filter((i) => !i.done && i.dueDate);
   const overallPct = classPercent(gradedItems, categories);
@@ -197,7 +212,7 @@ export default function ClassCard({
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 10 }}>
                   {categories.map((cat) => {
                     const inCat = gradedItems.filter((i) => i.gradeCategoryId === cat.id && i.scoreEarned != null && i.scorePossible > 0);
-                    const catPct = inCat.length > 0 ? pointsPercent(inCat) : null;
+                    const catPct = inCat.length > 0 ? pointsPercent(inCat, cat.scoreMode) : null;
                     return (
                       <div key={cat.id}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -214,8 +229,27 @@ export default function ClassCard({
                             style={{ ...inputStyle, width: 64, fontSize: 14, padding: "7px 10px" }}
                           />
                           <span style={{ fontSize: 13, color: "#93A0AD" }}>% weight</span>
+                          {onSetCategoryScoreMode && (
+                            <div style={{ display: "flex", gap: 2, background: "#F1F2F6", borderRadius: 8, padding: 2 }}>
+                              {[{ key: "sum", label: "Add up" }, { key: "average", label: "Average" }].map((m) => (
+                                <button
+                                  key={m.key}
+                                  onClick={() => onSetCategoryScoreMode(cls.id, cat.id, m.key)}
+                                  title={m.key === "sum" ? "Points added up across everything in this category (sum(earned)/sum(possible))" : "The average of each assignment's own percentage, regardless of how many points each was out of"}
+                                  style={{
+                                    border: "none", borderRadius: 6, padding: "4px 8px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                                    background: (cat.scoreMode || "sum") === m.key ? "#fff" : "transparent",
+                                    color: (cat.scoreMode || "sum") === m.key ? "#4A5568" : "#93A0AD",
+                                    boxShadow: (cat.scoreMode || "sum") === m.key ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                                  }}
+                                >
+                                  {m.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           <span style={{ fontSize: 12.5, color: "#93A0AD", width: 120 }}>
-                            {catPct != null ? `${catPct}% avg (${inCat.length})` : "no scores yet"}
+                            {catPct != null ? `${catPct}% (${inCat.length})` : "no scores yet"}
                           </span>
                           <button onClick={() => onRemoveCategory(cls.id, cat.id)} style={deleteBtn}>×</button>
                         </div>
@@ -268,6 +302,7 @@ export default function ClassCard({
                   onSetScore={onSetScore}
                   onSetCategory={onSetItemCategory}
                   onSetItemWeight={onSetItemWeight}
+                  onSetNextTerm={onSetItemNextTerm}
                   onRemove={onRemoveItem}
                 />
               ))}
@@ -343,9 +378,42 @@ export default function ClassCard({
                         aria-label={`${it.title} own weight percent`}
                         style={{ ...inputStyle, width: 72, fontSize: 13, padding: "7px 9px" }}
                       />
+                      {onSetItemNextTerm && (
+                        <button
+                          onClick={() => onSetItemNextTerm(it.id, true)}
+                          title="This is actually for next term — don't count it toward this one yet"
+                          style={{ background: "none", border: "1px solid #E5E9ED", borderRadius: 999, cursor: "pointer", color: "#93A0AD", padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
+                        >
+                          Next term
+                        </button>
+                      )}
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* An item flagged above drops out of every current-term list (see activeItems)
+              — this is the one place it still shows, so flagging it isn't a one-way trip
+              into invisibility. Ending the term clears the flag automatically (see
+              App.jsx's endGradeTerm) once the boundary itself correctly covers it. */}
+          {nextTermItems.length > 0 && (
+            <div style={{ marginTop: 18, borderTop: "1px solid #F0F0F0", paddingTop: 16 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#93A0AD", marginBottom: 10 }}>Flagged for next term — not counted yet</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {nextTermItems.map((it) => (
+                  <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 140px", minWidth: 0, fontSize: 14, color: "#93A0AD", wordBreak: "break-word" }}>{it.title}</div>
+                    <button
+                      onClick={() => onSetItemNextTerm(it.id, false)}
+                      title="Move this back into the current term"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: col.text, fontSize: 12.5, fontWeight: 700 }}
+                    >
+                      Undo
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -19,6 +19,10 @@ const fromRow = (row) => ({
   // close/overdue instead of spiking it the same way a fixed deadline does (see
   // inLeadWindow/urgency sort in DashboardView and EducationView).
   flexible: !!row.flexible,
+  // Belongs to the NEXT grading term even though it's already showing up before the
+  // current one has been ended — see Grades' ClassCard/GradesView and
+  // migration_edu_next_term.sql.
+  nextTerm: !!row.next_term,
 });
 
 export function useEduItems(userId) {
@@ -167,6 +171,24 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
+  const setNextTerm = useCallback(async (id, nextTerm) => {
+    setEduItems((e) => e.map((x) => (x.id === id ? { ...x, nextTerm } : x)));
+    const { error } = await supabase.from("edu_items").update({ next_term: nextTerm }).eq("id", id);
+    if (error) reportSaveError();
+  }, []);
+
+  // Ending a term (see useGrades' endTerm) moves the term boundary itself to today —
+  // everything from here on counts fresh regardless of a next_term flag, so the flags
+  // that got this class's items here safely are no longer needed once that happens.
+  // Left set, they'd just as wrongly exclude the SAME items from the term they were
+  // actually flagged for.
+  const clearNextTermFlags = useCallback(async (itemIds) => {
+    if (itemIds.length === 0) return;
+    setEduItems((e) => e.map((x) => (itemIds.includes(x.id) ? { ...x, nextTerm: false } : x)));
+    const { error } = await supabase.from("edu_items").update({ next_term: false }).in("id", itemIds);
+    if (error) reportSaveError();
+  }, []);
+
   // Picking "No subject" at creation time (or just not knowing yet) shouldn't be
   // permanent — this is the same free-text field addEduItems sets, just editable after
   // the fact. Doesn't touch grade_category_id/item_weight even if the new subject
@@ -179,5 +201,5 @@ export function useEduItems(userId) {
     if (error) reportSaveError();
   }, []);
 
-  return { eduItems, loading, addEduItems, setDone, removeItem, restoreItems, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible, setSubject };
+  return { eduItems, loading, addEduItems, setDone, removeItem, restoreItems, setScore, setGradeCategory, setItemWeight, setDeadline, setFlexible, setNextTerm, clearNextTermFlags, setSubject };
 }

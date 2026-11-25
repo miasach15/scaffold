@@ -63,6 +63,10 @@ create table if not exists edu_items (
   score_possible numeric,
   -- which grade_categories row (if any) this item counts toward, in a weighted class
   grade_category_id uuid,
+  -- Belongs to the NEXT grading term even though it's already showing up (possibly
+  -- already due/scored) before the current term has been ended. See
+  -- migration_edu_next_term.sql.
+  next_term boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -85,6 +89,10 @@ create table if not exists grade_categories (
   name text not null,
   weight numeric not null default 0, -- percent, only used in 'weighted' mode
   order_index integer not null default 0,
+  -- 'sum': sum(earned)/sum(possible) across the category's scored items (the original,
+  -- still-default behavior). 'average': the mean of each item's own percentage instead.
+  -- See migration_category_score_mode.sql.
+  score_mode text not null default 'sum',
   created_at timestamptz not null default now()
 );
 

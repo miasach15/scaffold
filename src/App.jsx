@@ -77,8 +77,17 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
   const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
-  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setSubject: setEduSubject } = useEduItems(userId);
-  const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTerm, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
+  const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDone, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setNextTerm: setEduNextTerm, clearNextTermFlags, setSubject: setEduSubject } = useEduItems(userId);
+  const { classes: gradeClasses, ensureClass: ensureGradeClass, endTerm: endGradeTermRaw, addCategory: addGradeCategory, renameCategory: renameGradeCategory, setCategoryWeight: setGradeCategoryWeight, setCategoryScoreMode: setGradeCategoryScoreMode, removeCategory: removeGradeCategory, removeClass: removeGradeClass } = useGrades(userId);
+  // Ending a term moves that class's active-term boundary to today, so anything flagged
+  // "next term" for THIS class no longer needs the flag — the boundary itself now
+  // correctly includes it going forward. Without this, an item flagged ahead of time
+  // would keep getting excluded forever, from the very term it was flagged for.
+  const endGradeTerm = async (classId, payload) => {
+    await endGradeTermRaw(classId, payload);
+    const flaggedIds = eduItems.filter((e) => e.nextTerm && gradeClasses.find((c) => c.id === classId)?.subject === e.subject).map((e) => e.id);
+    if (flaggedIds.length > 0) await clearNextTermFlags(flaggedIds);
+  };
   // One instance for the whole session (not one inside Settings, which would only exist
   // while that modal happens to be open) — so a stale/missing subscription self-heals as
   // soon as the profile loads, not only on the rare occasion someone opens Settings and
@@ -1189,11 +1198,13 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAddCategory={addGradeCategory}
             onRenameCategory={renameGradeCategory}
             onSetCategoryWeight={setGradeCategoryWeight}
+            onSetCategoryScoreMode={setGradeCategoryScoreMode}
             onRemoveCategory={removeGradeCategory}
             onRemoveClass={removeGradeClass}
             onSetScore={setEduScore}
             onSetItemCategory={setEduGradeCategory}
             onSetItemWeight={setEduItemWeight}
+            onSetItemNextTerm={setEduNextTerm}
             onRemoveItem={removeEduItem}
             onEnsureClass={ensureGradeClass}
           />
