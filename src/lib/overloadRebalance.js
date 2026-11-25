@@ -39,7 +39,16 @@ export function planOverloadRebalance(tasks, events, eduItems, capacityMinutes, 
   for (const date of Object.keys(load).sort()) {
     if (load[date] <= capacityMinutes) continue;
 
-    const movable = (tasks || []).filter((t) => t.date === date && !t.done && t.start == null && (t.groupId || t.eduId));
+    // Never move a session off the one day it's guaranteed to be on — the day right
+    // before its own deadline (see assessmentStudyDates' and Homework's "always the
+    // night before, no matter what" rules elsewhere). Without this, a crowded calendar
+    // could silently bump that mandatory last session to some other day, breaking that
+    // guarantee the moment it actually mattered.
+    const movable = (tasks || []).filter((t) => {
+      if (!(t.date === date && !t.done && t.start == null && (t.groupId || t.eduId))) return false;
+      const deadline = t.groupDueDate || (t.eduId ? eduDueById.get(t.eduId) : null);
+      return !deadline || t.date !== toISO(addDays(parseISO(deadline), -1));
+    });
     if (movable.length === 0) continue;
 
     // Move the biggest one first — one well-chosen move is more likely to actually bring
