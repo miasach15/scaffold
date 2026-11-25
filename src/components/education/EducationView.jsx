@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronUp, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { addDays, assessmentStudyDates, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, timeToDecimal, toISO } from "../../lib/dateHelpers";
+import { addDays, assessmentStudyDates, dateRangeISO, dayBefore, decimalToTimeLabel, distributeDatesByLoad, groupItemsByDate, sessionMinutesByLoad, studyRampMinutes, timeToDecimal, toISO } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { sanitizeStepTitle } from "../../lib/text";
 import { inputStyle, primaryBtn } from "../../lib/styles";
@@ -122,6 +122,12 @@ export default function EducationView({
       : defaultStartISO;
     const lastWorkDay = dayBefore(dueDate);
     const endISO = lastWorkDay < startISO ? startISO : lastWorkDay;
+    // Resolved to a real `duration` here, once, instead of leaving that for App.jsx's
+    // addEduItem to work out again at confirm time from scratch — two separate
+    // calculations of "what duration does this session get" is exactly how the shown
+    // preview and the actual saved sessions could end up disagreeing with each other.
+    // addEduItem now just reads `.duration` straight off each item it's given.
+    const stepMinutesOpts = { min: 45, max: 90 };
     if (typeof schedule === "object" && Array.isArray(schedule.steps)) {
       const dates = distributeDatesByLoad(startISO, endISO, schedule.steps.length, tasks, events);
       // distributeDatesByLoad spreads steps evenly across the whole window rather than
@@ -135,8 +141,8 @@ export default function EducationView({
       // distributeDatesByLoad packs more than one onto the same date — that day's total
       // is the SUM of everything actually packed onto it (real work doesn't get smaller
       // just because it landed on a shared day), not just whichever step happened to be
-      // written last. stepCountByDate lets App.jsx's addEduItem tell a packed day (use
-      // this sum as-is) apart from a normal single-step day (still load-adjusted below).
+      // written last. stepCountByDate tells a packed day (use that sum as-is) apart from
+      // a normal single-step day (still load-adjusted below).
       const minutesByDate = {};
       const stepCountByDate = {};
       schedule.steps.forEach((s, i) => {
@@ -144,15 +150,36 @@ export default function EducationView({
         minutesByDate[d] = (minutesByDate[d] || 0) + (typeof s.minutes === "number" ? s.minutes : 60);
         stepCountByDate[d] = (stepCountByDate[d] || 0) + 1;
       });
-      return groupItemsByDate(schedule.steps.map((s, i) => ({ title: s.title, date: dates[i] })), `${workVerb}: ${title.trim()}`)
+      const grouped = groupItemsByDate(schedule.steps.map((s, i) => ({ title: s.title, date: dates[i] })), `${workVerb}: ${title.trim()}`)
         .map((it) => ({ ...it, minutes: minutesByDate[it.date], stepCount: stepCountByDate[it.date] }));
+      // A day that only ever had one real step on it still gets the usual load-aware
+      // adjustment. A day multiple steps got packed onto carries the SUM of those real
+      // steps' own estimates, still capped at the same 90-minute ceiling as everything
+      // else here — nobody's actually sitting down for 2+ hours on one assignment in one
+      // evening just because the calendar happened to be tight.
+      const singleIdxs = grouped.map((_, i) => i).filter((i) => (grouped[i].stepCount || 1) <= 1);
+      const singleMinutes = sessionMinutesByLoad(
+        singleIdxs.map((i) => grouped[i].date), tasks, events,
+        singleIdxs.map((i) => (typeof grouped[i].minutes === "number" ? grouped[i].minutes : 60)),
+        stepMinutesOpts
+      );
+      const adjustedByIndex = {};
+      singleIdxs.forEach((i, j) => { adjustedByIndex[i] = singleMinutes[j]; });
+      return grouped.map((it, i) => ({ ...it, duration: adjustedByIndex[i] !== undefined ? adjustedByIndex[i] : Math.min(it.minutes, stepMinutesOpts.max) }));
     }
     // An assessment crams into the days right before it, not spread thin across however
-    // far off it is; an assignment still spreads across your least-busy days either way.
-    const dates = type === "Assessment"
-      ? assessmentStudyDates(dueDate, schedule, tasks, events)
-      : schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
-    return groupItemsByDate(dates.map((d) => ({ title: `${workVerb}: ${title.trim()}`, date: d })));
+    // far off it is, and each session's length ramps up toward the night before (see
+    // studyRampMinutes) instead of staying flat; an assignment still spreads across your
+    // least-busy days either way, at one flat base length.
+    if (type === "Assessment") {
+      const dates = assessmentStudyDates(dueDate, schedule, tasks, events);
+      const rampBase = dates.map((_, i) => studyRampMinutes(i, dates.length));
+      const minutes = sessionMinutesByLoad(dates, tasks, events, rampBase, { min: 30, max: 90 });
+      return dates.map((d, i) => ({ title: `${workVerb}: ${title.trim()}`, date: d, notes: null, duration: minutes[i] }));
+    }
+    const dates = schedule === "everyday" ? dateRangeISO(startISO, endISO) : distributeDatesByLoad(startISO, endISO, schedule, tasks, events);
+    const minutes = sessionMinutesByLoad(dates, tasks, events, 60, stepMinutesOpts);
+    return dates.map((d, i) => ({ title: `${workVerb}: ${title.trim()}`, date: d, notes: null, duration: minutes[i] }));
   };
 
   const breakDownAssignment = async () => {

@@ -701,39 +701,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       const stepMinutesOpts = { min: 45, max: 90 };
       rows.forEach((row, rowIdx) => {
         if (rowIdx === 0 && previewItems) {
-          // An Assessment's preview never carries AI steps (that option's Assignment-only
-          // at creation — see EducationView), so every item here is a plain ramped study
-          // session with no per-item minutes estimate of its own; ramp it the same way
-          // the non-preview branch below does, in the same 30-90 range, instead of
-          // falling through to the Assignment-style flat 60/45-90 default below.
-          if (type === "Assessment") {
-            const rampBase = previewItems.map((_, i) => studyRampMinutes(i, previewItems.length));
-            const minutes = sessionMinutesByLoad(previewItems.map((it) => it.date), tasks, events, rampBase, { min: 30, max: 90 });
-            previewItems.forEach((it, i) => {
-              addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: minutes[i], eduId: row.id, category: profile.educationCategory, notes: it.notes || null });
-            });
-            return;
-          }
-          // A day that only ever had one real step on it still gets the usual load-aware
-          // adjustment (see stepMinutesOpts). A day multiple steps got packed onto (not
-          // enough runway before the deadline to give each its own day — see
-          // previewSchedule's stepCount) carries the SUM of those real steps' own
-          // estimates, same as a single step would never be understated — but still
-          // capped at the same 90-minute ceiling as everything else here. Nobody's
-          // actually sitting down for 2+ hours on one assignment in one evening just
-          // because the calendar happened to be tight; past that cap it's "this day is
-          // genuinely packed," not "schedule a 3-hour block."
-          const singleIdxs = previewItems.map((_, i) => i).filter((i) => (previewItems[i].stepCount || 1) <= 1);
-          const singleMinutes = sessionMinutesByLoad(
-            singleIdxs.map((i) => previewItems[i].date), tasks, events,
-            singleIdxs.map((i) => (typeof previewItems[i].minutes === "number" ? previewItems[i].minutes : 60)),
-            stepMinutesOpts
-          );
-          const adjustedByIndex = {};
-          singleIdxs.forEach((i, j) => { adjustedByIndex[i] = singleMinutes[j]; });
-          previewItems.forEach((it, i) => {
-            const duration = adjustedByIndex[i] !== undefined ? adjustedByIndex[i] : Math.min(it.minutes, stepMinutesOpts.max);
-            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration, eduId: row.id, category: profile.educationCategory, notes: it.notes || it.title || null });
+          // previewItems already carries a resolved `duration` for every item (see
+          // EducationView's previewSchedule) — reused exactly as-is here, not
+          // recalculated, so there's no second calculation that could land on a
+          // different date-to-duration pairing than what the preview actually showed.
+          previewItems.forEach((it) => {
+            addTask({ title: `${workVerb}: ${title}`, date: it.date, start: null, duration: it.duration, eduId: row.id, category: profile.educationCategory, notes: it.notes || null });
           });
           return;
         }
