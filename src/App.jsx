@@ -483,8 +483,15 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     eduItems.forEach((e) => {
       if (e.dueDate) chips.push({ id: e.id, kind: "edu", title: e.title, date: e.dueDate, start: e.dueStart, done: e.done, type: e.type, subject: e.subject });
     });
+    // A standalone task's own date IS its due date — there's no separate deadline chip
+    // for it elsewhere. A task that's one session of an Education assignment or one step
+    // of a "break it down" group is the opposite: its date is a work day on the way to a
+    // real deadline that already gets its own chip (the "edu" chip above, or
+    // "task-group-due" below) — including it here too would show the SAME thing as a due
+    // date on every single day it has a session/step scheduled, not just the day it's
+    // actually due.
     visibleTasks.forEach((t) => {
-      if (t.date && t.start == null) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category, groupId: t.groupId, eduId: t.eduId });
+      if (t.date && t.start == null && !t.eduId && !t.groupId) chips.push({ id: t.id, kind: "task", title: t.title, date: t.date, done: t.done, category: t.category });
     });
     // One synthetic chip per "break it down" group, on its own overall due date — the
     // group's steps (above) are work days, not the deadline itself, so this is what
