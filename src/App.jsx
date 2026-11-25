@@ -954,6 +954,11 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
            state to reveal it with. */
         .hoverable .btn-delete { opacity: 0.35; transition: opacity .15s ease; }
         .hoverable:hover .btn-delete, .hoverable:focus-within .btn-delete { opacity: 1; }
+        /* "Next term" is a rare correction, not something every row needs shouting at
+           you — same dim-until-you're-looking treatment as the delete × above, so a
+           list of grades doesn't read as a wall of pill buttons. */
+        .hoverable .btn-nextterm { opacity: 0.3; transition: opacity .15s ease; }
+        .hoverable:hover .btn-nextterm, .hoverable:focus-within .btn-nextterm { opacity: 1; }
         .hoverable:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important; }
         @keyframes checkboxPingOut { 0% { opacity: 0.55; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.9); } }
         /* The backdrop itself (.sheet-overlay) now appears at full strength instantly,

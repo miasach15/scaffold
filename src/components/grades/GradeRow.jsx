@@ -116,7 +116,8 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
             <button
               onClick={() => onSetNextTerm(item.id, true)}
               title="This is actually for next term — don't count it toward this one yet"
-              style={{ background: "none", border: "1px solid #E5E9ED", borderRadius: 999, cursor: "pointer", color: "#93A0AD", padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
+              className="btn-nextterm"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: "4px 2px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "underline", textDecorationColor: "#D8DEE4", textUnderlineOffset: 2 }}
             >
               Next term
             </button>

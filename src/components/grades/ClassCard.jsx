@@ -354,7 +354,7 @@ export default function ClassCard({
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {pendingItems.map((it) => {
                   return (
-                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <div key={it.id} className="hoverable" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <div style={{ flex: "1 1 140px", minWidth: 0, fontSize: 14, wordBreak: "break-word" }}>{it.title}</div>
                       {categories.length > 0 && (
                         <select
@@ -382,7 +382,8 @@ export default function ClassCard({
                         <button
                           onClick={() => onSetItemNextTerm(it.id, true)}
                           title="This is actually for next term — don't count it toward this one yet"
-                          style={{ background: "none", border: "1px solid #E5E9ED", borderRadius: 999, cursor: "pointer", color: "#93A0AD", padding: "4px 9px", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}
+                          className="btn-nextterm"
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: "4px 2px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "underline", textDecorationColor: "#D8DEE4", textUnderlineOffset: 2 }}
                         >
                           Next term
                         </button>
