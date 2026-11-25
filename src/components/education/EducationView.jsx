@@ -209,7 +209,11 @@ export default function EducationView({
       return;
     }
     setAddError(null);
-    if (schedulable && useAI) { breakDownAssignment(); return; }
+    // Belt-and-suspenders alongside clearing useAI on type switch above — the AI
+    // breakdown path is Assignment-only (its own toggle only renders for that type), so
+    // this never routes an Assessment/Homework through it even if useAI were somehow
+    // still set from an earlier visit to Assignment.
+    if (type === "Assignment" && schedulable && useAI) { breakDownAssignment(); return; }
     if (schedulable) {
       // An assessment never gets "every day" — it's always a day count, crammed right before it.
       const schedule = type !== "Assessment" && workMode === "everyday" ? "everyday" : workDays;
@@ -448,7 +452,19 @@ export default function EducationView({
             {["Assignment", "Assessment", "Homework"].map((t) => (
               <button
                 key={t}
-                onClick={() => setType(t)}
+                onClick={() => {
+                  setType(t);
+                  // "Break it down with AI" is an Assignment-only control (its own
+                  // toggle/textarea only render when type === "Assignment") — switching
+                  // away used to leave useAI/assignmentDetails stuck set from an earlier
+                  // visit to Assignment, invisible once the control itself disappeared,
+                  // but still read by add() below on every later submission regardless
+                  // of the type actually selected. That silently routed an Assessment (or
+                  // Homework) through the AI-steps scheduling path — no night-before
+                  // guarantee, no week-out cap, dates picked by distributeDatesByLoad
+                  // instead of assessmentStudyDates — with nothing in the UI hinting why.
+                  if (t !== "Assignment") { setUseAI(false); setAssignmentDetails(""); }
+                }}
                 style={{
                   padding: "8px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap",
                   border: `1px solid ${type === t ? "var(--primary, #7B6EF0)" : "#E5E9ED"}`,
