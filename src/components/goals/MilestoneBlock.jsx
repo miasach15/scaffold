@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { formatShortDate } from "../../lib/dateHelpers";
+import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { inputStyle, noTypeDateProps } from "../../lib/styles";
 import { INK, MUTED, PRIMARY_DARK, SURFACE } from "../../lib/constants";
 import { deleteBtn, ghostBtn } from "../../lib/styles";
@@ -118,18 +118,30 @@ export default function MilestoneBlock({ milestone, col, onAddAction, onMoveActi
           </div>
         )}
         {editingMilestoneDate ? (
-          <input
-            type="date"
-            autoFocus
-            value={milestone.dueDate || ""}
-            onChange={(e) => { onSetMilestoneDueDate(e.target.value); setEditingMilestoneDate(false); }}
-            onBlur={() => setEditingMilestoneDate(false)}
-            {...noTypeDateProps}
-            style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
-          />
+          <div
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingMilestoneDate(false); }}
+            style={{ display: "flex", gap: 4 }}
+          >
+            <input
+              type="date"
+              autoFocus
+              value={milestone.dueDate || ""}
+              onChange={(e) => onSetMilestoneDueDate(e.target.value, milestone.dueStart)}
+              {...noTypeDateProps}
+              style={{ ...inputStyle, width: 124, fontSize: 11.5, padding: "3px 6px" }}
+            />
+            <input
+              type="time"
+              value={decimalToTimeInput(milestone.dueStart)}
+              onChange={(e) => onSetMilestoneDueDate(milestone.dueDate, e.target.value ? timeToDecimal(e.target.value) : null)}
+              title="Optional: a specific time it's due (shows timed on Calendar instead of in the all-day row)"
+              style={{ ...inputStyle, width: 100, fontSize: 11.5, padding: "3px 6px" }}
+            />
+          </div>
         ) : milestone.dueDate ? (
-          <div onClick={() => setEditingMilestoneDate(true)} title={`${formatShortDate(milestone.dueDate)} (click to change)`} style={{ cursor: "pointer" }}>
+          <div onClick={() => setEditingMilestoneDate(true)} title={`${formatShortDate(milestone.dueDate)} (click to change)`} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <UrgencyBadge iso={milestone.dueDate} done={milestoneDone} leadDays={2} />
+            {milestone.dueStart != null && <span style={{ fontSize: 11, color: MUTED }}>{decimalToTimeLabel(milestone.dueStart)}</span>}
           </div>
         ) : (
           <button onClick={() => setEditingMilestoneDate(true)} title="Set a target date: this will auto-fill dates for actions below" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10.5, color: MUTED, fontWeight: 600, whiteSpace: "nowrap", padding: 0 }}>+ target date</button>

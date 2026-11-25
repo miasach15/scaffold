@@ -20,6 +20,9 @@ const milestoneFromRow = (row) => ({
   id: row.id,
   title: row.title,
   dueDate: row.due_date,
+  // Optional time-of-day the milestone is due, decimal hour like tasks.start (e.g. 14.5
+  // = 2:30pm) — null means "just a day". See migration_goal_due_start.sql.
+  dueStart: row.due_start == null ? null : Number(row.due_start),
   actions: (row.goal_actions || [])
     .slice()
     .sort((a, b) => {
@@ -36,6 +39,8 @@ const goalFromRow = (row) => ({
   title: row.title,
   category: row.category,
   deadline: row.deadline,
+  // Same convention as milestoneFromRow's dueStart. See migration_goal_due_start.sql.
+  deadlineStart: row.deadline_start == null ? null : Number(row.deadline_start),
   milestones: (row.milestones || [])
     .slice()
     .sort((a, b) => a.created_at?.localeCompare(b.created_at))
@@ -118,7 +123,7 @@ export function useGoals(userId, tasks, events) {
 
   // Setting/changing a milestone's target date auto-fills due dates on any of its
   // actions that don't have one yet, spreading them evenly up to that date.
-  const setMilestoneDueDate = useCallback(async (goalId, milestoneId, dueDate) => {
+  const setMilestoneDueDate = useCallback(async (goalId, milestoneId, dueDate, dueStart = null) => {
     const goal = goals.find((g) => g.id === goalId);
     const milestone = goal?.milestones.find((m) => m.id === milestoneId);
     if (!milestone) return;
@@ -145,11 +150,12 @@ export function useGoals(userId, tasks, events) {
       milestones: g.milestones.map((m) => (m.id !== milestoneId ? m : {
         ...m,
         dueDate: dueDate || null,
+        dueStart,
         actions: m.actions.map((a) => (dateForAction.has(a.id) ? { ...a, dueDate: dateForAction.get(a.id) } : a)),
       })),
     })));
 
-    const results = [await supabase.from("milestones").update({ due_date: dueDate || null }).eq("id", milestoneId)];
+    const results = [await supabase.from("milestones").update({ due_date: dueDate || null, due_start: dueStart }).eq("id", milestoneId)];
     for (const [actionId, d] of dateForAction) {
       results.push(await supabase.from("goal_actions").update({ due_date: d }).eq("id", actionId));
     }
@@ -163,7 +169,7 @@ export function useGoals(userId, tasks, events) {
   // uses for a single milestone — every milestone that now has a date (whether it already
   // had one or just got assigned one here) has its own undated actions spread up to that.
   // Anything that already has a date of its own is left alone.
-  const setGoalDeadline = useCallback(async (goalId, deadline) => {
+  const setGoalDeadline = useCallback(async (goalId, deadline, deadlineStart = null) => {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal) return;
 
@@ -194,6 +200,7 @@ export function useGoals(userId, tasks, events) {
     setGoals((gs) => gs.map((g) => (g.id !== goalId ? g : {
       ...g,
       deadline: deadline || null,
+      deadlineStart,
       milestones: g.milestones.map((m) => ({
         ...m,
         dueDate: milestoneDateFor.get(m.id) || m.dueDate,
@@ -201,7 +208,7 @@ export function useGoals(userId, tasks, events) {
       })),
     })));
 
-    const results = [await supabase.from("goals").update({ deadline: deadline || null }).eq("id", goalId)];
+    const results = [await supabase.from("goals").update({ deadline: deadline || null, deadline_start: deadlineStart }).eq("id", goalId)];
     for (const [milestoneId, d] of milestoneDateFor) {
       results.push(await supabase.from("milestones").update({ due_date: d }).eq("id", milestoneId));
     }

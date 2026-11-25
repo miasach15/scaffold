@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pencil, Check, X, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
-import { formatShortDate } from "../../lib/dateHelpers";
+import { decimalToTimeInput, decimalToTimeLabel, formatShortDate, timeToDecimal } from "../../lib/dateHelpers";
 import { supabase } from "../../lib/supabase";
 import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, serifFont } from "../../lib/constants";
 import { deleteBtn, inputStyle, ghostBtn, noTypeDateProps } from "../../lib/styles";
@@ -141,22 +141,34 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
               {onSetGoalDeadline && editingDeadline ? (
-                <input
-                  type="date"
-                  autoFocus
-                  value={goal.deadline || ""}
-                  onChange={(e) => { onSetGoalDeadline(goal.id, e.target.value); setEditingDeadline(false); }}
-                  onBlur={() => setEditingDeadline(false)}
-                  {...noTypeDateProps}
-                  style={{ ...inputStyle, width: 138, fontSize: 11.5, padding: "3px 6px" }}
-                />
+                <div
+                  onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setEditingDeadline(false); }}
+                  style={{ display: "flex", gap: 4 }}
+                >
+                  <input
+                    type="date"
+                    autoFocus
+                    value={goal.deadline || ""}
+                    onChange={(e) => onSetGoalDeadline(goal.id, e.target.value, goal.deadlineStart)}
+                    {...noTypeDateProps}
+                    style={{ ...inputStyle, width: 138, fontSize: 11.5, padding: "3px 6px" }}
+                  />
+                  <input
+                    type="time"
+                    value={decimalToTimeInput(goal.deadlineStart)}
+                    onChange={(e) => onSetGoalDeadline(goal.id, goal.deadline, e.target.value ? timeToDecimal(e.target.value) : null)}
+                    title="Optional: a specific time it's due (shows timed on Calendar instead of in the all-day row)"
+                    style={{ ...inputStyle, width: 104, fontSize: 11.5, padding: "3px 6px" }}
+                  />
+                </div>
               ) : goal.deadline ? (
                 <div
                   onClick={() => onSetGoalDeadline && setEditingDeadline(true)}
                   title={onSetGoalDeadline ? `${formatShortDate(goal.deadline)} (click to change). Changing this spreads dates across anything still undated underneath.` : undefined}
-                  style={{ cursor: onSetGoalDeadline ? "pointer" : "default" }}
+                  style={{ cursor: onSetGoalDeadline ? "pointer" : "default", display: "flex", alignItems: "center", gap: 6 }}
                 >
                   <UrgencyBadge iso={goal.deadline} done={allDone} leadDays={2} />
+                  {goal.deadlineStart != null && <span style={{ fontSize: 11, color: MUTED }}>{decimalToTimeLabel(goal.deadlineStart)}</span>}
                 </div>
               ) : onSetGoalDeadline ? (
                 <button
@@ -219,7 +231,7 @@ export default function GoalCard({ goal, onRemoveGoal, onRenameGoal, onSetGoalDe
                   onRemoveAction={(aid) => onRemoveAction(goal.id, m.id, aid)}
                   onRemoveMilestone={() => onRemoveMilestone(goal.id, m.id)}
                   onRenameMilestone={(title) => onRenameMilestone(goal.id, m.id, title)}
-                  onSetMilestoneDueDate={(date) => onSetMilestoneDueDate(goal.id, m.id, date)}
+                  onSetMilestoneDueDate={(date, dueStart) => onSetMilestoneDueDate(goal.id, m.id, date, dueStart)}
                   onRenameAction={(aid, title) => onRenameAction(goal.id, m.id, aid, title)}
                   onSetActionDueDate={(aid, date) => onSetActionDueDate(goal.id, m.id, aid, date)}
                 />

@@ -175,6 +175,9 @@ create table if not exists goals (
   title text not null,
   category text not null default 'Personal',
   deadline date,
+  -- Optional time-of-day the deadline is due, decimal hour like tasks.start (e.g. 14.5 =
+  -- 2:30pm) — null means "just a day". See migration_goal_due_start.sql.
+  deadline_start numeric,
   created_at timestamptz not null default now()
 );
 
@@ -184,6 +187,8 @@ create table if not exists milestones (
   goal_id uuid not null references goals(id) on delete cascade,
   title text not null,
   due_date date,
+  -- Same convention as goals.deadline_start. See migration_goal_due_start.sql.
+  due_start numeric,
   created_at timestamptz not null default now()
 );
 

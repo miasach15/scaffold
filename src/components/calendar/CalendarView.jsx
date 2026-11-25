@@ -74,7 +74,7 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
     ...assessmentChips,
   ];
-  const timedDueChips = dueChips.filter((c) => c.start != null && (c.kind === "edu" || c.kind === "task-group-due"));
+  const timedDueChips = dueChips.filter((c) => c.start != null && (c.kind === "edu" || c.kind === "task-group-due" || c.kind === "goal-deadline" || c.kind === "goal-milestone"));
 
   const isDay = !!dayView;
   const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));

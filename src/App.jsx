@@ -471,12 +471,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     goals.forEach((g) => {
       const allActions = g.milestones.flatMap((m) => m.actions);
       const allActionsDone = allActions.length > 0 && allActions.every((a) => a.done);
-      if (g.deadline) chips.push({ id: g.id, kind: "goal-deadline", title: g.title, date: g.deadline, done: allActionsDone, category: g.category, goalId: g.id });
+      if (g.deadline) chips.push({ id: g.id, kind: "goal-deadline", title: g.title, date: g.deadline, start: g.deadlineStart, done: allActionsDone, category: g.category, goalId: g.id });
       g.milestones.forEach((m) => {
         if (m.dueDate) {
           const total = m.actions.length;
           const doneCount = m.actions.filter((a) => a.done).length;
-          chips.push({ id: m.id, kind: "goal-milestone", title: m.title, date: m.dueDate, done: total > 0 && doneCount === total, category: g.category, goalId: g.id, milestoneId: m.id });
+          chips.push({ id: m.id, kind: "goal-milestone", title: m.title, date: m.dueDate, start: m.dueStart, done: total > 0 && doneCount === total, category: g.category, goalId: g.id, milestoneId: m.id });
         }
       });
     });
