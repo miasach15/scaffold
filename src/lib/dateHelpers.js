@@ -157,11 +157,9 @@ export const dateRangeISO = (startISO, endISO) => {
   const arr = [];
   let cur = new Date(startISO + "T00:00:00");
   const end = new Date(endISO + "T00:00:00");
-  let i = 0;
-  while (cur <= end && i < 30) {
+  while (cur <= end) {
     arr.push(toISO(cur));
     cur = addDays(cur, 1);
-    i++;
   }
   return arr.length ? arr : [startISO];
 };

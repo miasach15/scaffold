@@ -658,6 +658,7 @@ export default function EducationView({
         if (!editingItem) return null;
         return (
           <EduSessionsModal
+            key={editingItem.id}
             item={editingItem}
             col={eduCol}
             sessions={tasks.filter((t) => t.eduId === editingEduId)}

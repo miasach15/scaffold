@@ -359,7 +359,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
       ? eduItems.filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate).map((e) => e.id)
       : [id];
     const snapshot = { items: eduItems.filter((e) => ids.includes(e.id)), sessions: tasks.filter((t) => t.eduId && ids.includes(t.eduId)) };
-    pendingDeleteEduPromiseRef.current = Promise.all(ids.map((eid) => removeEduItem(eid, "one")));
+    pendingDeleteEduPromiseRef.current = Promise.all(ids.map((eid) => removeEduItem(eid)));
     setPendingDeleteEdu(snapshot);
     const label = ids.length > 1 ? `"${item.title}" and ${ids.length - 1} more deleted` : `"${item.title}" deleted`;
     eduDeleteUndo.requestDelete(label, () => {
@@ -531,11 +531,17 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     // One synthetic chip per "break it down" group, on its own overall due date — the
     // group's steps (above) are work days, not the deadline itself, so this is what
     // actually belongs in the calendar's "Due" row alongside everything else that's due.
+    const tasksByGroup = new Map();
+    visibleTasks.forEach((t) => {
+      if (!t.groupId) return;
+      if (!tasksByGroup.has(t.groupId)) tasksByGroup.set(t.groupId, []);
+      tasksByGroup.get(t.groupId).push(t);
+    });
     const seenGroups = new Set();
     visibleTasks.forEach((t) => {
       if (!t.groupId || !t.groupDueDate || seenGroups.has(t.groupId)) return;
       seenGroups.add(t.groupId);
-      const groupTasks = visibleTasks.filter((x) => x.groupId === t.groupId);
+      const groupTasks = tasksByGroup.get(t.groupId) || [];
       const groupDone = groupTasks.length > 0 && groupTasks.every((x) => x.done);
       chips.push({ id: t.groupId, kind: "task-group-due", title: t.groupTitle || t.title, date: t.groupDueDate, start: t.groupDueStart, done: groupDone, category: t.category });
     });
@@ -619,22 +625,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     setAutoOpenBrainDump(true);
   };
 
-  // mode: "one" (default) or "following" — for repeating edu items (no stored series id),
-  // "following" is found heuristically: same title/type/subject, due date on or after this one's.
-  const removeEduItem = async (id, mode = "one") => {
-    let ids = [id];
-    if (mode === "following") {
-      const item = eduItems.find((e) => e.id === id);
-      if (item) {
-        ids = eduItems
-          .filter((e) => e.title === item.title && e.type === item.type && e.subject === item.subject && e.dueDate >= item.dueDate)
-          .map((e) => e.id);
-      }
-    }
-    for (const eid of ids) {
-      await removeTasksByEduId(eid);
-      await removeEduItemRaw(eid);
-    }
+  // "following" (repeating edu items with no stored series id) is already expanded into
+  // individual ids by requestRemoveEduItem, which calls this once per id in parallel —
+  // this only ever handles one id at a time.
+  const removeEduItem = async (id) => {
+    await removeTasksByEduId(id);
+    await removeEduItemRaw(id);
   };
 
   // workDays: for Assignments, either a number of days (spreads that many "Work on: <title>"
@@ -1332,6 +1328,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
 
       {editingTask && (
         <TaskDetailModal
+          key={editingTask.id}
           task={editingTask}
           onClose={() => setEditingTask(null)}
           onRename={renameTask}

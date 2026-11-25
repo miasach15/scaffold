@@ -1,4 +1,4 @@
-import { addDays, toISO } from "./dateHelpers";
+import { addDays, dayBefore, toISO } from "./dateHelpers";
 
 const parseISO = (iso) => new Date(`${iso}T00:00:00`);
 
@@ -47,7 +47,7 @@ export function planOverloadRebalance(tasks, events, eduItems, capacityMinutes, 
     const movable = (tasks || []).filter((t) => {
       if (!(t.date === date && !t.done && t.start == null && (t.groupId || t.eduId))) return false;
       const deadline = t.groupDueDate || (t.eduId ? eduDueById.get(t.eduId) : null);
-      return !deadline || t.date !== toISO(addDays(parseISO(deadline), -1));
+      return !deadline || t.date !== dayBefore(deadline);
     });
     if (movable.length === 0) continue;
 
@@ -56,7 +56,7 @@ export function planOverloadRebalance(tasks, events, eduItems, capacityMinutes, 
     movable.sort((a, b) => (b.duration ?? 30) - (a.duration ?? 30));
     const session = movable[0];
     const deadline = session.groupDueDate || (session.eduId ? eduDueById.get(session.eduId) : null);
-    const lastWorkDay = deadline ? toISO(addDays(parseISO(deadline), -1)) : toISO(addDays(parseISO(todayISO), 14));
+    const lastWorkDay = deadline ? dayBefore(deadline) : toISO(addDays(parseISO(todayISO), 14));
     if (lastWorkDay < todayISO) continue; // the deadline's basically now — nowhere left to move it to
 
     // Other sessions for this same breakdown/assignment already occupy their own days —
