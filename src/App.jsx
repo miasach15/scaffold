@@ -1081,6 +1081,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onChipClick={onChipClick}
             onRescheduleTask={rescheduleTask}
             onRescheduleEvent={(id, date, hour) => updateEvent(id, hour != null ? { date, start: hour } : { date })}
+            onResizeEvent={(id, minutes) => updateEvent(id, { duration: minutes })}
             onEditEvent={setEditingEvent}
             onOpenFocus={openFocus}
             onSetTaskDone={setTaskDone}

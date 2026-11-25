@@ -3,18 +3,23 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MUTED, PRIMARY, PRIMARY_DARK, ROW_H, cardStyle, serifFont } from "../../lib/constants";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { useDragReschedule } from "../../hooks/useDragReschedule";
+import { useDragResize } from "../../hooks/useDragResize";
 import { addDays, dayLabel, dateLabel, decimalToTimeLabel, layoutOverlaps, monthLabel, hourLabel, startOfWeek, toISO } from "../../lib/dateHelpers";
 import CalBlock from "./CalBlock";
 import StripRow from "./StripRow";
 import { ghostBtn } from "../../lib/styles";
 
-export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, tasks, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onEditEvent, onOpenFocus, onSetTaskDone, educationCategory }) {
+export default function CalendarView({ days, weekStart, setWeekStart, dayView, onSetDayView, onEnterMonth, events, dueChips, tasks, onCellClick, onChipClick, onRescheduleTask, onRescheduleEvent, onResizeEvent, onEditEvent, onOpenFocus, onSetTaskDone, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const eduCol = CATEGORY_COLORS[educationCategory] || CATEGORY_COLORS.Personal;
   const onDropItem = (kind, id, iso, hour) => (kind === "event" ? onRescheduleEvent(id, iso, hour) : onRescheduleTask(id, iso, hour ?? null));
   // Pointer-based drag-to-reschedule (see the hook's own comment) — replaces native
   // HTML5 drag/drop, which never fired from a touch gesture.
   const { drag, beginPress, guardClick } = useDragReschedule(onDropItem);
+  // Same pointer-event approach, for stretching an event's bottom edge to change its
+  // duration directly on the grid instead of only through the edit modal's start/end
+  // time fields.
+  const { resize, beginResize } = useDragResize((id, minutes) => onResizeEvent(id, minutes));
   const todayISO = toISO(new Date());
   const now = new Date();
   const nowDecimal = now.getHours() + now.getMinutes() / 60;
@@ -29,13 +34,14 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Calendar shows deadlines, not day-to-day to-dos: Education due dates (homework,
-  // assignments, tests) and goal deadlines/milestones. Plain tasks, "break it down"
-  // groups (their own due date and their individual work-day steps alike), and
-  // Education work sessions ("Work on: X"/"Study: X") never render here at all — those
-  // live on the Tasks/Education pages instead. This intentionally narrows what used to
-  // render on Calendar; see the Tasks page for the day-to-day list.
-  const isDueKind = (chip) => chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone";
+  // Calendar shows deadlines, not day-to-day to-dos: a plain task's own due date, a
+  // "break it down" group's overall due date, Education due dates (homework,
+  // assignments, tests), and goal deadlines/milestones — every kind of "this is due"
+  // chip dueChips builds (see App.jsx), not just the school/goal ones. A goal action
+  // (the small day-to-day step under a milestone) and Education work sessions ("Work
+  // on: X"/"Study: X") still don't render here — those are day-to-day to-dos, not
+  // deadlines, and live on the Tasks/Education/Dashboard pages instead.
+  const isDueKind = (chip) => chip.kind === "edu" || chip.kind === "goal-deadline" || chip.kind === "goal-milestone" || chip.kind === "task" || chip.kind === "task-group-due";
   const chipStyle = (chip) => {
     // Solid, not a pale category-tint wash — same treatment "Due" chips below already
     // use, so an all-day event reads as a deliberate colored chip instead of a faint tint.
@@ -62,13 +68,13 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
   // Goal actions (the small day-to-day steps under a milestone) deliberately don't
   // render on Calendar at all — same "deadlines, not day-to-day to-dos" narrowing as
   // plain tasks above. They still show on Tasks and Dashboard.
-  const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || (c.kind === "edu" && c.type !== "Assessment")));
+  const dueChipsOnly = dueChips.filter((c) => c.start == null && (c.kind === "goal-deadline" || c.kind === "goal-milestone" || c.kind === "task" || c.kind === "task-group-due" || (c.kind === "edu" && c.type !== "Assessment")));
   const assessmentChips = dueChips.filter((c) => c.kind === "edu" && c.type === "Assessment" && c.start == null);
   const allDayEventChips = [
     ...events.filter((e) => e.start == null).map((e) => ({ id: e.id, kind: "event", title: e.title, date: e.date, done: false, category: e.category })),
     ...assessmentChips,
   ];
-  const timedDueChips = dueChips.filter((c) => c.start != null && c.kind === "edu");
+  const timedDueChips = dueChips.filter((c) => c.start != null && (c.kind === "edu" || c.kind === "task-group-due"));
 
   const isDay = !!dayView;
   const goPrev = () => (isDay ? onSetDayView(toISO(addDays(days[0], -1))) : setWeekStart(addDays(weekStart, -7)));
@@ -225,6 +231,8 @@ export default function CalendarView({ days, weekStart, setWeekStart, dayView, o
                               dragKind="event"
                               beginPress={beginPress}
                               guardClick={guardClick}
+                              beginResize={beginResize}
+                              resizeHeight={resize && resize.id === block.data.id ? resize.height : undefined}
                             />
                           );
                         }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCategoryColors, useCategoryKeys } from "../../hooks/CategoryColorsContext";
 import { SURFACE, TONE } from "../../lib/constants";
-import { pad, timeToDecimal } from "../../lib/dateHelpers";
+import { decimalToTimeInput, pad, timeToDecimal } from "../../lib/dateHelpers";
 import { ghostBtn, inputStyle, labelStyle, modalStyle, overlayStyle, primaryBtn } from "../../lib/styles";
 import { DatePickerButton } from "../shared/Misc";
 import ModalPortal from "../shared/ModalPortal";
@@ -18,22 +18,36 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
     if (event) return event.start != null ? `${pad(Math.floor(event.start))}:${pad(Math.round((event.start % 1) * 60))}` : "09:00";
     return `${pad(initial.hour ?? 9)}:00`;
   });
-  const [durationHours, setDurationHours] = useState(event?.duration != null ? Math.floor(event.duration / 60) : 1);
-  const [durationMinutes, setDurationMinutes] = useState(event?.duration != null ? event.duration % 60 : 0);
+  // Ends at a clock time instead of a separate hours/minutes duration — same thing
+  // Google Calendar does, and the actual reason for it: sometimes you know when
+  // something ends (a class period, a shift) without knowing offhand how long that
+  // comes out to in hours and minutes. Duration is just derived from the gap.
+  const [endTime, setEndTime] = useState(() => {
+    if (event) return decimalToTimeInput((event.start ?? 9) + (event.duration ?? 60) / 60);
+    return decimalToTimeInput((initial.hour ?? 9) + 1);
+  });
   const [allDay, setAllDay] = useState(event ? event.start == null : initial.hour == null);
   const [category, setCategory] = useState(event?.category || "Personal");
   const [repeat, setRepeat] = useState("None");
   const [customDays, setCustomDays] = useState([]);
 
-  const totalDuration = Math.max(5, Math.round(durationHours) * 60 + Math.round(durationMinutes));
-
   const toggleCustomDay = (d) => setCustomDays((ds) => (ds.includes(d) ? ds.filter((x) => x !== d) : [...ds, d]));
+
+  // Moving the start time keeps however long the event already was — the end time slides
+  // along with it instead of staying put and silently shrinking (or inverting) the
+  // duration. Editing the end time directly, on the other hand, only ever touches the
+  // end — that's the whole point of being able to set one independent of the other.
+  const changeStart = (newTime) => {
+    const keptDuration = Math.max(5 / 60, timeToDecimal(endTime) - timeToDecimal(time));
+    setTime(newTime);
+    setEndTime(decimalToTimeInput(timeToDecimal(newTime) + keptDuration));
+  };
 
   const save = () => {
     const payload = {
       title: title.trim(), date, category,
       start: allDay ? null : timeToDecimal(time),
-      duration: allDay ? null : totalDuration,
+      duration: allDay ? null : Math.max(5, Math.round((timeToDecimal(endTime) - timeToDecimal(time)) * 60)),
     };
     if (isEdit) onUpdate({ id: event.id, ...payload, repeat, customDays });
     else onSave({ kind: "event", ...payload, repeat, customDays });
@@ -63,28 +77,21 @@ export default function QuickAddModal({ initial, event, hasFollowing, onClose, o
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Date</label>
-            <DatePickerButton value={date} onChange={(e) => setDate(e.target.value)} style={{ width: "100%" }} />
-          </div>
-          {!allDay && (
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Start</label>
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={inputStyle} />
-            </div>
-          )}
+        <div style={{ marginTop: 10 }}>
+          <label style={labelStyle}>Date</label>
+          <DatePickerButton value={date} onChange={(e) => setDate(e.target.value)} style={{ width: "100%" }} />
         </div>
         {!allDay && (
-          <>
-            <label style={{ ...labelStyle, marginTop: 10 }}>Duration</label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input type="number" min={0} max={24} value={durationHours} onChange={(e) => setDurationHours(e.target.value === "" ? 0 : Number(e.target.value))} style={{ ...inputStyle, width: 70 }} />
-              <span style={{ fontSize: 12.5, color: "#93A0AD" }}>hrs</span>
-              <input type="number" min={0} max={59} step={5} value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value === "" ? 0 : Number(e.target.value))} style={{ ...inputStyle, width: 70 }} />
-              <span style={{ fontSize: 12.5, color: "#93A0AD" }}>min</span>
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Starts</label>
+              <input type="time" value={time} onChange={(e) => changeStart(e.target.value)} style={inputStyle} />
             </div>
-          </>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Ends</label>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
         )}
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5568", marginTop: 10 }}>
           <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
