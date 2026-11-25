@@ -173,7 +173,7 @@ export default function EduSessionsModal({ item, col, sessions, onClose, onMarkD
           </>
         )}
 
-        {item.type !== "Homework" && (
+        {item.type === "Assignment" && (
           <div style={{ borderTop: "1px solid #F0F0F0", paddingTop: 12, marginBottom: 14 }}>
             {!showAI ? (
               <button
