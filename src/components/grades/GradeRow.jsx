@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronsRight } from "lucide-react";
 import { BORDER, SURFACE } from "../../lib/constants";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle } from "../../lib/styles";
@@ -115,11 +116,12 @@ export default function GradeRow({ item, col, categories, onSetScore, onSetCateg
           {onSetNextTerm && (
             <button
               onClick={() => onSetNextTerm(item.id, true)}
-              title="This is actually for next term — don't count it toward this one yet"
+              title="Actually for next term — don't count it toward this one"
+              aria-label="Move to next term"
               className="btn-nextterm"
-              style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: "4px 2px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "underline", textDecorationColor: "#D8DEE4", textUnderlineOffset: 2 }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: 4, display: "flex" }}
             >
-              Next term
+              <ChevronsRight size={15} strokeWidth={2.25} />
             </button>
           )}
           <button onClick={() => onRemove(item.id, "one")} className="btn-delete" style={deleteBtn}>×</button>

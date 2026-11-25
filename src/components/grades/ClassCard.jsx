@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsRight, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { formatShortDate } from "../../lib/dateHelpers";
 import { deleteBtn, ghostBtn, inputStyle, primaryBtn } from "../../lib/styles";
@@ -381,11 +381,12 @@ export default function ClassCard({
                       {onSetItemNextTerm && (
                         <button
                           onClick={() => onSetItemNextTerm(it.id, true)}
-                          title="This is actually for next term — don't count it toward this one yet"
+                          title="Actually for next term — don't count it toward this one"
+                          aria-label={`Move ${it.title} to next term`}
                           className="btn-nextterm"
-                          style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: "4px 2px", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", textDecoration: "underline", textDecorationColor: "#D8DEE4", textUnderlineOffset: 2 }}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#93A0AD", padding: 4, display: "flex" }}
                         >
-                          Next term
+                          <ChevronsRight size={15} strokeWidth={2.25} />
                         </button>
                       )}
                     </div>
