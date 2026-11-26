@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Pause, Pencil, Play, RotateCcw, X } from "lucide-react";
+import { Check, Minimize2, Pause, PictureInPicture2, Pencil, Play, RotateCcw, X } from "lucide-react";
 import { BORDER, CATEGORY_COLOR_SWATCHES, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, THEME_PRESETS, TONE, serifFont } from "../../lib/constants";
 import { addDays, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority } from "../../lib/taskPriority";
@@ -232,6 +232,47 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   };
+  // "Pop out" into a real always-on-top OS window via the Document Picture-in-Picture
+  // API (Chrome/Edge only — not in Safari/Firefox, and not available at all on the
+  // iPhone app) — the same mechanism a floating video/mini-player uses, just holding
+  // this card's markup instead of a <video>. The window shares this tab's own JS, so
+  // the timer keeps ticking and every button keeps working while it floats over
+  // another site/app entirely; it closes itself the moment this tab does.
+  const [pipWindow, setPipWindow] = useState(null);
+  const pipSupported = typeof window !== "undefined" && "documentPictureInPicture" in window;
+  const openPip = async () => {
+    if (!pipSupported || pipWindow) return;
+    const pip = await window.documentPictureInPicture.requestWindow({ width: 320, height: 420 });
+    pip.document.title = "Focus Timer";
+    pip.document.body.style.margin = "0";
+    pip.document.body.style.background = SURFACE;
+    // Copies every stylesheet into the new window's own (otherwise blank) document —
+    // it's a separate `document`, so none of this page's CSS reaches it on its own.
+    [...document.styleSheets].forEach((sheet) => {
+      try {
+        const rules = [...sheet.cssRules].map((r) => r.cssText).join("");
+        const style = pip.document.createElement("style");
+        style.textContent = rules;
+        pip.document.head.appendChild(style);
+      } catch {
+        if (sheet.href) {
+          const link = pip.document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = sheet.href;
+          pip.document.head.appendChild(link);
+        }
+      }
+    });
+    pip.addEventListener("pagehide", () => setPipWindow(null), { once: true });
+    setPipWindow(pip);
+  };
+  // Closes the floating OS window itself the moment this timer goes away for real
+  // (session ended, task switched away from) — without this, the popped-out window
+  // would just sit there empty/frozen instead of disappearing along with the rest of
+  // the timer.
+  useEffect(() => {
+    return () => pipWindow?.close();
+  }, [pipWindow]);
   // The celebration screen replaces the timer face once you mark the task done — see
   // "Task Completed!" in the Figma kit. Distinct from `finished` (the timer running out
   // on its own): you can mark complete at any point, timer running or not.
@@ -585,7 +626,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     // Embedded (portalTarget) uses tighter sizing throughout — this card replaces
     // Dashboard's own compact idle picker the instant a session starts, so without this
     // it visibly balloons in that same slot right when you press Start.
-    const compact = !!portalTarget;
+    const compact = !!portalTarget || !!pipWindow;
     const ringSize = compact ? 106 : 148;
     const ringRadius = compact ? 44 : 64;
     const ringStroke = compact ? 6 : 9;
@@ -596,7 +637,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
               {phase === "work" ? (maxBlocks > 1 ? `Focus Session · Round ${blocksCompleted + 1} of ${maxBlocks}` : "Focus Session") : "Break"}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {task.id && onOpenDetail && (
+              {task.id && onOpenDetail && !pipWindow && (
                 <button
                   onClick={() => { onOpenDetail(task.id); onClose(); }}
                   title="Edit this task"
@@ -604,6 +645,19 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
                 >
                   <Pencil size={13} strokeWidth={2.2} />
                 </button>
+              )}
+              {/* Document Picture-in-Picture — Chrome/Edge only, so this just doesn't
+                  render anywhere it isn't supported (Safari, Firefox, the iPhone app). */}
+              {pipSupported && (
+                pipWindow ? (
+                  <button onClick={() => pipWindow.close()} title="Bring back into the app" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}>
+                    <Minimize2 size={13} strokeWidth={2.2} />
+                  </button>
+                ) : (
+                  <button onClick={openPip} title="Pop out — keeps floating over other tabs/apps" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}>
+                    <PictureInPicture2 size={13} strokeWidth={2.2} />
+                  </button>
+                )
               )}
               <button onClick={onClose} title="Close" style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", padding: 2, display: "flex" }}>
                 <X size={15} strokeWidth={2.2} />
@@ -814,6 +868,9 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
       </div>
     );
 
+    // Popped out: fills the whole floating OS window rather than sitting in a fixed
+    // corner box of its own — the window itself IS the box.
+    if (pipWindow) return createPortal(<div style={{ padding: 10, boxSizing: "border-box" }}>{card}</div>, pipWindow.document.body);
     if (portalTarget) return createPortal(card, portalTarget);
     return (
       <div
