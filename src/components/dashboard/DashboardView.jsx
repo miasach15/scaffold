@@ -469,7 +469,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // scheduled for today yet.", no habits) right up until the real data landed a beat
   // later. The greeting/date above is real (profile's already in hand); only the
   // data-shaped body below is placeholder, roughly mirroring what's about to replace it.
-  if (loading) {
+  //
+  // Only for the very FIRST load, though — those same hooks also silently re-fetch in
+  // the background every time this tab regains focus (see useRealtimeSync), to pick up
+  // whatever changed on another device while this one was away. Without this guard,
+  // every single tab switch flashed the whole page back to this skeleton and loading
+  // placeholders the instant you returned, reading exactly like the page had reloaded —
+  // once real data's actually on screen, a background refresh should update it quietly
+  // in place, never yank the page back to a loading state to do it.
+  const everLoadedRef = useRef(false);
+  if (!loading) everLoadedRef.current = true;
+  if (loading && !everLoadedRef.current) {
     return (
       <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <div style={{ ...flatSection, padding: "14px 0 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
