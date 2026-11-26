@@ -22,6 +22,7 @@ import FreehandIcon from "../shared/FreehandIcon";
 import BrainDumpModal from "./BrainDumpModal";
 import WorkTitle from "../shared/WorkTitle";
 import StepNotes from "../shared/StepNotes";
+import Skeleton from "../shared/Skeleton";
 
 // A timed task/event row in "Today's Scaffolded Steps" — a colored timeline dot (solid
 // for the first/soonest item, a paler ring for the rest) connected by a line down to the
@@ -52,7 +53,7 @@ function greeting() {
   return "Good evening";
 }
 
-export default function DashboardView({ profile, events, tasks, habits, eduItems, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, onCheckOffStep, onCheckOffNoteStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
+export default function DashboardView({ profile, events, tasks, habits, eduItems, loading, onSetHabitDone, onToggleDone, setView, onSelectDay, onStartFocus, onAddTask, onPushTomorrow, onReorderTasks, autoOpenBrainDump, onAutoOpenBrainDumpHandled, hasActiveFocusSession, focusSlotRef, onCheckOffStep, onCheckOffNoteStep, goalActionChips, goalMilestoneChips, onToggleGoalChip }) {
   const CATEGORY_COLORS = useCategoryColors();
   // Reordering "Anytime today" uses pointer events, not native HTML5 drag-and-drop —
   // native drag doesn't work at all on touch in most mobile browsers, and gives no
@@ -459,6 +460,58 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   }, [autoOpenBrainDump, onAutoOpenBrainDumpHandled]);
 
   const firstName = (profile?.name || "").trim().split(" ")[0];
+
+  // Tasks/events/habits/eduItems each fetch independently of the profile that already
+  // gated the rest of the app in — without this, the moment profile resolves this page
+  // mounted and briefly rendered as if everything were genuinely empty ("Nothing
+  // scheduled for today yet.", no habits) right up until the real data landed a beat
+  // later. The greeting/date above is real (profile's already in hand); only the
+  // data-shaped body below is placeholder, roughly mirroring what's about to replace it.
+  if (loading) {
+    return (
+      <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ ...flatSection, padding: "14px 0 20px", marginBottom: 20, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+          <div style={{ fontFamily: serifFont, fontSize: 26, color: INK, letterSpacing: -0.3 }}>
+            {greeting()}{firstName ? `, ${firstName}` : ""}
+          </div>
+          <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>
+            {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 28, flex: 1, minHeight: 0 }} className="dashboard-grid">
+          <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+            <div className="dv-hero" style={{ background: HERO_BG, border: `1px solid ${BORDER}`, borderRadius: 18, padding: "26px 26px 24px" }}>
+              <Skeleton width={150} height={24} style={{ marginBottom: 22 }} />
+              {[78, 60, 45].map((pct, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: i === 2 ? 0 : 18 }}>
+                  <Skeleton width={20} height={20} radius={6} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Skeleton width={`${pct}%`} height={13} style={{ marginBottom: 6 }} />
+                    <Skeleton width={`${Math.max(pct - 35, 20)}%`} height={10} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="dv-col" style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+            <div>
+              <Skeleton width={88} height={10} style={{ marginBottom: 12 }} />
+              <Skeleton width={106} height={106} radius={53} style={{ margin: "0 auto" }} />
+            </div>
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
+              <Skeleton width={56} height={10} style={{ marginBottom: 12 }} />
+              {[1, 2].map((i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <Skeleton width={16} height={16} radius={4} />
+                  <Skeleton width={`${55 - i * 10}%`} height={12} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dv-root" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>

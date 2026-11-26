@@ -77,7 +77,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   const { events, loading: eventsLoading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
   const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, restoreTasks, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
   const { goals, addGoal, removeGoal, renameGoal, setGoalDeadline, addMilestone, removeMilestone, renameMilestone, setMilestoneDueDate, addAction, moveAction, setActionDone, removeAction, renameAction, setActionDueDate, renameCategoryEverywhere: renameCategoryInGoals } = useGoals(userId, tasks, events);
-  const { habits, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
+  const { habits, loading: habitsLoading, addHabit, addHabitsBulk, removeHabit, setDone: setHabitDone } = useHabits(userId);
   const { lists, addList, removeList, renameList, addItem: addListItem, setItemDone: setListItemDone, removeItem: removeListItem, renameItem: renameListItem } = useLists(userId);
   const { eduItems, loading: eduItemsLoading, addEduItems, setDone: setEduDoneRaw, removeItem: removeEduItemRaw, restoreItems: restoreEduItems, setScore: setEduScore, setGradeCategory: setEduGradeCategory, setItemWeight: setEduItemWeight, setDeadline: setEduDeadlineRaw, setFlexible: setEduFlexible, setNextTerm: setEduNextTerm, clearNextTermFlags, setSubject: setEduSubject } = useEduItems(userId);
   // A little celebration the moment a whole assignment actually finishes — not a mini-
@@ -1039,6 +1039,12 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
            ancestor of one), unlike ModalPortal's wrapper above. */
         @keyframes toastSlideIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         @keyframes toastSlideOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+        /* Shared by every loading skeleton (see shared/Skeleton.jsx) — a gentle pulse,
+           not a sweeping shimmer, so it reads as "still settling" rather than demanding
+           attention. Backs off to a static tone under the catch-all reduced-motion rule
+           below, same as every other animation in this file. */
+        .skeleton-block { background: var(--border, #D9D3E6); opacity: 0.5; animation: skeletonPulse 1.3s ease-in-out infinite; }
+        @keyframes skeletonPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.75; } }
         /* Sidebar nav is a column (mobile top bar, then page content) below 861px, and a
            row (fixed-width rail beside content) at desktop widths — see Sidebar.jsx. */
         .app-shell { flex-direction: column; }
@@ -1087,6 +1093,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             tasks={visibleTasks}
             habits={habits}
             eduItems={eduItems}
+            loading={tasksLoading || eventsLoading || eduItemsLoading || habitsLoading}
             onSetHabitDone={setHabitDone}
             onToggleDone={setTaskDone}
             setView={setView}
