@@ -9,7 +9,7 @@ import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import Checkbox from "../shared/Checkbox";
 import ModalPortal from "../shared/ModalPortal";
 import StepNotes from "../shared/StepNotes";
-import { saveFocusSession, clearFocusSession } from "../../lib/focusSessionStore";
+import { loadFocusSession, saveFocusSession, clearFocusSession } from "../../lib/focusSessionStore";
 
 // Brand-kit coral (Figma "Brand & Identity" → Coral Main #FF9286, same hue the
 // celebration screen's quote below already uses) — only a FALLBACK now, for a task
@@ -183,33 +183,48 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // starting default, not a cap on what any one round can be. A `resumeState` (see
   // focusSessionStore.js) means the tab got reloaded mid-session — App.jsx found a saved
   // session for this same task and is handing it back here instead of starting fresh.
-  const [roundMinutes, setRoundMinutes] = useState(() => resumeState?.roundMinutes ?? DEFAULT_ROUND_MIN);
+  // The `resumeState` PROP only ever gets set once, at the very first openFocus() call —
+  // it's never refreshed after that. If this component instance itself ever remounts
+  // for some other reason while the SAME task is still being timed (it used to, every
+  // tab switch, before the loading-gate fix this was reported alongside — see App.jsx/
+  // DashboardView's `everLoadedRef` guards), relying on that stale prop alone would
+  // silently reset to a fresh, not-running round instead of picking back up — the prop
+  // says "this wasn't a resume" even on a remount that very much was one. Falling back to
+  // whatever's actually in localStorage for this exact task, right here at mount, makes
+  // resuming correct regardless of why this component is (re)mounting, not just the one
+  // cause that's fixed today.
+  const [effectiveResumeState] = useState(() => {
+    if (resumeState) return resumeState;
+    const saved = loadFocusSession();
+    return saved && saved.taskId === task.id ? saved : null;
+  });
+  const [roundMinutes, setRoundMinutes] = useState(() => effectiveResumeState?.roundMinutes ?? DEFAULT_ROUND_MIN);
   const initial = roundMinutes * 60;
   // How many rounds this task gets before the app actually asks you to switch — scaled
   // to the task's own estimate AND whatever round length is set (see computeMaxBlocks),
   // not a flat number.
   const maxBlocks = useMemo(() => computeMaxBlocks(task.duration, roundMinutes), [task.duration, roundMinutes]);
   const maxSessionMin = maxBlocks * roundMinutes;
-  const [totalSeconds, setTotalSeconds] = useState(() => resumeState?.totalSeconds ?? initial);
+  const [totalSeconds, setTotalSeconds] = useState(() => effectiveResumeState?.totalSeconds ?? initial);
   // A resumed session that was actively running recomputes its true remaining time from
   // the real clock against the saved end timestamp (same math the tick/visibility-change
   // handlers below already use) rather than trusting a stale saved "seconds left" — that's
   // what makes it correct no matter how long the tab was actually gone.
   const [remaining, setRemaining] = useState(() => {
-    if (!resumeState) return initial;
-    if (resumeState.running && resumeState.endTime) return Math.max(0, Math.round((resumeState.endTime - Date.now()) / 1000));
-    return resumeState.remaining ?? initial;
+    if (!effectiveResumeState) return initial;
+    if (effectiveResumeState.running && effectiveResumeState.endTime) return Math.max(0, Math.round((effectiveResumeState.endTime - Date.now()) / 1000));
+    return effectiveResumeState.remaining ?? initial;
   });
-  const [running, setRunning] = useState(() => !!resumeState?.running);
+  const [running, setRunning] = useState(() => !!effectiveResumeState?.running);
   // Whether the timer's currently running the work round or a break — `totalSeconds`/
   // `remaining` above are reused for both. Every work round is the same length
   // (`roundMinutes`), so resuming after a break just restores that directly.
-  const [phase, setPhase] = useState(() => resumeState?.phase ?? "work"); // "work" | "break"
+  const [phase, setPhase] = useState(() => effectiveResumeState?.phase ?? "work"); // "work" | "break"
   // How many full work rounds have already chained on this task this session — a ref
   // (read inside the countdown tick below, which shouldn't re-subscribe every round)
   // mirrored into state purely so the render can show "Round 2 of 3".
-  const blocksCompletedRef = useRef(resumeState?.blocksCompleted ?? 0);
-  const [blocksCompleted, setBlocksCompleted] = useState(() => resumeState?.blocksCompleted ?? 0);
+  const blocksCompletedRef = useRef(effectiveResumeState?.blocksCompleted ?? 0);
+  const [blocksCompleted, setBlocksCompleted] = useState(() => effectiveResumeState?.blocksCompleted ?? 0);
   // Mirrors phase/roundMinutes/totalSeconds into a ref every render — read by the
   // per-tick heartbeat save below (see `tick`), whose own closure is only recreated
   // when `running` itself flips, not on every round/break transition. Without this,
@@ -304,7 +319,7 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // from `resumeState` when this mount is itself a resume (see above) — a restored
   // session that was actively running needs this set from the first tick, not just from
   // the next toggleRunning.
-  const endTimeRef = useRef(resumeState?.running && resumeState?.endTime ? resumeState.endTime : null);
+  const endTimeRef = useRef(effectiveResumeState?.running && effectiveResumeState?.endTime ? effectiveResumeState.endTime : null);
 
   const ensureAudioCtx = () => {
     if (!audioCtxRef.current) {
