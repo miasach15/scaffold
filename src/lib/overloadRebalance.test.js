@@ -44,4 +44,17 @@ describe("planOverloadRebalance — never moves the mandatory day-before-deadlin
     expect(ops[0].taskId).toBe("a");
     expect(ops[0].toDate).not.toBe("2026-09-15");
   });
+
+  it("never pulls an overloaded future session back to today just because today is empty", () => {
+    // Today (09-10) has nothing scheduled at all — the emptiest day in the whole
+    // window — but the overloaded session is on 09-15. It should only ever move
+    // FORWARD from 09-15, never back to the emptier day behind it.
+    const tasks = [
+      { id: "a", date: "2026-09-15", duration: 90, done: false, start: null, groupId: "g1", groupDueDate: "2026-09-25" },
+      { id: "busy", date: "2026-09-15", duration: 500, done: false, start: null },
+    ];
+    const ops = planOverloadRebalance(tasks, [], [], 400, "2026-09-10");
+    expect(ops.length).toBe(1);
+    expect(ops[0].toDate >= "2026-09-15").toBe(true);
+  });
 });

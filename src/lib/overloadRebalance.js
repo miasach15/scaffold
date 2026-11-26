@@ -67,7 +67,12 @@ export function planOverloadRebalance(tasks, events, eduItems, capacityMinutes, 
         .map((t) => t.date)
     );
 
-    let cursor = todayISO;
+    // Starts searching from the session's OWN current day, never from today — relieving
+    // an overloaded day is "push the excess further out to a lighter day ahead," never
+    // "pull it backward to an earlier, emptier one." Today being empty (everything else
+    // already finished) isn't an invitation to silently show tomorrow's work as due
+    // today; it only ever moves forward or spreads sideways among equally-distant days.
+    let cursor = date;
     let bestDate = null;
     let bestLoad = Infinity;
     while (cursor <= lastWorkDay) {

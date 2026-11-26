@@ -5,7 +5,7 @@
 // are plain YYYY-MM-DD strings throughout, same convention as the rest of the app.
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { getLocalToday } from "./dateHelpers";
-import { applyOverdueSessionOps, mergeAbsorbedNotes, planOverdueSessionReflow, planPushTaskToNextDay } from "./overdueSessions";
+import { applyOverdueSessionOps, mergeAbsorbedNotes, planEarlyCompletionShift, planOverdueSessionReflow, planPushTaskToNextDay } from "./overdueSessions";
 
 // A minimal session-task factory — only the fields planOverdueSessionReflow reads.
 const session = (id, date, { done = false, notes = null, eduId = "e1" } = {}) => ({ id, eduId, date, done, notes });
@@ -342,5 +342,54 @@ describe("planPushTaskToNextDay — Dashboard's manual 'push to tomorrow' button
     ];
     const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
     expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-02" }]);
+  });
+});
+
+describe("planEarlyCompletionShift — finishing a breakdown step ahead of schedule", () => {
+  it("compacts the remaining steps one slot earlier when the earliest one finishes early", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-02", done: false, groupId: "g1" }, // finished today (2026-10-01), a day early
+      { id: "b", date: "2026-10-04", done: false, groupId: "g1" },
+      { id: "c", date: "2026-10-06", done: false, groupId: "g1" },
+    ];
+    const ops = planEarlyCompletionShift(tasks, "a", "2026-10-01");
+    expect(ops).toEqual([
+      { taskId: "b", fromDate: "2026-10-04", toDate: "2026-10-02" },
+      { taskId: "c", fromDate: "2026-10-06", toDate: "2026-10-04" },
+    ]);
+  });
+
+  it("does nothing for a plain task with no groupId/eduId", () => {
+    const tasks = [{ id: "a", date: "2026-10-05", done: false }];
+    expect(planEarlyCompletionShift(tasks, "a", "2026-10-01")).toEqual([]);
+  });
+
+  it("does nothing when the step finished on or after its own scheduled day", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-01", done: false, groupId: "g1" },
+      { id: "b", date: "2026-10-04", done: false, groupId: "g1" },
+    ];
+    expect(planEarlyCompletionShift(tasks, "a", "2026-10-01")).toEqual([]);
+  });
+
+  it("only compacts siblings scheduled AFTER the one that just finished, not ones already earlier", () => {
+    const tasks = [
+      { id: "earlier", date: "2026-09-28", done: false, groupId: "g1" }, // already overdue/earlier, untouched
+      { id: "a", date: "2026-10-03", done: false, groupId: "g1" },
+      { id: "b", date: "2026-10-05", done: false, groupId: "g1" },
+    ];
+    const ops = planEarlyCompletionShift(tasks, "a", "2026-10-01");
+    expect(ops).toEqual([{ taskId: "b", fromDate: "2026-10-05", toDate: "2026-10-03" }]);
+  });
+
+  it("matches siblings by eduId the same way, ignoring done ones and other assignments", () => {
+    const tasks = [
+      { id: "a", date: "2026-10-02", done: false, eduId: "edu1" },
+      { id: "done-sibling", date: "2026-10-03", done: true, eduId: "edu1" }, // already done — not movable
+      { id: "b", date: "2026-10-04", done: false, eduId: "edu1" },
+      { id: "other", date: "2026-10-03", done: false, eduId: "edu2" }, // different assignment entirely
+    ];
+    const ops = planEarlyCompletionShift(tasks, "a", "2026-10-01");
+    expect(ops).toEqual([{ taskId: "b", fromDate: "2026-10-04", toDate: "2026-10-02" }]);
   });
 });

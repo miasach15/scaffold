@@ -50,8 +50,12 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
         {/* Steps used to only be visible by opening the note or starting a focus
             session — now the next one (and, expanded, the rest) shows right here,
             same as Dashboard's own rows already give it. */}
+        {/* Muted gray, not the category's own bold text color — same restraint
+            Dashboard's identical rows already give this (only its one featured task
+            gets a bold tint), since the category color's already carrying the full
+            weight of the border/checkbox right next to it. */}
         {!t.done && t.notes && (
-          <StepNotes notes={t.notes} title={t.title} taskId={t.id} checkedSteps={t.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(t.id, step) : undefined} color={col.text} fontSize={11} />
+          <StepNotes notes={t.notes} title={t.title} taskId={t.id} checkedSteps={t.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(t.id, step) : undefined} fontSize={11} />
         )}
       </div>
       {onOpenFocus && (

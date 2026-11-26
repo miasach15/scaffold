@@ -202,6 +202,34 @@ export function planPushTaskToNextDay(tasks, events, eduItems, taskId, capacityM
   return [{ type: "move", taskId: task.id, toDate: day }];
 }
 
+// Plans what happens when a breakdown step or Education work session finishes BEFORE
+// its own scheduled day — getting ahead, not just catching up. The remaining not-done
+// steps for that same assignment (matched by groupId or eduId) that were scheduled
+// AFTER it each compact one slot earlier, taking over the slot the step before it in
+// the sequence used to occupy (the one just-finished step's own slot becomes the first
+// of those). A plain task (no groupId/eduId) or a step finished on or after its own
+// scheduled day returns nothing — there's no "ahead of schedule" to collapse, and
+// nothing else to shift. Returns `{taskId, fromDate, toDate}` so a caller can snapshot
+// `fromDate` before applying, and put everything back exactly where it was if the
+// completion itself gets undone (see App.jsx's requestStepDone/undoStepDone).
+export function planEarlyCompletionShift(tasks, completedTaskId, todayISO) {
+  const t = (tasks || []).find((x) => x.id === completedTaskId);
+  if (!t || !t.date || t.date <= todayISO) return [];
+  if (!t.groupId && !t.eduId) return [];
+  const siblings = (tasks || [])
+    .filter((x) => x.id !== t.id && !x.done && x.date && x.date > t.date && ((t.groupId && x.groupId === t.groupId) || (t.eduId && x.eduId === t.eduId)))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (siblings.length === 0) return [];
+  const slots = [t.date, ...siblings.slice(0, -1).map((s) => s.date)];
+  return siblings.map((s, i) => ({ taskId: s.id, fromDate: s.date, toDate: slots[i] }));
+}
+
+// Applies (or, with ops built from the OPPOSITE fromDate/toDate — see undoStepDone —
+// reverses) a plan from planEarlyCompletionShift.
+export async function applyEarlyCompletionShift(ops, setTaskDate) {
+  for (const op of ops) await setTaskDate(op.taskId, op.toDate);
+}
+
 // Applies a plan from planOverdueSessionReflow in order. Keeps its own running notes
 // per task id (rather than re-reading the `tasks` array, which stays fixed for the
 // duration of this call) so two absorbs into the same session within one pass merge

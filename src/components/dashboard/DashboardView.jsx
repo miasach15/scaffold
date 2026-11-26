@@ -436,6 +436,16 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // Calendar yet at all. The empty "Today's steps" card otherwise just reads as
   // unfinished; a guided first action gives it somewhere to go instead.
   const isFirstUse = tasks.length === 0 && eduItems.length === 0 && habits.length === 0 && events.length === 0;
+  // Once everything actually due today is finished, the earliest not-yet-due step of
+  // any multi-day assignment/breakdown — offered, never forced, and never moved onto
+  // today just because today's empty (see planOverloadRebalance). Starting it doesn't
+  // touch its real date at all; only actually finishing it today does (see App.jsx's
+  // requestStepDone/planEarlyCompletionShift), which is what pulls the rest of that
+  // same assignment's remaining steps one slot earlier to fill the gap.
+  const allDoneToday = scaffoldedTotalCount > 0 && todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0;
+  const upcomingHeadStart = allDoneToday
+    ? tasks.filter((t) => !t.done && t.date && t.date > todayISO && (t.groupId || t.eduId)).sort((a, b) => a.date.localeCompare(b.date))[0] || null
+    : null;
   const [showBrainDump, setShowBrainDump] = useState(false);
   // Right after onboarding, the very first Dashboard visit opens Brain Dump on its own —
   // the second of the two "Up next" steps the onboarding Done screen just promised.
@@ -534,6 +544,20 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
                   <FreehandIcon name="fireworks-2" size={52} color={PRIMARY} style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>That's everything for today.</div>
+                  {upcomingHeadStart && onStartFocus && (
+                    <div style={{ marginTop: 14 }}>
+                      <button
+                        onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
+                        className="hoverable"
+                        style={ghostBtn}
+                      >
+                        Get a head start on "{upcomingHeadStart.title}"?
+                      </button>
+                      <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>
+                        Still due {formatShortDate(upcomingHeadStart.date)} — only moves up if you actually finish it today
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <EmptyState text="Nothing scheduled for today yet." />

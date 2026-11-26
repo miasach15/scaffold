@@ -47,7 +47,7 @@ const EducationView = lazy(() => import("./components/education/EducationView"))
 const GradesView = lazy(() => import("./components/grades/GradesView"));
 
 import { addDays, assessmentStudyDates, dateRangeISO, dayBefore, distributeDatesByLoad, repeatDates, sessionMinutesByLoad, startOfWeek, studyRampMinutes, timeToDecimal, toISO } from "./lib/dateHelpers";
-import { applyOverdueSessionOps, planOverdueSessionReflow, planPushTaskToNextDay } from "./lib/overdueSessions";
+import { applyEarlyCompletionShift, applyOverdueSessionOps, planEarlyCompletionShift, planOverdueSessionReflow, planPushTaskToNextDay } from "./lib/overdueSessions";
 import { applyOverloadRebalance, planOverloadRebalance } from "./lib/overloadRebalance";
 import { DEFAULT_CATEGORY_COLOR_KEYS, FALLBACK_CATEGORY_COLOR_ROTATION, INK, PAPER_BG, PRIMARY, resolveCategoryColor, resolveTheme } from "./lib/constants";
 import { shouldAutoCompleteEduItem } from "./lib/eduAutoComplete";
@@ -392,20 +392,38 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
   // revert everywhere. Undo instead reverses an already-real write (sets it back to not
   // done), which is just as cheap and never loses data to a mistimed reload.
   const [pendingDoneStepId, setPendingDoneStepId] = useState(null);
+  // What planEarlyCompletionShift moved as a SIDE EFFECT of this particular step
+  // finishing early (see below) — {taskId, fromDate, toDate} per sibling it compacted
+  // forward. Undo needs these snapshotted, not recomputed, since recomputing after the
+  // fact can't tell "moved by this completion" apart from "moved for some other reason
+  // in between" the way just remembering where they actually were can.
+  const [pendingShiftOps, setPendingShiftOps] = useState([]);
   const stepDoneUndo = useUndoableDelete();
   const requestStepDone = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
     setTaskDone(id, true);
+    // Finishing a step before its own scheduled day — getting ahead, not just catching
+    // up — compacts the rest of this same assignment's remaining steps one slot
+    // earlier (see planEarlyCompletionShift). A plain task, or a step finished on/after
+    // its own day, has nothing to shift.
+    const shiftOps = planEarlyCompletionShift(tasks, id, toISO(new Date()));
+    if (shiftOps.length > 0) applyEarlyCompletionShift(shiftOps, setTaskDate);
     setPendingDoneStepId(id);
+    setPendingShiftOps(shiftOps);
     stepDoneUndo.requestDelete(`"${t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}" checked off`, () => {
       setPendingDoneStepId((cur) => (cur === id ? null : cur));
+      setPendingShiftOps([]);
     });
   };
   const undoStepDone = () => {
     if (stepDoneUndo.undo() && pendingDoneStepId) {
       setTaskDone(pendingDoneStepId, false);
+      if (pendingShiftOps.length > 0) {
+        applyEarlyCompletionShift(pendingShiftOps.map((op) => ({ taskId: op.taskId, toDate: op.fromDate })), setTaskDate);
+      }
       setPendingDoneStepId(null);
+      setPendingShiftOps([]);
     }
   };
 
