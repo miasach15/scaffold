@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Flame, GripVertical, NotebookPen, Play, SkipForward } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
-import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, SURFACE, TONE, serifFont } from "../../lib/constants";
+import { BORDER, INK, MUTED, PRIMARY, PRIMARY_DARK, PRIMARY_TINT, SURFACE, TONE, serifFont } from "../../lib/constants";
 import { ghostBtn, primaryBtn } from "../../lib/styles";
 
 // Flat experiment: no white card fill/border/shadow, sections just sit directly on the
@@ -741,17 +741,22 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 rather than duplicated inside both branches above. */}
             {todayClear && upcomingHeadStart && onStartFocus && (
               <div style={{ textAlign: "center", padding: "16px 0 2px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
-                {/* Same solid, rounded-rect button every real action in this app uses
-                    (primaryBtn) — not a pill, not a flat gray outline. The due-date
-                    caveat lives in the tooltip instead of sitting under it as its own
-                    line; the button's own wording already says what it does. */}
+                {/* A rounded rect, not a pill — but a soft tint, not the solid/bold
+                    primaryBtn fill: this is an optional extra, not the page's one real
+                    call to action, so it reads quieter than that. The due-date caveat
+                    lives in the tooltip instead of sitting under it as its own line;
+                    the button's own wording already says what it does. */}
                 <button
                   onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
                   className="hoverable"
                   title={`Still due ${formatShortDate(upcomingHeadStart.date)} — only moves up if you finish it today`}
-                  style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 7 }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "10px 16px", borderRadius: 14, border: "none", background: PRIMARY_TINT, color: PRIMARY_DARK,
+                    fontSize: 13, fontWeight: 600, cursor: "pointer", minHeight: 40,
+                  }}
                 >
-                  <Play size={12} color="#fff" /> Get a head start on "{upcomingHeadStart.title}"
+                  <Play size={12} color={PRIMARY_DARK} /> Get a head start on "{upcomingHeadStart.title}"
                 </button>
               </div>
             )}
