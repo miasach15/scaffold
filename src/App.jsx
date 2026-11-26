@@ -73,6 +73,8 @@ function FullScreenMessage({ text }) {
 }
 
 function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
+  // Whether profile has loaded at least once — see the full-screen loading gate below.
+  const profileEverLoadedRef = useRef(false);
   const { profile, loading: profileLoading, updateProfile } = useProfile(userId);
   const { events, loading: eventsLoading, addEvents, updateEvent, removeEvent, renameCategoryEverywhere: renameCategoryInEvents } = useEvents(userId);
   const { tasks, loading: tasksLoading, addTask, setTaskDone: setTaskDoneRaw, setTaskCategory, renameTask, setTaskDate, setTaskStart, setTaskDuration, setTaskNotes, toggleCheckedStep, removeTask, restoreTasks, removeTasksByEduId, rescheduleTask, reorderTasks, renameCategoryEverywhere: renameCategoryInTasks, setGroupDueDate } = useTasks(userId);
@@ -846,7 +848,14 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
     addEduSession(eduId, sessionTitle, date, "17:00", 60, true);
   };
 
-  if (profileLoading || !profile) return <FullScreenMessage text="Loading your data..." />;
+  // Only the genuine first load shows this — profile also quietly re-fetches every time
+  // the tab regains focus (see useRealtimeSync), and without this guard that flipped
+  // profileLoading back to true on every single tab switch, replacing the ENTIRE app
+  // (whatever page you were on) with this full-screen message instead of just updating
+  // profile in place once the fresh copy lands. Same fix as DashboardView's own skeleton
+  // guard, for the same reason.
+  if (!profileLoading) profileEverLoadedRef.current = true;
+  if ((profileLoading && !profileEverLoadedRef.current) || !profile) return <FullScreenMessage text="Loading your data..." />;
   if (!profile.onboarded) return <OnboardingQuiz onComplete={completeOnboarding} />;
 
   const theme = resolveTheme(profile.themeColor);
