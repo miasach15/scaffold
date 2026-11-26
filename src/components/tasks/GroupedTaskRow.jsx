@@ -13,7 +13,7 @@ import { INK, SURFACE } from "../../lib/constants";
 // is its own click target (not the expand toggle) — click it to change it, same native
 // date/time inputs every other due-date editor in the app uses; the not-done steps
 // automatically reflow to the new date (see TasksView's reflowGroupDueDate).
-export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onCheckOffStep, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onSetGroupDeadline, onAddStep }) {
+export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart, remainingItems, doneCount, total, onToggleDone, onCheckOffStep, onCheckOffNoteStep, onSetCategory, onRemove, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onSetGroupDeadline, onAddStep }) {
   const CATEGORY_COLORS = useCategoryColors();
   const [expanded, setExpanded] = useState(false);
   const [editingDue, setEditingDue] = useState(false);
@@ -89,6 +89,7 @@ export default function GroupedTaskRow({ groupTitle, groupDueDate, groupDueStart
               // instant it's tapped — unchecking one back off (done -> not done) stays
               // instant, same as ever, since there's nothing to protect there.
               onToggleDone={(id, done) => (done && onCheckOffStep ? onCheckOffStep(id) : onToggleDone(id, done))}
+              onCheckOffNoteStep={onCheckOffNoteStep}
               onSetCategory={onSetCategory}
               onRemove={onRemove}
               onOpenDetail={onOpenDetail}

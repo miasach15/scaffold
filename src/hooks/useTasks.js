@@ -76,10 +76,23 @@ export function useTasks(userId) {
   // long that session actually ran, not an estimate. Left undefined for every other way
   // a task gets checked off (nothing real to record), so it's never overwritten with a
   // guess.
+  // Finishing a task drops it out of Dashboard's drag-orderable "Anytime today" list —
+  // its old orderIndex/orderSetDate (see reorderTasks below) only ever described its spot
+  // among THAT day's visible set. Leaving it in place meant un-checking a task later
+  // brought back a now-meaningless index that could collide with whatever the remaining
+  // tasks had since been reordered to, scrambling the whole list's order the instant one
+  // task went done-then-undone instead of just reinserting it by date like everything
+  // else never manually dragged. Cleared on the way to done, not back on undone — nothing
+  // to clear there, it's already gone.
   const setTaskDone = useCallback(async (id, done, actualMinutes) => {
     const hasActual = actualMinutes !== undefined;
-    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done, ...(hasActual ? { actualMinutes } : {}) } : t)));
-    const { error } = await supabase.from("tasks").update(hasActual ? { done, actual_minutes: actualMinutes } : { done }).eq("id", id);
+    const clearOrder = done;
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, done, ...(hasActual ? { actualMinutes } : {}), ...(clearOrder ? { orderIndex: null, orderSetDate: null } : {}) } : t)));
+    const { error } = await supabase.from("tasks").update({
+      done,
+      ...(hasActual ? { actual_minutes: actualMinutes } : {}),
+      ...(clearOrder ? { order_index: null, order_set_date: null } : {}),
+    }).eq("id", id);
     if (error) reportSaveError();
   }, []);
 

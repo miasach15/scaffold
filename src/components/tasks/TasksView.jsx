@@ -18,7 +18,7 @@ import { SURFACE } from "../../lib/constants";
 
 const fieldLabelStyle = { fontSize: 10.5, color: "#93A0AD", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 };
 
-export default function TasksView({ tasks, events, onAddTask, onToggleDone, onCheckOffStep, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
+export default function TasksView({ tasks, events, onAddTask, onToggleDone, onCheckOffStep, onCheckOffNoteStep, onSetCategory, onRemove, onOpenTaskDetail, onSetDate, onRescheduleTask, onSetStart, onUpdateGroupDueDate, onOpenFocus, eduItems, onSetEduDone, onUpdateEduDeadline, onAddEduSession, onGoToEducation, goalActionChips, goalMilestoneChips, onToggleGoalChip, onGoToGoals, educationCategory }) {
   const CATEGORY_COLORS = useCategoryColors();
   const categoryKeys = useCategoryKeys();
   const [title, setTitle] = useState("");
@@ -244,7 +244,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onCh
 
   const renderComboItem = (item) => {
     if (item.type === "single") {
-      return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onOpenFocus={onOpenFocus} onSetDate={onSetDate} onSetStart={onSetStart} showDate />;
+      return <TaskRow key={item.task.id} t={item.task} onToggleDone={handleToggleDone} onSetCategory={onSetCategory} onRemove={onRemove} onOpenDetail={onOpenTaskDetail} onOpenFocus={onOpenFocus} onSetDate={onSetDate} onSetStart={onSetStart} onCheckOffNoteStep={onCheckOffNoteStep} showDate />;
     }
     if (item.type === "edu") {
       const sessions = tasks.filter((t) => t.eduId === item.edu.id && (!t.done || justDone.has(t.id))).sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -288,6 +288,7 @@ export default function TasksView({ tasks, events, onAddTask, onToggleDone, onCh
         total={item.group.total}
         onToggleDone={handleToggleDone}
         onCheckOffStep={onCheckOffStep}
+        onCheckOffNoteStep={onCheckOffNoteStep}
         onSetCategory={onSetCategory}
         onRemove={onRemove}
         onOpenDetail={onOpenTaskDetail}

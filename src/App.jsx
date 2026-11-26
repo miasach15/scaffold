@@ -1128,6 +1128,7 @@ function ScaffoldApp({ userId, onSignOut, darkMode, onToggleDarkMode }) {
             onAddTask={addTask}
             onToggleDone={setTaskDone}
             onCheckOffStep={requestStepDone}
+            onCheckOffNoteStep={requestNoteStepDone}
             onSetCategory={setTaskCategory}
             onRemove={requestRemoveTask}
             onOpenTaskDetail={openTaskDetail}

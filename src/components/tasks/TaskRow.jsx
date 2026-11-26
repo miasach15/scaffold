@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { FileText, Pencil, Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { useCategoryColors } from "../../hooks/CategoryColorsContext";
 import { decimalToTimeInput, decimalToTimeLabel, defaultLeadDays, formatShortDate, getLocalToday, isOverdueTask, timeToDecimal } from "../../lib/dateHelpers";
 import { deleteBtn, inputStyle, noTypeDateProps } from "../../lib/styles";
 import Checkbox from "../shared/Checkbox";
+import StepNotes from "../shared/StepNotes";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import { INK, SURFACE } from "../../lib/constants";
 
@@ -20,7 +21,7 @@ import { INK, SURFACE } from "../../lib/constants";
 // small "Move to today" button, since reaching for the date picker just to pick today's
 // date already sitting right there is one tap more than it needs to be — no other task
 // gets this button.
-export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDetail, onOpenFocus, onSetDate, onSetStart }) {
+export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDetail, onOpenFocus, onSetDate, onSetStart, onCheckOffNoteStep }) {
   const CATEGORY_COLORS = useCategoryColors();
   const category = t.category || "Personal";
   const col = CATEGORY_COLORS[category] || CATEGORY_COLORS.Personal;
@@ -38,27 +39,21 @@ export default function TaskRow({ t, onToggleDone, onRemove, showDate, onOpenDet
       <div style={{ width: 44, height: 44, margin: "-13px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <Checkbox checked={t.done} onClick={() => onToggleDone(t.id, !t.done)} color={col} />
       </div>
-      <button
-        onClick={() => (onOpenFocus ? onOpenFocus(t.id, t.title) : onOpenDetail(t.id))}
-        title="Click to start a focus session on this"
-        style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-      >
-        {t.title}
-      </button>
-      {/* Used to be a bare icon with only a hover title — invisible on touch, so tapping
-          it on a phone did nothing and there was no way to find out what it meant. Now
-          it actually opens the same place the note is visible (the comment above already
-          says Focus Timer shows notes "right there alongside" the task). */}
-      {t.notes && (
+      <div style={{ flex: 1, minWidth: 0 }}>
         <button
           onClick={() => (onOpenFocus ? onOpenFocus(t.id, t.title) : onOpenDetail(t.id))}
-          title={`Notes: ${t.notes}`}
-          aria-label="This task has notes — tap to view them"
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}
+          title="Click to start a focus session on this"
+          style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1, fontSize: 14, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
         >
-          <FileText size={13} strokeWidth={2.2} color="#B4BCC5" />
+          {t.title}
         </button>
-      )}
+        {/* Steps used to only be visible by opening the note or starting a focus
+            session — now the next one (and, expanded, the rest) shows right here,
+            same as Dashboard's own rows already give it. */}
+        {!t.done && t.notes && (
+          <StepNotes notes={t.notes} title={t.title} taskId={t.id} checkedSteps={t.checkedSteps} onCheckOffStep={onCheckOffNoteStep ? (step) => onCheckOffNoteStep(t.id, step) : undefined} color={col.text} fontSize={11} />
+        )}
+      </div>
       {onOpenFocus && (
         <button onClick={() => onOpenDetail(t.id)} title="Edit this task" className="hoverable" style={{ background: "none", border: "none", color: "#B4BCC5", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}>
           <Pencil size={13} strokeWidth={2.2} />
