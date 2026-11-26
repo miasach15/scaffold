@@ -442,7 +442,10 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // touch its real date at all; only actually finishing it today does (see App.jsx's
   // requestStepDone/planEarlyCompletionShift), which is what pulls the rest of that
   // same assignment's remaining steps one slot earlier to fill the gap.
-  const allDoneToday = scaffoldedTotalCount > 0 && todaysTimedTasks.length === 0 && todaysUntimed.length === 0 && todaysEvents.length === 0;
+  // Independent of whether there's still an event later today — an event isn't
+  // something you "finish," so it shouldn't block this just because the day isn't
+  // completely empty on the calendar.
+  const allDoneToday = scaffoldedTotalCount > 0 && todaysTimedTasks.length === 0 && todaysUntimed.length === 0;
   const upcomingHeadStart = allDoneToday
     ? tasks.filter((t) => !t.done && t.date && t.date > todayISO && (t.groupId || t.eduId)).sort((a, b) => a.date.localeCompare(b.date))[0] || null
     : null;
@@ -544,20 +547,6 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
                   <FreehandIcon name="fireworks-2" size={52} color={PRIMARY} style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>That's everything for today.</div>
-                  {upcomingHeadStart && onStartFocus && (
-                    <div style={{ marginTop: 14 }}>
-                      <button
-                        onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
-                        className="hoverable"
-                        style={ghostBtn}
-                      >
-                        Get a head start on "{upcomingHeadStart.title}"?
-                      </button>
-                      <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>
-                        Still due {formatShortDate(upcomingHeadStart.date)} — only moves up if you actually finish it today
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <EmptyState text="Nothing scheduled for today yet." />
@@ -746,6 +735,23 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {/* Shown whenever today's actual tasks are done, whether or not an event is
+                still ahead later today (see allDoneToday above) — rendered once here
+                rather than duplicated inside both branches above. */}
+            {allDoneToday && upcomingHeadStart && onStartFocus && (
+              <div style={{ textAlign: "center", padding: "16px 0 4px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
+                <button
+                  onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
+                  className="hoverable"
+                  style={ghostBtn}
+                >
+                  Get a head start on "{upcomingHeadStart.title}"?
+                </button>
+                <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>
+                  Still due {formatShortDate(upcomingHeadStart.date)} — only moves up if you actually finish it today
+                </div>
               </div>
             )}
           </div>
