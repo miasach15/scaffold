@@ -45,6 +45,12 @@ export default function TodaySection({ tasks, onToggleDone, onCheckOffStep, onRe
   // completed" log — once you leave and come back, done items fall out of Today as usual.
   const [justDone, setJustDone] = useState(() => new Set());
   const markJustDone = (id) => setJustDone((prev) => new Set(prev).add(id));
+  // Which step's completion actually finished a breakdown (see groupItems' allDone
+  // branch below) — unchecking the collapsed "all done" row needs to reopen THAT exact
+  // step, not just a guess at "whichever step is scheduled latest." Those only agree
+  // when steps happen to get finished in date order; finish them out of order (skip
+  // ahead to a later step, then circle back) and the guess reopens the wrong one.
+  const [lastCompletedStepByGroup, setLastCompletedStepByGroup] = useState(() => new Map());
   // Which "From earlier" row (by task id) currently has its native date input open —
   // only one at a time, same as TaskRow's own per-row editingDate toggle.
   const [editingOverdueId, setEditingOverdueId] = useState(null);
@@ -182,9 +188,10 @@ export default function TodaySection({ tasks, onToggleDone, onCheckOffStep, onRe
         category: next.category || "Personal",
         col: CATEGORY_COLORS[next.category || "Personal"] || CATEGORY_COLORS.Personal,
         onToggle: allDone
-          ? () => onToggleDone(next.id, false)
+          ? () => onToggleDone(lastCompletedStepByGroup.get(groupId) ?? next.id, false)
           : () => {
               markJustDone(`group-${groupId}`);
+              setLastCompletedStepByGroup((m) => new Map(m).set(groupId, next.id));
               if (onCheckOffStep) onCheckOffStep(next.id);
               else onToggleDone(next.id, true);
             },
