@@ -26,6 +26,7 @@ body {
   --ink: #1A1A2E;
   --muted: #6B7280;
   --border: #D9D3E6;
+  --card: #FFFFFF;
 }
 html[data-theme="dark"] {
   --paper-bg: #121018;
@@ -33,6 +34,7 @@ html[data-theme="dark"] {
   --ink: #F2F1F5;
   --muted: #9B9AA8;
   --border: #332F40;
+  --card: #1C1A24;
 }
 /* Theme changes (and the dark/light swap in particular) ease instead of snapping,
    per the design system's "ease dark<->light theme changes, avoid abrupt

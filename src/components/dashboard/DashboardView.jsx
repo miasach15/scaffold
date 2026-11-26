@@ -12,7 +12,9 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // Focus Timer, Habits, Done today) stays flat/bordered-once at most, so the hierarchy
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
-const HERO_BG = "#fff";
+// Resolves through --card (index.css) so dark mode gets a dark card instead of a
+// white slab on a dark page.
+const HERO_BG = "var(--card, #fff)";
 import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
@@ -965,7 +967,7 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 42,
                       padding: "6px 8px", borderRadius: 10, cursor: "pointer",
                       border: `1px solid ${selected ? PRIMARY_DARK : BORDER}`,
-                      background: selected ? PRIMARY_DARK : "#fff",
+                      background: selected ? PRIMARY_DARK : HERO_BG,
                     }}
                   >
                     <span style={{ fontSize: 11, fontWeight: 700, color: selected ? "#fff" : INK }}>{label}</span>
