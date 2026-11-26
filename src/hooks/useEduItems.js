@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -40,6 +41,8 @@ export function useEduItems(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["edu_items"], userId, load);
 
   // occurrences: array of due-date ISO strings. Returns the inserted rows (id + due_date)
   // so callers can schedule linked work sessions off the real generated ids — an empty

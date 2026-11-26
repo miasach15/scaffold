@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -27,6 +28,8 @@ export function useEvents(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["events"], userId, load);
 
   // occurrences: array of {title, date, start, duration, category}
   const addEvents = useCallback(

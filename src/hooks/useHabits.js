@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { toISO } from "../lib/dateHelpers";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -29,6 +30,8 @@ export function useHabits(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["habits", "habit_done_dates"], userId, load);
 
   const addHabit = useCallback(
     async (title) => {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 import { toISO } from "../lib/dateHelpers";
 
 const categoryFromRow = (row) => ({ id: row.id, name: row.name, weight: Number(row.weight) || 0, orderIndex: row.order_index, scoreMode: row.score_mode || "sum" });
@@ -49,6 +50,8 @@ export function useGrades(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["grade_classes", "grade_terms", "grade_categories"], userId, load);
 
   // Returns the class row for `subject`, creating one (no categories yet, everything
   // counts by points) the first time it's touched — e.g. adding its first category.

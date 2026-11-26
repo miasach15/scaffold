@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { DEFAULT_CATEGORY_COLOR_KEYS, DEFAULT_CATEGORY_KEYS, DEFAULT_THEME } from "../lib/constants";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const fromRow = (row) => ({
   name: row.name || "",
@@ -68,6 +69,8 @@ export function useProfile(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["profiles"], userId, load, "id");
 
   const updateProfile = useCallback(
     async (patch) => {

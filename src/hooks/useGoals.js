@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { dayBefore, distributeDatesByLoad, toISO } from "../lib/dateHelpers";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 // Every write below used to call reportSaveError() bare on failure — the toast always
 // said the same generic "check your connection" regardless of what actually went wrong,
@@ -67,6 +68,8 @@ export function useGoals(userId, tasks, events) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["goals", "milestones", "goal_actions"], userId, load);
 
   const addGoal = useCallback(
     async (title, category, deadline = null) => {

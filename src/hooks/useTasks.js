@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
 import { toISO } from "../lib/dateHelpers";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const fromRow = (row) => ({
   id: row.id,
@@ -40,6 +41,8 @@ export function useTasks(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["tasks"], userId, load);
 
   const addTask = useCallback(
     async ({ title, date = null, start = null, duration = null, category = "Personal", eduId = null, groupId = null, groupTitle = null, groupDueDate = null, groupDueStart = null, leadDays = null, notes = null }) => {

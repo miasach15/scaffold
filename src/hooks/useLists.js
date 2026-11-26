@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { uid } from "../lib/id";
 import { reportSaveError } from "../lib/saveErrors";
+import { useRealtimeSync } from "./useRealtimeSync";
 
 const itemFromRow = (row) => ({ id: row.id, text: row.text, done: row.done });
 const listFromRow = (row) => ({
@@ -34,6 +35,8 @@ export function useLists(userId) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync(["custom_lists", "custom_list_items"], userId, load);
 
   const addList = useCallback(
     async (title) => {
