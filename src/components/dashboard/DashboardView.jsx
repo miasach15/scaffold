@@ -13,7 +13,7 @@ const flatSection = { background: "transparent", border: "none", borderRadius: 0
 // reads at a glance instead of every section competing as its own box. Plain white, not
 // a tinted wash — an earlier cream tint here read as an unwanted yellow cast.
 const HERO_BG = "#fff";
-import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, inLeadWindow, pad, toISO } from "../../lib/dateHelpers";
+import { addDays, currentStreak as habitStreak, decimalToTimeLabel, defaultLeadDays, formatShortDate, pad, toISO } from "../../lib/dateHelpers";
 import { compareTaskPriority, staleSessionCount, STALE_SESSION_THRESHOLD } from "../../lib/taskPriority";
 import UrgencyBadge from "../shared/UrgencyBadge";
 import Checkbox from "../shared/Checkbox";
@@ -259,19 +259,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
       const sortDate = parent?.flexible ? toISO(addDays(new Date(dueDate + "T00:00:00"), 1)) : dueDate;
       return { ...t, date: dueDate, sortDate };
     });
-  // A plain due-dated task (no breakdown, not from Education, not recurring) shouldn't
-  // just sit invisible until the exact day it's due — same "shows up early, dimmed,
-  // until it's close" rule TodaySection already gives it on the Tasks page. And once its
-  // due date has passed without being done, it carries forward onto today instead of
-  // vanishing on a date that's scrolled by, matching the same treatment Calendar gives
-  // an overdue item. Either way it lands in "Anytime today," since a specific time slot
-  // from its original day doesn't apply once it's showing early or carried over.
+  // A plain due-dated task (no AI breakdown, not from Education, not recurring)
+  // doesn't just sit invisible until the exact day it's due — same mechanism a
+  // Homework item already gets (a reminder every day until it's actually done, not
+  // just a ping the night before). And once its due date has passed without being
+  // done, it carries forward onto today instead of vanishing on a date that's
+  // scrolled by, matching the same treatment Calendar gives an overdue item. Either
+  // way it lands in "Anytime today," since a specific time slot from its original day
+  // doesn't apply once it's showing early or carried over.
   const todaysUntimed = [
     ...tasks.filter((t) => t.date === todayISO && t.start == null && !t.done && !t.groupId && !t.eduId),
-    ...tasks.filter((t) => {
-      if (t.done || t.groupId || t.eduId || t.isRecurring || !t.date || t.date === todayISO) return false;
-      return t.date < todayISO || inLeadWindow(t.date, defaultLeadDays(t), t.done);
-    }),
+    ...tasks.filter((t) => !t.done && !t.groupId && !t.eduId && !t.isRecurring && t.date && t.date !== todayISO),
     ...groupItems,
     ...eduSessionItems,
     // A manually dragged order wins outright, regardless of which of these is due
@@ -743,21 +741,17 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 rather than duplicated inside both branches above. */}
             {todayClear && upcomingHeadStart && onStartFocus && (
               <div style={{ textAlign: "center", padding: "16px 0 2px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
-                {/* Same pill the "Start to Focus" widget uses elsewhere on this page —
-                    an accent-tinted outline with its own icon, not a flat gray box.
-                    The due-date caveat lives in the tooltip instead of sitting under it
-                    as its own line; the button's own wording already says what it does. */}
+                {/* Same solid, rounded-rect button every real action in this app uses
+                    (primaryBtn) — not a pill, not a flat gray outline. The due-date
+                    caveat lives in the tooltip instead of sitting under it as its own
+                    line; the button's own wording already says what it does. */}
                 <button
                   onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
                   className="hoverable"
                   title={`Still due ${formatShortDate(upcomingHeadStart.date)} — only moves up if you finish it today`}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "8px 16px 8px 13px", borderRadius: 999, border: `1px solid ${PRIMARY}`, background: SURFACE, color: PRIMARY_DARK,
-                    fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-                  }}
+                  style={{ ...primaryBtn, display: "inline-flex", alignItems: "center", gap: 7 }}
                 >
-                  <Play size={11} color={PRIMARY_DARK} /> Get a head start on "{upcomingHeadStart.title}"
+                  <Play size={12} color="#fff" /> Get a head start on "{upcomingHeadStart.title}"
                 </button>
               </div>
             )}
