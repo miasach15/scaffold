@@ -177,7 +177,13 @@ export function planPushTaskToNextDay(tasks, events, eduItems, taskId, capacityM
     return load;
   };
 
-  let day = nextDayISO(task.date);
+  // An already-overdue task (carried onto today, same as everything else in Dashboard's
+  // "Anytime today") lands back on TODAY first, not straight on tomorrow — nextDayISO of
+  // a date that's already days in the past is itself still in the past, which used to
+  // silently write an even-more-confusingly-dated, still-overdue date instead of actually
+  // catching it up to the present. A task already due today or later keeps the original
+  // "push it to tomorrow" behavior.
+  let day = task.date < todayISO ? todayISO : nextDayISO(task.date);
   let guard = 0;
   while (guard++ < 60) {
     if (day > lastDay) { day = lastDay; break; }

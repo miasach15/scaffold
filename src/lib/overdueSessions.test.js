@@ -324,4 +324,23 @@ describe("planPushTaskToNextDay — Dashboard's manual 'push to tomorrow' button
     const ops = planPushTaskToNextDay(tasks, [], eduItems, "a", 600);
     expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-02" }]);
   });
+
+  it("lands an already-overdue plain task on TODAY, not a day still in the past or straight on tomorrow", () => {
+    // Shown carried onto today's "Anytime today" list same as everything else there —
+    // pushing it forward used to start counting from the day AFTER its own stale date
+    // (nextDayISO("2026-09-25") = 2026-09-26), which is itself still well in the past,
+    // instead of catching it up to the present.
+    const tasks = [{ id: "a", date: "2026-09-25", duration: 30, done: false }]; // 6 days overdue
+    const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-01" }]);
+  });
+
+  it("skips an overdue task past today onto tomorrow when today has no room left", () => {
+    const tasks = [
+      { id: "a", date: "2026-09-25", duration: 30, done: false },
+      { id: "busy", date: "2026-10-01", duration: 600, done: false }, // fills today up
+    ];
+    const ops = planPushTaskToNextDay(tasks, [], [], "a", 600);
+    expect(ops).toEqual([{ type: "move", taskId: "a", toDate: "2026-10-02" }]);
+  });
 });
