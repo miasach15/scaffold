@@ -210,6 +210,14 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
   // mirrored into state purely so the render can show "Round 2 of 3".
   const blocksCompletedRef = useRef(resumeState?.blocksCompleted ?? 0);
   const [blocksCompleted, setBlocksCompleted] = useState(() => resumeState?.blocksCompleted ?? 0);
+  // Mirrors phase/roundMinutes/totalSeconds into a ref every render — read by the
+  // per-tick heartbeat save below (see `tick`), whose own closure is only recreated
+  // when `running` itself flips, not on every round/break transition. Without this,
+  // that heartbeat would keep re-saving whatever phase/length was true the moment the
+  // CURRENT run of rounds started, silently overwriting a later round-chain's own
+  // correct save with stale data a second later.
+  const persistFieldsRef = useRef();
+  persistFieldsRef.current = { phase, roundMinutes, totalSeconds };
   // The floating card is anchored bottom-right, so its one resize handle sits at the
   // opposite (top-left) corner — pulling it away from the anchor grows the card, same
   // direction the cursor actually moves. `null` means "default size, not resized yet".
@@ -395,7 +403,17 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     if (!running) return;
     const tick = () => {
       const secsLeft = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
-      if (secsLeft > 0) { setRemaining(secsLeft); return; }
+      if (secsLeft > 0) {
+        setRemaining(secsLeft);
+        // A heartbeat save every tick, not only on explicit actions (Start/Pause/round
+        // chaining) — so a reload can never land in the gap between "this session is
+        // genuinely running" and "the last thing that happened to persist it." Reads
+        // phase/roundMinutes/totalSeconds from persistFieldsRef (always current — see
+        // above), not this closure's own stale ones.
+        const { phase: ph, roundMinutes: rm, totalSeconds: ts } = persistFieldsRef.current;
+        saveFocusSession(task.id, { phase: ph, roundMinutes: rm, totalSeconds: ts, blocksCompleted: blocksCompletedRef.current, running: true, endTime: endTimeRef.current, remaining: secsLeft });
+        return;
+      }
       resolveZero();
     };
     tick(); // correct immediately on start/resume rather than waiting a full second
@@ -403,6 +421,19 @@ export default function FocusTimerModal({ task, tasks, eduItems, profile, setVie
     return () => clearInterval(intervalRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
+
+  // One last save right as the page is actually going away — belt-and-suspenders on
+  // top of the per-tick heartbeat above, for the split second between two ticks.
+  useEffect(() => {
+    if (!running) return;
+    const onBeforeUnload = () => {
+      const { phase: ph, roundMinutes: rm, totalSeconds: ts } = persistFieldsRef.current;
+      const secsLeft = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+      saveFocusSession(task.id, { phase: ph, roundMinutes: rm, totalSeconds: ts, blocksCompleted: blocksCompletedRef.current, running: true, endTime: endTimeRef.current, remaining: secsLeft });
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [running, task.id]);
 
   // A throttled background tab's setInterval can go quiet for a while — catching up the
   // instant the tab (or window) becomes visible again means the countdown (and any
