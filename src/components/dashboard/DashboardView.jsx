@@ -742,17 +742,23 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
                 still ahead later today (see todayClear above) — rendered once here
                 rather than duplicated inside both branches above. */}
             {todayClear && upcomingHeadStart && onStartFocus && (
-              <div style={{ textAlign: "center", padding: "16px 0 4px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
+              <div style={{ textAlign: "center", padding: "16px 0 2px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
+                {/* Same pill the "Start to Focus" widget uses elsewhere on this page —
+                    an accent-tinted outline with its own icon, not a flat gray box.
+                    The due-date caveat lives in the tooltip instead of sitting under it
+                    as its own line; the button's own wording already says what it does. */}
                 <button
                   onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
                   className="hoverable"
-                  style={ghostBtn}
+                  title={`Still due ${formatShortDate(upcomingHeadStart.date)} — only moves up if you finish it today`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "8px 16px 8px 13px", borderRadius: 999, border: `1px solid ${PRIMARY}`, background: SURFACE, color: PRIMARY_DARK,
+                    fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                  }}
                 >
-                  Get a head start on "{upcomingHeadStart.title}"?
+                  <Play size={11} color={PRIMARY_DARK} /> Get a head start on "{upcomingHeadStart.title}"
                 </button>
-                <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>
-                  Still due {formatShortDate(upcomingHeadStart.date)} — only moves up if you actually finish it today
-                </div>
               </div>
             )}
           </div>
