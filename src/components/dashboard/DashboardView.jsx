@@ -442,11 +442,12 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
   // touch its real date at all; only actually finishing it today does (see App.jsx's
   // requestStepDone/planEarlyCompletionShift), which is what pulls the rest of that
   // same assignment's remaining steps one slot earlier to fill the gap.
-  // Independent of whether there's still an event later today — an event isn't
-  // something you "finish," so it shouldn't block this just because the day isn't
-  // completely empty on the calendar.
-  const allDoneToday = scaffoldedTotalCount > 0 && todaysTimedTasks.length === 0 && todaysUntimed.length === 0;
-  const upcomingHeadStart = allDoneToday
+  // Independent of whether there's still an event later today (an event isn't
+  // something you "finish") AND of whether anything was ever due today in the first
+  // place — "I finished everything" and "nothing was due yet" both land here the same
+  // way: today's task list is clear, so there's room to get ahead if you want to.
+  const todayClear = todaysTimedTasks.length === 0 && todaysUntimed.length === 0;
+  const upcomingHeadStart = todayClear
     ? tasks.filter((t) => !t.done && t.date && t.date > todayISO && (t.groupId || t.eduId)).sort((a, b) => a.date.localeCompare(b.date))[0] || null
     : null;
   const [showBrainDump, setShowBrainDump] = useState(false);
@@ -738,9 +739,9 @@ export default function DashboardView({ profile, events, tasks, habits, eduItems
               </div>
             )}
             {/* Shown whenever today's actual tasks are done, whether or not an event is
-                still ahead later today (see allDoneToday above) — rendered once here
+                still ahead later today (see todayClear above) — rendered once here
                 rather than duplicated inside both branches above. */}
-            {allDoneToday && upcomingHeadStart && onStartFocus && (
+            {todayClear && upcomingHeadStart && onStartFocus && (
               <div style={{ textAlign: "center", padding: "16px 0 4px", marginTop: 14, borderTop: `1px solid ${BORDER}` }}>
                 <button
                   onClick={() => onStartFocus(upcomingHeadStart.id, upcomingHeadStart.title)}
